@@ -2776,7 +2776,7 @@ export default function KanbanBoard() {
                   }`}
                   title="⌘/Ctrl+D"
                 >
-                  ☀️ My <span className="underline">D</span>ay
+                  <span>☀️ My <span className="underline">D</span>ay</span>
                 </button>
                 <button
                   onClick={() => setCurrentView('board')}
@@ -2787,7 +2787,7 @@ export default function KanbanBoard() {
                   }`}
                   title="⌘/Ctrl+B"
                 >
-                  📋 <span className="underline">B</span>oard
+                  <span>📋 <span className="underline">B</span>oard</span>
                 </button>
               </div>
             </div>
@@ -2863,7 +2863,7 @@ export default function KanbanBoard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span className="underline">P</span>roject
+                <span><span className="underline">P</span>roject</span>
               </button>
               
               <button
@@ -2875,7 +2875,7 @@ export default function KanbanBoard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span className="underline">T</span>ask
+                <span><span className="underline">T</span>ask</span>
               </button>
               
               <button
@@ -2892,7 +2892,7 @@ export default function KanbanBoard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Import <span className="underline">N</span>otes
+                <span>Import <span className="underline">N</span>otes</span>
               </button>
               
               <button
