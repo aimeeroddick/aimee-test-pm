@@ -2554,9 +2554,11 @@ export default function KanbanBoard() {
   const [editingTask, setEditingTask] = useState(null)
   const [editingProject, setEditingProject] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
-  const [filterAssignee, setFilterAssignee] = useState('all')
-  const [filterCustomer, setFilterCustomer] = useState('all')
-  const [filterCritical, setFilterCritical] = useState('all')
+  
+  // Unified filters: array of {type: 'assignee'|'customer'|'critical'|'status', value: string}
+  const [activeFilters, setActiveFilters] = useState([])
+  const [filterType, setFilterType] = useState('') // For the "add filter" UI
+  
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
   const [filterTimeValue, setFilterTimeValue] = useState('')
@@ -3720,13 +3722,60 @@ export default function KanbanBoard() {
   // Filtering
   const allAssignees = [...new Set(tasks.map(t => t.assignee).filter(Boolean))]
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
+  
+  // Helper to get active filter value by type
+  const getFilterValue = (type) => activeFilters.find(f => f.type === type)?.value
+  
+  // Helper to add a filter
+  const addFilter = (type, value) => {
+    // Remove existing filter of same type, then add new one
+    setActiveFilters(prev => [...prev.filter(f => f.type !== type), { type, value }])
+    setFilterType('')
+  }
+  
+  // Helper to remove a filter
+  const removeFilter = (type) => {
+    setActiveFilters(prev => prev.filter(f => f.type !== type))
+  }
+  
+  // Get filter options based on selected type
+  const getFilterOptions = (type) => {
+    switch (type) {
+      case 'assignee': return allAssignees.map(a => ({ value: a, label: a }))
+      case 'customer': return allCustomers.map(c => ({ value: c, label: c }))
+      case 'critical': return [
+        { value: 'critical', label: '🚩 Critical Only' },
+        { value: 'regular', label: 'Regular Only' }
+      ]
+      case 'status': return [
+        { value: 'backlog', label: 'Backlog' },
+        { value: 'todo', label: 'To Do' },
+        { value: 'in_progress', label: 'In Progress' },
+        { value: 'done', label: 'Done' }
+      ]
+      default: return []
+    }
+  }
+  
+  // Filter type labels
+  const filterTypeLabels = {
+    assignee: 'Assignee',
+    customer: 'Customer', 
+    critical: 'Priority',
+    status: 'Status'
+  }
 
   const readyToStartCount = tasks.filter((t) => {
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
-    if (filterAssignee !== 'all' && t.assignee !== filterAssignee) return false
-    if (filterCustomer !== 'all' && t.customer !== filterCustomer) return false
-    if (filterCritical === 'critical' && !t.critical) return false
-    if (filterCritical === 'regular' && t.critical) return false
+    const assigneeFilter = getFilterValue('assignee')
+    const customerFilter = getFilterValue('customer')
+    const criticalFilter = getFilterValue('critical')
+    const statusFilter = getFilterValue('status')
+    if (assigneeFilter && t.assignee !== assigneeFilter) return false
+    if (customerFilter && t.customer !== customerFilter) return false
+    if (criticalFilter === 'critical' && !t.critical) return false
+    if (criticalFilter === 'regular' && t.critical) return false
+    if (statusFilter && t.status !== statusFilter) return false
     if (filterTimeOperator !== 'all' && filterTimeValue) {
       const timeVal = parseInt(filterTimeValue)
       if (filterTimeOperator === 'lt' && (t.time_estimate || 0) >= timeVal) return false
@@ -3737,10 +3786,15 @@ export default function KanbanBoard() {
 
   const filteredTasks = tasks.filter((t) => {
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
-    if (filterAssignee !== 'all' && t.assignee !== filterAssignee) return false
-    if (filterCustomer !== 'all' && t.customer !== filterCustomer) return false
-    if (filterCritical === 'critical' && !t.critical) return false
-    if (filterCritical === 'regular' && t.critical) return false
+    const assigneeFilter = getFilterValue('assignee')
+    const customerFilter = getFilterValue('customer')
+    const criticalFilter = getFilterValue('critical')
+    const statusFilter = getFilterValue('status')
+    if (assigneeFilter && t.assignee !== assigneeFilter) return false
+    if (customerFilter && t.customer !== customerFilter) return false
+    if (criticalFilter === 'critical' && !t.critical) return false
+    if (criticalFilter === 'regular' && t.critical) return false
+    if (statusFilter && t.status !== statusFilter) return false
     if (filterReadyToStart && !isReadyToStart(t)) return false
     if (filterTimeOperator !== 'all' && filterTimeValue) {
       const timeVal = parseInt(filterTimeValue)
@@ -3999,39 +4053,65 @@ export default function KanbanBoard() {
                     </label>
                   </div>
                   
-                  <select
-                    value={filterCustomer}
-                    onChange={(e) => setFilterCustomer(e.target.value)}
-                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Customers</option>
-                    {allCustomers.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                  {/* Unified Filter UI */}
+                  <div className="flex items-center gap-2">
+                    {/* Active filter chips */}
+                    {activeFilters.map(filter => (
+                      <span 
+                        key={filter.type}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm"
+                      >
+                        <span className="text-indigo-500 dark:text-indigo-400 text-xs">{filterTypeLabels[filter.type]}:</span>
+                        <span className="font-medium">{filter.value === 'critical' ? '🚩 Critical' : filter.value === 'regular' ? 'Regular' : filter.value}</span>
+                        <button 
+                          onClick={() => removeFilter(filter.type)}
+                          className="ml-1 hover:text-indigo-900 dark:hover:text-indigo-100"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
                     ))}
-                  </select>
-                  
-                  <select
-                    value={filterAssignee}
-                    onChange={(e) => setFilterAssignee(e.target.value)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Assignees</option>
-                    {allAssignees.map((a) => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
-                  
-                  <select
-                    value={filterCritical}
-                    onChange={(e) => setFilterCritical(e.target.value)}
-                    className={`px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                      filterCritical === 'critical' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <option value="all">All Tasks</option>
-                    <option value="critical">🚩 Critical Only</option>
-                    <option value="regular">Regular Only</option>
-                  </select>
+                    
+                    {/* Add filter dropdown */}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      >
+                        <option value="">+ Add filter</option>
+                        {!getFilterValue('assignee') && allAssignees.length > 0 && <option value="assignee">Assignee</option>}
+                        {!getFilterValue('customer') && allCustomers.length > 0 && <option value="customer">Customer</option>}
+                        {!getFilterValue('critical') && <option value="critical">Priority</option>}
+                        {!getFilterValue('status') && <option value="status">Status</option>}
+                      </select>
+                      
+                      {filterType && (
+                        <select
+                          value=""
+                          onChange={(e) => e.target.value && addFilter(filterType, e.target.value)}
+                          className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          autoFocus
+                        >
+                          <option value="">Select {filterTypeLabels[filterType]}...</option>
+                          {getFilterOptions(filterType).map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    
+                    {activeFilters.length > 0 && (
+                      <button
+                        onClick={() => setActiveFilters([])}
+                        className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
               
