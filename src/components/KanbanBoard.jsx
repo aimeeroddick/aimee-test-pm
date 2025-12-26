@@ -3950,28 +3950,27 @@ export default function KanbanBoard() {
               
               {currentView === 'board' && (
                 <>
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  >
-                    <option value="all">All Projects</option>
-                    {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
-                      <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
-                    ))}
-                  </select>
-                  
-                  <button
-                    onClick={() => setShowArchivedProjects(!showArchivedProjects)}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                      showArchivedProjects 
-                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800' 
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
-                    }`}
-                    title={showArchivedProjects ? 'Hide archived projects' : 'Show archived projects'}
-                  >
-                    📦 {showArchivedProjects ? 'Hide' : 'Show'} archived
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    >
+                      <option value="all">All Projects</option>
+                      {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                        <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={showArchivedProjects}
+                        onChange={(e) => setShowArchivedProjects(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      Archived
+                    </label>
+                  </div>
                   
                   <select
                     value={filterCustomer}
