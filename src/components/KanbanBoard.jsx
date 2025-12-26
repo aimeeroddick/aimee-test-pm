@@ -1778,6 +1778,18 @@ export default function KanbanBoard() {
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
   const [filterTimeValue, setFilterTimeValue] = useState('')
   
+  // Meeting Notes Import
+  const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
+  const [meetingNotesData, setMeetingNotesData] = useState({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: '',
+    projectId: '',
+  })
+  const [extractedTasks, setExtractedTasks] = useState([])
+  const [isExtracting, setIsExtracting] = useState(false)
+  const [showExtractedTasks, setShowExtractedTasks] = useState(false)
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1924,6 +1936,398 @@ export default function KanbanBoard() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Meeting Notes Import Functions
+  const extractActionItems = (notesText) => {
+    const lines = notesText.split('\n')
+    const actionItems = []
+    
+    // Try to find a Follow-Up table first
+    const tableResult = extractFromFollowUpTable(notesText)
+    if (tableResult.length > 0) {
+      return tableResult
+    }
+    
+    // Fall back to pattern matching
+    return extractFromPatterns(lines)
+  }
+  
+  const extractFromFollowUpTable = (notesText) => {
+    const lines = notesText.split('\n')
+    const actionItems = []
+    
+    let headerRowIndex = -1
+    let columnIndices = { followUp: -1, owner: -1, dueDate: -1, status: -1 }
+    let delimiter = '|'
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase()
+      
+      if (line.includes('|') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
+        const cells = lines[i].split('|').map(c => c.trim().toLowerCase())
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cell = cells[j]
+          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
+            columnIndices.followUp = j
+          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who') || cell.includes('responsible')) {
+            columnIndices.owner = j
+          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when') || cell.includes('deadline')) {
+            columnIndices.dueDate = j
+          } else if (cell.includes('status') || cell.includes('state') || cell.includes('progress')) {
+            columnIndices.status = j
+          }
+        }
+        
+        if (columnIndices.followUp !== -1) {
+          headerRowIndex = i
+          delimiter = '|'
+          break
+        }
+      }
+      
+      if (line.includes('\t') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
+        const cells = lines[i].split('\t').map(c => c.trim().toLowerCase())
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cell = cells[j]
+          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
+            columnIndices.followUp = j
+          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) {
+            columnIndices.owner = j
+          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when')) {
+            columnIndices.dueDate = j
+          } else if (cell.includes('status') || cell.includes('state')) {
+            columnIndices.status = j
+          }
+        }
+        
+        if (columnIndices.followUp !== -1) {
+          headerRowIndex = i
+          delimiter = '\t'
+          break
+        }
+      }
+    }
+    
+    if (headerRowIndex === -1 || columnIndices.followUp === -1) {
+      return []
+    }
+    
+    let startRow = headerRowIndex + 1
+    if (startRow < lines.length && /^[\s|:-]+$/.test(lines[startRow].replace(/\t/g, ''))) {
+      startRow++
+    }
+    
+    for (let i = startRow; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (!line || (!line.includes(delimiter) && delimiter === '|') || 
+          (delimiter === '\t' && !line.includes('\t') && line.split(/\s{2,}/).length < 2)) {
+        if (actionItems.length > 0) break
+        continue
+      }
+      
+      const cells = delimiter === '|' 
+        ? line.split('|').map(c => c.trim())
+        : line.split('\t').map(c => c.trim())
+      
+      const followUp = cells[columnIndices.followUp] || ''
+      const owner = columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : ''
+      const dueDateStr = columnIndices.dueDate !== -1 ? (cells[columnIndices.dueDate] || '') : ''
+      const status = columnIndices.status !== -1 ? (cells[columnIndices.status] || '').toLowerCase() : ''
+      
+      if (!followUp || followUp.length < 3) continue
+      if (status.includes('done') || status.includes('complete') || status.includes('closed')) continue
+      
+      let dueDate = meetingNotesData.date
+      if (dueDateStr) {
+        const parsedDate = parseDateString(dueDateStr)
+        if (parsedDate) dueDate = parsedDate
+      }
+      
+      const isCritical = /urgent|asap|critical|important|high/i.test(followUp) || 
+                        /urgent|asap|critical|important|high/i.test(status)
+      
+      actionItems.push({
+        id: `extracted-table-${i}`,
+        title: followUp.charAt(0).toUpperCase() + followUp.slice(1),
+        assignee: owner,
+        dueDate: dueDate,
+        selected: true,
+        critical: isCritical,
+      })
+    }
+    
+    return actionItems
+  }
+  
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return null
+    
+    const cleaned = dateStr.trim().toLowerCase()
+    const today = new Date()
+    
+    if (cleaned === 'today' || cleaned === 'eod') {
+      return today.toISOString().split('T')[0]
+    }
+    if (cleaned === 'tomorrow') {
+      today.setDate(today.getDate() + 1)
+      return today.toISOString().split('T')[0]
+    }
+    if (cleaned === 'asap') {
+      return today.toISOString().split('T')[0]
+    }
+    
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+    const dayIndex = days.indexOf(cleaned)
+    if (dayIndex !== -1) {
+      let daysUntil = (dayIndex - today.getDay() + 7) % 7
+      if (daysUntil === 0) daysUntil = 7
+      today.setDate(today.getDate() + daysUntil)
+      return today.toISOString().split('T')[0]
+    }
+    
+    let match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)
+    if (match) {
+      const day = parseInt(match[1])
+      const month = parseInt(match[2]) - 1
+      const year = match[3].length === 2 ? 2000 + parseInt(match[3]) : parseInt(match[3])
+      const date = new Date(year, month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})(?!\d)/)
+    if (match) {
+      const day = parseInt(match[1])
+      const month = parseInt(match[2]) - 1
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    match = dateStr.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
+    if (match) {
+      const day = parseInt(match[1])
+      const month = months.indexOf(match[2].toLowerCase())
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    match = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
+    if (match) {
+      const day = parseInt(match[2])
+      const month = months.indexOf(match[1].toLowerCase())
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    return null
+  }
+  
+  const extractFromPatterns = (lines) => {
+    const actionItems = []
+    
+    const actionPatterns = [
+      /^[-*•]\s*\[?\s*\]?\s*(.+)/i,
+      /^(?:action|todo|task|to-do|to do)[:\s]+(.+)/i,
+      /^(\d+[.)]\s*.+)/i,
+      /(.+?)\s+(?:will|to|should|must|needs? to|has to)\s+(.+)/i,
+      /(?:@|assigned to:?)\s*(\w+)\s*[-:]\s*(.+)/i,
+      /^(?:ai|action item)[:\s]+(.+)/i,
+      /^follow[ -]?up[:\s]+(.+)/i,
+    ]
+    
+    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|circulate|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      
+      let matched = false
+      let taskTitle = ''
+      let assignee = ''
+      
+      for (const pattern of actionPatterns) {
+        const match = line.match(pattern)
+        if (match) {
+          if (pattern.toString().includes('will|to|should')) {
+            assignee = match[1]?.trim() || ''
+            taskTitle = `${assignee} ${match[2]?.trim() || ''}`.trim()
+          } 
+          else if (pattern.toString().includes('@|assigned')) {
+            assignee = match[1]?.trim() || ''
+            taskTitle = match[2]?.trim() || ''
+          }
+          else {
+            taskTitle = match[1]?.trim() || ''
+          }
+          matched = true
+          break
+        }
+      }
+      
+      if (!matched && actionVerbs.test(line)) {
+        taskTitle = line
+        matched = true
+      }
+      
+      if (!matched && line.includes(':') && !line.startsWith('http')) {
+        const parts = line.split(':')
+        if (parts.length >= 2 && parts[0].length < 30) {
+          const potentialAssignee = parts[0].trim()
+          const potentialTask = parts.slice(1).join(':').trim()
+          if (potentialTask.length > 5 && actionVerbs.test(potentialTask)) {
+            assignee = potentialAssignee
+            taskTitle = potentialTask
+            matched = true
+          }
+        }
+      }
+      
+      if (matched && taskTitle.length > 3) {
+        taskTitle = taskTitle
+          .replace(/^[-*•]\s*\[?\s*\]?\s*/, '')
+          .replace(/^\d+[.)]\s*/, '')
+          .replace(/^(?:action|todo|task|ai|action item|follow[ -]?up)[:\s]*/i, '')
+          .trim()
+        
+        let dueDate = meetingNotesData.date
+        const datePatterns = [
+          /by\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+          /by\s+(\d{1,2}\/\d{1,2})/i,
+          /due\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+          /(eod|end of day|eow|end of week|asap)/i,
+        ]
+        
+        for (const datePattern of datePatterns) {
+          const dateMatch = taskTitle.match(datePattern)
+          if (dateMatch) {
+            const hint = dateMatch[1].toLowerCase()
+            const today = new Date()
+            if (hint === 'today' || hint === 'eod' || hint === 'end of day') {
+              dueDate = today.toISOString().split('T')[0]
+            } else if (hint === 'tomorrow') {
+              today.setDate(today.getDate() + 1)
+              dueDate = today.toISOString().split('T')[0]
+            } else if (hint === 'asap') {
+              dueDate = today.toISOString().split('T')[0]
+            } else if (hint === 'eow' || hint === 'end of week') {
+              const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7
+              today.setDate(today.getDate() + daysUntilFriday)
+              dueDate = today.toISOString().split('T')[0]
+            } else if (['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].includes(hint)) {
+              const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+              const targetDay = days.indexOf(hint)
+              let daysUntil = (targetDay - today.getDay() + 7) % 7
+              if (daysUntil === 0) daysUntil = 7
+              today.setDate(today.getDate() + daysUntil)
+              dueDate = today.toISOString().split('T')[0]
+            }
+            taskTitle = taskTitle.replace(datePattern, '').trim()
+          }
+        }
+        
+        if (taskTitle.length > 3) {
+          actionItems.push({
+            id: `extracted-${i}`,
+            title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
+            assignee: assignee,
+            dueDate: dueDate,
+            selected: true,
+            critical: /urgent|asap|critical|important/i.test(taskTitle),
+          })
+        }
+      }
+    }
+    
+    return actionItems
+  }
+  
+  const handleExtractTasks = () => {
+    if (!meetingNotesData.notes.trim()) return
+    
+    setIsExtracting(true)
+    
+    setTimeout(() => {
+      const extracted = extractActionItems(meetingNotesData.notes)
+      setExtractedTasks(extracted)
+      setShowExtractedTasks(true)
+      setIsExtracting(false)
+    }, 300)
+  }
+  
+  const handleCreateExtractedTasks = async () => {
+    const selectedTasks = extractedTasks.filter(t => t.selected)
+    if (selectedTasks.length === 0) return
+    
+    setSaving(true)
+    setError(null)
+    
+    try {
+      const projectId = meetingNotesData.projectId || projects[0]?.id
+      if (!projectId) throw new Error('Please select a project')
+      
+      const project = projects.find(p => p.id === projectId)
+      const members = project?.members || []
+      
+      for (const task of selectedTasks) {
+        let matchedAssignee = null
+        if (task.assignee) {
+          matchedAssignee = members.find(m => 
+            m.toLowerCase().includes(task.assignee.toLowerCase()) ||
+            task.assignee.toLowerCase().includes(m.toLowerCase().split(' ')[0])
+          )
+        }
+        
+        const taskData = {
+          title: task.title,
+          description: meetingNotesData.title ? `From meeting: ${meetingNotesData.title}` : '',
+          project_id: projectId,
+          status: 'todo',
+          critical: task.critical,
+          start_date: null,
+          due_date: task.dueDate || null,
+          assignee: matchedAssignee || task.assignee || null,
+          time_estimate: null,
+          energy_level: 'medium',
+          category: 'meeting_followup',
+          source: 'meeting',
+          source_link: null,
+          customer: null,
+          notes: null,
+        }
+        
+        const { error: insertError } = await supabase
+          .from('tasks')
+          .insert(taskData)
+        
+        if (insertError) throw insertError
+      }
+      
+      await fetchData()
+      
+      setMeetingNotesModalOpen(false)
+      setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: '' })
+      setExtractedTasks([])
+      setShowExtractedTasks(false)
+      
+    } catch (err) {
+      console.error('Error creating tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  const updateExtractedTask = (taskId, field, value) => {
+    setExtractedTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, [field]: value } : t
+    ))
+  }
+  
+  const removeExtractedTask = (taskId) => {
+    setExtractedTasks(prev => prev.filter(t => t.id !== taskId))
   }
 
   // Project CRUD
@@ -2421,6 +2825,22 @@ export default function KanbanBoard() {
               </button>
               
               <button
+                onClick={() => {
+                  setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+                  setExtractedTasks([])
+                  setShowExtractedTasks(false)
+                  setMeetingNotesModalOpen(true)
+                }}
+                disabled={projects.length === 0}
+                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Import Notes
+              </button>
+              
+              <button
                 onClick={signOut}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors text-sm"
               >
@@ -2593,6 +3013,223 @@ export default function KanbanBoard() {
         onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
         allTasks={tasks}
       />
+      
+      {/* Meeting Notes Import Modal */}
+      <Modal 
+        isOpen={meetingNotesModalOpen} 
+        onClose={() => setMeetingNotesModalOpen(false)} 
+        title="Import Meeting Notes"
+        wide
+      >
+        {!showExtractedTasks ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Paste your meeting notes below. We'll extract action items and create tasks automatically.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Title</label>
+                <input
+                  type="text"
+                  value={meetingNotesData.title}
+                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, title: e.target.value })}
+                  placeholder="e.g., Weekly Team Sync"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Date</label>
+                <input
+                  type="date"
+                  value={meetingNotesData.date}
+                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+              <select
+                value={meetingNotesData.projectId}
+                onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              >
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Notes</label>
+              <textarea
+                value={meetingNotesData.notes}
+                onChange={(e) => setMeetingNotesData({ ...meetingNotesData, notes: e.target.value })}
+                placeholder={`Paste your meeting notes here...
+
+Best format - Follow-Up table:
+| Follow-Up | Owner | Due Date | Status |
+| Review proposal | Sarah | 30/12 | Open |
+| Send update email | John | Friday | Open |
+
+Or we can extract from:
+• Action items like 'John to send report by Friday'
+• TODO: Review the proposal
+• @Sarah: Update the timeline`}
+                rows={12}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-sm"
+              />
+            </div>
+            
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-gray-400">
+                Tip: Follow-Up tables are extracted first, then we scan for action items
+              </p>
+              <button
+                onClick={handleExtractTasks}
+                disabled={!meetingNotesData.notes.trim() || isExtracting}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isExtracting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Extract Tasks
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-800">
+                  Found {extractedTasks.length} potential task{extractedTasks.length !== 1 ? 's' : ''}
+                </h3>
+                <p className="text-sm text-gray-500">Review and edit before creating</p>
+              </div>
+              <button
+                onClick={() => setShowExtractedTasks(false)}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                ← Back to Notes
+              </button>
+            </div>
+            
+            {extractedTasks.length === 0 ? (
+              <div className="text-center py-8">
+                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-gray-500">No action items found in your notes.</p>
+                <p className="text-sm text-gray-400 mt-1">Try adding bullet points or phrases like "Action:", "TODO:", or "@name"</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {extractedTasks.map((task) => (
+                  <div 
+                    key={task.id}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      task.selected 
+                        ? 'border-indigo-200 bg-indigo-50/50' 
+                        : 'border-gray-100 bg-gray-50 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={task.selected}
+                        onChange={(e) => updateExtractedTask(task.id, 'selected', e.target.checked)}
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="text"
+                          value={task.title}
+                          onChange={(e) => updateExtractedTask(task.id, 'title', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Assignee:</span>
+                            <input
+                              type="text"
+                              value={task.assignee || ''}
+                              onChange={(e) => updateExtractedTask(task.id, 'assignee', e.target.value)}
+                              placeholder="Unassigned"
+                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs w-28 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Due:</span>
+                            <input
+                              type="date"
+                              value={task.dueDate || ''}
+                              onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
+                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            />
+                          </div>
+                          <label className="flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={task.critical}
+                              onChange={(e) => updateExtractedTask(task.id, 'critical', e.target.checked)}
+                              className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                            />
+                            <span className="text-red-600">Critical</span>
+                          </label>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeExtractedTask(task.id)}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <p className="text-sm text-gray-500">
+                {extractedTasks.filter(t => t.selected).length} task{extractedTasks.filter(t => t.selected).length !== 1 ? 's' : ''} selected
+              </p>
+              <button
+                onClick={handleCreateExtractedTasks}
+                disabled={extractedTasks.filter(t => t.selected).length === 0 || saving}
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create {extractedTasks.filter(t => t.selected).length} Task{extractedTasks.filter(t => t.selected).length !== 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
