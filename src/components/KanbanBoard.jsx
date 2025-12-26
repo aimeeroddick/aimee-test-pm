@@ -81,7 +81,6 @@ const isBlocked = (task, allTasks) => {
   if (!task.dependencies || task.dependencies.length === 0) return false
   if (task.status === 'done') return false
   
-  // Check if any dependency is not done
   return task.dependencies.some(dep => {
     const depTask = allTasks.find(t => t.id === dep.depends_on_id)
     return depTask && depTask.status !== 'done'
@@ -144,6 +143,498 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
         </div>
         <div className="p-6">{children}</div>
       </div>
+    </div>
+  )
+}
+
+// Search Modal Component
+const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
+  const [searchQuery, setSearchQuery] = useState('')
+  const inputRef = useRef(null)
+  
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus()
+    }
+    if (!isOpen) {
+      setSearchQuery('')
+    }
+  }, [isOpen])
+  
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+  
+  if (!isOpen) return null
+  
+  const filteredTasks = searchQuery.trim() 
+    ? tasks.filter(task => {
+        const query = searchQuery.toLowerCase()
+        return (
+          task.title?.toLowerCase().includes(query) ||
+          task.description?.toLowerCase().includes(query) ||
+          task.assignee?.toLowerCase().includes(query) ||
+          task.customer?.toLowerCase().includes(query) ||
+          task.notes?.toLowerCase().includes(query)
+        )
+      })
+    : []
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+        {/* Search Input */}
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks by title, description, assignee, customer..."
+              className="flex-1 text-lg outline-none placeholder-gray-400"
+            />
+            <kbd className="px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded">ESC</kbd>
+          </div>
+        </div>
+        
+        {/* Results */}
+        <div className="max-h-96 overflow-y-auto">
+          {searchQuery.trim() === '' ? (
+            <div className="p-8 text-center text-gray-400">
+              <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p>Start typing to search across all tasks</p>
+            </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">
+              <p>No tasks found matching "{searchQuery}"</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {filteredTasks.map(task => {
+                const project = projects.find(p => p.id === task.project_id)
+                const category = CATEGORIES.find(c => c.id === task.category)
+                const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+                
+                return (
+                  <button
+                    key={task.id}
+                    onClick={() => {
+                      onEditTask(task)
+                      onClose()
+                    }}
+                    className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full mt-1.5 shrink-0"
+                        style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-800 truncate">{task.title}</h4>
+                          {task.critical && (
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">Critical</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <span>{project?.name}</span>
+                          {category && (
+                            <>
+                              <span>•</span>
+                              <span style={{ color: category.color }}>{category.label}</span>
+                            </>
+                          )}
+                          {task.assignee && (
+                            <>
+                              <span>•</span>
+                              <span>{task.assignee}</span>
+                            </>
+                          )}
+                          {task.due_date && (
+                            <>
+                              <span>•</span>
+                              <span className={dueDateStatus === 'overdue' ? 'text-red-600' : dueDateStatus === 'today' ? 'text-orange-600' : ''}>
+                                Due {formatDate(task.due_date)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {task.description && (
+                          <p className="text-sm text-gray-400 mt-1 truncate">{task.description}</p>
+                        )}
+                      </div>
+                      <span className="text-xs px-2 py-1 bg-gray-100 rounded-lg text-gray-500 shrink-0">
+                        {COLUMNS.find(c => c.id === task.status)?.title}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+        
+        {/* Footer */}
+        {filteredTasks.length > 0 && (
+          <div className="p-3 border-t border-gray-100 bg-gray-50 text-center text-sm text-gray-500">
+            {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// My Day Dashboard Component
+const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange }) => {
+  const [selectedEnergy, setSelectedEnergy] = useState('all')
+  const [availableTime, setAvailableTime] = useState('')
+  
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  
+  // Filter tasks for different sections
+  const activeTasks = tasks.filter(t => t.status !== 'done')
+  
+  const overdueTasks = activeTasks.filter(t => getDueDateStatus(t.due_date, t.status) === 'overdue')
+  const dueTodayTasks = activeTasks.filter(t => getDueDateStatus(t.due_date, t.status) === 'today')
+  const inProgressTasks = activeTasks.filter(t => t.status === 'in_progress')
+  const readyToStartTasks = activeTasks.filter(t => isReadyToStart(t) && !isBlocked(t, allTasks))
+  const blockedTasks = activeTasks.filter(t => isBlocked(t, allTasks))
+  const criticalTasks = activeTasks.filter(t => t.critical && !overdueTasks.includes(t) && !dueTodayTasks.includes(t))
+  
+  // Suggested tasks based on energy and time
+  const getSuggestedTasks = () => {
+    let candidates = [...inProgressTasks, ...dueTodayTasks, ...readyToStartTasks]
+      .filter(t => !isBlocked(t, allTasks))
+    
+    // Remove duplicates
+    candidates = [...new Map(candidates.map(t => [t.id, t])).values()]
+    
+    // Filter by energy level if selected
+    if (selectedEnergy !== 'all') {
+      candidates = candidates.filter(t => t.energy_level === selectedEnergy)
+    }
+    
+    // Filter by available time if specified
+    if (availableTime) {
+      const minutes = parseInt(availableTime)
+      candidates = candidates.filter(t => !t.time_estimate || t.time_estimate <= minutes)
+    }
+    
+    // Sort: critical first, then by due date, then by time estimate
+    candidates.sort((a, b) => {
+      if (a.critical && !b.critical) return -1
+      if (!a.critical && b.critical) return 1
+      if (a.due_date && !b.due_date) return -1
+      if (!a.due_date && b.due_date) return 1
+      if (a.due_date && b.due_date) {
+        return new Date(a.due_date) - new Date(b.due_date)
+      }
+      return (a.time_estimate || 999) - (b.time_estimate || 999)
+    })
+    
+    return candidates.slice(0, 5)
+  }
+  
+  const suggestedTasks = getSuggestedTasks()
+  
+  // Calculate daily progress
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const completedToday = tasks.filter(t => {
+    if (t.status !== 'done') return false
+    const updatedAt = new Date(t.updated_at || t.created_at)
+    return updatedAt >= todayStart
+  })
+  
+  const totalTimeCompleted = completedToday.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+  const totalTimeRemaining = [...dueTodayTasks, ...inProgressTasks].reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+  
+  const TaskRow = ({ task, showStatus = false }) => {
+    const project = projects.find(p => p.id === task.project_id)
+    const category = CATEGORIES.find(c => c.id === task.category)
+    const energyStyle = ENERGY_LEVELS[task.energy_level]
+    const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+    const blocked = isBlocked(task, allTasks)
+    
+    return (
+      <div
+        onClick={() => onEditTask(task)}
+        className={`p-4 bg-white rounded-xl border cursor-pointer hover:shadow-md transition-all ${
+          blocked ? 'border-orange-200 opacity-75' : task.critical ? 'border-red-200' : 'border-gray-100'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          {/* Quick complete checkbox */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuickStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')
+            }}
+            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+              task.status === 'done' 
+                ? 'bg-green-500 border-green-500 text-white' 
+                : 'border-gray-300 hover:border-green-400'
+            }`}
+          >
+            {task.status === 'done' && (
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h4 className={`font-medium ${task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                {task.title}
+              </h4>
+              {blocked && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">🔒 Blocked</span>
+              )}
+              {task.critical && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">🚩 Critical</span>
+              )}
+              {showStatus && (
+                <span 
+                  className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
+                  style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+                >
+                  {COLUMNS.find(c => c.id === task.status)?.title}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
+              {project && <span>{project.name}</span>}
+              {category && (
+                <span className="px-2 py-0.5 rounded-full text-xs text-white" style={{ backgroundColor: category.color }}>
+                  {category.label}
+                </span>
+              )}
+              {task.time_estimate && (
+                <span className="flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {formatTimeEstimate(task.time_estimate)}
+                </span>
+              )}
+              {energyStyle && (
+                <span 
+                  className="px-2 py-0.5 rounded-full text-xs"
+                  style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
+                >
+                  {energyStyle.icon} {task.energy_level}
+                </span>
+              )}
+              {task.assignee && <span>👤 {task.assignee}</span>}
+            </div>
+          </div>
+          
+          {task.due_date && (
+            <div className={`text-sm font-medium px-3 py-1 rounded-lg shrink-0 ${
+              dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700' :
+              dueDateStatus === 'today' ? 'bg-orange-100 text-orange-700' :
+              dueDateStatus === 'soon' ? 'bg-amber-100 text-amber-700' :
+              'bg-gray-100 text-gray-600'
+            }`}>
+              {dueDateStatus === 'overdue' && '⚠️ '}
+              {formatDate(task.due_date)}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+  
+  const Section = ({ title, icon, tasks, color, emptyMessage, showStatus = false }) => {
+    if (tasks.length === 0) return null
+    
+    return (
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xl">{icon}</span>
+          <h3 className="font-semibold text-gray-800">{title}</h3>
+          <span className={`px-2.5 py-0.5 rounded-full text-sm font-medium ${color}`}>
+            {tasks.length}
+          </span>
+        </div>
+        <div className="space-y-3">
+          {tasks.map(task => (
+            <TaskRow key={task.id} task={task} showStatus={showStatus} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="max-w-4xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          Good {today.getHours() < 12 ? 'morning' : today.getHours() < 17 ? 'afternoon' : 'evening'}! ☀️
+        </h2>
+        <p className="text-gray-500">
+          {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
+        </p>
+      </div>
+      
+      {/* Progress Stats */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="text-3xl font-bold text-green-600 mb-1">{completedToday.length}</div>
+          <div className="text-sm text-gray-500">Completed today</div>
+          {totalTimeCompleted > 0 && (
+            <div className="text-xs text-green-600 mt-1">{formatTimeEstimate(totalTimeCompleted)} done</div>
+          )}
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="text-3xl font-bold text-orange-600 mb-1">{dueTodayTasks.length}</div>
+          <div className="text-sm text-gray-500">Due today</div>
+          {totalTimeRemaining > 0 && (
+            <div className="text-xs text-orange-600 mt-1">{formatTimeEstimate(totalTimeRemaining)} left</div>
+          )}
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="text-3xl font-bold text-indigo-600 mb-1">{inProgressTasks.length}</div>
+          <div className="text-sm text-gray-500">In progress</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="text-3xl font-bold text-red-600 mb-1">{overdueTasks.length}</div>
+          <div className="text-sm text-gray-500">Overdue</div>
+        </div>
+      </div>
+      
+      {/* Smart Suggestions */}
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mb-8 border border-indigo-100">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✨</span>
+            <h3 className="font-semibold text-gray-800">Suggested for you</h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={selectedEnergy}
+              onChange={(e) => setSelectedEnergy(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="all">Any energy</option>
+              <option value="high">⚡ High energy</option>
+              <option value="medium">→ Medium energy</option>
+              <option value="low">○ Low energy</option>
+            </select>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">I have</span>
+              <input
+                type="number"
+                value={availableTime}
+                onChange={(e) => setAvailableTime(e.target.value)}
+                placeholder="30"
+                className="w-16 px-2 py-1.5 text-sm border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <span className="text-sm text-gray-600">mins</span>
+            </div>
+          </div>
+        </div>
+        
+        {suggestedTasks.length === 0 ? (
+          <div className="text-center py-6 text-gray-500">
+            <p>🎉 You're all caught up! No matching tasks right now.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {suggestedTasks.map(task => (
+              <TaskRow key={task.id} task={task} showStatus={true} />
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Task Sections */}
+      <Section 
+        title="Overdue" 
+        icon="🔴" 
+        tasks={overdueTasks} 
+        color="bg-red-100 text-red-700"
+        emptyMessage="No overdue tasks!"
+      />
+      
+      <Section 
+        title="Due Today" 
+        icon="📅" 
+        tasks={dueTodayTasks} 
+        color="bg-orange-100 text-orange-700"
+        emptyMessage="Nothing due today"
+      />
+      
+      <Section 
+        title="In Progress" 
+        icon="🔄" 
+        tasks={inProgressTasks} 
+        color="bg-indigo-100 text-indigo-700"
+        emptyMessage="No tasks in progress"
+      />
+      
+      <Section 
+        title="Ready to Start" 
+        icon="🟢" 
+        tasks={readyToStartTasks.filter(t => !dueTodayTasks.includes(t) && !inProgressTasks.includes(t))} 
+        color="bg-green-100 text-green-700"
+        emptyMessage="No tasks ready to start"
+      />
+      
+      {blockedTasks.length > 0 && (
+        <Section 
+          title="Blocked" 
+          icon="🔒" 
+          tasks={blockedTasks} 
+          color="bg-orange-100 text-orange-700"
+          emptyMessage=""
+          showStatus={true}
+        />
+      )}
+      
+      {criticalTasks.length > 0 && (
+        <Section 
+          title="Other Critical Tasks" 
+          icon="🚩" 
+          tasks={criticalTasks} 
+          color="bg-red-100 text-red-700"
+          emptyMessage=""
+          showStatus={true}
+        />
+      )}
+      
+      {/* Empty state */}
+      {activeTasks.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🎉</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">All clear!</h3>
+          <p className="text-gray-500">You have no active tasks. Time to add some or take a well-deserved break!</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -450,7 +941,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [customCustomer, setCustomCustomer] = useState('')
   const [pasteMessage, setPasteMessage] = useState('')
   
-  // Handle pasting images into description or notes
   const handlePaste = async (e) => {
     const items = e.clipboardData?.items
     if (!items) return
@@ -460,7 +950,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         e.preventDefault()
         const file = item.getAsFile()
         if (file) {
-          // Generate a name for the pasted image
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           const extension = file.type.split('/')[1] || 'png'
           const namedFile = new File([file], `pasted-image-${timestamp}.${extension}`, { type: file.type })
@@ -585,7 +1074,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     onClose()
   }
   
-  // Get tasks that can be dependencies (same project, not self, not done)
   const availableDependencies = allTasks?.filter(t => 
     t.project_id === formData.project_id && 
     t.id !== task?.id && 
@@ -874,7 +1362,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         
         {activeTab === 'recurring' && (
           <div className="space-y-6">
-            {/* Recurrence Section */}
             <div className="p-4 bg-blue-50 rounded-xl">
               <div className="flex items-center gap-3 mb-3">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -908,7 +1395,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
-            {/* Dependencies Section */}
             <div className="p-4 bg-orange-50 rounded-xl">
               <div className="flex items-center gap-3 mb-3">
                 <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1275,6 +1761,10 @@ export default function KanbanBoard() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   
+  // View state
+  const [currentView, setCurrentView] = useState('board') // 'board' or 'myday'
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
+  
   const [selectedProjectId, setSelectedProjectId] = useState('all')
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
@@ -1288,17 +1778,30 @@ export default function KanbanBoard() {
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
   const [filterTimeValue, setFilterTimeValue] = useState('')
   
-  // Meeting Notes Import
-  const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
-  const [meetingNotesData, setMeetingNotesData] = useState({
-    title: '',
-    date: new Date().toISOString().split('T')[0],
-    notes: '',
-    projectId: '',
-  })
-  const [extractedTasks, setExtractedTasks] = useState([])
-  const [isExtracting, setIsExtracting] = useState(false)
-  const [showExtractedTasks, setShowExtractedTasks] = useState(false)
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return
+      }
+      
+      // Cmd/Ctrl + K for search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchModalOpen(true)
+      }
+      
+      // / for search
+      if (e.key === '/') {
+        e.preventDefault()
+        setSearchModalOpen(true)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Fetch data on mount
   useEffect(() => {
@@ -1310,7 +1813,6 @@ export default function KanbanBoard() {
     setError(null)
     
     try {
-      // Fetch projects with members and customers
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
@@ -1318,7 +1820,6 @@ export default function KanbanBoard() {
       
       if (projectsError) throw projectsError
 
-      // Fetch members and customers for each project
       const projectsWithRelations = await Promise.all(
         projectsData.map(async (project) => {
           const { data: members } = await supabase
@@ -1339,7 +1840,6 @@ export default function KanbanBoard() {
         })
       )
 
-      // Fetch tasks with attachments
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
@@ -1347,7 +1847,6 @@ export default function KanbanBoard() {
       
       if (tasksError) throw tasksError
 
-      // Fetch attachments and dependencies for each task
       const tasksWithRelations = await Promise.all(
         tasksData.map(async (task) => {
           const { data: attachments } = await supabase
@@ -1355,13 +1854,11 @@ export default function KanbanBoard() {
             .select('*')
             .eq('task_id', task.id)
           
-          // Get public URLs for attachments
           const attachmentsWithUrls = attachments?.map(att => ({
             ...att,
             file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
           })) || []
           
-          // Fetch dependencies
           const { data: dependencies } = await supabase
             .from('task_dependencies')
             .select('depends_on_id')
@@ -1386,7 +1883,6 @@ export default function KanbanBoard() {
         return startDate <= today
       })
       
-      // Move tasks to todo
       for (const task of tasksToMove) {
         await supabase
           .from('tasks')
@@ -1394,7 +1890,6 @@ export default function KanbanBoard() {
           .eq('id', task.id)
       }
       
-      // Refetch if any tasks were moved
       if (tasksToMove.length > 0) {
         const { data: updatedTasksData } = await supabase
           .from('tasks')
@@ -1438,7 +1933,6 @@ export default function KanbanBoard() {
     
     try {
       if (projectData.id) {
-        // Update existing project
         const { error: updateError } = await supabase
           .from('projects')
           .update({ name: projectData.name })
@@ -1446,7 +1940,6 @@ export default function KanbanBoard() {
         
         if (updateError) throw updateError
 
-        // Delete existing members and customers, then re-add
         await supabase.from('project_members').delete().eq('project_id', projectData.id)
         await supabase.from('project_customers').delete().eq('project_id', projectData.id)
 
@@ -1462,7 +1955,6 @@ export default function KanbanBoard() {
           )
         }
       } else {
-        // Create new project
         const { data: newProject, error: insertError } = await supabase
           .from('projects')
           .insert({ name: projectData.name, user_id: user.id })
@@ -1511,435 +2003,6 @@ export default function KanbanBoard() {
     }
   }
 
-  // Meeting Notes Import Functions
-  const extractActionItems = (notesText) => {
-    const lines = notesText.split('\n')
-    const actionItems = []
-    
-    // ============================================
-    // STEP 1: Try to find a Follow-Up table first
-    // ============================================
-    const tableResult = extractFromFollowUpTable(notesText)
-    if (tableResult.length > 0) {
-      return tableResult
-    }
-    
-    // ============================================
-    // STEP 2: Fall back to pattern matching
-    // ============================================
-    return extractFromPatterns(lines)
-  }
-  
-  // Extract tasks from a structured Follow-Up table
-  const extractFromFollowUpTable = (notesText) => {
-    const lines = notesText.split('\n')
-    const actionItems = []
-    
-    // Find table header row - look for variations of Follow-Up, Owner, Due Date, Status
-    let headerRowIndex = -1
-    let columnIndices = { followUp: -1, owner: -1, dueDate: -1, status: -1 }
-    let delimiter = '|'
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase()
-      
-      // Check for table with pipes (Markdown/Confluence style)
-      if (line.includes('|') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
-        const cells = lines[i].split('|').map(c => c.trim().toLowerCase())
-        
-        for (let j = 0; j < cells.length; j++) {
-          const cell = cells[j]
-          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
-            columnIndices.followUp = j
-          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who') || cell.includes('responsible')) {
-            columnIndices.owner = j
-          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when') || cell.includes('deadline')) {
-            columnIndices.dueDate = j
-          } else if (cell.includes('status') || cell.includes('state') || cell.includes('progress')) {
-            columnIndices.status = j
-          }
-        }
-        
-        if (columnIndices.followUp !== -1) {
-          headerRowIndex = i
-          delimiter = '|'
-          break
-        }
-      }
-      
-      // Check for tab-separated table
-      if (line.includes('\t') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
-        const cells = lines[i].split('\t').map(c => c.trim().toLowerCase())
-        
-        for (let j = 0; j < cells.length; j++) {
-          const cell = cells[j]
-          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
-            columnIndices.followUp = j
-          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) {
-            columnIndices.owner = j
-          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when')) {
-            columnIndices.dueDate = j
-          } else if (cell.includes('status') || cell.includes('state')) {
-            columnIndices.status = j
-          }
-        }
-        
-        if (columnIndices.followUp !== -1) {
-          headerRowIndex = i
-          delimiter = '\t'
-          break
-        }
-      }
-    }
-    
-    // If no table header found, return empty
-    if (headerRowIndex === -1 || columnIndices.followUp === -1) {
-      return []
-    }
-    
-    // Parse table rows after header
-    // Skip separator row if it exists (e.g., |---|---|---|)
-    let startRow = headerRowIndex + 1
-    if (startRow < lines.length && /^[\s|:-]+$/.test(lines[startRow].replace(/\t/g, ''))) {
-      startRow++
-    }
-    
-    for (let i = startRow; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
-      // Stop if we hit an empty line or a line that doesn't look like a table row
-      if (!line || (!line.includes(delimiter) && delimiter === '|') || 
-          (delimiter === '\t' && !line.includes('\t') && line.split(/\s{2,}/).length < 2)) {
-        // Check if we've collected any items - if so, we're done with the table
-        if (actionItems.length > 0) break
-        continue
-      }
-      
-      const cells = delimiter === '|' 
-        ? line.split('|').map(c => c.trim())
-        : line.split('\t').map(c => c.trim())
-      
-      const followUp = cells[columnIndices.followUp] || ''
-      const owner = columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : ''
-      const dueDateStr = columnIndices.dueDate !== -1 ? (cells[columnIndices.dueDate] || '') : ''
-      const status = columnIndices.status !== -1 ? (cells[columnIndices.status] || '').toLowerCase() : ''
-      
-      // Skip empty rows or completed items
-      if (!followUp || followUp.length < 3) continue
-      if (status.includes('done') || status.includes('complete') || status.includes('closed')) continue
-      
-      // Parse due date
-      let dueDate = meetingNotesData.date
-      if (dueDateStr) {
-        const parsedDate = parseDateString(dueDateStr)
-        if (parsedDate) dueDate = parsedDate
-      }
-      
-      // Determine if critical
-      const isCritical = /urgent|asap|critical|important|high/i.test(followUp) || 
-                        /urgent|asap|critical|important|high/i.test(status)
-      
-      actionItems.push({
-        id: `extracted-table-${i}`,
-        title: followUp.charAt(0).toUpperCase() + followUp.slice(1),
-        assignee: owner,
-        dueDate: dueDate,
-        selected: true,
-        critical: isCritical,
-      })
-    }
-    
-    return actionItems
-  }
-  
-  // Parse various date formats
-  const parseDateString = (dateStr) => {
-    if (!dateStr) return null
-    
-    const cleaned = dateStr.trim().toLowerCase()
-    const today = new Date()
-    
-    // Handle relative dates
-    if (cleaned === 'today' || cleaned === 'eod') {
-      return today.toISOString().split('T')[0]
-    }
-    if (cleaned === 'tomorrow') {
-      today.setDate(today.getDate() + 1)
-      return today.toISOString().split('T')[0]
-    }
-    if (cleaned === 'asap') {
-      return today.toISOString().split('T')[0]
-    }
-    
-    // Handle day names
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
-    const dayIndex = days.indexOf(cleaned)
-    if (dayIndex !== -1) {
-      let daysUntil = (dayIndex - today.getDay() + 7) % 7
-      if (daysUntil === 0) daysUntil = 7
-      today.setDate(today.getDate() + daysUntil)
-      return today.toISOString().split('T')[0]
-    }
-    
-    // Handle various date formats
-    // DD/MM/YYYY or DD-MM-YYYY
-    let match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)
-    if (match) {
-      const day = parseInt(match[1])
-      const month = parseInt(match[2]) - 1
-      const year = match[3].length === 2 ? 2000 + parseInt(match[3]) : parseInt(match[3])
-      const date = new Date(year, month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
-    }
-    
-    // DD/MM or DD-MM (assume current year)
-    match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})(?!\d)/)
-    if (match) {
-      const day = parseInt(match[1])
-      const month = parseInt(match[2]) - 1
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
-    }
-    
-    // "DD Mon" or "Mon DD" format
-    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    match = dateStr.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
-    if (match) {
-      const day = parseInt(match[1])
-      const month = months.indexOf(match[2].toLowerCase())
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
-    }
-    match = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
-    if (match) {
-      const day = parseInt(match[2])
-      const month = months.indexOf(match[1].toLowerCase())
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
-    }
-    
-    return null
-  }
-  
-  // Extract tasks using pattern matching (fallback)
-  const extractFromPatterns = (lines) => {
-    const actionItems = []
-    
-    // Patterns that indicate action items
-    const actionPatterns = [
-      /^[-*•]\s*\[?\s*\]?\s*(.+)/i,                          // Bullet points: - [ ] or - or * or •
-      /^(?:action|todo|task|to-do|to do)[:\s]+(.+)/i,        // Action: or TODO: prefixes
-      /^(\d+[.)]\s*.+)/i,                                     // Numbered lists: 1. or 1)
-      /(.+?)\s+(?:will|to|should|must|needs? to|has to)\s+(.+)/i, // "Person will do X"
-      /(?:@|assigned to:?)\s*(\w+)\s*[-:]\s*(.+)/i,          // @name: task or assigned to: name - task
-      /^(?:ai|action item)[:\s]+(.+)/i,                      // AI: or Action Item:
-      /^follow[ -]?up[:\s]+(.+)/i,                           // Follow-up:
-    ]
-    
-    // Verbs that commonly start action items
-    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|circulate|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
-      
-      let matched = false
-      let taskTitle = ''
-      let assignee = ''
-      
-      // Check for explicit action patterns
-      for (const pattern of actionPatterns) {
-        const match = line.match(pattern)
-        if (match) {
-          // Handle "Person will do X" pattern
-          if (pattern.toString().includes('will|to|should')) {
-            assignee = match[1]?.trim() || ''
-            taskTitle = `${assignee} ${match[2]?.trim() || ''}`.trim()
-          } 
-          // Handle @name pattern
-          else if (pattern.toString().includes('@|assigned')) {
-            assignee = match[1]?.trim() || ''
-            taskTitle = match[2]?.trim() || ''
-          }
-          else {
-            taskTitle = match[1]?.trim() || ''
-          }
-          matched = true
-          break
-        }
-      }
-      
-      // Check if line starts with an action verb
-      if (!matched && actionVerbs.test(line)) {
-        taskTitle = line
-        matched = true
-      }
-      
-      // Check for lines with colons that might be assignments
-      if (!matched && line.includes(':') && !line.startsWith('http')) {
-        const parts = line.split(':')
-        if (parts.length >= 2 && parts[0].length < 30) {
-          const potentialAssignee = parts[0].trim()
-          const potentialTask = parts.slice(1).join(':').trim()
-          if (potentialTask.length > 5 && actionVerbs.test(potentialTask)) {
-            assignee = potentialAssignee
-            taskTitle = potentialTask
-            matched = true
-          }
-        }
-      }
-      
-      if (matched && taskTitle.length > 3) {
-        // Clean up the task title
-        taskTitle = taskTitle
-          .replace(/^[-*•]\s*\[?\s*\]?\s*/, '')  // Remove bullet markers
-          .replace(/^\d+[.)]\s*/, '')              // Remove number prefixes
-          .replace(/^(?:action|todo|task|ai|action item|follow[ -]?up)[:\s]*/i, '') // Remove prefixes
-          .trim()
-        
-        // Extract date hints from the task
-        let dueDate = meetingNotesData.date
-        const datePatterns = [
-          /by\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
-          /by\s+(\d{1,2}\/\d{1,2})/i,
-          /due\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
-          /(eod|end of day|eow|end of week|asap)/i,
-        ]
-        
-        for (const datePattern of datePatterns) {
-          const dateMatch = taskTitle.match(datePattern)
-          if (dateMatch) {
-            const hint = dateMatch[1].toLowerCase()
-            const today = new Date()
-            if (hint === 'today' || hint === 'eod' || hint === 'end of day') {
-              dueDate = today.toISOString().split('T')[0]
-            } else if (hint === 'tomorrow') {
-              today.setDate(today.getDate() + 1)
-              dueDate = today.toISOString().split('T')[0]
-            } else if (hint === 'asap') {
-              dueDate = today.toISOString().split('T')[0]
-            } else if (hint === 'eow' || hint === 'end of week') {
-              const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7
-              today.setDate(today.getDate() + daysUntilFriday)
-              dueDate = today.toISOString().split('T')[0]
-            } else if (['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].includes(hint)) {
-              const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
-              const targetDay = days.indexOf(hint)
-              let daysUntil = (targetDay - today.getDay() + 7) % 7
-              if (daysUntil === 0) daysUntil = 7
-              today.setDate(today.getDate() + daysUntil)
-              dueDate = today.toISOString().split('T')[0]
-            }
-            // Remove date hint from task title
-            taskTitle = taskTitle.replace(datePattern, '').trim()
-          }
-        }
-        
-        if (taskTitle.length > 3) {
-          actionItems.push({
-            id: `extracted-${i}`,
-            title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
-            assignee: assignee,
-            dueDate: dueDate,
-            selected: true,
-            critical: /urgent|asap|critical|important/i.test(taskTitle),
-          })
-        }
-      }
-    }
-    
-    return actionItems
-  }
-  
-  const handleExtractTasks = () => {
-    if (!meetingNotesData.notes.trim()) return
-    
-    setIsExtracting(true)
-    
-    // Small delay to show loading state
-    setTimeout(() => {
-      const extracted = extractActionItems(meetingNotesData.notes)
-      setExtractedTasks(extracted)
-      setShowExtractedTasks(true)
-      setIsExtracting(false)
-    }, 300)
-  }
-  
-  const handleCreateExtractedTasks = async () => {
-    const selectedTasks = extractedTasks.filter(t => t.selected)
-    if (selectedTasks.length === 0) return
-    
-    setSaving(true)
-    setError(null)
-    
-    try {
-      const projectId = meetingNotesData.projectId || projects[0]?.id
-      if (!projectId) throw new Error('Please select a project')
-      
-      const project = projects.find(p => p.id === projectId)
-      const members = project?.members || []
-      
-      for (const task of selectedTasks) {
-        // Try to match assignee to project members
-        let matchedAssignee = null
-        if (task.assignee) {
-          matchedAssignee = members.find(m => 
-            m.toLowerCase().includes(task.assignee.toLowerCase()) ||
-            task.assignee.toLowerCase().includes(m.toLowerCase().split(' ')[0])
-          )
-        }
-        
-        const taskData = {
-          title: task.title,
-          description: meetingNotesData.title ? `From meeting: ${meetingNotesData.title}` : '',
-          project_id: projectId,
-          status: 'todo',
-          critical: task.critical,
-          start_date: null,
-          due_date: task.dueDate || null,
-          assignee: matchedAssignee || task.assignee || null,
-          time_estimate: null,
-          energy_level: 'medium',
-          category: 'meeting_followup',
-          source: 'meeting',
-          source_link: null,
-          customer: null,
-          notes: null,
-        }
-        
-        const { error: insertError } = await supabase
-          .from('tasks')
-          .insert(taskData)
-        
-        if (insertError) throw insertError
-      }
-      
-      await fetchData()
-      
-      // Reset and close
-      setMeetingNotesModalOpen(false)
-      setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: '' })
-      setExtractedTasks([])
-      setShowExtractedTasks(false)
-      
-    } catch (err) {
-      console.error('Error creating tasks:', err)
-      setError(err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-  
-  const updateExtractedTask = (taskId, field, value) => {
-    setExtractedTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, [field]: value } : t
-    ))
-  }
-  
-  const removeExtractedTask = (taskId) => {
-    setExtractedTasks(prev => prev.filter(t => t.id !== taskId))
-  }
-
   // Task CRUD
   const handleSaveTask = async (taskData, newFiles = [], existingAttachments = []) => {
     setSaving(true)
@@ -1949,7 +2012,6 @@ export default function KanbanBoard() {
       let taskId = taskData.id
 
       if (taskId) {
-        // Update existing task
         const { error: updateError } = await supabase
           .from('tasks')
           .update({
@@ -1974,7 +2036,6 @@ export default function KanbanBoard() {
         
         if (updateError) throw updateError
         
-        // Update dependencies - delete existing and re-add
         await supabase.from('task_dependencies').delete().eq('task_id', taskId)
         if (taskData.dependencies && taskData.dependencies.length > 0) {
           await supabase.from('task_dependencies').insert(
@@ -1982,7 +2043,6 @@ export default function KanbanBoard() {
           )
         }
 
-        // Handle removed attachments
         const existingIds = existingAttachments.map(a => a.id)
         const { data: currentAttachments } = await supabase
           .from('attachments')
@@ -1996,7 +2056,6 @@ export default function KanbanBoard() {
           await supabase.from('attachments').delete().eq('id', att.id)
         }
       } else {
-        // Create new task
         const { data: newTask, error: insertError } = await supabase
           .from('tasks')
           .insert({
@@ -2023,7 +2082,6 @@ export default function KanbanBoard() {
         if (insertError) throw insertError
         taskId = newTask.id
         
-        // Add dependencies for new task
         if (taskData.dependencies && taskData.dependencies.length > 0) {
           await supabase.from('task_dependencies').insert(
             taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
@@ -2031,7 +2089,6 @@ export default function KanbanBoard() {
         }
       }
 
-      // Upload new files
       for (const file of newFiles) {
         const filePath = `${user.id}/${taskId}/${Date.now()}_${file.name}`
         
@@ -2062,7 +2119,6 @@ export default function KanbanBoard() {
   const handleDeleteTask = async (taskId) => {
     setSaving(true)
     try {
-      // Delete attachments from storage
       const { data: attachments } = await supabase
         .from('attachments')
         .select('file_path')
@@ -2088,12 +2144,10 @@ export default function KanbanBoard() {
     try {
       const task = tasks.find(t => t.id === taskId)
       
-      // If moving to done and has recurrence, create next instance
       if (newStatus === 'done' && task?.recurrence_type && task?.start_date) {
         const nextStartDate = getNextRecurrenceDate(task.start_date, task.recurrence_type)
         let nextDueDate = null
         
-        // Calculate next due date if there was a due date
         if (task.due_date && nextStartDate) {
           const originalDiff = new Date(task.due_date) - new Date(task.start_date)
           const nextDue = new Date(nextStartDate)
@@ -2102,7 +2156,6 @@ export default function KanbanBoard() {
         }
         
         if (nextStartDate) {
-          // Create the next recurring task
           const { error: recurError } = await supabase
             .from('tasks')
             .insert({
@@ -2136,7 +2189,6 @@ export default function KanbanBoard() {
       
       if (error) throw error
       
-      // Refresh data to get the new recurring task
       if (newStatus === 'done' && task?.recurrence_type) {
         await fetchData()
       } else {
@@ -2245,98 +2297,107 @@ export default function KanbanBoard() {
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-full mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    Trackli
+                  </h1>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Trackli
-                </h1>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+              
+              {/* View Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-xl p-1 ml-4">
+                <button
+                  onClick={() => setCurrentView('myday')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'myday' 
+                      ? 'bg-white shadow-sm text-gray-800' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  ☀️ My Day
+                </button>
+                <button
+                  onClick={() => setCurrentView('board')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'board' 
+                      ? 'bg-white shadow-sm text-gray-800' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  📋 Board
+                </button>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              {/* Search Button */}
+              <button
+                onClick={() => setSearchModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all"
               >
-                <option value="all">All Projects</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Search</span>
+                <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-gray-100 rounded">/</kbd>
+              </button>
               
-              <select
-                value={filterCustomer}
-                onChange={(e) => setFilterCustomer(e.target.value)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              >
-                <option value="all">All Customers</option>
-                {allCustomers.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              
-              <select
-                value={filterAssignee}
-                onChange={(e) => setFilterAssignee(e.target.value)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              >
-                <option value="all">All Assignees</option>
-                {allAssignees.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-              
-              <select
-                value={filterCritical}
-                onChange={(e) => setFilterCritical(e.target.value)}
-                className={`px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                  filterCritical === 'critical' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-gray-200'
-                }`}
-              >
-                <option value="all">All Tasks</option>
-                <option value="critical">🚩 Critical Only</option>
-                <option value="regular">Regular Only</option>
-              </select>
-              
-              {/* Time Estimate Filter */}
-              <div className="flex items-center gap-1">
-                <select
-                  value={filterTimeOperator}
-                  onChange={(e) => setFilterTimeOperator(e.target.value)}
-                  className={`px-3 py-2 border rounded-l-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
-                    filterTimeOperator !== 'all' && filterTimeValue ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <option value="all">Time</option>
-                  <option value="lt">&lt;</option>
-                  <option value="gt">&gt;</option>
-                </select>
-                {filterTimeOperator !== 'all' && (
-                  <div className="flex items-center">
-                    <input
-                      type="number"
-                      min="0"
-                      value={filterTimeValue}
-                      onChange={(e) => setFilterTimeValue(e.target.value)}
-                      placeholder="mins"
-                      className="w-20 px-3 py-2 border-y border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    />
-                    <button
-                      onClick={() => { setFilterTimeOperator('all'); setFilterTimeValue('') }}
-                      className="px-2 py-2 border border-l-0 border-gray-200 rounded-r-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
+              {currentView === 'board' && (
+                <>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  >
+                    <option value="all">All Projects</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={filterCustomer}
+                    onChange={(e) => setFilterCustomer(e.target.value)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  >
+                    <option value="all">All Customers</option>
+                    {allCustomers.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={filterAssignee}
+                    onChange={(e) => setFilterAssignee(e.target.value)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  >
+                    <option value="all">All Assignees</option>
+                    {allAssignees.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={filterCritical}
+                    onChange={(e) => setFilterCritical(e.target.value)}
+                    className={`px-4 py-2 border rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${
+                      filterCritical === 'critical' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <option value="all">All Tasks</option>
+                    <option value="critical">🚩 Critical Only</option>
+                    <option value="regular">Regular Only</option>
+                  </select>
+                </>
+              )}
               
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
@@ -2360,27 +2421,6 @@ export default function KanbanBoard() {
               </button>
               
               <button
-                onClick={() => {
-                  setMeetingNotesData({ 
-                    title: '', 
-                    date: new Date().toISOString().split('T')[0], 
-                    notes: '', 
-                    projectId: selectedProjectId !== 'all' ? selectedProjectId : projects[0]?.id || ''
-                  })
-                  setExtractedTasks([])
-                  setShowExtractedTasks(false)
-                  setMeetingNotesModalOpen(true)
-                }}
-                disabled={projects.length === 0}
-                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Import Notes
-              </button>
-              
-              <button
                 onClick={signOut}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors text-sm"
               >
@@ -2391,62 +2431,64 @@ export default function KanbanBoard() {
         </div>
       </header>
 
-      {/* Stats Bar */}
-      <div className="bg-white/60 border-b border-gray-100 px-6 py-3">
-        <div className="max-w-full mx-auto flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500">Active:</span>
-            <span className="font-semibold text-gray-800">{filteredTasks.filter(t => t.status !== 'done').length} tasks</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500">Total time:</span>
-            <span className="font-semibold text-gray-800">{formatTimeEstimate(totalEstimatedTime) || '0h'}</span>
-          </div>
-          
-          {readyToStartCount > 0 && (
-            <button
-              onClick={() => setFilterReadyToStart(!filterReadyToStart)}
-              className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-all ${
-                filterReadyToStart ? 'bg-green-500 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="font-medium">{readyToStartCount} ready in backlog</span>
-              {filterReadyToStart && (
+      {/* Stats Bar - only show on board view */}
+      {currentView === 'board' && (
+        <div className="bg-white/60 border-b border-gray-100 px-6 py-3">
+          <div className="max-w-full mx-auto flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">Active:</span>
+              <span className="font-semibold text-gray-800">{filteredTasks.filter(t => t.status !== 'done').length} tasks</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">Total time:</span>
+              <span className="font-semibold text-gray-800">{formatTimeEstimate(totalEstimatedTime) || '0h'}</span>
+            </div>
+            
+            {readyToStartCount > 0 && (
+              <button
+                onClick={() => setFilterReadyToStart(!filterReadyToStart)}
+                className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-all ${
+                  filterReadyToStart ? 'bg-green-500 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'
+                }`}
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-              )}
-            </button>
-          )}
-          
-          {criticalCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-              <span className="text-red-600 font-medium">🚩 {criticalCount} critical</span>
-            </div>
-          )}
-          {dueTodayCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
-              <span className="text-orange-600 font-medium">{dueTodayCount} due today</span>
-            </div>
-          )}
-          {overdueCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-              <span className="text-red-600 font-medium">{overdueCount} overdue</span>
-            </div>
-          )}
-          {blockedCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
-              <span className="text-orange-600 font-medium">🔒 {blockedCount} blocked</span>
-            </div>
-          )}
+                <span className="font-medium">{readyToStartCount} ready in backlog</span>
+                {filterReadyToStart && (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </button>
+            )}
+            
+            {criticalCount > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
+                <span className="text-red-600 font-medium">🚩 {criticalCount} critical</span>
+              </div>
+            )}
+            {dueTodayCount > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
+                <span className="text-orange-600 font-medium">{dueTodayCount} due today</span>
+              </div>
+            )}
+            {overdueCount > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
+                <span className="text-red-600 font-medium">{overdueCount} overdue</span>
+              </div>
+            )}
+            {blockedCount > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
+                <span className="text-orange-600 font-medium">🔒 {blockedCount} blocked</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Project Info */}
-      {selectedProjectId !== 'all' && (
+      {/* Project Info - only show on board view */}
+      {currentView === 'board' && selectedProjectId !== 'all' && (
         <div className="max-w-full mx-auto px-6 py-4">
           {projects.filter((p) => p.id === selectedProjectId).map((project) => (
             <div key={project.id} className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -2487,26 +2529,39 @@ export default function KanbanBoard() {
         </div>
       )}
 
-      {/* Board */}
+      {/* Main Content */}
       {projects.length > 0 && (
-        <main className="max-w-full mx-auto px-6 py-6">
-          <div className="flex gap-6 overflow-x-auto pb-6">
-            {COLUMNS.map((column) => (
-              <Column
-                key={column.id}
-                column={column}
-                tasks={getTasksByStatus(column.id)}
-                projects={projects}
-                onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                showProject={selectedProjectId === 'all'}
-                allTasks={tasks}
-              />
-            ))}
-          </div>
-        </main>
+        <>
+          {currentView === 'myday' ? (
+            <MyDayDashboard
+              tasks={tasks}
+              projects={projects}
+              onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+              onDragStart={handleDragStart}
+              allTasks={tasks}
+              onQuickStatusChange={handleUpdateTaskStatus}
+            />
+          ) : (
+            <main className="max-w-full mx-auto px-6 py-6">
+              <div className="flex gap-6 overflow-x-auto pb-6">
+                {COLUMNS.map((column) => (
+                  <Column
+                    key={column.id}
+                    column={column}
+                    tasks={getTasksByStatus(column.id)}
+                    projects={projects}
+                    onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    showProject={selectedProjectId === 'all'}
+                    allTasks={tasks}
+                  />
+                ))}
+              </div>
+            </main>
+          )}
+        </>
       )}
 
       {/* Modals */}
@@ -2530,222 +2585,14 @@ export default function KanbanBoard() {
         loading={saving}
       />
       
-      {/* Meeting Notes Import Modal */}
-      <Modal 
-        isOpen={meetingNotesModalOpen} 
-        onClose={() => setMeetingNotesModalOpen(false)} 
-        title="Import Meeting Notes"
-        wide
-      >
-        {!showExtractedTasks ? (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500">
-              Paste your meeting notes below. We'll extract action items and create tasks automatically.
-            </p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Title</label>
-                <input
-                  type="text"
-                  value={meetingNotesData.title}
-                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, title: e.target.value })}
-                  placeholder="e.g., Weekly Team Sync"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Date</label>
-                <input
-                  type="date"
-                  value={meetingNotesData.date}
-                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-              <select
-                value={meetingNotesData.projectId}
-                onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Notes</label>
-              <textarea
-                value={meetingNotesData.notes}
-                onChange={(e) => setMeetingNotesData({ ...meetingNotesData, notes: e.target.value })}
-                placeholder="Paste your meeting notes here...
-
-Best format - Follow-Up table:
-| Follow-Up | Owner | Due Date | Status |
-| Review proposal | Sarah | 30/12 | Open |
-| Send update email | John | Friday | Open |
-
-Or we can extract from:
-• Action items like 'John to send report by Friday'
-• TODO: Review the proposal
-• @Sarah: Update the timeline"
-                rows={12}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-sm"
-              />
-            </div>
-            
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-gray-400">
-                Tip: Follow-Up tables are extracted first, then we scan for action items
-              </p>
-              <button
-                onClick={handleExtractTasks}
-                disabled={!meetingNotesData.notes.trim() || isExtracting}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isExtracting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Extracting...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Extract Tasks
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-800">
-                  Found {extractedTasks.length} potential task{extractedTasks.length !== 1 ? 's' : ''}
-                </h3>
-                <p className="text-sm text-gray-500">Review and edit before creating</p>
-              </div>
-              <button
-                onClick={() => setShowExtractedTasks(false)}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-              >
-                ← Back to Notes
-              </button>
-            </div>
-            
-            {extractedTasks.length === 0 ? (
-              <div className="text-center py-8">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-gray-500">No action items found in your notes.</p>
-                <p className="text-sm text-gray-400 mt-1">Try adding bullet points or phrases like "Action:", "TODO:", or "@name"</p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {extractedTasks.map((task) => (
-                  <div 
-                    key={task.id}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      task.selected 
-                        ? 'border-indigo-200 bg-indigo-50/50' 
-                        : 'border-gray-100 bg-gray-50 opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={task.selected}
-                        onChange={(e) => updateExtractedTask(task.id, 'selected', e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <input
-                          type="text"
-                          value={task.title}
-                          onChange={(e) => updateExtractedTask(task.id, 'title', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
-                        />
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Assignee:</span>
-                            <input
-                              type="text"
-                              value={task.assignee || ''}
-                              onChange={(e) => updateExtractedTask(task.id, 'assignee', e.target.value)}
-                              placeholder="Unassigned"
-                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs w-28 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Due:</span>
-                            <input
-                              type="date"
-                              value={task.dueDate || ''}
-                              onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
-                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                          </div>
-                          <label className="flex items-center gap-1 text-xs">
-                            <input
-                              type="checkbox"
-                              checked={task.critical}
-                              onChange={(e) => updateExtractedTask(task.id, 'critical', e.target.checked)}
-                              className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                            />
-                            <span className="text-red-600">Critical</span>
-                          </label>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removeExtractedTask(task.id)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <p className="text-sm text-gray-500">
-                {extractedTasks.filter(t => t.selected).length} task{extractedTasks.filter(t => t.selected).length !== 1 ? 's' : ''} selected
-              </p>
-              <button
-                onClick={handleCreateExtractedTasks}
-                disabled={extractedTasks.filter(t => t.selected).length === 0 || saving}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Create {extractedTasks.filter(t => t.selected).length} Task{extractedTasks.filter(t => t.selected).length !== 1 ? 's' : ''}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <SearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        tasks={tasks}
+        projects={projects}
+        onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+        allTasks={tasks}
+      />
     </div>
   )
 }
