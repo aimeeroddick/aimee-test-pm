@@ -1515,7 +1515,7 @@ export default function KanbanBoard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Aimee Test PM
+                  Trackli
                 </h1>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
@@ -1712,7 +1712,7 @@ export default function KanbanBoard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Aimee Test PM!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Trackli!</h2>
           <p className="text-gray-500 mb-6">Get started by creating your first project.</p>
           <button
             onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}

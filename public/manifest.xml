@@ -10,10 +10,10 @@
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
   
   <Version>1.0.0.0</Version>
-  <ProviderName>Aimee Test PM</ProviderName>
+  <ProviderName>Trackli</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Aimee Test PM"/>
-  <Description DefaultValue="Create tasks from emails in Aimee Test PM"/>
+  <DisplayName DefaultValue="Trackli"/>
+  <Description DefaultValue="Create tasks from emails in Trackli"/>
   
   <IconUrl DefaultValue="https://aimee-test-pm.vercel.app/icon-64.png"/>
   <HighResolutionIconUrl DefaultValue="https://aimee-test-pm.vercel.app/icon-128.png"/>
@@ -92,7 +92,7 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://aimee-test-pm.vercel.app/outlook-addin"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Aimee Test PM"/>
+        <bt:String id="GroupLabel" DefaultValue="Trackli"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="Create Task"/>
       </bt:ShortStrings>
       <bt:LongStrings>

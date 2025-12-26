@@ -270,9 +270,10 @@ export default function OutlookAddin() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-800">Aimee Test PM</h1>
-            <p className="text-sm text-gray-500">Sign in to create tasks</p>
+            <h1 className="text-xl font-bold text-gray-800">Trackli</h1>
+            <p className="text-sm text-gray-500">Track. Manage. Deliver.</p>
           </div>
+          <p className="text-sm text-gray-500 mb-4">Sign in to create tasks</p>
 
           <div className="bg-white rounded-2xl shadow-lg p-6">
             {error && (

@@ -78,9 +78,9 @@ export default function Login() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Aimee Test PM
+            Trackli
           </h1>
-          <p className="text-gray-500 mt-2">Your lightweight PM cockpit</p>
+          <p className="text-gray-500 mt-2">Track. Manage. Deliver.</p>
         </div>
 
         {/* Form Card */}
