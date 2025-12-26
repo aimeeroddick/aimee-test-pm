@@ -119,6 +119,139 @@ const formatTimeEstimate = (minutes) => {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
+// Toast Component for undo actions
+const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, duration)
+    return () => clearTimeout(timer)
+  }, [onClose, duration])
+  
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
+      <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl shadow-lg">
+        <span className="text-sm font-medium">{message}</span>
+        {action && (
+          <button
+            onClick={() => { action(); onClose(); }}
+            className="px-3 py-1 text-sm font-semibold bg-white/20 dark:bg-gray-900/20 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded-lg transition-colors"
+          >
+            {actionLabel || 'Undo'}
+          </button>
+        )}
+        <button onClick={onClose} className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Loading Skeleton Components
+const SkeletonCard = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 animate-pulse">
+    <div className="flex items-center gap-2 mb-3">
+      <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full" />
+      <div className="h-5 w-12 bg-gray-200 dark:bg-gray-700 rounded-full" />
+    </div>
+    <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+    <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
+    <div className="flex items-center gap-2">
+      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+    </div>
+  </div>
+)
+
+const SkeletonColumn = () => (
+  <div className="flex-1 min-w-[300px] max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600" />
+      <div className="h-5 w-24 bg-gray-300 dark:bg-gray-600 rounded" />
+      <div className="ml-auto h-6 w-8 bg-gray-200 dark:bg-gray-700 rounded-full" />
+    </div>
+    <div className="space-y-3">
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+    </div>
+  </div>
+)
+
+// Keyboard Shortcuts Modal
+const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null
+  
+  const shortcuts = [
+    { keys: ['⌘/Ctrl', 'N'], description: 'New task' },
+    { keys: ['⌘/Ctrl', 'P'], description: 'New project' },
+    { keys: ['⌘/Ctrl', 'S'], description: 'Search tasks' },
+    { keys: ['/'], description: 'Quick search' },
+    { keys: ['⌘/Ctrl', 'D'], description: 'My Day view' },
+    { keys: ['⌘/Ctrl', 'B'], description: 'Board view' },
+    { keys: ['⌘/Ctrl', 'L'], description: 'Calendar view' },
+    { keys: ['⌘/Ctrl', 'M'], description: 'Meeting notes' },
+    { keys: ['Esc'], description: 'Close modal' },
+    { keys: ['?'], description: 'Show this help' },
+  ]
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl mx-4 w-full max-w-md overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Keyboard Shortcuts</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+          {shortcuts.map((shortcut, idx) => (
+            <div key={idx} className="flex items-center justify-between">
+              <span className="text-gray-600 dark:text-gray-400">{shortcut.description}</span>
+              <div className="flex items-center gap-1">
+                {shortcut.keys.map((key, keyIdx) => (
+                  <span key={keyIdx}>
+                    <kbd className="px-2 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700">
+                      {key}
+                    </kbd>
+                    {keyIdx < shortcut.keys.length - 1 && <span className="text-gray-400 mx-1">+</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Press <kbd className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">?</kbd> anytime to see shortcuts</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Empty State Component
+const EmptyState = ({ icon, title, description, action, actionLabel }) => (
+  <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center mb-6">
+      {icon}
+    </div>
+    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+    <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm">{description}</p>
+    {action && (
+      <button
+        onClick={action}
+        className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-500/25"
+      >
+        {actionLabel}
+      </button>
+    )}
+  </div>
+)
+
 // Modal Component
 const Modal = ({ isOpen, onClose, title, children, wide }) => {
   if (!isOpen) return null
@@ -1100,7 +1233,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect }) => {
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   const category = CATEGORIES.find(c => c.id === task.category)
@@ -1114,9 +1247,11 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
     <div
       draggable
       onDragStart={(e) => onDragStart(e, task)}
-      onClick={() => onEdit(task)}
+      onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
       className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group ${
-        blocked
+        isSelected
+          ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600'
+          : blocked
           ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300 ring-1 ring-orange-100 dark:ring-orange-900 opacity-75'
           : task.critical 
           ? 'border-red-200 dark:border-red-800 hover:border-red-300 ring-1 ring-red-100 dark:ring-red-900' 
@@ -1126,9 +1261,27 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '4px', borderLeftColor: blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status]) }}
     >
-      {/* Quick Complete Checkbox */}
+      {/* Quick Complete Checkbox or Bulk Select */}
       <div className="flex items-start gap-3">
-        {onQuickComplete && (
+        {bulkSelectMode ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleSelect?.(task.id)
+            }}
+            className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+              isSelected
+                ? 'bg-indigo-500 border-indigo-500 text-white'
+                : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+            }`}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        ) : onQuickComplete && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -2211,7 +2364,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
 }
 
 // Project Modal Component
-const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, loading }) => {
+const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading }) => {
   const [formData, setFormData] = useState({ name: '', members: [], customers: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
@@ -2333,16 +2486,31 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, loading }) =
         
         <div className="flex gap-3 pt-4">
           {project && (
-            <button
-              type="button"
-              onClick={() => { onDelete(project.id); onClose() }}
-              disabled={loading}
-              className="px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50"
-            >
-              Delete
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Delete this project and all its tasks? This cannot be undone.')) {
+                    onDelete(project.id)
+                    onClose()
+                  }
+                }}
+                disabled={loading}
+                className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => { onArchive(project.id); onClose() }}
+                disabled={loading}
+                className="px-4 py-2.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors disabled:opacity-50"
+              >
+                {project.archived ? 'Unarchive' : 'Archive'}
+              </button>
+            </>
           )}
-          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
             Cancel
           </button>
           <button
@@ -2366,6 +2534,7 @@ export default function KanbanBoard() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [undoToast, setUndoToast] = useState(null) // { taskId, previousStatus, message }
   
   // View state
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', or 'calendar'
@@ -2378,6 +2547,7 @@ export default function KanbanBoard() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
+  const [showArchivedProjects, setShowArchivedProjects] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
@@ -2401,6 +2571,19 @@ export default function KanbanBoard() {
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExtractedTasks, setShowExtractedTasks] = useState(false)
+  
+  // Toast for undo actions
+  const [toast, setToast] = useState(null)
+  
+  // Keyboard shortcuts modal
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
+  
+  // Bulk selection
+  const [bulkSelectMode, setBulkSelectMode] = useState(false)
+  const [selectedTaskIds, setSelectedTaskIds] = useState(new Set())
+  
+  // Archive filter
+  const [showArchived, setShowArchived] = useState(false)
 
   // Dark mode effect
   useEffect(() => {
@@ -2485,6 +2668,20 @@ export default function KanbanBoard() {
       if (modifier && e.key === 'l') {
         e.preventDefault()
         setCurrentView('calendar')
+        return
+      }
+      
+      // ? for keyboard shortcuts help
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault()
+        setShortcutsModalOpen(true)
+        return
+      }
+      
+      // Escape to exit bulk select mode
+      if (e.key === 'Escape' && bulkSelectMode) {
+        setBulkSelectMode(false)
+        setSelectedTaskIds(new Set())
         return
       }
     }
@@ -3068,8 +3265,6 @@ export default function KanbanBoard() {
   }
 
   const handleDeleteProject = async (projectId) => {
-    if (!confirm('Delete this project and all its tasks?')) return
-    
     setSaving(true)
     try {
       const { error } = await supabase.from('projects').delete().eq('id', projectId)
@@ -3083,6 +3278,107 @@ export default function KanbanBoard() {
     } finally {
       setSaving(false)
     }
+  }
+  
+  const handleArchiveProject = async (projectId) => {
+    const project = projects.find(p => p.id === projectId)
+    const action = project?.archived ? 'unarchive' : 'archive'
+    
+    setSaving(true)
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ archived: !project?.archived })
+        .eq('id', projectId)
+      
+      if (error) throw error
+      
+      setProjects(projects.map(p => p.id === projectId ? { ...p, archived: !p.archived } : p))
+      // Show feedback via undo toast pattern
+      setUndoToast({
+        taskId: null,
+        previousStatus: null,
+        taskTitle: `Project ${action}d`,
+      })
+      setTimeout(() => setUndoToast(null), 3000)
+    } catch (err) {
+      console.error(`Error ${action}ing project:`, err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  // Bulk actions
+  const handleBulkStatusChange = async (newStatus) => {
+    if (selectedTaskIds.size === 0) return
+    
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .in('id', ids)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, status: newStatus } : t))
+      setToast({ message: `${ids.length} tasks moved to ${newStatus.replace('_', ' ')}` })
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk updating tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  const handleBulkDelete = async () => {
+    if (selectedTaskIds.size === 0) return
+    if (!confirm(`Delete ${selectedTaskIds.size} selected tasks?`)) return
+    
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', ids)
+      
+      if (error) throw error
+      
+      setTasks(tasks.filter(t => !selectedTaskIds.has(t.id)))
+      setToast({ message: `${ids.length} tasks deleted` })
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk deleting tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  const toggleTaskSelection = (taskId) => {
+    setSelectedTaskIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId)
+      } else {
+        newSet.add(taskId)
+      }
+      return newSet
+    })
+  }
+  
+  const selectAllTasks = () => {
+    setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)))
+  }
+  
+  const deselectAllTasks = () => {
+    setSelectedTaskIds(new Set())
   }
 
   // Task CRUD
@@ -3273,13 +3569,38 @@ export default function KanbanBoard() {
       
       if (error) throw error
       
+      const previousStatus = task?.status
+      
       if (newStatus === 'done' && task?.recurrence_type) {
         await fetchData()
       } else {
         setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
       }
+      
+      // Show undo toast
+      if (newStatus === 'done') {
+        setUndoToast({
+          taskId,
+          previousStatus,
+          taskTitle: task?.title,
+        })
+        // Auto-hide after 5 seconds
+        setTimeout(() => setUndoToast(null), 5000)
+      }
     } catch (err) {
       console.error('Error updating task status:', err)
+      setError(err.message)
+    }
+  }
+
+  const handleUndo = async () => {
+    if (!undoToast) return
+    try {
+      await supabase.from('tasks').update({ status: undoToast.previousStatus }).eq('id', undoToast.taskId)
+      setTasks(prev => prev.map(t => t.id === undoToast.taskId ? { ...t, status: undoToast.previousStatus } : t))
+      setUndoToast(null)
+    } catch (err) {
+      console.error('Error undoing:', err)
       setError(err.message)
     }
   }
@@ -3346,11 +3667,35 @@ export default function KanbanBoard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading your projects...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+        {/* Skeleton Header */}
+        <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
+          <div className="max-w-full mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" />
+                <div>
+                  <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </header>
+        
+        {/* Skeleton Board */}
+        <main className="max-w-full mx-auto px-6 py-6">
+          <div className="flex gap-6 overflow-x-auto pb-6">
+            <SkeletonColumn />
+            <SkeletonColumn />
+            <SkeletonColumn />
+            <SkeletonColumn />
+          </div>
+        </main>
       </div>
     )
   }
@@ -3374,6 +3719,30 @@ export default function KanbanBoard() {
               </svg>
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Undo Toast */}
+      {undoToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl px-4 py-3 shadow-lg flex items-center gap-4 animate-in slide-in-from-bottom-5">
+          <svg className="w-5 h-5 text-emerald-400 dark:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm font-medium">"{undoToast.taskTitle}" marked as done</span>
+          <button
+            onClick={handleUndo}
+            className="px-3 py-1 bg-white/20 dark:bg-gray-900/20 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded-lg text-sm font-semibold transition-colors"
+          >
+            Undo
+          </button>
+          <button
+            onClick={() => setUndoToast(null)}
+            className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -3465,23 +3834,63 @@ export default function KanbanBoard() {
                 )}
               </button>
               
+              {/* Keyboard Shortcuts */}
+              <button
+                onClick={() => setShortcutsModalOpen(true)}
+                className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
+                title="Keyboard shortcuts (?)"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              
+              {/* Bulk Select Toggle */}
+              {currentView === 'board' && (
+                <button
+                  onClick={() => { setBulkSelectMode(!bulkSelectMode); setSelectedTaskIds(new Set()) }}
+                  className={`p-2 border rounded-xl transition-all ${
+                    bulkSelectMode
+                      ? 'bg-indigo-500 border-indigo-500 text-white'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                  title="Bulk select tasks"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </button>
+              )}
+              
               {currentView === 'board' && (
                 <>
                   <select
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   >
                     <option value="all">All Projects</option>
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
+                    {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                      <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
                     ))}
                   </select>
+                  
+                  <button
+                    onClick={() => setShowArchivedProjects(!showArchivedProjects)}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      showArchivedProjects 
+                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800' 
+                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
+                    }`}
+                    title={showArchivedProjects ? 'Hide archived projects' : 'Show archived projects'}
+                  >
+                    📦 {showArchivedProjects ? 'Hide' : 'Show'} archived
+                  </button>
                   
                   <select
                     value={filterCustomer}
                     onChange={(e) => setFilterCustomer(e.target.value)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   >
                     <option value="all">All Customers</option>
                     {allCustomers.map((c) => (
@@ -3666,6 +4075,60 @@ export default function KanbanBoard() {
       {/* Main Content */}
       {projects.length > 0 && (
         <>
+          {/* Bulk Action Toolbar */}
+          {bulkSelectMode && (
+            <div className="sticky top-[73px] z-30 bg-indigo-600 dark:bg-indigo-700 border-b border-indigo-500">
+              <div className="max-w-full mx-auto px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => { setBulkSelectMode(false); setSelectedTaskIds(new Set()) }}
+                      className="p-1.5 hover:bg-indigo-500 rounded-lg transition-colors text-white"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <span className="text-white font-medium">
+                      {selectedTaskIds.size} task{selectedTaskIds.size !== 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                      onClick={selectAllTasks}
+                      className="text-sm text-indigo-200 hover:text-white transition-colors"
+                    >
+                      Select all
+                    </button>
+                    <button
+                      onClick={deselectAllTasks}
+                      className="text-sm text-indigo-200 hover:text-white transition-colors"
+                    >
+                      Deselect all
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      onChange={(e) => e.target.value && handleBulkStatusChange(e.target.value)}
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Move to...</option>
+                      <option value="backlog">Backlog</option>
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="done">Done</option>
+                    </select>
+                    <button
+                      onClick={handleBulkDelete}
+                      className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {currentView === 'myday' && (
             <MyDayDashboard
               tasks={tasks}
@@ -3728,6 +4191,7 @@ export default function KanbanBoard() {
         project={editingProject}
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
+        onArchive={handleArchiveProject}
         loading={saving}
       />
       
@@ -3956,6 +4420,22 @@ Or we can extract from:
           </div>
         )}
       </Modal>
+      
+      {/* Toast for undo actions */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          action={toast.action}
+          actionLabel={toast.actionLabel}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={shortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
+      />
     </div>
   )
 }
