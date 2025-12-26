@@ -15,9 +15,9 @@
   <DisplayName DefaultValue="Trackli"/>
   <Description DefaultValue="Create tasks from emails in Trackli"/>
   
-  <IconUrl DefaultValue="https://aimee-test-pm.vercel.app/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://aimee-test-pm.vercel.app/icon-128.png"/>
-  <SupportUrl DefaultValue="https://aimee-test-pm.vercel.app"/>
+  <IconUrl DefaultValue="https://trackli.vercel.app/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://trackli.vercel.app/icon-128.png"/>
+  <SupportUrl DefaultValue="https://trackli.vercel.app"/>
   
   <Hosts>
     <Host Name="Mailbox"/>
@@ -32,7 +32,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://aimee-test-pm.vercel.app/outlook-addin"/>
+        <SourceLocation DefaultValue="https://trackli.vercel.app/outlook-addin"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -84,12 +84,12 @@
     
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://aimee-test-pm.vercel.app/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://aimee-test-pm.vercel.app/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://aimee-test-pm.vercel.app/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://trackli.vercel.app/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://trackli.vercel.app/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://trackli.vercel.app/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://aimee-test-pm.vercel.app/outlook-addin"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://trackli.vercel.app/outlook-addin"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Trackli"/>
