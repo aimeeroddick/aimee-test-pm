@@ -257,14 +257,14 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
   if (!isOpen) return null
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}`}>
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 rounded-t-2xl z-10">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
+      <div className={`relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:mx-4 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 rounded-t-2xl z-10">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-400"
@@ -274,7 +274,7 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
             </svg>
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </div>
   )
@@ -1248,7 +1248,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group ${
+      className={`bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group active:scale-[0.98] ${
         isSelected
           ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600'
           : blocked
@@ -1479,7 +1479,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`flex-1 min-w-[300px] max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-4 transition-all ${
+      className={`flex-shrink-0 w-[280px] sm:w-[320px] md:flex-1 md:min-w-[300px] md:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
       }`}
       onDragOver={(e) => {
@@ -3890,7 +3890,7 @@ export default function KanbanBoard() {
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
         {/* Main Header Row */}
-        <div className="max-w-full mx-auto px-6 py-3">
+        <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
@@ -3905,46 +3905,93 @@ export default function KanbanBoard() {
                   </svg>
                 </button>
                 
-                {/* Nav Dropdown Menu */}
+                {/* Nav Dropdown Menu - Slide in drawer on mobile */}
                 {navMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setNavMenuOpen(false)} />
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="fixed inset-0 z-40 bg-black/20 sm:bg-transparent" onClick={() => setNavMenuOpen(false)} />
+                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-64 sm:w-56 sm:mt-2 bg-white dark:bg-gray-800 sm:rounded-xl shadow-xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-50 transform transition-transform">
+                      {/* Mobile header */}
+                      <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                        <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
+                        <button
+                          onClick={() => setNavMenuOpen(false)}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                        >
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
                       <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Views</div>
                       <button
                         onClick={() => { setCurrentView('myday'); setNavMenuOpen(false) }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${currentView === 'myday' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'myday' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         <span className="text-lg">☀️</span>
                         <span className="font-medium">My Day</span>
-                        <span className="ml-auto text-xs text-gray-400">⌘D</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘D</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('board'); setNavMenuOpen(false) }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${currentView === 'board' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'board' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         <span className="text-lg">📋</span>
                         <span className="font-medium">Board</span>
-                        <span className="ml-auto text-xs text-gray-400">⌘B</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘B</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('calendar'); setNavMenuOpen(false) }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${currentView === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         <span className="text-lg">📆</span>
                         <span className="font-medium">Calendar</span>
-                        <span className="ml-auto text-xs text-gray-400">⌘L</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘L</span>
                       </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
                       <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Manage</div>
                       <button
                         onClick={() => { setCurrentView('projects'); setNavMenuOpen(false) }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${currentView === 'projects' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'projects' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         <span className="text-lg">📁</span>
                         <span className="font-medium">Projects</span>
                       </button>
+                      
+                      {/* Mobile-only options */}
+                      <div className="sm:hidden">
+                        <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Settings</div>
+                        <button
+                          onClick={() => { setDarkMode(!darkMode) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <span className="text-lg">{darkMode ? '☀️' : '🌙'}</span>
+                          <span className="font-medium">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+                            setExtractedTasks([])
+                            setShowExtractedTasks(false)
+                            setMeetingNotesModalOpen(true)
+                            setNavMenuOpen(false)
+                          }}
+                          disabled={projects.length === 0}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        >
+                          <span className="text-lg">📝</span>
+                          <span className="font-medium">Import Notes</span>
+                        </button>
+                        <button
+                          onClick={() => { signOut(); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <span className="text-lg">🚪</span>
+                          <span className="font-medium">Sign Out</span>
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -3958,22 +4005,22 @@ export default function KanbanBoard() {
             
             {/* Center: Logo */}
             <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="hidden xs:block text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Trackli
               </h1>
             </div>
             
             {/* Right: Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {/* Utility buttons - icon only */}
               <button
                 onClick={() => setSearchModalOpen(true)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Search (⌘S or /)"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3983,7 +4030,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? (
@@ -3999,7 +4046,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setShortcutsModalOpen(true)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Keyboard shortcuts (?)"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4019,12 +4066,12 @@ export default function KanbanBoard() {
                 </button>
               )}
               
-              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+              <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
               
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="px-3 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-1.5"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-1.5"
                 title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4036,7 +4083,7 @@ export default function KanbanBoard() {
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
                 title="⌘T"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4053,7 +4100,7 @@ export default function KanbanBoard() {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
+                className="hidden sm:flex px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium items-center gap-1.5 disabled:opacity-50"
                 title="⌘N"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4064,7 +4111,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={signOut}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Sign Out"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4077,21 +4124,21 @@ export default function KanbanBoard() {
         
         {/* Filter Bar - only on board view */}
         {currentView === 'board' && (
-          <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-2">
-            <div className="flex items-center gap-3 flex-wrap">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 overflow-x-auto">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
               {/* Project dropdown */}
               <div className="flex items-center gap-2">
                 <select
                   value={selectedProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="px-2 sm:px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="all">All Projects</option>
                   {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
                     <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
                   ))}
                 </select>
-                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+                <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={showArchivedProjects}
@@ -4108,7 +4155,7 @@ export default function KanbanBoard() {
               {activeFilters.map(filter => (
                 <span 
                   key={filter.type}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm"
+                  className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm whitespace-nowrap"
                 >
                   <span className="text-indigo-500 dark:text-indigo-400 text-xs">{filterTypeLabels[filter.type]}:</span>
                   <span className="font-medium">{filter.value === 'critical' ? '🚩 Critical' : filter.value === 'regular' ? 'Regular' : filter.value}</span>
@@ -4164,28 +4211,28 @@ export default function KanbanBoard() {
 
       {/* Stats Bar - only show on board view */}
       {currentView === 'board' && (
-        <div className="bg-white/60 border-b border-gray-100 px-6 py-3">
-          <div className="max-w-full mx-auto flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500">Active:</span>
-              <span className="font-semibold text-gray-800">{filteredTasks.filter(t => t.status !== 'done').length} tasks</span>
+        <div className="bg-white/60 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 sm:py-3 overflow-x-auto">
+          <div className="max-w-full mx-auto flex items-center gap-3 sm:gap-6 text-sm min-w-max">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className="text-gray-500 dark:text-gray-400">Active:</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-200">{filteredTasks.filter(t => t.status !== 'done').length}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500">Total time:</span>
-              <span className="font-semibold text-gray-800">{formatTimeEstimate(totalEstimatedTime) || '0h'}</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span className="text-gray-500 dark:text-gray-400">Time:</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-200">{formatTimeEstimate(totalEstimatedTime) || '0h'}</span>
             </div>
             
             {readyToStartCount > 0 && (
               <button
                 onClick={() => setFilterReadyToStart(!filterReadyToStart)}
-                className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-all ${
-                  filterReadyToStart ? 'bg-green-500 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg transition-all whitespace-nowrap ${
+                  filterReadyToStart ? 'bg-green-500 text-white' : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="font-medium">{readyToStartCount} ready in backlog</span>
+                <span className="font-medium">{readyToStartCount} ready</span>
                 {filterReadyToStart && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -4195,8 +4242,8 @@ export default function KanbanBoard() {
             )}
             
             {criticalCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-                <span className="text-red-600 font-medium">🚩 {criticalCount} critical</span>
+              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-red-50 dark:bg-red-900/30 rounded-lg whitespace-nowrap">
+                <span className="text-red-600 dark:text-red-400 font-medium">🚩 {criticalCount} critical</span>
               </div>
             )}
             {dueTodayCount > 0 && (
@@ -4503,8 +4550,8 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'board' && (
-            <main className="max-w-full mx-auto px-6 py-6">
-              <div className="flex gap-6 overflow-x-auto pb-6">
+            <main className="max-w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+              <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 sm:pb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
                 {COLUMNS.map((column) => (
                   <Column
                     key={column.id}
