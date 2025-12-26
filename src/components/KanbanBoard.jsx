@@ -1100,14 +1100,15 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [] }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete }) => {
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   const category = CATEGORIES.find(c => c.id === task.category)
   const source = SOURCES.find(s => s.id === task.source)
   const readyToStart = isReadyToStart(task)
   const blocked = isBlocked(task, allTasks)
-  const recurrence = RECURRENCE_TYPES.find(r => r.id === task.recurrence_type)
+  const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
+  const isDone = task.status === 'done'
   
   return (
     <div
@@ -1125,6 +1126,29 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '4px', borderLeftColor: blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status]) }}
     >
+      {/* Quick Complete Checkbox */}
+      <div className="flex items-start gap-3">
+        {onQuickComplete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuickComplete(task.id, isDone ? 'todo' : 'done')
+            }}
+            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+              isDone
+                ? 'bg-emerald-500 border-emerald-500 text-white'
+                : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+            }`}
+            title={isDone ? 'Mark as not done' : 'Mark as done'}
+          >
+            {isDone && (
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        )}
+        <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         {blocked && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
@@ -1275,16 +1299,18 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       </div>
       
       {showProject && project && (
-        <div className="mt-3 pt-3 border-t border-gray-50">
+        <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
           <span className="text-xs text-gray-400">{project.name}</span>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -1338,6 +1364,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onDragStart={onDragStart}
             showProject={showProject}
             allTasks={allTasks}
+            onQuickComplete={onQuickComplete}
           />
         ))}
         
@@ -3674,6 +3701,7 @@ export default function KanbanBoard() {
                     onDrop={handleDrop}
                     showProject={selectedProjectId === 'all'}
                     allTasks={tasks}
+                    onQuickComplete={handleUpdateTaskStatus}
                   />
                 ))}
               </div>
