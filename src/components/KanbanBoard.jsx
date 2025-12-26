@@ -2674,13 +2674,6 @@ export default function KanbanBoard() {
         return
       }
       
-      // Cmd/Ctrl/Alt + P for Projects view
-      if (modifier && e.key === 'p') {
-        e.preventDefault()
-        setCurrentView('projects')
-        return
-      }
-      
       // ? for keyboard shortcuts help
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
@@ -3962,7 +3955,6 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📁</span>
                         <span className="font-medium">Projects</span>
-                        <span className="ml-auto text-xs text-gray-400">⌘P</span>
                       </button>
                     </div>
                   </>
@@ -4114,6 +4106,17 @@ export default function KanbanBoard() {
                   </div>
                 </>
               )}
+              
+              <button
+                onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
+                className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-2"
+                title="⌘/Ctrl+P"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>New <span className="underline">P</span>roject</span>
+              </button>
               
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
