@@ -1233,7 +1233,8 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange }) => {
+  const [showStatusPicker, setShowStatusPicker] = useState(false)
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   const category = CATEGORIES.find(c => c.id === task.category)
@@ -1400,7 +1401,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           </span>
         )}
         {task.attachments?.length > 0 && (
-          <span className="text-gray-400 flex items-center gap-1">
+          <span className="text-gray-400 dark:text-gray-500 flex items-center gap-1">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
@@ -1408,6 +1409,27 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           </span>
         )}
       </div>
+      
+      {/* Image thumbnails */}
+      {task.attachments?.filter(a => a.file_type?.startsWith('image/')).length > 0 && (
+        <div className="mt-2 flex gap-1.5 overflow-x-auto">
+          {task.attachments.filter(a => a.file_type?.startsWith('image/')).slice(0, 3).map((att, i) => (
+            <div key={att.id || i} className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+              <img 
+                src={att.file_url} 
+                alt="" 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))}
+          {task.attachments.filter(a => a.file_type?.startsWith('image/')).length > 3 && (
+            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 font-medium">
+              +{task.attachments.filter(a => a.file_type?.startsWith('image/')).length - 3}
+            </div>
+          )}
+        </div>
+      )}
       
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-2">
@@ -1456,6 +1478,49 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           <span className="text-xs text-gray-400">{project.name}</span>
         </div>
       )}
+      
+      {/* Mobile Status Picker - only show on touch devices */}
+      {onStatusChange && (
+        <div className="sm:hidden mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+          {showStatusPicker ? (
+            <div className="flex gap-1">
+              {COLUMNS.map(col => (
+                <button
+                  key={col.id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (col.id !== task.status) {
+                      onStatusChange(task.id, col.id)
+                    }
+                    setShowStatusPicker(false)
+                  }}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    col.id === task.status
+                      ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 active:bg-gray-200'
+                  }`}
+                  style={col.id === task.status ? { backgroundColor: col.color + '30', color: col.color } : {}}
+                >
+                  {col.id === 'backlog' ? '📥' : col.id === 'todo' ? '📋' : col.id === 'in_progress' ? '⏳' : '✅'}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowStatusPicker(true)
+              }}
+              className="w-full flex items-center justify-center gap-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Move to...
+            </button>
+          )}
+        </div>
+      )}
         </div>
       </div>
     </div>
@@ -1463,7 +1528,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -1518,6 +1583,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             showProject={showProject}
             allTasks={allTasks}
             onQuickComplete={onQuickComplete}
+            onStatusChange={onStatusChange}
           />
         ))}
         
@@ -2237,24 +2303,54 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Attachments</label>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments</label>
+              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 text-center hover:border-indigo-400 transition-colors">
                 <input
                   ref={fileInputRef}
                   type="file"
                   multiple
+                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
-                >
-                  {isUploading ? 'Uploading...' : 'Click to upload files'}
-                </button>
-                <p className="text-xs text-gray-400 mt-1">Max 10MB per file</p>
+                {/* Camera input for mobile */}
+                <input
+                  id="camera-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {/* Take Photo button - prominent on mobile */}
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('camera-input')?.click()}
+                    disabled={isUploading}
+                    className="sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white rounded-xl font-medium disabled:opacity-50 active:bg-indigo-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Take Photo
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-gray-100 dark:bg-gray-700 sm:bg-transparent text-gray-700 dark:text-gray-300 sm:text-indigo-600 dark:sm:text-indigo-400 rounded-xl sm:rounded-none font-medium disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-600 sm:hover:bg-transparent sm:hover:text-indigo-700"
+                  >
+                    <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {isUploading ? 'Uploading...' : 'Choose Files'}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Max 10MB per file • Paste images with ⌘V</p>
               </div>
               
               {uploadError && (
@@ -4565,6 +4661,7 @@ export default function KanbanBoard() {
                     showProject={selectedProjectId === 'all'}
                     allTasks={tasks}
                     onQuickComplete={handleUpdateTaskStatus}
+                    onStatusChange={handleUpdateTaskStatus}
                   />
                 ))}
               </div>
