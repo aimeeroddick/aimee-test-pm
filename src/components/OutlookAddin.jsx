@@ -19,6 +19,7 @@ export default function OutlookAddin() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
   const [officeReady, setOfficeReady] = useState(false)
+  const [officeLoaded, setOfficeLoaded] = useState(false)
   
   const [formData, setFormData] = useState({
     title: '',
@@ -35,10 +36,31 @@ export default function OutlookAddin() {
     sender: '',
   })
 
+  // Dynamically load Office.js
+  useEffect(() => {
+    const loadOfficeJs = () => {
+      // Check if already loaded
+      if (typeof Office !== 'undefined') {
+        setOfficeLoaded(true)
+        return
+      }
+      
+      const script = document.createElement('script')
+      script.src = 'https://appsforoffice.microsoft.com/lib/1/hosted/office.js'
+      script.onload = () => setOfficeLoaded(true)
+      script.onerror = () => setOfficeLoaded(true) // Continue anyway for standalone testing
+      document.head.appendChild(script)
+    }
+    
+    loadOfficeJs()
+  }, [])
+
   // Initialize Office.js and get email data
   useEffect(() => {
+    if (!officeLoaded) return
+    
     const initOffice = () => {
-      if (typeof Office !== 'undefined') {
+      if (typeof Office !== 'undefined' && Office.onReady) {
         Office.onReady((info) => {
           setOfficeReady(true)
           
@@ -84,7 +106,7 @@ export default function OutlookAddin() {
     }
     
     initOffice()
-  }, [])
+  }, [officeLoaded])
 
   // Check auth and load projects
   useEffect(() => {
