@@ -129,12 +129,12 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className={`relative bg-white rounded-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}`}>
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      <div className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl mx-4 max-h-[90vh] overflow-y-auto ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}`}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 rounded-t-2xl z-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-400"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1114,14 +1114,14 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onEdit(task)}
-      className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group ${
+      className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group ${
         blocked
-          ? 'border-orange-200 hover:border-orange-300 ring-1 ring-orange-100 opacity-75'
+          ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300 ring-1 ring-orange-100 dark:ring-orange-900 opacity-75'
           : task.critical 
-          ? 'border-red-200 hover:border-red-300 ring-1 ring-red-100' 
+          ? 'border-red-200 dark:border-red-800 hover:border-red-300 ring-1 ring-red-100 dark:ring-red-900' 
           : readyToStart
-          ? 'border-green-200 hover:border-green-300'
-          : 'border-gray-100 hover:border-gray-200'
+          ? 'border-green-200 dark:border-green-800 hover:border-green-300'
+          : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
       }`}
       style={{ borderLeftWidth: '4px', borderLeftColor: blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status]) }}
     >
@@ -1168,18 +1168,36 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         )}
       </div>
       
-      <h4 className="font-medium text-gray-800 group-hover:text-indigo-600 transition-colors mb-1">
+      <h4 className="font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">
         {task.title}
       </h4>
       
       {task.customer && (
-        <p className="text-sm text-purple-600 font-medium mb-2">
+        <p className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-2">
           {task.customer}
         </p>
       )}
       
       {task.description && (
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{task.description}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{task.description}</p>
+      )}
+      
+      {/* Subtasks Progress */}
+      {task.subtasks && task.subtasks.length > 0 && (
+        <div className="mb-3">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            <span>{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks</span>
+          </div>
+          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-indigo-500 transition-all duration-300"
+              style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }}
+            />
+          </div>
+        </div>
       )}
       
       <div className="flex items-center gap-3 mb-3 text-xs">
@@ -1282,8 +1300,8 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`flex-1 min-w-[300px] max-w-[380px] bg-gray-50/80 rounded-2xl p-4 transition-all ${
-        isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2' : ''
+      className={`flex-1 min-w-[300px] max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-4 transition-all ${
+        isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
       }`}
       onDragOver={(e) => {
         e.preventDefault()
@@ -1298,16 +1316,16 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
     >
       <div className="flex items-center gap-3 mb-1">
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
-        <h3 className="font-semibold text-gray-700">{column.title}</h3>
-        <span className="ml-auto bg-white px-2.5 py-0.5 rounded-full text-sm font-medium text-gray-500 shadow-sm">
+        <h3 className="font-semibold text-gray-700 dark:text-gray-200">{column.title}</h3>
+        <span className="ml-auto bg-white dark:bg-gray-700 px-2.5 py-0.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-300 shadow-sm">
           {tasks.length}
         </span>
       </div>
-      <div className="flex items-center gap-3 mb-4 ml-6 text-xs text-gray-400">
+      <div className="flex items-center gap-3 mb-4 ml-6 text-xs text-gray-400 dark:text-gray-500">
         <span>{column.subtitle}</span>
         {totalMinutes > 0 && <span>• {formatTimeEstimate(totalMinutes)}</span>}
         {criticalCount > 0 && <span className="text-red-500">• {criticalCount} critical</span>}
-        {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600">• {readyCount} ready</span>}
+        {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">• {readyCount} ready</span>}
       </div>
       
       <div className="space-y-3">
@@ -1377,6 +1395,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [useCustomCustomer, setUseCustomCustomer] = useState(false)
   const [customCustomer, setCustomCustomer] = useState('')
   const [pasteMessage, setPasteMessage] = useState('')
+  const [subtasks, setSubtasks] = useState([])
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   
   const handlePaste = async (e) => {
     const items = e.clipboardData?.items
@@ -1435,6 +1455,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setCustomAssignee(isCustomAssignee ? task.assignee : '')
       setUseCustomCustomer(isCustomCustomer)
       setCustomCustomer(isCustomCustomer ? task.customer : '')
+      setSubtasks(task.subtasks || [])
     } else {
       setFormData({
         title: '',
@@ -1460,10 +1481,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setCustomAssignee('')
       setUseCustomCustomer(false)
       setCustomCustomer('')
+      setSubtasks([])
     }
     setNewFiles([])
     setActiveTab('details')
     setUploadError('')
+    setNewSubtaskTitle('')
   }, [task, projects, isOpen])
   
   const selectedProject = projects.find((p) => p.id === formData.project_id)
@@ -1507,6 +1530,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       time_estimate: formData.time_estimate ? parseInt(formData.time_estimate) : null,
       id: task?.id,
       dependencies: selectedDependencies,
+      subtasks: subtasks,
     }, newFiles, attachments)
     onClose()
   }
@@ -1526,9 +1550,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide>
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1">
+        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           {[
             { id: 'details', label: 'Details' },
+            { id: 'subtasks', label: 'Subtasks' },
             { id: 'planning', label: 'Planning' },
             { id: 'recurring', label: 'Recurring & Deps' },
             { id: 'notes', label: 'Notes & Files' },
@@ -1538,7 +1563,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'
+                activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               {tab.label}
@@ -1560,25 +1585,25 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
               <input
                 type="text"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 placeholder="What needs to be done?"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 onPaste={handlePaste}
                 rows={3}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 placeholder="Add more context... (paste images here!)"
               />
               {pasteMessage && activeTab === 'details' && (
@@ -1720,6 +1745,123 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   >
                     ✕
                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'subtasks' && (
+          <div className="space-y-4">
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <h3 className="font-medium text-indigo-800 dark:text-indigo-200">Checklist</h3>
+              </div>
+              <p className="text-sm text-indigo-600 dark:text-indigo-300 mb-4">Break down this task into smaller steps</p>
+              
+              {/* Add subtask input */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSubtaskTitle.trim()) {
+                      e.preventDefault()
+                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false }])
+                      setNewSubtaskTitle('')
+                    }
+                  }}
+                  placeholder="Add a subtask..."
+                  className="flex-1 px-4 py-2.5 border border-indigo-200 dark:border-indigo-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newSubtaskTitle.trim()) {
+                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false }])
+                      setNewSubtaskTitle('')
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-medium"
+                >
+                  Add
+                </button>
+              </div>
+              
+              {/* Progress bar */}
+              {subtasks.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-sm text-indigo-700 dark:text-indigo-300 mb-2">
+                    <span>{subtasks.filter(s => s.completed).length} of {subtasks.length} completed</span>
+                    <span>{Math.round((subtasks.filter(s => s.completed).length / subtasks.length) * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-indigo-200 dark:bg-indigo-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-indigo-500 transition-all duration-300"
+                      style={{ width: `${(subtasks.filter(s => s.completed).length / subtasks.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Subtasks list */}
+              {subtasks.length === 0 ? (
+                <div className="text-center py-8 text-indigo-400 dark:text-indigo-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p>No subtasks yet. Add some to track progress!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {subtasks.map((subtask, index) => (
+                    <div 
+                      key={subtask.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                        subtask.completed 
+                          ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' 
+                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-700'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubtasks(subtasks.map(s => 
+                            s.id === subtask.id ? { ...s, completed: !s.completed } : s
+                          ))
+                        }}
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          subtask.completed 
+                            ? 'bg-green-500 border-green-500 text-white' 
+                            : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+                        }`}
+                      >
+                        {subtask.completed && (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className={`flex-1 ${
+                        subtask.completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200'
+                      }`}>
+                        {subtask.title}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSubtasks(subtasks.filter(s => s.id !== subtask.id))}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -2200,6 +2342,12 @@ export default function KanbanBoard() {
   
   // View state
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', or 'calendar'
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('trackli-dark-mode') === 'true'
+    }
+    return false
+  })
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
@@ -2226,6 +2374,16 @@ export default function KanbanBoard() {
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExtractedTasks, setShowExtractedTasks] = useState(false)
+
+  // Dark mode effect
+  useEffect(() => {
+    localStorage.setItem('trackli-dark-mode', darkMode)
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -2928,6 +3086,7 @@ export default function KanbanBoard() {
             customer: taskData.customer || null,
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
+            subtasks: taskData.subtasks || [],
           })
           .eq('id', taskId)
         
@@ -2972,6 +3131,7 @@ export default function KanbanBoard() {
             customer: taskData.customer || null,
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
+            subtasks: taskData.subtasks || [],
           })
           .select()
           .single()
@@ -3169,7 +3329,7 @@ export default function KanbanBoard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
       {/* Error Toast */}
       {error && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
@@ -3191,7 +3351,7 @@ export default function KanbanBoard() {
       )}
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
         <div className="max-w-full mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -3205,18 +3365,18 @@ export default function KanbanBoard() {
                   <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                     Trackli
                   </h1>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                 </div>
               </div>
               
               {/* View Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-xl p-1 ml-4">
+              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl p-1 ml-4">
                 <button
                   onClick={() => setCurrentView('myday')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'myday' 
-                      ? 'bg-white shadow-sm text-gray-800' 
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' 
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                   title="⌘/Ctrl+D"
                 >
@@ -3226,8 +3386,8 @@ export default function KanbanBoard() {
                   onClick={() => setCurrentView('board')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'board' 
-                      ? 'bg-white shadow-sm text-gray-800' 
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' 
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                   title="⌘/Ctrl+B"
                 >
@@ -3237,8 +3397,8 @@ export default function KanbanBoard() {
                   onClick={() => setCurrentView('calendar')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'calendar' 
-                      ? 'bg-white shadow-sm text-gray-800' 
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' 
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   }`}
                   title="⌘/Ctrl+L"
                 >
@@ -3251,14 +3411,31 @@ export default function KanbanBoard() {
               {/* Search Button */}
               <button
                 onClick={() => setSearchModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
                 title="⌘/Ctrl+S or /"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <span><span className="underline">S</span>earch</span>
-                <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-gray-100 rounded">/</kbd>
+                <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">/</kbd>
+              </button>
+              
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
+                title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {darkMode ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
               </button>
               
               {currentView === 'board' && (
