@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import KanbanBoard from './components/KanbanBoard'
+import OutlookAddin from './components/OutlookAddin'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -28,6 +29,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/outlook-addin" element={<OutlookAddin />} />
       <Route
         path="/"
         element={
