@@ -3324,7 +3324,8 @@ export default function KanbanBoard() {
       if (error) throw error
       
       setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, status: newStatus } : t))
-      setToast({ message: `${ids.length} tasks moved to ${newStatus.replace('_', ' ')}` })
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks moved to ${newStatus.replace('_', ' ')}` })
+      setTimeout(() => setUndoToast(null), 3000)
       setBulkSelectMode(false)
       setSelectedTaskIds(new Set())
     } catch (err) {
@@ -3350,11 +3351,96 @@ export default function KanbanBoard() {
       if (error) throw error
       
       setTasks(tasks.filter(t => !selectedTaskIds.has(t.id)))
-      setToast({ message: `${ids.length} tasks deleted` })
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks deleted` })
+      setTimeout(() => setUndoToast(null), 3000)
       setBulkSelectMode(false)
       setSelectedTaskIds(new Set())
     } catch (err) {
       console.error('Error bulk deleting tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBulkMoveToProject = async (projectId) => {
+    if (selectedTaskIds.size === 0 || !projectId) return
+    
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ project_id: projectId })
+        .in('id', ids)
+      
+      if (error) throw error
+      
+      const projectName = projects.find(p => p.id === projectId)?.name || 'project'
+      setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, project_id: projectId } : t))
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks moved to ${projectName}` })
+      setTimeout(() => setUndoToast(null), 3000)
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk moving tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBulkAssign = async (assignee) => {
+    if (selectedTaskIds.size === 0) return
+    
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ assignee: assignee || null })
+        .in('id', ids)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, assignee: assignee || null } : t))
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks assigned to ${assignee || 'nobody'}` })
+      setTimeout(() => setUndoToast(null), 3000)
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk assigning tasks:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBulkToggleCritical = async () => {
+    if (selectedTaskIds.size === 0) return
+    
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      // Check if majority are critical - if so, unmark all; otherwise mark all
+      const selectedTasks = tasks.filter(t => selectedTaskIds.has(t.id))
+      const majorityCritical = selectedTasks.filter(t => t.critical).length > selectedTasks.length / 2
+      const newCritical = !majorityCritical
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update({ critical: newCritical })
+        .in('id', ids)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, critical: newCritical } : t))
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks ${newCritical ? 'marked critical' : 'unmarked'}` })
+      setTimeout(() => setUndoToast(null), 3000)
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk toggling critical:', err)
       setError(err.message)
     } finally {
       setSaving(false)
@@ -4111,12 +4197,40 @@ export default function KanbanBoard() {
                       className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
                       defaultValue=""
                     >
-                      <option value="" disabled>Move to...</option>
+                      <option value="" disabled>Status...</option>
                       <option value="backlog">Backlog</option>
                       <option value="todo">To Do</option>
                       <option value="in_progress">In Progress</option>
                       <option value="done">Done</option>
                     </select>
+                    <select
+                      onChange={(e) => e.target.value && handleBulkMoveToProject(e.target.value)}
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Project...</option>
+                      {projects.filter(p => !p.archived).map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      onChange={(e) => handleBulkAssign(e.target.value)}
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Assign...</option>
+                      <option value="">Unassign</option>
+                      {allAssignees.map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleBulkToggleCritical}
+                      className="px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                      title="Toggle critical flag"
+                    >
+                      🚩 Critical
+                    </button>
                     <button
                       onClick={handleBulkDelete}
                       className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
