@@ -1798,22 +1798,71 @@ export default function KanbanBoard() {
         return
       }
       
-      // Cmd/Ctrl + K for search
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      const modifier = isMac ? e.metaKey : (e.ctrlKey || e.altKey)
+      
+      // Cmd/Ctrl/Alt + K or S for search
+      if (modifier && (e.key === 'k' || e.key === 's')) {
         e.preventDefault()
         setSearchModalOpen(true)
+        return
       }
       
-      // / for search
+      // / for search (no modifier needed)
       if (e.key === '/') {
         e.preventDefault()
         setSearchModalOpen(true)
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + T for new Task
+      if (modifier && e.key === 't') {
+        e.preventDefault()
+        if (projects.length > 0) {
+          setEditingTask(null)
+          setTaskModalOpen(true)
+        }
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + P for new Project
+      if (modifier && e.key === 'p') {
+        e.preventDefault()
+        setEditingProject(null)
+        setProjectModalOpen(true)
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + N for Import Notes
+      if (modifier && e.key === 'n') {
+        e.preventDefault()
+        if (projects.length > 0) {
+          setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+          setExtractedTasks([])
+          setShowExtractedTasks(false)
+          setMeetingNotesModalOpen(true)
+        }
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + D for My Day view
+      if (modifier && e.key === 'd') {
+        e.preventDefault()
+        setCurrentView('myday')
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + B for Board view
+      if (modifier && e.key === 'b') {
+        e.preventDefault()
+        setCurrentView('board')
+        return
       }
     }
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [projects, meetingNotesData])
 
   // Fetch data on mount
   useEffect(() => {
@@ -2725,8 +2774,9 @@ export default function KanbanBoard() {
                       ? 'bg-white shadow-sm text-gray-800' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
+                  title="⌘/Ctrl+D"
                 >
-                  ☀️ My Day
+                  ☀️ My <span className="underline">D</span>ay
                 </button>
                 <button
                   onClick={() => setCurrentView('board')}
@@ -2735,8 +2785,9 @@ export default function KanbanBoard() {
                       ? 'bg-white shadow-sm text-gray-800' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
+                  title="⌘/Ctrl+B"
                 >
-                  📋 Board
+                  📋 <span className="underline">B</span>oard
                 </button>
               </div>
             </div>
@@ -2746,11 +2797,12 @@ export default function KanbanBoard() {
               <button
                 onClick={() => setSearchModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700 transition-all"
+                title="⌘/Ctrl+S or /"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span>Search</span>
+                <span><span className="underline">S</span>earch</span>
                 <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-gray-100 rounded">/</kbd>
               </button>
               
@@ -2806,22 +2858,24 @@ export default function KanbanBoard() {
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
                 className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-2"
+                title="⌘/Ctrl+P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Project
+                <span className="underline">P</span>roject
               </button>
               
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
                 className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="⌘/Ctrl+T"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Task
+                <span className="underline">T</span>ask
               </button>
               
               <button
@@ -2833,11 +2887,12 @@ export default function KanbanBoard() {
                 }}
                 disabled={projects.length === 0}
                 className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="⌘/Ctrl+N"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Import Notes
+                Import <span className="underline">N</span>otes
               </button>
               
               <button
