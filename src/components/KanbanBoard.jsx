@@ -28,10 +28,18 @@ const SOURCES = [
   { id: 'client_request', label: 'Client Request', icon: '🎯' },
 ]
 
+const RECURRENCE_TYPES = [
+  { id: null, label: 'No recurrence' },
+  { id: 'daily', label: 'Daily' },
+  { id: 'weekly', label: 'Weekly' },
+  { id: 'monthly', label: 'Monthly' },
+]
+
 const COLUMN_COLORS = {
   backlog: '#8B5CF6',
   todo: '#6366F1',
   in_progress: '#14B8A6',
+  blocked: '#EF4444',
   done: '#10B981',
 }
 
@@ -67,6 +75,35 @@ const isReadyToStart = (task) => {
   const start = new Date(task.start_date)
   start.setHours(0, 0, 0, 0)
   return start <= today
+}
+
+const isBlocked = (task, allTasks) => {
+  if (!task.dependencies || task.dependencies.length === 0) return false
+  if (task.status === 'done') return false
+  
+  // Check if any dependency is not done
+  return task.dependencies.some(dep => {
+    const depTask = allTasks.find(t => t.id === dep.depends_on_id)
+    return depTask && depTask.status !== 'done'
+  })
+}
+
+const getNextRecurrenceDate = (currentDate, recurrenceType) => {
+  const date = new Date(currentDate)
+  switch (recurrenceType) {
+    case 'daily':
+      date.setDate(date.getDate() + 1)
+      break
+    case 'weekly':
+      date.setDate(date.getDate() + 7)
+      break
+    case 'monthly':
+      date.setMonth(date.getMonth() + 1)
+      break
+    default:
+      return null
+  }
+  return date.toISOString().split('T')[0]
 }
 
 const formatDate = (dateString) => {
@@ -135,12 +172,14 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [] }) => {
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   const category = CATEGORIES.find(c => c.id === task.category)
   const source = SOURCES.find(s => s.id === task.source)
   const readyToStart = isReadyToStart(task)
+  const blocked = isBlocked(task, allTasks)
+  const recurrence = RECURRENCE_TYPES.find(r => r.id === task.recurrence_type)
   
   return (
     <div
@@ -148,15 +187,25 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true }) =>
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onEdit(task)}
       className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all group ${
-        task.critical 
+        blocked
+          ? 'border-orange-200 hover:border-orange-300 ring-1 ring-orange-100 opacity-75'
+          : task.critical 
           ? 'border-red-200 hover:border-red-300 ring-1 ring-red-100' 
           : readyToStart
           ? 'border-green-200 hover:border-green-300'
           : 'border-gray-100 hover:border-gray-200'
       }`}
-      style={{ borderLeftWidth: '4px', borderLeftColor: task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status]) }}
+      style={{ borderLeftWidth: '4px', borderLeftColor: blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status]) }}
     >
       <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {blocked && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Blocked
+          </span>
+        )}
         {task.critical && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">
             <svg className="w-3 h-3" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +214,15 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true }) =>
             Critical
           </span>
         )}
-        {readyToStart && (
+        {recurrence && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {recurrence.label}
+          </span>
+        )}
+        {readyToStart && !blocked && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -281,7 +338,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true }) =>
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -334,6 +391,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onEdit={onEditTask}
             onDragStart={onDragStart}
             showProject={showProject}
+            allTasks={allTasks}
           />
         ))}
         
@@ -360,7 +418,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading }) => {
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState({
     title: '',
@@ -378,7 +436,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
     source_link: '',
     customer: '',
     notes: '',
+    recurrence_type: null,
   })
+  const [selectedDependencies, setSelectedDependencies] = useState([])
   const [attachments, setAttachments] = useState([])
   const [newFiles, setNewFiles] = useState([])
   const [activeTab, setActiveTab] = useState('details')
@@ -441,8 +501,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
         source_link: task.source_link || '',
         customer: isCustomCustomer ? '' : (task.customer || ''),
         notes: task.notes || '',
+        recurrence_type: task.recurrence_type || null,
       })
       setAttachments(task.attachments || [])
+      setSelectedDependencies(task.dependencies?.map(d => d.depends_on_id) || [])
       setUseCustomAssignee(isCustomAssignee)
       setCustomAssignee(isCustomAssignee ? task.assignee : '')
       setUseCustomCustomer(isCustomCustomer)
@@ -464,8 +526,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
         source_link: '',
         customer: '',
         notes: '',
+        recurrence_type: null,
       })
       setAttachments([])
+      setSelectedDependencies([])
       setUseCustomAssignee(false)
       setCustomAssignee('')
       setUseCustomCustomer(false)
@@ -516,9 +580,17 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
       customer: finalCustomer,
       time_estimate: formData.time_estimate ? parseInt(formData.time_estimate) : null,
       id: task?.id,
+      dependencies: selectedDependencies,
     }, newFiles, attachments)
     onClose()
   }
+  
+  // Get tasks that can be dependencies (same project, not self, not done)
+  const availableDependencies = allTasks?.filter(t => 
+    t.project_id === formData.project_id && 
+    t.id !== task?.id && 
+    t.status !== 'done'
+  ) || []
   
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B'
@@ -533,7 +605,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
           {[
             { id: 'details', label: 'Details' },
             { id: 'planning', label: 'Planning' },
-            { id: 'notes', label: 'Notes & Attachments' },
+            { id: 'recurring', label: 'Recurring & Deps' },
+            { id: 'notes', label: 'Notes & Files' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -794,6 +867,108 @@ const TaskModal = ({ isOpen, onClose, task, projects, onSave, onDelete, loading 
               />
               {formData.time_estimate && (
                 <p className="text-xs text-gray-400 mt-1">({formatTimeEstimate(parseInt(formData.time_estimate))})</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'recurring' && (
+          <div className="space-y-6">
+            {/* Recurrence Section */}
+            <div className="p-4 bg-blue-50 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <h3 className="font-medium text-blue-800">Recurrence</h3>
+              </div>
+              <p className="text-sm text-blue-600 mb-4">When this task is marked as done, it will automatically create a new instance.</p>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Repeat</label>
+                <select
+                  value={formData.recurrence_type || ''}
+                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                >
+                  {RECURRENCE_TYPES.map((type) => (
+                    <option key={type.id || 'none'} value={type.id || ''}>{type.label}</option>
+                  ))}
+                </select>
+                {formData.recurrence_type && formData.start_date && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    Next occurrence will start on: {formatDate(getNextRecurrenceDate(formData.start_date, formData.recurrence_type))}
+                  </p>
+                )}
+                {formData.recurrence_type && !formData.start_date && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    ⚠️ Set a start date in the Planning tab to enable recurrence
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {/* Dependencies Section */}
+            <div className="p-4 bg-orange-50 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <h3 className="font-medium text-orange-800">Dependencies</h3>
+              </div>
+              <p className="text-sm text-orange-600 mb-4">This task will be blocked until all dependencies are completed.</p>
+              
+              {!formData.project_id ? (
+                <p className="text-sm text-gray-500 italic">Select a project first to add dependencies</p>
+              ) : availableDependencies.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">No other tasks available to link as dependencies</p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {availableDependencies.map((depTask) => {
+                    const isSelected = selectedDependencies.includes(depTask.id)
+                    return (
+                      <label
+                        key={depTask.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-orange-300 bg-orange-100' 
+                            : 'border-gray-200 bg-white hover:border-orange-200'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDependencies([...selectedDependencies, depTask.id])
+                            } else {
+                              setSelectedDependencies(selectedDependencies.filter(id => id !== depTask.id))
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{depTask.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {COLUMNS.find(c => c.id === depTask.status)?.title}
+                            {depTask.assignee && ` • ${depTask.assignee}`}
+                          </p>
+                        </div>
+                        {depTask.critical && (
+                          <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Critical</span>
+                        )}
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+              
+              {selectedDependencies.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-orange-200">
+                  <p className="text-sm text-orange-700 font-medium">
+                    {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -1172,8 +1347,8 @@ export default function KanbanBoard() {
       
       if (tasksError) throw tasksError
 
-      // Fetch attachments for each task
-      const tasksWithAttachments = await Promise.all(
+      // Fetch attachments and dependencies for each task
+      const tasksWithRelations = await Promise.all(
         tasksData.map(async (task) => {
           const { data: attachments } = await supabase
             .from('attachments')
@@ -1186,12 +1361,68 @@ export default function KanbanBoard() {
             file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
           })) || []
           
-          return { ...task, attachments: attachmentsWithUrls }
+          // Fetch dependencies
+          const { data: dependencies } = await supabase
+            .from('task_dependencies')
+            .select('depends_on_id')
+            .eq('task_id', task.id)
+          
+          return { ...task, attachments: attachmentsWithUrls, dependencies: dependencies || [] }
         })
       )
 
       setProjects(projectsWithRelations)
-      setTasks(tasksWithAttachments)
+      setTasks(tasksWithRelations)
+      
+      // Auto-move backlog tasks to todo if start date is today or past
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      const tasksToMove = tasksWithRelations.filter(task => {
+        if (task.status !== 'backlog') return false
+        if (!task.start_date) return false
+        const startDate = new Date(task.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        return startDate <= today
+      })
+      
+      // Move tasks to todo
+      for (const task of tasksToMove) {
+        await supabase
+          .from('tasks')
+          .update({ status: 'todo' })
+          .eq('id', task.id)
+      }
+      
+      // Refetch if any tasks were moved
+      if (tasksToMove.length > 0) {
+        const { data: updatedTasksData } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        const updatedTasksWithRelations = await Promise.all(
+          updatedTasksData.map(async (task) => {
+            const { data: attachments } = await supabase
+              .from('attachments')
+              .select('*')
+              .eq('task_id', task.id)
+            
+            const attachmentsWithUrls = attachments?.map(att => ({
+              ...att,
+              file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
+            })) || []
+            
+            const { data: dependencies } = await supabase
+              .from('task_dependencies')
+              .select('depends_on_id')
+              .eq('task_id', task.id)
+            
+            return { ...task, attachments: attachmentsWithUrls, dependencies: dependencies || [] }
+          })
+        )
+        setTasks(updatedTasksWithRelations)
+      }
     } catch (err) {
       console.error('Error fetching data:', err)
       setError(err.message)
@@ -1737,10 +1968,19 @@ export default function KanbanBoard() {
             source_link: taskData.source_link || null,
             customer: taskData.customer || null,
             notes: taskData.notes || null,
+            recurrence_type: taskData.recurrence_type || null,
           })
           .eq('id', taskId)
         
         if (updateError) throw updateError
+        
+        // Update dependencies - delete existing and re-add
+        await supabase.from('task_dependencies').delete().eq('task_id', taskId)
+        if (taskData.dependencies && taskData.dependencies.length > 0) {
+          await supabase.from('task_dependencies').insert(
+            taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
+          )
+        }
 
         // Handle removed attachments
         const existingIds = existingAttachments.map(a => a.id)
@@ -1775,12 +2015,20 @@ export default function KanbanBoard() {
             source_link: taskData.source_link || null,
             customer: taskData.customer || null,
             notes: taskData.notes || null,
+            recurrence_type: taskData.recurrence_type || null,
           })
           .select()
           .single()
         
         if (insertError) throw insertError
         taskId = newTask.id
+        
+        // Add dependencies for new task
+        if (taskData.dependencies && taskData.dependencies.length > 0) {
+          await supabase.from('task_dependencies').insert(
+            taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
+          )
+        }
       }
 
       // Upload new files
@@ -1838,6 +2086,49 @@ export default function KanbanBoard() {
 
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
+      const task = tasks.find(t => t.id === taskId)
+      
+      // If moving to done and has recurrence, create next instance
+      if (newStatus === 'done' && task?.recurrence_type && task?.start_date) {
+        const nextStartDate = getNextRecurrenceDate(task.start_date, task.recurrence_type)
+        let nextDueDate = null
+        
+        // Calculate next due date if there was a due date
+        if (task.due_date && nextStartDate) {
+          const originalDiff = new Date(task.due_date) - new Date(task.start_date)
+          const nextDue = new Date(nextStartDate)
+          nextDue.setTime(nextDue.getTime() + originalDiff)
+          nextDueDate = nextDue.toISOString().split('T')[0]
+        }
+        
+        if (nextStartDate) {
+          // Create the next recurring task
+          const { error: recurError } = await supabase
+            .from('tasks')
+            .insert({
+              title: task.title,
+              description: task.description,
+              project_id: task.project_id,
+              status: 'todo',
+              critical: task.critical,
+              start_date: nextStartDate,
+              due_date: nextDueDate,
+              assignee: task.assignee,
+              time_estimate: task.time_estimate,
+              energy_level: task.energy_level,
+              category: task.category,
+              source: task.source,
+              source_link: task.source_link,
+              customer: task.customer,
+              notes: task.notes,
+              recurrence_type: task.recurrence_type,
+              recurrence_parent_id: task.recurrence_parent_id || task.id,
+            })
+          
+          if (recurError) console.error('Error creating recurring task:', recurError)
+        }
+      }
+      
       const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
@@ -1845,7 +2136,12 @@ export default function KanbanBoard() {
       
       if (error) throw error
       
-      setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+      // Refresh data to get the new recurring task
+      if (newStatus === 'done' && task?.recurrence_type) {
+        await fetchData()
+      } else {
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+      }
     } catch (err) {
       console.error('Error updating task status:', err)
       setError(err.message)
@@ -1909,6 +2205,7 @@ export default function KanbanBoard() {
   const criticalCount = filteredTasks.filter((t) => t.critical && t.status !== 'done').length
   const overdueCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'overdue').length
   const dueTodayCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'today').length
+  const blockedCount = filteredTasks.filter((t) => isBlocked(t, tasks) && t.status !== 'done').length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
 
   if (loading) {
@@ -2140,6 +2437,11 @@ export default function KanbanBoard() {
               <span className="text-red-600 font-medium">{overdueCount} overdue</span>
             </div>
           )}
+          {blockedCount > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
+              <span className="text-orange-600 font-medium">🔒 {blockedCount} blocked</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2200,6 +2502,7 @@ export default function KanbanBoard() {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 showProject={selectedProjectId === 'all'}
+                allTasks={tasks}
               />
             ))}
           </div>
@@ -2212,6 +2515,7 @@ export default function KanbanBoard() {
         onClose={() => { setTaskModalOpen(false); setEditingTask(null) }}
         task={editingTask}
         projects={projects}
+        allTasks={tasks}
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
         loading={saving}
