@@ -302,15 +302,295 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
   )
 }
 
-// My Day Dashboard Component
+// Progress Ring Component
+const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1' }) => {
+  const radius = (size - strokeWidth) / 2
+  const circumference = radius * 2 * Math.PI
+  const offset = circumference - (progress / 100) * circumference
+  
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="text-gray-200"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-500 ease-out"
+      />
+    </svg>
+  )
+}
+
+// Calendar View Component
+const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(null)
+  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+  
+  const firstDayOfMonth = new Date(year, month, 1)
+  const lastDayOfMonth = new Date(year, month + 1, 0)
+  const startingDayOfWeek = firstDayOfMonth.getDay()
+  const daysInMonth = lastDayOfMonth.getDate()
+  
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
+  const goToToday = () => setCurrentDate(new Date())
+  
+  const getTasksForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0]
+    return tasks.filter(t => t.due_date === dateStr)
+  }
+  
+  const renderCalendarDays = () => {
+    const days = []
+    
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="h-28 bg-gray-50/50" />)
+    }
+    
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day)
+      const dateStr = date.toISOString().split('T')[0]
+      const dayTasks = getTasksForDate(date)
+      const isToday = date.getTime() === today.getTime()
+      const isSelected = selectedDate === dateStr
+      const isPast = date < today
+      
+      const overdueTasks = dayTasks.filter(t => t.status !== 'done' && isPast && !isToday)
+      const criticalTasks = dayTasks.filter(t => t.critical && t.status !== 'done')
+      const completedTasks = dayTasks.filter(t => t.status === 'done')
+      const pendingTasks = dayTasks.filter(t => t.status !== 'done')
+      
+      days.push(
+        <div
+          key={day}
+          onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+          className={`h-28 p-2 border-b border-r border-gray-100 cursor-pointer transition-all hover:bg-indigo-50/50 ${
+            isToday ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : 
+            isSelected ? 'bg-indigo-100' : 
+            isPast ? 'bg-gray-50/30' : 'bg-white'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-sm font-semibold ${
+              isToday ? 'text-indigo-600' : isPast ? 'text-gray-400' : 'text-gray-700'
+            }`}>
+              {day}
+            </span>
+            {dayTasks.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                overdueTasks.length > 0 ? 'bg-red-100 text-red-700' :
+                criticalTasks.length > 0 ? 'bg-orange-100 text-orange-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>
+                {dayTasks.length}
+              </span>
+            )}
+          </div>
+          <div className="space-y-1 overflow-hidden">
+            {dayTasks.slice(0, 3).map(task => {
+              const project = projects.find(p => p.id === task.project_id)
+              return (
+                <div
+                  key={task.id}
+                  onClick={(e) => { e.stopPropagation(); onEditTask(task) }}
+                  className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-all hover:ring-2 hover:ring-indigo-300 ${
+                    task.status === 'done' ? 'bg-green-100 text-green-700 line-through' :
+                    task.critical ? 'bg-red-100 text-red-700' :
+                    isPast && !isToday ? 'bg-red-50 text-red-600' :
+                    'bg-indigo-100 text-indigo-700'
+                  }`}
+                  title={task.title}
+                >
+                  {task.critical && '🚩 '}{task.title}
+                </div>
+              )
+            })}
+            {dayTasks.length > 3 && (
+              <div className="text-xs text-gray-400 px-2">
+                +{dayTasks.length - 3} more
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+    
+    return days
+  }
+  
+  const selectedTasks = selectedDate ? tasks.filter(t => t.due_date === selectedDate) : []
+  
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {monthNames[month]} {year}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {tasks.filter(t => t.due_date && t.status !== 'done').length} tasks with due dates
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goToToday}
+            className="px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+          >
+            Today
+          </button>
+          <button
+            onClick={prevMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={nextMonth}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Calendar Grid */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+          {dayNames.map(day => (
+            <div key={day} className="py-3 text-center text-sm font-semibold text-gray-600">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7">
+          {renderCalendarDays()}
+        </div>
+      </div>
+      
+      {/* Selected Date Tasks */}
+      {selectedDate && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-800 mb-4">
+            Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </h3>
+          {selectedTasks.length === 0 ? (
+            <p className="text-gray-500 text-sm">No tasks due on this date</p>
+          ) : (
+            <div className="space-y-3">
+              {selectedTasks.map(task => {
+                const project = projects.find(p => p.id === task.project_id)
+                const category = CATEGORIES.find(c => c.id === task.category)
+                return (
+                  <div
+                    key={task.id}
+                    onClick={() => onEditTask(task)}
+                    className={`p-4 rounded-xl border cursor-pointer hover:shadow-md transition-all ${
+                      task.status === 'done' ? 'bg-green-50 border-green-200' :
+                      task.critical ? 'bg-red-50 border-red-200' :
+                      'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className={`font-medium ${
+                          task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'
+                        }`}>
+                          {task.critical && '🚩 '}{task.title}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                          {project && <span>{project.name}</span>}
+                          {category && (
+                            <span className="px-2 py-0.5 rounded-full text-xs text-white" style={{ backgroundColor: category.color }}>
+                              {category.label}
+                            </span>
+                          )}
+                          {task.assignee && <span>• {task.assignee}</span>}
+                        </div>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-lg ${
+                        task.status === 'done' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {COLUMNS.find(c => c.id === task.status)?.title}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Legend */}
+      <div className="mt-6 flex items-center gap-6 text-sm text-gray-500">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-indigo-400" />
+          <span>Today</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-red-100" />
+          <span>Overdue / Critical</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-green-100" />
+          <span>Completed</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// My Day Dashboard Component - Redesigned
 const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange }) => {
   const [selectedEnergy, setSelectedEnergy] = useState('all')
   const [availableTime, setAvailableTime] = useState('')
+  const [expandedSection, setExpandedSection] = useState(null)
   
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const greetingEmoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : '🌙'
   
   // Filter tasks for different sections
   const activeTasks = tasks.filter(t => t.status !== 'done')
@@ -327,21 +607,17 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     let candidates = [...inProgressTasks, ...dueTodayTasks, ...readyToStartTasks]
       .filter(t => !isBlocked(t, allTasks))
     
-    // Remove duplicates
     candidates = [...new Map(candidates.map(t => [t.id, t])).values()]
     
-    // Filter by energy level if selected
     if (selectedEnergy !== 'all') {
       candidates = candidates.filter(t => t.energy_level === selectedEnergy)
     }
     
-    // Filter by available time if specified
     if (availableTime) {
       const minutes = parseInt(availableTime)
       candidates = candidates.filter(t => !t.time_estimate || t.time_estimate <= minutes)
     }
     
-    // Sort: critical first, then by due date, then by time estimate
     candidates.sort((a, b) => {
       if (a.critical && !b.critical) return -1
       if (!a.critical && b.critical) return 1
@@ -370,7 +646,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const totalTimeCompleted = completedToday.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   const totalTimeRemaining = [...dueTodayTasks, ...inProgressTasks].reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   
-  const TaskRow = ({ task, showStatus = false }) => {
+  // Progress calculation
+  const totalTodayTasks = dueTodayTasks.length + completedToday.length
+  const progressPercent = totalTodayTasks > 0 ? Math.round((completedToday.length / totalTodayTasks) * 100) : 0
+  
+  const TaskCard = ({ task, showStatus = false, compact = false }) => {
     const project = projects.find(p => p.id === task.project_id)
     const category = CATEGORIES.find(c => c.id === task.category)
     const energyStyle = ENERGY_LEVELS[task.energy_level]
@@ -380,40 +660,68 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     return (
       <div
         onClick={() => onEditTask(task)}
-        className={`p-4 bg-white rounded-xl border cursor-pointer hover:shadow-md transition-all ${
-          blocked ? 'border-orange-200 opacity-75' : task.critical ? 'border-red-200' : 'border-gray-100'
+        className={`group relative p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+          blocked ? 'bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200' : 
+          task.critical ? 'bg-gradient-to-br from-red-50 to-pink-50 border border-red-200' : 
+          'bg-white border border-gray-100 hover:border-indigo-200'
         }`}
       >
-        <div className="flex items-start gap-3">
-          {/* Quick complete checkbox */}
+        {/* Priority indicator bar */}
+        <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-full ${
+          task.critical ? 'bg-red-400' : blocked ? 'bg-orange-400' : 'bg-indigo-400'
+        }`} />
+        
+        <div className="flex items-start gap-3 pl-3">
+          {/* Quick complete */}
           <button
             onClick={(e) => {
               e.stopPropagation()
               onQuickStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')
             }}
-            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+            className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
               task.status === 'done' 
-                ? 'bg-green-500 border-green-500 text-white' 
-                : 'border-gray-300 hover:border-green-400'
+                ? 'bg-emerald-500 border-emerald-500 text-white scale-110' 
+                : 'border-gray-300 hover:border-emerald-400 hover:bg-emerald-50'
             }`}
           >
             {task.status === 'done' && (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             )}
           </button>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h4 className={`font-medium ${task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+            <div className="flex items-start justify-between gap-2">
+              <h4 className={`font-medium leading-tight ${
+                task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'
+              }`}>
                 {task.title}
               </h4>
+              {task.due_date && (
+                <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-lg ${
+                  dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700' :
+                  dueDateStatus === 'today' ? 'bg-amber-100 text-amber-700' :
+                  dueDateStatus === 'soon' ? 'bg-orange-100 text-orange-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {dueDateStatus === 'overdue' && '⚠️ '}
+                  {formatDate(task.due_date)}
+                </span>
+              )}
+            </div>
+            
+            {/* Tags row */}
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               {blocked && (
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">🔒 Blocked</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                  🔒 Blocked
+                </span>
               )}
               {task.critical && (
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">🚩 Critical</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">
+                  🚩 Critical
+                </span>
               )}
               {showStatus && (
                 <span 
@@ -423,218 +731,347 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                   {COLUMNS.find(c => c.id === task.status)?.title}
                 </span>
               )}
-            </div>
-            
-            <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
-              {project && <span>{project.name}</span>}
               {category && (
-                <span className="px-2 py-0.5 rounded-full text-xs text-white" style={{ backgroundColor: category.color }}>
+                <span 
+                  className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                  style={{ backgroundColor: category.color }}
+                >
                   {category.label}
                 </span>
               )}
-              {task.time_estimate && (
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {formatTimeEstimate(task.time_estimate)}
-                </span>
-              )}
-              {energyStyle && (
-                <span 
-                  className="px-2 py-0.5 rounded-full text-xs"
-                  style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
-                >
-                  {energyStyle.icon} {task.energy_level}
-                </span>
-              )}
-              {task.assignee && <span>👤 {task.assignee}</span>}
             </div>
+            
+            {/* Meta row */}
+            {!compact && (
+              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                {project && (
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    {project.name}
+                  </span>
+                )}
+                {task.time_estimate && (
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {formatTimeEstimate(task.time_estimate)}
+                  </span>
+                )}
+                {energyStyle && (
+                  <span 
+                    className="px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
+                  >
+                    {energyStyle.icon} {task.energy_level}
+                  </span>
+                )}
+                {task.assignee && (
+                  <span className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-medium">
+                      {task.assignee.charAt(0).toUpperCase()}
+                    </div>
+                    {task.assignee}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          
-          {task.due_date && (
-            <div className={`text-sm font-medium px-3 py-1 rounded-lg shrink-0 ${
-              dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700' :
-              dueDateStatus === 'today' ? 'bg-orange-100 text-orange-700' :
-              dueDateStatus === 'soon' ? 'bg-amber-100 text-amber-700' :
-              'bg-gray-100 text-gray-600'
-            }`}>
-              {dueDateStatus === 'overdue' && '⚠️ '}
-              {formatDate(task.due_date)}
-            </div>
-          )}
         </div>
       </div>
     )
   }
   
-  const Section = ({ title, icon, tasks, color, emptyMessage, showStatus = false }) => {
+  const Section = ({ title, icon, tasks, color, gradient, showStatus = false, defaultExpanded = true }) => {
+    const isExpanded = expandedSection === null ? defaultExpanded : expandedSection === title
+    
     if (tasks.length === 0) return null
     
     return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">{icon}</span>
-          <h3 className="font-semibold text-gray-800">{title}</h3>
-          <span className={`px-2.5 py-0.5 rounded-full text-sm font-medium ${color}`}>
+      <div className="mb-6">
+        <button
+          onClick={() => setExpandedSection(isExpanded ? (expandedSection === title ? null : title) : title)}
+          className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${gradient} border border-transparent hover:shadow-md`}
+        >
+          <span className="text-2xl">{icon}</span>
+          <div className="flex-1 text-left">
+            <h3 className="font-bold text-gray-800">{title}</h3>
+            <p className="text-sm text-gray-500">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-bold ${color}`}>
             {tasks.length}
           </span>
-        </div>
-        <div className="space-y-3">
-          {tasks.map(task => (
-            <TaskRow key={task.id} task={task} showStatus={showStatus} />
-          ))}
-        </div>
+          <svg 
+            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isExpanded && (
+          <div className="mt-3 space-y-3 pl-4">
+            {tasks.map(task => (
+              <TaskCard key={task.id} task={task} showStatus={showStatus} />
+            ))}
+          </div>
+        )}
       </div>
     )
   }
   
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Good {today.getHours() < 12 ? 'morning' : today.getHours() < 17 ? 'afternoon' : 'evening'}! ☀️
-        </h2>
-        <p className="text-gray-500">
-          {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
-        </p>
-      </div>
-      
-      {/* Progress Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <div className="text-3xl font-bold text-green-600 mb-1">{completedToday.length}</div>
-          <div className="text-sm text-gray-500">Completed today</div>
-          {totalTimeCompleted > 0 && (
-            <div className="text-xs text-green-600 mt-1">{formatTimeEstimate(totalTimeCompleted)} done</div>
-          )}
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <div className="text-3xl font-bold text-orange-600 mb-1">{dueTodayTasks.length}</div>
-          <div className="text-sm text-gray-500">Due today</div>
-          {totalTimeRemaining > 0 && (
-            <div className="text-xs text-orange-600 mt-1">{formatTimeEstimate(totalTimeRemaining)} left</div>
-          )}
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <div className="text-3xl font-bold text-indigo-600 mb-1">{inProgressTasks.length}</div>
-          <div className="text-sm text-gray-500">In progress</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100">
-          <div className="text-3xl font-bold text-red-600 mb-1">{overdueTasks.length}</div>
-          <div className="text-sm text-gray-500">Overdue</div>
-        </div>
-      </div>
-      
-      {/* Smart Suggestions */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 mb-8 border border-indigo-100">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">✨</span>
-            <h3 className="font-semibold text-gray-800">Suggested for you</h3>
+    <div className="min-h-screen">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-10" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-yellow-200 to-orange-200 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200 to-indigo-200 rounded-full blur-3xl opacity-30 translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative max-w-5xl mx-auto px-6 py-12">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-indigo-600 font-medium mb-2">
+                {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
+              </p>
+              <h1 className="text-4xl font-black text-gray-900 mb-2">
+                {greeting} {greetingEmoji}
+              </h1>
+              <p className="text-gray-500 text-lg">
+                {activeTasks.length === 0 
+                  ? "You're all caught up! Enjoy your day." 
+                  : `You have ${activeTasks.length} active task${activeTasks.length !== 1 ? 's' : ''} to tackle.`
+                }
+              </p>
+            </div>
+            
+            {/* Progress Ring */}
+            <div className="relative">
+              <ProgressRing progress={progressPercent} size={140} strokeWidth={10} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-black text-gray-800">{progressPercent}%</span>
+                <span className="text-xs text-gray-500">today</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={selectedEnergy}
-              onChange={(e) => setSelectedEnergy(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="all">Any energy</option>
-              <option value="high">⚡ High energy</option>
-              <option value="medium">→ Medium energy</option>
-              <option value="low">○ Low energy</option>
-            </select>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">I have</span>
-              <input
-                type="number"
-                value={availableTime}
-                onChange={(e) => setAvailableTime(e.target.value)}
-                placeholder="30"
-                className="w-16 px-2 py-1.5 text-sm border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <span className="text-sm text-gray-600">mins</span>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-4 gap-4 mt-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-gray-800">{completedToday.length}</div>
+                  <div className="text-sm text-gray-500">Done today</div>
+                </div>
+              </div>
+              {totalTimeCompleted > 0 && (
+                <div className="mt-3 text-xs text-emerald-600 font-medium bg-emerald-50 px-3 py-1 rounded-full inline-block">
+                  {formatTimeEstimate(totalTimeCompleted)} completed
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-gray-800">{dueTodayTasks.length}</div>
+                  <div className="text-sm text-gray-500">Due today</div>
+                </div>
+              </div>
+              {totalTimeRemaining > 0 && (
+                <div className="mt-3 text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full inline-block">
+                  {formatTimeEstimate(totalTimeRemaining)} remaining
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-gray-800">{inProgressTasks.length}</div>
+                  <div className="text-sm text-gray-500">In progress</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  overdueTasks.length > 0 ? 'bg-red-100' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${overdueTasks.length > 0 ? 'text-red-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className={`text-2xl font-black ${overdueTasks.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    {overdueTasks.length}
+                  </div>
+                  <div className="text-sm text-gray-500">Overdue</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Smart Suggestions */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl p-1">
+            <div className="bg-white rounded-[22px] p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                    <span className="text-xl">✨</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800">Focus Queue</h3>
+                    <p className="text-sm text-gray-500">AI-suggested tasks based on your priorities</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={selectedEnergy}
+                    onChange={(e) => setSelectedEnergy(e.target.value)}
+                    className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="all">Any energy</option>
+                    <option value="high">⚡ High</option>
+                    <option value="medium">→ Medium</option>
+                    <option value="low">○ Low</option>
+                  </select>
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                    <span className="text-sm text-gray-500">I have</span>
+                    <input
+                      type="number"
+                      value={availableTime}
+                      onChange={(e) => setAvailableTime(e.target.value)}
+                      placeholder="30"
+                      className="w-14 px-2 py-1 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
+                    />
+                    <span className="text-sm text-gray-500">mins</span>
+                  </div>
+                </div>
+              </div>
+              
+              {suggestedTasks.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-4xl">🎉</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800 mb-2">You're all caught up!</h4>
+                  <p className="text-gray-500">No matching tasks right now. Time for a break?</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {suggestedTasks.map((task, index) => (
+                    <div key={task.id} className="relative">
+                      {index === 0 && (
+                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                          <span className="text-white text-[10px] font-bold">1</span>
+                        </div>
+                      )}
+                      <TaskCard task={task} showStatus={true} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
         
-        {suggestedTasks.length === 0 ? (
-          <div className="text-center py-6 text-gray-500">
-            <p>🎉 You're all caught up! No matching tasks right now.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {suggestedTasks.map(task => (
-              <TaskRow key={task.id} task={task} showStatus={true} />
-            ))}
+        {/* Task Sections */}
+        <Section 
+          title="Overdue" 
+          icon="🔴" 
+          tasks={overdueTasks} 
+          color="bg-red-100 text-red-700"
+          gradient="bg-gradient-to-r from-red-50 to-pink-50"
+        />
+        
+        <Section 
+          title="Due Today" 
+          icon="📅" 
+          tasks={dueTodayTasks} 
+          color="bg-amber-100 text-amber-700"
+          gradient="bg-gradient-to-r from-amber-50 to-orange-50"
+        />
+        
+        <Section 
+          title="In Progress" 
+          icon="🔄" 
+          tasks={inProgressTasks} 
+          color="bg-indigo-100 text-indigo-700"
+          gradient="bg-gradient-to-r from-indigo-50 to-blue-50"
+        />
+        
+        <Section 
+          title="Ready to Start" 
+          icon="🟢" 
+          tasks={readyToStartTasks.filter(t => !dueTodayTasks.includes(t) && !inProgressTasks.includes(t))} 
+          color="bg-emerald-100 text-emerald-700"
+          gradient="bg-gradient-to-r from-emerald-50 to-teal-50"
+          defaultExpanded={false}
+        />
+        
+        {blockedTasks.length > 0 && (
+          <Section 
+            title="Blocked" 
+            icon="🔒" 
+            tasks={blockedTasks} 
+            color="bg-orange-100 text-orange-700"
+            gradient="bg-gradient-to-r from-orange-50 to-amber-50"
+            showStatus={true}
+            defaultExpanded={false}
+          />
+        )}
+        
+        {criticalTasks.length > 0 && (
+          <Section 
+            title="Other Critical" 
+            icon="🚩" 
+            tasks={criticalTasks} 
+            color="bg-red-100 text-red-700"
+            gradient="bg-gradient-to-r from-red-50 to-rose-50"
+            showStatus={true}
+            defaultExpanded={false}
+          />
+        )}
+        
+        {/* Empty state */}
+        {activeTasks.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100 flex items-center justify-center mx-auto mb-6">
+              <span className="text-6xl">🎊</span>
+            </div>
+            <h3 className="text-2xl font-black text-gray-800 mb-3">All clear!</h3>
+            <p className="text-gray-500 text-lg max-w-md mx-auto">
+              You have no active tasks. Time to add some or take a well-deserved break!
+            </p>
           </div>
         )}
       </div>
-      
-      {/* Task Sections */}
-      <Section 
-        title="Overdue" 
-        icon="🔴" 
-        tasks={overdueTasks} 
-        color="bg-red-100 text-red-700"
-        emptyMessage="No overdue tasks!"
-      />
-      
-      <Section 
-        title="Due Today" 
-        icon="📅" 
-        tasks={dueTodayTasks} 
-        color="bg-orange-100 text-orange-700"
-        emptyMessage="Nothing due today"
-      />
-      
-      <Section 
-        title="In Progress" 
-        icon="🔄" 
-        tasks={inProgressTasks} 
-        color="bg-indigo-100 text-indigo-700"
-        emptyMessage="No tasks in progress"
-      />
-      
-      <Section 
-        title="Ready to Start" 
-        icon="🟢" 
-        tasks={readyToStartTasks.filter(t => !dueTodayTasks.includes(t) && !inProgressTasks.includes(t))} 
-        color="bg-green-100 text-green-700"
-        emptyMessage="No tasks ready to start"
-      />
-      
-      {blockedTasks.length > 0 && (
-        <Section 
-          title="Blocked" 
-          icon="🔒" 
-          tasks={blockedTasks} 
-          color="bg-orange-100 text-orange-700"
-          emptyMessage=""
-          showStatus={true}
-        />
-      )}
-      
-      {criticalTasks.length > 0 && (
-        <Section 
-          title="Other Critical Tasks" 
-          icon="🚩" 
-          tasks={criticalTasks} 
-          color="bg-red-100 text-red-700"
-          emptyMessage=""
-          showStatus={true}
-        />
-      )}
-      
-      {/* Empty state */}
-      {activeTasks.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🎉</div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">All clear!</h3>
-          <p className="text-gray-500">You have no active tasks. Time to add some or take a well-deserved break!</p>
-        </div>
-      )}
     </div>
   )
 }
@@ -1762,7 +2199,7 @@ export default function KanbanBoard() {
   const [error, setError] = useState(null)
   
   // View state
-  const [currentView, setCurrentView] = useState('board') // 'board' or 'myday'
+  const [currentView, setCurrentView] = useState('board') // 'board', 'myday', or 'calendar'
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
@@ -1856,6 +2293,13 @@ export default function KanbanBoard() {
       if (modifier && e.key === 'b') {
         e.preventDefault()
         setCurrentView('board')
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + L for Calendar view
+      if (modifier && e.key === 'l') {
+        e.preventDefault()
+        setCurrentView('calendar')
         return
       }
     }
@@ -2789,6 +3233,17 @@ export default function KanbanBoard() {
                 >
                   <span>📋 <span className="underline">B</span>oard</span>
                 </button>
+                <button
+                  onClick={() => setCurrentView('calendar')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'calendar' 
+                      ? 'bg-white shadow-sm text-gray-800' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                  title="⌘/Ctrl+L"
+                >
+                  <span>📆 Ca<span className="underline">l</span>endar</span>
+                </button>
               </div>
             </div>
             
@@ -3007,7 +3462,7 @@ export default function KanbanBoard() {
       {/* Main Content */}
       {projects.length > 0 && (
         <>
-          {currentView === 'myday' ? (
+          {currentView === 'myday' && (
             <MyDayDashboard
               tasks={tasks}
               projects={projects}
@@ -3016,7 +3471,18 @@ export default function KanbanBoard() {
               allTasks={tasks}
               onQuickStatusChange={handleUpdateTaskStatus}
             />
-          ) : (
+          )}
+          
+          {currentView === 'calendar' && (
+            <CalendarView
+              tasks={tasks}
+              projects={projects}
+              onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+              allTasks={tasks}
+            />
+          )}
+          
+          {currentView === 'board' && (
             <main className="max-w-full mx-auto px-6 py-6">
               <div className="flex gap-6 overflow-x-auto pb-6">
                 {COLUMNS.map((column) => (
