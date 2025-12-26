@@ -12,7 +12,7 @@
   <Version>1.0.0.0</Version>
   <ProviderName>Trackli</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Trackli"/>
+  <DisplayName DefaultValue="Create Task"/>
   <Description DefaultValue="Create tasks from emails in Trackli"/>
   
   <IconUrl DefaultValue="https://trackli.vercel.app/icon-64.png"/>
