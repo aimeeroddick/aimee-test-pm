@@ -92,7 +92,7 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://trackli.vercel.app/outlook-addin"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Trackli"/>
+        <bt:String id="GroupLabel" DefaultValue="Create Task"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="Create Task"/>
       </bt:ShortStrings>
       <bt:LongStrings>
