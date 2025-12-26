@@ -3889,30 +3889,19 @@ export default function KanbanBoard() {
 
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
-        <div className="max-w-full mx-auto px-6 py-4">
+        {/* Main Header Row */}
+        <div className="max-w-full mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Clickable Logo with Nav Menu */}
+            {/* Left: Menu Button */}
+            <div className="flex items-center gap-3">
               <div className="relative">
                 <button
                   onClick={() => setNavMenuOpen(!navMenuOpen)}
-                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                  title="Menu"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                      Trackli
-                    </h1>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : '📁 Projects'}
-                    </p>
-                  </div>
-                  <svg className={`w-4 h-4 text-gray-400 transition-transform ${navMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
                 
@@ -3960,27 +3949,42 @@ export default function KanbanBoard() {
                   </>
                 )}
               </div>
+              
+              {/* Current view indicator */}
+              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : '📁 Projects'}
+              </span>
             </div>
             
-            <div className="flex items-center gap-3">
-              {/* Search Button */}
+            {/* Center: Logo */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Trackli
+              </h1>
+            </div>
+            
+            {/* Right: Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Utility buttons - icon only */}
               <button
                 onClick={() => setSearchModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
-                title="⌘/Ctrl+S or /"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title="Search (⌘S or /)"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span><span className="underline">S</span>earch</span>
-                <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded">/</kbd>
               </button>
               
-              {/* Dark Mode Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
-                title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3993,10 +3997,9 @@ export default function KanbanBoard() {
                 )}
               </button>
               
-              {/* Keyboard Shortcuts */}
               <button
                 onClick={() => setShortcutsModalOpen(true)}
-                className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Keyboard shortcuts (?)"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4004,16 +4007,11 @@ export default function KanbanBoard() {
                 </svg>
               </button>
               
-              {/* Bulk Select Toggle */}
               {currentView === 'board' && (
                 <button
                   onClick={() => { setBulkSelectMode(!bulkSelectMode); setSelectedTaskIds(new Set()) }}
-                  className={`p-2 border rounded-xl transition-all ${
-                    bulkSelectMode
-                      ? 'bg-indigo-500 border-indigo-500 text-white'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-                  title="Bulk select tasks"
+                  className={`p-2 rounded-xl transition-colors ${bulkSelectMode ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
+                  title="Bulk select"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -4021,113 +4019,30 @@ export default function KanbanBoard() {
                 </button>
               )}
               
-              {currentView === 'board' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={selectedProjectId}
-                      onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    >
-                      <option value="all">All Projects</option>
-                      {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
-                        <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
-                      ))}
-                    </select>
-                    <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={showArchivedProjects}
-                        onChange={(e) => setShowArchivedProjects(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      Archived
-                    </label>
-                  </div>
-                  
-                  {/* Unified Filter UI */}
-                  <div className="flex items-center gap-2">
-                    {/* Active filter chips */}
-                    {activeFilters.map(filter => (
-                      <span 
-                        key={filter.type}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm"
-                      >
-                        <span className="text-indigo-500 dark:text-indigo-400 text-xs">{filterTypeLabels[filter.type]}:</span>
-                        <span className="font-medium">{filter.value === 'critical' ? '🚩 Critical' : filter.value === 'regular' ? 'Regular' : filter.value}</span>
-                        <button 
-                          onClick={() => removeFilter(filter.type)}
-                          className="ml-1 hover:text-indigo-900 dark:hover:text-indigo-100"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                    
-                    {/* Add filter dropdown */}
-                    <div className="flex items-center gap-1">
-                      <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      >
-                        <option value="">+ Add filter</option>
-                        {!getFilterValue('assignee') && allAssignees.length > 0 && <option value="assignee">Assignee</option>}
-                        {!getFilterValue('customer') && allCustomers.length > 0 && <option value="customer">Customer</option>}
-                        {!getFilterValue('critical') && <option value="critical">Priority</option>}
-                        {!getFilterValue('status') && <option value="status">Status</option>}
-                      </select>
-                      
-                      {filterType && (
-                        <select
-                          value=""
-                          onChange={(e) => e.target.value && addFilter(filterType, e.target.value)}
-                          className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                          autoFocus
-                        >
-                          <option value="">Select {filterTypeLabels[filterType]}...</option>
-                          {getFilterOptions(filterType).map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                    
-                    {activeFilters.length > 0 && (
-                      <button
-                        onClick={() => setActiveFilters([])}
-                        className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      >
-                        Clear all
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
+              <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
               
+              {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="px-4 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-2"
-                title="⌘/Ctrl+P"
+                className="px-3 py-2 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-1.5"
+                title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>New <span className="underline">P</span>roject</span>
+                <span className="hidden sm:inline">Project</span>
               </button>
               
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-2 shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="⌘/Ctrl+T"
+                className="px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                title="⌘T"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>New <span className="underline">T</span>ask</span>
+                <span className="hidden sm:inline">Task</span>
               </button>
               
               <button
@@ -4138,24 +4053,113 @@ export default function KanbanBoard() {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="⌘/Ctrl+N"
+                className="px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium flex items-center gap-1.5 disabled:opacity-50"
+                title="⌘N"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span>Import <span className="underline">N</span>otes</span>
+                <span className="hidden sm:inline">Import</span>
               </button>
               
               <button
                 onClick={signOut}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors text-sm"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title="Sign Out"
               >
-                Sign Out
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
+        
+        {/* Filter Bar - only on board view */}
+        {currentView === 'board' && (
+          <div className="border-t border-gray-100 dark:border-gray-800 px-6 py-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Project dropdown */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="all">All Projects</option>
+                  {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                    <option key={p.id} value={p.id}>{p.archived ? '📦 ' : ''}{p.name}</option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showArchivedProjects}
+                    onChange={(e) => setShowArchivedProjects(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Archived
+                </label>
+              </div>
+              
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+              
+              {/* Active filter chips */}
+              {activeFilters.map(filter => (
+                <span 
+                  key={filter.type}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm"
+                >
+                  <span className="text-indigo-500 dark:text-indigo-400 text-xs">{filterTypeLabels[filter.type]}:</span>
+                  <span className="font-medium">{filter.value === 'critical' ? '🚩 Critical' : filter.value === 'regular' ? 'Regular' : filter.value}</span>
+                  <button onClick={() => removeFilter(filter.type)} className="ml-0.5 hover:text-indigo-900 dark:hover:text-indigo-100">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+              
+              {/* Add filter */}
+              <div className="flex items-center gap-1">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">+ Filter</option>
+                  {!getFilterValue('assignee') && allAssignees.length > 0 && <option value="assignee">Assignee</option>}
+                  {!getFilterValue('customer') && allCustomers.length > 0 && <option value="customer">Customer</option>}
+                  {!getFilterValue('critical') && <option value="critical">Priority</option>}
+                  {!getFilterValue('status') && <option value="status">Status</option>}
+                </select>
+                
+                {filterType && (
+                  <select
+                    value=""
+                    onChange={(e) => e.target.value && addFilter(filterType, e.target.value)}
+                    className="px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                    autoFocus
+                  >
+                    <option value="">Select...</option>
+                    {getFilterOptions(filterType).map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              
+              {activeFilters.length > 0 && (
+                <button
+                  onClick={() => setActiveFilters([])}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Stats Bar - only show on board view */}
