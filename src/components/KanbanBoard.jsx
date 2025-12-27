@@ -1963,7 +1963,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           {[
             { id: 'details', label: 'Details' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'planning', label: 'Planning' },
+            { id: 'more', label: 'More' },
             { id: 'recurring', label: 'Recurring & Deps' },
             { id: 'notes', label: 'Notes & Files' },
           ].map((tab) => (
@@ -1982,17 +1982,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         
         {activeTab === 'details' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-              <div>
-                <p className="font-medium text-gray-700">Priority</p>
-                <p className="text-sm text-gray-500">Flag this task if it needs immediate attention</p>
-              </div>
-              <CriticalToggle 
-                checked={formData.critical} 
-                onChange={(val) => setFormData({ ...formData, critical: val })}
-              />
-            </div>
-            
+            {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
               <input
@@ -2005,6 +1995,89 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               />
             </div>
             
+            {/* Project & Status */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
+                <select
+                  required
+                  value={formData.project_id}
+                  onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="">Select project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                >
+                  {COLUMNS.map((col) => (
+                    <option key={col.id} value={col.id}>{col.title}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {/* Due Date with shortcuts */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                />
+                {formData.due_date && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, due_date: '' })}
+                    className="px-3 py-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                    title="Clear date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {DATE_SHORTCUTS.map(shortcut => (
+                  <button
+                    key={shortcut.label}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      formData.due_date === shortcut.getValue()
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    }`}
+                  >
+                    {shortcut.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Priority Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <div>
+                <p className="font-medium text-gray-700 dark:text-gray-300">🚩 Critical Priority</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Flag if this needs immediate attention</p>
+              </div>
+              <CriticalToggle 
+                checked={formData.critical} 
+                onChange={(val) => setFormData({ ...formData, critical: val })}
+              />
+            </div>
+            
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea
@@ -2017,144 +2090,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               />
               {pasteMessage && activeTab === 'details' && (
                 <p className="text-sm text-green-600 mt-1">{pasteMessage}</p>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
-                <select
-                  required
-                  value={formData.project_id}
-                  onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Select project</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer/Client</label>
-                {!useCustomCustomer ? (
-                  <select
-                    value={formData.customer}
-                    onChange={(e) => {
-                      if (e.target.value === '__other__') {
-                        setUseCustomCustomer(true)
-                        setFormData({ ...formData, customer: '' })
-                      } else {
-                        setFormData({ ...formData, customer: e.target.value })
-                      }
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  >
-                    <option value="">No customer</option>
-                    {selectedProject?.customers?.map((cust) => (
-                      <option key={cust} value={cust}>{cust}</option>
-                    ))}
-                    <option value="__other__">Other (enter name)</option>
-                  </select>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={customCustomer}
-                      onChange={(e) => setCustomCustomer(e.target.value)}
-                      className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                      placeholder="Customer name"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { setUseCustomCustomer(false); setCustomCustomer('') }}
-                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                <select
-                  value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  {SOURCES.map((src) => (
-                    <option key={src.id} value={src.id}>{src.icon} {src.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Source Link</label>
-              <input
-                type="text"
-                value={formData.source_link}
-                onChange={(e) => setFormData({ ...formData, source_link: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="URL or reference to the source"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
-              {!useCustomAssignee ? (
-                <select
-                  value={formData.assignee}
-                  onChange={(e) => {
-                    if (e.target.value === '__other__') {
-                      setUseCustomAssignee(true)
-                      setFormData({ ...formData, assignee: '' })
-                    } else {
-                      setFormData({ ...formData, assignee: e.target.value })
-                    }
-                  }}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Unassigned</option>
-                  {selectedProject?.members?.map((member) => (
-                    <option key={member} value={member}>{member}</option>
-                  ))}
-                  <option value="__other__">Other (enter name)</option>
-                </select>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customAssignee}
-                    onChange={(e) => setCustomAssignee(e.target.value)}
-                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="Enter name"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { setUseCustomAssignee(false); setCustomAssignee('') }}
-                    className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
               )}
             </div>
           </div>
@@ -2277,28 +2212,32 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        {activeTab === 'planning' && (
+        {activeTab === 'more' && (
           <div className="space-y-4">
+            {/* Time & Energy */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                >
-                  {COLUMNS.map((col) => (
-                    <option key={col.id} value={col.id}>{col.title}</option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Estimate</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="5"
+                  value={formData.time_estimate}
+                  onChange={(e) => setFormData({ ...formData, time_estimate: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  placeholder="Minutes (e.g., 30)"
+                />
+                {formData.time_estimate && (
+                  <p className="text-xs text-gray-400 mt-1">{formatTimeEstimate(parseInt(formData.time_estimate))}</p>
+                )}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Energy Level Required</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Energy Level</label>
                 <select
                   value={formData.energy_level}
                   onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
                     <option key={key} value={key}>{val.icon} {val.label}</option>
@@ -2307,69 +2246,142 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
+            {/* Start Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              />
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Leave blank if ready to start anytime</p>
+            </div>
+            
+            {/* Assignee & Customer */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-                <p className="text-xs text-gray-400 mt-1">Leave blank if ready to start anytime</p>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assignee</label>
+                {!useCustomAssignee ? (
+                  <select
+                    value={formData.assignee}
+                    onChange={(e) => {
+                      if (e.target.value === '__other__') {
+                        setUseCustomAssignee(true)
+                        setFormData({ ...formData, assignee: '' })
+                      } else {
+                        setFormData({ ...formData, assignee: e.target.value })
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">Unassigned</option>
+                    {selectedProject?.members?.map((member) => (
+                      <option key={member} value={member}>{member}</option>
+                    ))}
+                    <option value="__other__">Other (enter name)</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customAssignee}
+                      onChange={(e) => setCustomAssignee(e.target.value)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="Enter name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setUseCustomAssignee(false); setCustomAssignee('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                <input
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-                {/* Quick date shortcuts */}
-                <div className="flex items-center gap-2 mt-2">
-                  {DATE_SHORTCUTS.map(shortcut => (
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
+                {!useCustomCustomer ? (
+                  <select
+                    value={formData.customer}
+                    onChange={(e) => {
+                      if (e.target.value === '__other__') {
+                        setUseCustomCustomer(true)
+                        setFormData({ ...formData, customer: '' })
+                      } else {
+                        setFormData({ ...formData, customer: e.target.value })
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">No customer</option>
+                    {selectedProject?.customers?.map((cust) => (
+                      <option key={cust} value={cust}>{cust}</option>
+                    ))}
+                    <option value="__other__">Other (enter name)</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customCustomer}
+                      onChange={(e) => setCustomCustomer(e.target.value)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="Customer name"
+                    />
                     <button
-                      key={shortcut.label}
                       type="button"
-                      onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
-                      className={`px-2 py-1 text-xs rounded-lg transition-colors ${
-                        formData.due_date === shortcut.getValue()
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-600'
-                      }`}
+                      onClick={() => { setUseCustomCustomer(false); setCustomCustomer('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                     >
-                      {shortcut.label}
+                      ✕
                     </button>
-                  ))}
-                  {formData.due_date && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, due_date: '' })}
-                      className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
             
+            {/* Category & Source */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
+                <select
+                  value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                >
+                  {SOURCES.map((src) => (
+                    <option key={src.id} value={src.id}>{src.icon} {src.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {/* Source Link */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Estimate (minutes)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Link</label>
               <input
-                type="number"
-                min="0"
-                step="5"
-                value={formData.time_estimate}
-                onChange={(e) => setFormData({ ...formData, time_estimate: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="e.g., 30, 60, 120"
+                type="text"
+                value={formData.source_link}
+                onChange={(e) => setFormData({ ...formData, source_link: e.target.value })}
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="URL or reference to the source"
               />
-              {formData.time_estimate && (
-                <p className="text-xs text-gray-400 mt-1">({formatTimeEstimate(parseInt(formData.time_estimate))})</p>
-              )}
             </div>
           </div>
         )}
