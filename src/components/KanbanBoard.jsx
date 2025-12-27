@@ -846,9 +846,8 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
   const completedToday = tasks.filter(t => {
-    if (t.status !== 'done') return false
-    const updatedAt = new Date(t.updated_at || t.created_at)
-    return updatedAt >= todayStart
+    if (t.status !== 'done' || !t.completed_at) return false
+    return new Date(t.completed_at) >= todayStart
   })
   
   const totalTimeCompleted = completedToday.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
