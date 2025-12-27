@@ -2303,7 +2303,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`flex-shrink-0 w-[280px] sm:w-[320px] md:flex-1 md:min-w-[300px] md:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
+      className={`flex-1 min-w-[280px] sm:min-w-[300px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
       }`}
       onDragOver={(e) => {
@@ -5824,8 +5824,8 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'board' && (
-            <main className="max-w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
-              <div className="flex gap-3 sm:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
+            <main className="w-full px-3 sm:px-6 py-4 sm:py-6">
+              <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6">
                 {COLUMNS.map((column) => (
                   <Column
                     key={column.id}
