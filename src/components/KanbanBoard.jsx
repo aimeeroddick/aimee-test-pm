@@ -3894,6 +3894,13 @@ export default function KanbanBoard() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [undoToast, setUndoToast] = useState(null) // { taskId, previousStatus, message }
+  const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
+  
+  // Show notification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
   
   // View state
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', 'calendar', or 'projects'
@@ -5103,6 +5110,7 @@ export default function KanbanBoard() {
   // Update my_day_date for My Day feature
   const handleUpdateMyDayDate = async (taskId, myDayDate) => {
     try {
+      const task = tasks.find(t => t.id === taskId)
       const { error } = await supabase
         .from('tasks')
         .update({ my_day_date: myDayDate })
@@ -5114,6 +5122,11 @@ export default function KanbanBoard() {
       setTasks(prev => prev.map(t => 
         t.id === taskId ? { ...t, my_day_date: myDayDate } : t
       ))
+      
+      // Show notification
+      if (myDayDate && new Date(myDayDate).toDateString() === new Date().toDateString()) {
+        showNotification(`☀️ Added "${task?.title}" to My Day`)
+      }
     } catch (error) {
       console.error('Error updating my_day_date:', error)
     }
@@ -5526,6 +5539,30 @@ export default function KanbanBoard() {
           </button>
           <button
             onClick={() => setUndoToast(null)}
+            className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed bottom-6 left-6 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-5">
+          {notification.type === 'success' ? (
+            <svg className="w-5 h-5 text-emerald-400 dark:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-blue-400 dark:text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          <span className="text-sm font-medium">{notification.message}</span>
+          <button
+            onClick={() => setNotification(null)}
             className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
