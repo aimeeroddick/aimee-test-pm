@@ -395,6 +395,8 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
       </div>
     </div>
   )
+}
+
 const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   const steps = [
     {
