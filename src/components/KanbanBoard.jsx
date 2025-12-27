@@ -121,15 +121,22 @@ const isInMyDay = (task) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
+  // Check if task was dismissed (my_day_date set to a past date)
+  if (task.my_day_date) {
+    const myDayDate = new Date(task.my_day_date)
+    myDayDate.setHours(0, 0, 0, 0)
+    // If my_day_date < today, task was dismissed
+    if (myDayDate < today) return false
+    // If my_day_date = today, task was manually added
+    if (myDayDate.getTime() === today.getTime()) return true
+  }
+  
   // Auto-included: start_date <= today
   if (task.start_date) {
     const startDate = new Date(task.start_date)
     startDate.setHours(0, 0, 0, 0)
     if (startDate <= today) return true
   }
-  
-  // Manually added: my_day_date exists
-  if (task.my_day_date) return true
   
   return false
 }
@@ -1542,16 +1549,31 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const greetingEmoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : '🌙'
   
   const taskInMyDay = (task) => {
-    // For done tasks, show if they were in My Day and completed today
+    // Check if task was dismissed (my_day_date set to a past date)
+    if (task.my_day_date) {
+      const myDayDate = new Date(task.my_day_date)
+      myDayDate.setHours(0, 0, 0, 0)
+      // If my_day_date < today, task was dismissed - exclude it
+      if (myDayDate < today) return false
+      // If my_day_date = today, task was manually added - include it
+      if (myDayDate.getTime() === today.getTime()) {
+        // But not if it's done (unless completed today)
+        if (task.status === 'done') {
+          if (!task.completed_at) return false
+          const completedDate = new Date(task.completed_at)
+          completedDate.setHours(0, 0, 0, 0)
+          return completedDate.getTime() === today.getTime()
+        }
+        return true
+      }
+    }
+    
+    // For done tasks without my_day_date, show if auto-added and completed today
     if (task.status === 'done') {
-      // Must have been completed today to show
       if (!task.completed_at) return false
       const completedDate = new Date(task.completed_at)
       completedDate.setHours(0, 0, 0, 0)
       if (completedDate.getTime() !== today.getTime()) return false
-      
-      // Was manually added to My Day
-      if (task.my_day_date) return true
       
       // Was auto-added via start_date
       if (task.start_date) {
@@ -1569,8 +1591,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       if (startDate <= today) return true
     }
     
-    // Manually added via my_day_date
-    if (task.my_day_date) return true
     return false
   }
   
@@ -1652,7 +1672,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   
   const handleRemoveFromMyDay = (e, task) => {
     e.stopPropagation()
-    onUpdateMyDayDate(task.id, null)
+    // Set to yesterday to mark as "dismissed from My Day"
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    onUpdateMyDayDate(task.id, yesterdayStr)
   }
   
   const TaskCard = ({ task, showRemove = false, isCompleted = false }) => {
@@ -1708,7 +1732,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                 {task.title}
               </h4>
               
-              {showRemove && !isAutoAdded(task) && !isCompleted && (
+              {showRemove && !isCompleted && (
                 <button
                   onClick={(e) => handleRemoveFromMyDay(e, task)}
                   className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
