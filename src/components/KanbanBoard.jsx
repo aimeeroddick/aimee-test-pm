@@ -709,8 +709,15 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
 }
 
 // Help Modal Component
-const HelpModal = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState('board')
+const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab)
+  
+  // Reset to initialTab when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab)
+    }
+  }, [isOpen, initialTab])
   
   if (!isOpen) return null
   
@@ -3402,6 +3409,7 @@ export default function KanbanBoard() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
+  const [helpModalTab, setHelpModalTab] = useState('board')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
   })
@@ -3443,9 +3451,6 @@ export default function KanbanBoard() {
   
   // Toast for undo actions
   const [toast, setToast] = useState(null)
-  
-  // Keyboard shortcuts modal
-  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false)
   
   // Bulk selection
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
@@ -3561,7 +3566,8 @@ export default function KanbanBoard() {
       // ? for keyboard shortcuts help
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
-        setShortcutsModalOpen(true)
+        setHelpModalTab('shortcuts')
+        setHelpModalOpen(true)
         return
       }
       
@@ -5072,16 +5078,6 @@ export default function KanbanBoard() {
                 )}
               </button>
               
-              <button
-                onClick={() => setShortcutsModalOpen(true)}
-                className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
-                title="Keyboard shortcuts (?)"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-              
               {currentView === 'board' && (
                 <button
                   onClick={() => { setBulkSelectMode(!bulkSelectMode); setSelectedTaskIds(new Set()) }}
@@ -5861,7 +5857,8 @@ export default function KanbanBoard() {
       
       <HelpModal
         isOpen={helpModalOpen}
-        onClose={() => setHelpModalOpen(false)}
+        onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
+        initialTab={helpModalTab}
       />
       
       {/* Onboarding Overlay */}
@@ -6106,12 +6103,6 @@ Or we can extract from:
           onClose={() => setToast(null)}
         />
       )}
-      
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        isOpen={shortcutsModalOpen}
-        onClose={() => setShortcutsModalOpen(false)}
-      />
       
       {/* Quick Add Modal */}
       {quickAddOpen && (
