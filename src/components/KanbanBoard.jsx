@@ -1612,7 +1612,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, userLists }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const blocked = isBlocked(task, allTasks)
@@ -1728,9 +1728,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               <span 
                 className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full"
                 style={{
-                  backgroundColor: getCustomerColor(task.customer)?.bg || '#EDE9FE',
-                  color: getCustomerColor(task.customer)?.text || '#7C3AED',
-                  border: `1px solid ${getCustomerColor(task.customer)?.border || '#C4B5FD'}`
+                  backgroundColor: getCustomerColor(task.customer, userLists)?.bg || '#EDE9FE',
+                  color: getCustomerColor(task.customer, userLists)?.text || '#7C3AED',
+                  border: `1px solid ${getCustomerColor(task.customer, userLists)?.border || '#C4B5FD'}`
                 }}
               >
                 {task.customer}
@@ -1773,7 +1773,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, userLists }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -1833,6 +1833,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             bulkSelectMode={bulkSelectMode}
             isSelected={selectedTaskIds?.has(task.id)}
             onToggleSelect={onToggleSelect}
+            userLists={userLists}
           />
         ))}
         
@@ -5299,6 +5300,7 @@ export default function KanbanBoard() {
                       }
                       setSelectedTaskIds(newSet)
                     }}
+                    userLists={userLists}
                   />
                 ))}
               </div>
