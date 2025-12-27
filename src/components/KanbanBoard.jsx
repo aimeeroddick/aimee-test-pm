@@ -1066,7 +1066,8 @@ const HelpModal = ({ isOpen, onClose }) => {
   )
 }
 
-// Search Modal Component = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
+// Search Modal Component
+const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const inputRef = useRef(null)
   
