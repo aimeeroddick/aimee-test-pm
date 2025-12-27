@@ -1155,10 +1155,28 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800">Focus Queue</h3>
-                    <p className="text-sm text-gray-500">AI-suggested tasks based on your priorities</p>
+                    <p className="text-sm text-gray-500">Tasks matched to your energy and time</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {/* Energy suggestion based on time of day */}
+                  {(() => {
+                    const hour = new Date().getHours()
+                    const suggestion = hour < 10 ? { level: 'high', text: 'Morning power! Try high-energy tasks', icon: '⚡' } :
+                                       hour < 14 ? { level: 'medium', text: 'Mid-day focus. Medium energy works well', icon: '→' } :
+                                       hour < 17 ? { level: 'low', text: 'Afternoon wind-down. Low-energy tasks?', icon: '○' } :
+                                       { level: 'low', text: 'Evening mode. Light tasks recommended', icon: '🌙' }
+                    
+                    return selectedEnergy === 'all' && (
+                      <button
+                        onClick={() => setSelectedEnergy(suggestion.level)}
+                        className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 rounded-lg text-xs font-medium hover:from-amber-100 hover:to-orange-100 transition-all"
+                      >
+                        <span>{suggestion.icon}</span>
+                        <span>{suggestion.text}</span>
+                      </button>
+                    )
+                  })()}
                   <select
                     value={selectedEnergy}
                     onChange={(e) => setSelectedEnergy(e.target.value)}
@@ -1308,7 +1326,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
@@ -1318,6 +1336,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   const blocked = isBlocked(task, allTasks)
   const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
   const isDone = task.status === 'done'
+  const isToday = task.due_date === new Date().toISOString().split('T')[0]
   
   return (
     <div
@@ -1519,6 +1538,20 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Add to Today button - show if not done and not already today */}
+          {onSetDueDate && !isDone && !isToday && task.status !== 'done' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onSetDueDate(task.id, new Date().toISOString().split('T')[0])
+              }}
+              className="opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all"
+              title="Add to My Day"
+            >
+              <span>☀️</span>
+              <span className="hidden sm:inline">Today</span>
+            </button>
+          )}
           {task.start_date && (
             <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${
               readyToStart ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-500'
@@ -1603,7 +1636,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -1659,6 +1692,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             allTasks={allTasks}
             onQuickComplete={onQuickComplete}
             onStatusChange={onStatusChange}
+            onSetDueDate={onSetDueDate}
           />
         ))}
         
@@ -3939,6 +3973,23 @@ export default function KanbanBoard() {
       setError(err.message)
     }
   }
+  
+  // Quick set due date (for "Add to My Day" feature)
+  const handleSetDueDate = async (taskId, dueDate) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ due_date: dueDate })
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, due_date: dueDate } : t))
+    } catch (err) {
+      console.error('Error setting due date:', err)
+      setError(err.message)
+    }
+  }
 
   const handleUndo = async () => {
     if (!undoToast) return
@@ -5078,6 +5129,7 @@ export default function KanbanBoard() {
                     allTasks={tasks}
                     onQuickComplete={handleUpdateTaskStatus}
                     onStatusChange={handleUpdateTaskStatus}
+                    onSetDueDate={handleSetDueDate}
                   />
                 ))}
               </div>
