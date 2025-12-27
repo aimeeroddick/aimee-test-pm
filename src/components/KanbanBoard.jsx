@@ -2129,7 +2129,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
     >
       {/* Hover Popup Bubble */}
       {hasExtraInfo && (
-        <div className="absolute left-full top-0 ml-2 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+        <div className={`absolute top-0 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
+          task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
+        }`}>
           {/* Category */}
           {category && (
             <div className="mb-2">
