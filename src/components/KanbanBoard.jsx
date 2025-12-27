@@ -2903,6 +2903,9 @@ export default function KanbanBoard() {
   const [filterCritical, setFilterCritical] = useState(false)
   const [filterOverdue, setFilterOverdue] = useState(false)
   const [filterBlocked, setFilterBlocked] = useState(false)
+  const [filterActive, setFilterActive] = useState(false)
+  const [filterBacklog, setFilterBacklog] = useState(false)
+  const [filterDueToday, setFilterDueToday] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
@@ -4190,7 +4193,7 @@ export default function KanbanBoard() {
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
   // Check if any filters are active
-  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || searchQuery.trim()
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || searchQuery.trim()
   
   // Clear all filters
   const clearFilters = () => {
@@ -4213,6 +4216,9 @@ export default function KanbanBoard() {
     if (filterCritical && !t.critical) return false
     if (filterOverdue && getDueDateStatus(t.due_date, t.status) !== 'overdue') return false
     if (filterBlocked && !isBlocked(t, tasks)) return false
+    if (filterActive && !['todo', 'in_progress'].includes(t.status)) return false
+    if (filterBacklog && t.status !== 'backlog') return false
+    if (filterDueToday && getDueDateStatus(t.due_date, t.status) !== 'today') return false
     
     // Search filter
     if (searchQuery.trim()) {
@@ -4534,16 +4540,6 @@ export default function KanbanBoard() {
             <div className="flex items-center gap-1 sm:gap-2">
               {/* Utility buttons - icon only */}
               <button
-                onClick={() => setSearchModalOpen(true)}
-                className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
-                title="Search (⌘S or /)"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              
-              <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title={darkMode ? 'Light mode' : 'Dark mode'}
@@ -4680,48 +4676,7 @@ export default function KanbanBoard() {
                 </label>
               </div>
               
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
               
-              {/* Quick Filter Toggles */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setFilterCritical(!filterCritical)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    filterCritical
-                      ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700'
-                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span>🚩</span>
-                  <span className="hidden sm:inline">Critical</span>
-                </button>
-                
-                <button
-                  onClick={() => setFilterOverdue(!filterOverdue)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    filterOverdue
-                      ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700'
-                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span>⚠️</span>
-                  <span className="hidden sm:inline">Overdue</span>
-                </button>
-                
-                <button
-                  onClick={() => setFilterBlocked(!filterBlocked)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    filterBlocked
-                      ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
-                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span>🔒</span>
-                  <span className="hidden sm:inline">Blocked</span>
-                </button>
-              </div>
-              
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
               
               {/* Search Bar */}
               <div className="relative flex-1 min-w-[150px] max-w-xs">
@@ -4767,84 +4722,100 @@ export default function KanbanBoard() {
       {/* Stats Bar - only show on board view */}
       {currentView === 'board' && (
         <div className="bg-white/60 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 sm:py-3 overflow-x-auto">
-          <div className="max-w-full mx-auto flex items-center gap-3 sm:gap-6 text-sm min-w-max">
-            {/* Today Widget */}
-            <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-4 border-r border-gray-200 dark:border-gray-700">
-              {/* Streak */}
-              {currentStreak > 0 && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 rounded-lg" title={`${currentStreak} day streak!`}>
-                  <span className="text-amber-500">🔥</span>
-                  <span className="font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
-                </div>
-              )}
-              {/* Today's progress */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-green-500">✓</span>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">{completedToday}</span>
-                <span className="text-gray-400 dark:text-gray-500">today</span>
-              </div>
-              {/* Weekly stats */}
-              <div className="hidden sm:flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                <span>•</span>
-                <span>{weeklyStats.count} this week</span>
-              </div>
-              {/* Plan Day button */}
-              <button
-                onClick={() => setPlanningModeOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 rounded-lg text-sm font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors"
-              >
-                <span>☀️</span>
-                <span>Plan</span>
-              </button>
-            </div>
+          <div className="max-w-full mx-auto flex items-center gap-2 sm:gap-3 text-sm min-w-max">
+            {/* Active filter */}
+            <button
+              onClick={() => { setFilterActive(!filterActive); setFilterBacklog(false) }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterActive
+                  ? 'bg-indigo-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span>Active</span>
+              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => ['todo', 'in_progress'].includes(t.status)).length}</span>
+            </button>
             
-            <div className="flex items-center gap-1 sm:gap-2">
-              <span className="text-gray-500 dark:text-gray-400">Active:</span>
-              <span className="font-semibold text-gray-800 dark:text-gray-200">{filteredTasks.filter(t => t.status !== 'done').length}</span>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <span className="text-gray-500 dark:text-gray-400">Time:</span>
-              <span className="font-semibold text-gray-800 dark:text-gray-200">{formatTimeEstimate(totalEstimatedTime) || '0h'}</span>
-            </div>
+            {/* Backlog filter */}
+            <button
+              onClick={() => { setFilterBacklog(!filterBacklog); setFilterActive(false) }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterBacklog
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span>Backlog</span>
+              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => t.status === 'backlog').length}</span>
+            </button>
             
-            {readyToStartCount > 0 && (
+            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+            
+            {/* Critical filter */}
+            <button
+              onClick={() => setFilterCritical(!filterCritical)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterCritical
+                  ? 'bg-red-500 text-white'
+                  : criticalCount > 0 
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              <span>🚩 Critical</span>
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterCritical ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{criticalCount}</span>
+            </button>
+            
+            {/* Due Today filter */}
+            <button
+              onClick={() => setFilterDueToday(!filterDueToday)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterDueToday
+                  ? 'bg-orange-500 text-white'
+                  : dueTodayCount > 0
+                    ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/50'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              <span>Due Today</span>
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterDueToday ? 'bg-white/20' : 'bg-orange-100 dark:bg-orange-900/50'}`}>{dueTodayCount}</span>
+            </button>
+            
+            {/* Overdue filter */}
+            <button
+              onClick={() => setFilterOverdue(!filterOverdue)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterOverdue
+                  ? 'bg-red-600 text-white'
+                  : overdueCount > 0
+                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              <span>Overdue</span>
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterOverdue ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{overdueCount}</span>
+            </button>
+            
+            {/* Clear filters */}
+            {hasActiveFilters && (
               <button
-                onClick={() => setFilterReadyToStart(!filterReadyToStart)}
-                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg transition-all whitespace-nowrap ${
-                  filterReadyToStart ? 'bg-green-500 text-white' : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50'
-                }`}
+                onClick={() => {
+                  setFilterActive(false)
+                  setFilterBacklog(false)
+                  setFilterCritical(false)
+                  setFilterDueToday(false)
+                  setFilterOverdue(false)
+                  setFilterBlocked(false)
+                  setFilterReadyToStart(false)
+                  setSearchQuery('')
+                }}
+                className="flex items-center gap-1 px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span className="font-medium">{readyToStartCount} ready</span>
-                {filterReadyToStart && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
+                Clear
               </button>
-            )}
-            
-            {criticalCount > 0 && (
-              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-red-50 dark:bg-red-900/30 rounded-lg whitespace-nowrap">
-                <span className="text-red-600 dark:text-red-400 font-medium">🚩 {criticalCount} critical</span>
-              </div>
-            )}
-            {dueTodayCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
-                <span className="text-orange-600 font-medium">{dueTodayCount} due today</span>
-              </div>
-            )}
-            {overdueCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-                <span className="text-red-600 font-medium">{overdueCount} overdue</span>
-              </div>
-            )}
-            {blockedCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg">
-                <span className="text-orange-600 font-medium">🔒 {blockedCount} blocked</span>
-              </div>
             )}
           </div>
         </div>
