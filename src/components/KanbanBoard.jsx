@@ -1547,11 +1547,18 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     }
   })
   
-  // Format time from minutes since midnight
+  // Format time from minutes since midnight to HH:MM (24-hour format for database)
   const formatTime = (minutes) => {
     if (minutes === null || minutes === undefined) return ''
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+  }
+  
+  // Format time for display (12-hour format with AM/PM)
+  const formatTimeDisplay = (timeStr) => {
+    if (!timeStr) return ''
+    const [h, m] = timeStr.split(':').map(Number)
     const hour = h % 12 || 12
     const ampm = h < 12 ? 'AM' : 'PM'
     return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
@@ -2065,11 +2072,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                               'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
                             }`}
                             style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
-                            title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
+                            title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}`}
                           >
                             <div className="truncate text-[11px]">{task.critical && '🚩 '}{task.title}</div>
                             {heightSlots > 1 && task.start_time && (
-                              <div className="text-[9px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>
+                              <div className="text-[9px] opacity-70">{formatTimeDisplay(task.start_time)}{task.end_time && ` - ${formatTimeDisplay(task.end_time)}`}</div>
                             )}
                             {/* Resize handle */}
                             <div
