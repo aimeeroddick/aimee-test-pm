@@ -1968,7 +1968,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             { id: 'additional', label: 'Additional' },
             { id: 'subtasks', label: 'Subtasks' },
             { id: 'dependencies', label: 'Dependencies' },
-            { id: 'notes', label: 'Notes & Files' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -2419,6 +2418,123 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 placeholder="URL or reference to the source"
               />
             </div>
+            
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onPaste={handlePaste}
+                rows={4}
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="Running notes, context, updates... (paste images here!)"
+              />
+              {pasteMessage && activeTab === 'additional' && (
+                <p className="text-sm text-green-600 mt-1">{pasteMessage}</p>
+              )}
+            </div>
+            
+            {/* Attachments */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachments</label>
+              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <input
+                  id="camera-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('camera-input')?.click()}
+                    disabled={isUploading}
+                    className="sm:hidden w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                  >
+                    📷 Take Photo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full sm:w-auto px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  >
+                    {isUploading ? 'Uploading...' : '📎 Choose Files'}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Max 10MB • Paste images with ⌘V</p>
+              </div>
+              
+              {uploadError && (
+                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">
+                  {uploadError}
+                </div>
+              )}
+              
+              {(attachments.length > 0 || newFiles.length > 0) && (
+                <div className="mt-3 space-y-2">
+                  {attachments.map((attachment) => (
+                    <div key={attachment.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-lg">📄</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{attachment.file_name}</p>
+                          <p className="text-xs text-gray-400">{formatFileSize(attachment.file_size)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <a
+                          href={attachment.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                        >
+                          ⬇️
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => removeExistingAttachment(attachment.id)}
+                          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-500"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {newFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-lg">➕</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{file.name}</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">New • {formatFileSize(file.size)}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeNewFile(index)}
+                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-500 flex-shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
         
@@ -2483,149 +2599,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
                     ✓ {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected - task will be blocked until complete
                   </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'notes' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                onPaste={handlePaste}
-                rows={6}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
-                placeholder="Running notes, context, updates... (paste images here!)"
-              />
-              {pasteMessage && activeTab === 'notes' && (
-                <p className="text-sm text-green-600 mt-1">{pasteMessage}</p>
-              )}
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments</label>
-              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 text-center hover:border-indigo-400 transition-colors">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                {/* Camera input for mobile */}
-                <input
-                  id="camera-input"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                  {/* Take Photo button - prominent on mobile */}
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('camera-input')?.click()}
-                    disabled={isUploading}
-                    className="sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-500 text-white rounded-xl font-medium disabled:opacity-50 active:bg-indigo-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Take Photo
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-gray-100 dark:bg-gray-700 sm:bg-transparent text-gray-700 dark:text-gray-300 sm:text-indigo-600 dark:sm:text-indigo-400 rounded-xl sm:rounded-none font-medium disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-600 sm:hover:bg-transparent sm:hover:text-indigo-700"
-                  >
-                    <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {isUploading ? 'Uploading...' : 'Choose Files'}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Max 10MB per file • Paste images with ⌘V</p>
-              </div>
-              
-              {uploadError && (
-                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                  {uploadError}
-                </div>
-              )}
-              
-              {(attachments.length > 0 || newFiles.length > 0) && (
-                <div className="mt-4 space-y-2">
-                  {attachments.map((attachment) => (
-                    <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">{attachment.file_name}</p>
-                          <p className="text-xs text-gray-400">{formatFileSize(attachment.file_size)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={attachment.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                        >
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => removeExistingAttachment(attachment.id)}
-                          className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                        >
-                          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {newFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">{file.name}</p>
-                          <p className="text-xs text-green-600">New • {formatFileSize(file.size)}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeNewFile(index)}
-                        className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
