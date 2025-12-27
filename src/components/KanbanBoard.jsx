@@ -1620,13 +1620,12 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   const isDone = task.status === 'done'
   const readyToStart = isReadyToStart(task)
   const category = CATEGORIES.find(c => c.id === task.category)
-  const source = SOURCES.find(s => s.id === task.source)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   
   const accentColor = blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
   
-  const hasExtraInfo = task.description || task.customer || task.assignee || category || 
-    (task.subtasks?.length > 0) || (task.attachments?.length > 0) || source
+  const hasExtraInfo = task.description || task.assignee || category || 
+    (task.subtasks?.length > 0) || (task.attachments?.length > 0)
 
   return (
     <div
@@ -1645,11 +1644,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       {/* Hover Popup Bubble */}
       {hasExtraInfo && (
         <div className="absolute left-full top-0 ml-2 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
-          {/* Category & Source Row */}
-          {(category || source) && (
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {category && <span className="px-2 py-0.5 text-xs font-medium rounded text-white" style={{ backgroundColor: category.color }}>{category.label}</span>}
-              {source && <span className="text-xs text-gray-500 dark:text-gray-400">{source.icon} {source.label}</span>}
+          {/* Category */}
+          {category && (
+            <div className="mb-2">
+              <span className="px-2 py-0.5 text-xs font-medium rounded text-white" style={{ backgroundColor: category.color }}>{category.label}</span>
             </div>
           )}
           {/* Customer */}
@@ -1723,6 +1721,22 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               </span>
             )}
           </div>
+          
+          {/* Customer */}
+          {task.customer && (
+            <div className="mt-1.5">
+              <span 
+                className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full"
+                style={{
+                  backgroundColor: getCustomerColor(task.customer)?.bg || '#EDE9FE',
+                  color: getCustomerColor(task.customer)?.text || '#7C3AED',
+                  border: `1px solid ${getCustomerColor(task.customer)?.border || '#C4B5FD'}`
+                }}
+              >
+                {task.customer}
+              </span>
+            </div>
+          )}
           
           {/* Project at bottom */}
           {showProject && project && (
