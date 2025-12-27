@@ -2160,13 +2160,31 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               <span className="text-xs text-gray-600 dark:text-gray-400">{task.assignee}</span>
             </div>
           )}
+          {/* Blocking Tasks */}
+          {task.dependencies?.length > 0 && (() => {
+            const blockingTasks = task.dependencies
+              .map(dep => allTasks.find(t => t.id === dep.depends_on_id))
+              .filter(t => t && t.status !== 'done')
+            if (blockingTasks.length === 0) return null
+            return (
+              <div className="mb-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">🚫 Blocked by:</p>
+                {blockingTasks.map(t => (
+                  <p key={t.id} className="text-xs text-red-500 dark:text-red-400 truncate">• {t.title}</p>
+                ))}
+              </div>
+            )
+          })()}
           {/* Subtasks Progress */}
           {task.subtasks?.length > 0 && (
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
+            <div className="mb-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Subtasks</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
+                </div>
+                <span className="text-xs text-gray-500">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
               </div>
-              <span className="text-xs text-gray-500">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
             </div>
           )}
           {/* Attachments */}
