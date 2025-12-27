@@ -4800,6 +4800,25 @@ export default function KanbanBoard() {
     }
   }
 
+  // Update my_day_date for My Day feature
+  const handleUpdateMyDayDate = async (taskId, myDayDate) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ my_day_date: myDayDate })
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      // Update local state
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, my_day_date: myDayDate } : t
+      ))
+    } catch (error) {
+      console.error('Error updating my_day_date:', error)
+    }
+  }
+
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
       const task = tasks.find(t => t.id === taskId)
@@ -5837,6 +5856,7 @@ export default function KanbanBoard() {
                 onDragStart={handleDragStart}
                 allTasks={tasks}
                 onQuickStatusChange={handleUpdateTaskStatus}
+                onUpdateMyDayDate={handleUpdateMyDayDate}
               />
             </div>
           )}
