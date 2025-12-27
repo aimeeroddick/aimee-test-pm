@@ -5472,7 +5472,21 @@ export default function KanbanBoard() {
     })
   }
 
-  const getTasksByStatus = (status) => sortTasksByPriority(filteredTasks.filter((t) => t.status === status), status === 'backlog')
+  const getTasksByStatus = (status) => {
+    const statusTasks = filteredTasks.filter((t) => t.status === status)
+    
+    // Done column: sort by completion date (most recent first)
+    if (status === 'done') {
+      return [...statusTasks].sort((a, b) => {
+        const aCompleted = a.completed_at ? new Date(a.completed_at) : new Date(0)
+        const bCompleted = b.completed_at ? new Date(b.completed_at) : new Date(0)
+        return bCompleted - aCompleted // Descending (most recent first)
+      })
+    }
+    
+    // Other columns: use priority sorting
+    return sortTasksByPriority(statusTasks, status === 'backlog')
+  }
 
   // Stats
   const criticalCount = filteredTasks.filter((t) => t.critical && t.status !== 'done').length
