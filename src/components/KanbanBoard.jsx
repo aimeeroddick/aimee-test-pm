@@ -1655,6 +1655,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
   
   // Handle drag start
   const handleDragStart = (e, task) => {
+    console.log('Drag started:', task.title, task.id)
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', task.id)
