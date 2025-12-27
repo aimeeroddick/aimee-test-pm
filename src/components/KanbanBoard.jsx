@@ -4461,6 +4461,14 @@ export default function KanbanBoard() {
                 <span>•</span>
                 <span>{weeklyStats.count} this week</span>
               </div>
+              {/* Plan Day button */}
+              <button
+                onClick={() => setPlanningModeOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 rounded-lg text-sm font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors"
+              >
+                <span>☀️</span>
+                <span>Plan</span>
+              </button>
             </div>
             
             <div className="flex items-center gap-1 sm:gap-2">
@@ -5154,6 +5162,140 @@ Or we can extract from:
             </form>
             
             <p className="mt-3 text-xs text-center text-gray-400">Press Q anytime to quick add</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Daily Planning Modal */}
+      {planningModeOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setPlanningModeOpen(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl sm:mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">☀️ Plan Your Day</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Pick tasks to focus on today</p>
+              </div>
+              <button
+                onClick={() => setPlanningModeOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {/* Energy filter */}
+              <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">Energy:</span>
+                {Object.entries(ENERGY_LEVELS).map(([key, style]) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveFilters(prev => {
+                      const withoutEnergy = prev.filter(f => f.type !== 'energy')
+                      return prev.some(f => f.type === 'energy' && f.value === key)
+                        ? withoutEnergy
+                        : [...withoutEnergy, { type: 'energy', value: key }]
+                    })}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      activeFilters.some(f => f.type === 'energy' && f.value === key)
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {style.icon} {style.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Backlog tasks to pick from */}
+              <div className="space-y-2">
+                {tasks
+                  .filter(t => t.status === 'backlog' && !isBlocked(t, tasks))
+                  .filter(t => !activeFilters.some(f => f.type === 'energy') || activeFilters.some(f => f.type === 'energy' && f.value === t.energy_level))
+                  .sort((a, b) => {
+                    if (a.critical && !b.critical) return -1
+                    if (!a.critical && b.critical) return 1
+                    if (a.due_date && !b.due_date) return -1
+                    if (!a.due_date && b.due_date) return 1
+                    return 0
+                  })
+                  .map(task => {
+                    const project = projects.find(p => p.id === task.project_id)
+                    const energyStyle = ENERGY_LEVELS[task.energy_level]
+                    const isReady = isReadyToStart(task)
+                    
+                    return (
+                      <div
+                        key={task.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                          task.critical
+                            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                            : isReady
+                            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {task.critical && <span className="text-red-500">🚩</span>}
+                            {isReady && <span className="text-green-500">✓</span>}
+                            <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{task.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <span>{project?.name}</span>
+                            {task.time_estimate && (
+                              <>
+                                <span>•</span>
+                                <span>{formatTimeEstimate(task.time_estimate)}</span>
+                              </>
+                            )}
+                            <span className={`px-1.5 py-0.5 rounded ${energyStyle.color}`}>
+                              {energyStyle.icon}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleUpdateTaskStatus(task.id, 'todo')}
+                          className="px-3 py-1.5 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors whitespace-nowrap"
+                        >
+                          + Today
+                        </button>
+                      </div>
+                    )
+                  })
+                }
+                
+                {tasks.filter(t => t.status === 'backlog' && !isBlocked(t, tasks)).length === 0 && (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <p className="text-lg mb-2">🎉 Backlog is empty!</p>
+                    <p className="text-sm">All tasks are either planned or done.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{tasks.filter(t => t.status === 'todo').length}</span> tasks in Todo
+                </div>
+                <button
+                  onClick={() => {
+                    setPlanningModeOpen(false)
+                    setCurrentView('myday')
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium"
+                >
+                  View My Day →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
