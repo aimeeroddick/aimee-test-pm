@@ -1525,19 +1525,19 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         </div>
       )}
       
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <div className="flex items-center gap-2 min-w-0">
           {task.assignee && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white bg-purple-500">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium text-white bg-purple-500">
                 {task.assignee.charAt(0).toUpperCase()}
               </div>
-              <span className="text-gray-600 text-xs">{task.assignee}</span>
+              <span className="text-gray-600 dark:text-gray-400 text-xs truncate">{task.assignee}</span>
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Add to Today button - show if not done and not already today */}
           {onSetDueDate && !isDone && !isToday && task.status !== 'done' && (
             <button
@@ -1561,21 +1561,21 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </div>
           )}
           {task.due_date && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${
               dueDateStatus === 'overdue'
-                ? 'bg-red-50 text-red-700'
+                ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                 : dueDateStatus === 'today'
-                ? 'bg-orange-50 text-orange-700'
+                ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                 : dueDateStatus === 'soon'
-                ? 'bg-amber-50 text-amber-700'
-                : 'bg-gray-50 text-gray-600'
+                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
             }`}>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              {formatDate(task.due_date)}
-              {dueDateStatus === 'overdue' && ' (overdue)'}
-              {dueDateStatus === 'today' && ' (today)'}
+              <span>{formatDate(task.due_date)}</span>
+              {dueDateStatus === 'overdue' && <span className="hidden sm:inline"> (overdue)</span>}
+              {dueDateStatus === 'today' && <span className="hidden sm:inline"> (today)</span>}
             </div>
           )}
         </div>
