@@ -1962,9 +1962,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           {[
             { id: 'details', label: 'Details' },
+            { id: 'additional', label: 'Additional' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'more', label: 'More' },
-            { id: 'recurring', label: 'Recurring & Deps' },
+            { id: 'dependencies', label: 'Dependencies' },
             { id: 'notes', label: 'Notes & Files' },
           ].map((tab) => (
             <button
@@ -2092,6 +2092,56 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <p className="text-sm text-green-600 mt-1">{pasteMessage}</p>
               )}
             </div>
+            
+            {/* Recurrence Toggle */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🔁</span>
+                  <div>
+                    <p className="font-medium text-gray-700 dark:text-gray-300">Recurring Task</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Automatically recreates when completed</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, recurrence_type: formData.recurrence_type ? null : 'weekly' })}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${
+                    formData.recurrence_type ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    formData.recurrence_type ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+              
+              {/* Recurrence options - shown when toggle is on */}
+              {formData.recurrence_type && (
+                <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repeat</label>
+                  <select
+                    value={formData.recurrence_type || ''}
+                    onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
+                      <option key={type.id} value={type.id}>{type.label}</option>
+                    ))}
+                  </select>
+                  {formData.recurrence_type && formData.due_date && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      ✓ Next occurrence will be created when this task is completed
+                    </p>
+                  )}
+                  {formData.recurrence_type && !formData.due_date && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                      ⚠️ Set a due date above to enable recurrence scheduling
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
         
@@ -2212,7 +2262,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        {activeTab === 'more' && (
+        {activeTab === 'additional' && (
           <div className="space-y-4">
             {/* Time & Energy */}
             <div className="grid grid-cols-2 gap-4">
@@ -2386,56 +2436,23 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        {activeTab === 'recurring' && (
-          <div className="space-y-6">
-            <div className="p-4 bg-blue-50 rounded-xl">
+        {activeTab === 'dependencies' && (
+          <div className="space-y-4">
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
               <div className="flex items-center gap-3 mb-3">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <h3 className="font-medium text-blue-800">Recurrence</h3>
+                <span className="text-lg">🔗</span>
+                <div>
+                  <h3 className="font-medium text-orange-800 dark:text-orange-300">Task Dependencies</h3>
+                  <p className="text-sm text-orange-600 dark:text-orange-400">This task will be blocked until selected tasks are completed</p>
+                </div>
               </div>
-              <p className="text-sm text-blue-600 mb-4">When this task is marked as done, it will automatically create a new instance.</p>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Repeat</label>
-                <select
-                  value={formData.recurrence_type || ''}
-                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
-                >
-                  {RECURRENCE_TYPES.map((type) => (
-                    <option key={type.id || 'none'} value={type.id || ''}>{type.label}</option>
-                  ))}
-                </select>
-                {formData.recurrence_type && formData.start_date && (
-                  <p className="text-xs text-blue-600 mt-2">
-                    Next occurrence will start on: {formatDate(getNextRecurrenceDate(formData.start_date, formData.recurrence_type))}
-                  </p>
-                )}
-                {formData.recurrence_type && !formData.start_date && (
-                  <p className="text-xs text-amber-600 mt-2">
-                    ⚠️ Set a start date in the Planning tab to enable recurrence
-                  </p>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-4 bg-orange-50 rounded-xl">
-              <div className="flex items-center gap-3 mb-3">
-                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                <h3 className="font-medium text-orange-800">Dependencies</h3>
-              </div>
-              <p className="text-sm text-orange-600 mb-4">This task will be blocked until all dependencies are completed.</p>
               
               {!formData.project_id ? (
-                <p className="text-sm text-gray-500 italic">Select a project first to add dependencies</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">Select a project first to add dependencies</p>
               ) : availableDependencies.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No other tasks available to link as dependencies</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">No other tasks available to link as dependencies</p>
               ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {availableDependencies.map((depTask) => {
                     const isSelected = selectedDependencies.includes(depTask.id)
                     return (
@@ -2443,8 +2460,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         key={depTask.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                           isSelected 
-                            ? 'border-orange-300 bg-orange-100' 
-                            : 'border-gray-200 bg-white hover:border-orange-200'
+                            ? 'border-orange-300 dark:border-orange-600 bg-orange-100 dark:bg-orange-900/40' 
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-orange-200 dark:hover:border-orange-700'
                         }`}
                       >
                         <input
@@ -2457,17 +2474,17 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                               setSelectedDependencies(selectedDependencies.filter(id => id !== depTask.id))
                             }
                           }}
-                          className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{depTask.title}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{depTask.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {COLUMNS.find(c => c.id === depTask.status)?.title}
                             {depTask.assignee && ` • ${depTask.assignee}`}
                           </p>
                         </div>
                         {depTask.critical && (
-                          <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Critical</span>
+                          <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 rounded-full">Critical</span>
                         )}
                       </label>
                     )
@@ -2476,9 +2493,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
               
               {selectedDependencies.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-orange-200">
-                  <p className="text-sm text-orange-700 font-medium">
-                    {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected
+                <div className="mt-4 pt-4 border-t border-orange-200 dark:border-orange-800">
+                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                    ✓ {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected - task will be blocked until complete
                   </p>
                 </div>
               )}
