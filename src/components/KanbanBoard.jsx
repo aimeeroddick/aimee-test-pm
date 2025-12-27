@@ -119,6 +119,80 @@ const formatTimeEstimate = (minutes) => {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
+// Natural language date parser
+const parseNaturalLanguageDate = (text) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const patterns = [
+    // Today/Tomorrow
+    { regex: /\b(today)\b/i, fn: () => new Date(today) },
+    { regex: /\b(tomorrow)\b/i, fn: () => { const d = new Date(today); d.setDate(d.getDate() + 1); return d } },
+    { regex: /\b(yesterday)\b/i, fn: () => { const d = new Date(today); d.setDate(d.getDate() - 1); return d } },
+    
+    // Day names
+    { regex: /\b(next\s+)?(monday)\b/i, fn: (m) => getNextDayOfWeek(1, m[1]) },
+    { regex: /\b(next\s+)?(tuesday)\b/i, fn: (m) => getNextDayOfWeek(2, m[1]) },
+    { regex: /\b(next\s+)?(wednesday)\b/i, fn: (m) => getNextDayOfWeek(3, m[1]) },
+    { regex: /\b(next\s+)?(thursday)\b/i, fn: (m) => getNextDayOfWeek(4, m[1]) },
+    { regex: /\b(next\s+)?(friday)\b/i, fn: (m) => getNextDayOfWeek(5, m[1]) },
+    { regex: /\b(next\s+)?(saturday)\b/i, fn: (m) => getNextDayOfWeek(6, m[1]) },
+    { regex: /\b(next\s+)?(sunday)\b/i, fn: (m) => getNextDayOfWeek(0, m[1]) },
+    
+    // Relative days
+    { regex: /\bin\s+(\d+)\s+days?\b/i, fn: (m) => { const d = new Date(today); d.setDate(d.getDate() + parseInt(m[1])); return d } },
+    { regex: /\bin\s+(\d+)\s+weeks?\b/i, fn: (m) => { const d = new Date(today); d.setDate(d.getDate() + parseInt(m[1]) * 7); return d } },
+    { regex: /\bin\s+(\d+)\s+months?\b/i, fn: (m) => { const d = new Date(today); d.setMonth(d.getMonth() + parseInt(m[1])); return d } },
+    
+    // Next week/month
+    { regex: /\bnext\s+week\b/i, fn: () => { const d = new Date(today); d.setDate(d.getDate() + 7); return d } },
+    { regex: /\bnext\s+month\b/i, fn: () => { const d = new Date(today); d.setMonth(d.getMonth() + 1); return d } },
+    
+    // End of week/month
+    { regex: /\bend\s+of\s+week\b/i, fn: () => { const d = new Date(today); d.setDate(d.getDate() + (5 - d.getDay())); return d } },
+    { regex: /\bend\s+of\s+month\b/i, fn: () => { const d = new Date(today); d.setMonth(d.getMonth() + 1, 0); return d } },
+  ]
+  
+  function getNextDayOfWeek(dayOfWeek, isNext) {
+    const result = new Date(today)
+    const currentDay = result.getDay()
+    let daysUntil = dayOfWeek - currentDay
+    
+    if (daysUntil <= 0 || isNext) {
+      daysUntil += 7
+    }
+    if (isNext && daysUntil <= 7) {
+      daysUntil += 7
+    }
+    
+    result.setDate(result.getDate() + daysUntil)
+    return result
+  }
+  
+  for (const pattern of patterns) {
+    const match = text.match(pattern.regex)
+    if (match) {
+      const date = pattern.fn(match)
+      const cleanedText = text.replace(pattern.regex, '').replace(/\s+/g, ' ').trim()
+      return {
+        date: date.toISOString().split('T')[0],
+        cleanedText,
+        matched: match[0]
+      }
+    }
+  }
+  
+  return { date: null, cleanedText: text, matched: null }
+}
+
+// Smart date shortcuts for UI
+const DATE_SHORTCUTS = [
+  { label: 'Today', getValue: () => new Date().toISOString().split('T')[0] },
+  { label: 'Tomorrow', getValue: () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0] } },
+  { label: 'Next Week', getValue: () => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().split('T')[0] } },
+  { label: 'Next Month', getValue: () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split('T')[0] } },
+]
+
 // Toast Component for undo actions
 const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
   useEffect(() => {
@@ -2165,6 +2239,32 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
+                {/* Quick date shortcuts */}
+                <div className="flex items-center gap-2 mt-2">
+                  {DATE_SHORTCUTS.map(shortcut => (
+                    <button
+                      key={shortcut.label}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
+                      className={`px-2 py-1 text-xs rounded-lg transition-colors ${
+                        formData.due_date === shortcut.getValue()
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-600'
+                      }`}
+                    >
+                      {shortcut.label}
+                    </button>
+                  ))}
+                  {formData.due_date && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, due_date: '' })}
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -5116,52 +5216,87 @@ Or we can extract from:
               </button>
             </div>
             
-            <form onSubmit={(e) => {
-              e.preventDefault()
-              handleQuickAdd(quickAddTitle, quickAddProject)
-            }}>
-              <input
-                type="text"
-                value={quickAddTitle}
-                onChange={(e) => setQuickAddTitle(e.target.value)}
-                placeholder="What needs to be done?"
-                autoFocus
-                className="w-full px-4 py-3 text-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3"
-              />
-              
-              <div className="flex items-center gap-3 mb-4">
-                <select
-                  value={quickAddProject}
-                  onChange={(e) => setQuickAddProject(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-                >
-                  {projects.filter(p => !p.archived).map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuickAddOpen(false)
-                    setEditingTask(null)
-                    setTaskModalOpen(true)
-                  }}
-                  className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
-                >
-                  More options
-                </button>
-              </div>
-              
-              <button
-                type="submit"
-                disabled={!quickAddTitle.trim() || saving}
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-              >
-                {saving ? 'Adding...' : 'Add Task'}
-              </button>
-            </form>
+            {(() => {
+              const parsed = parseNaturalLanguageDate(quickAddTitle)
+              return (
+                <form onSubmit={(e) => {
+                  e.preventDefault()
+                  handleQuickAdd(parsed.cleanedText || quickAddTitle, quickAddProject, parsed.date)
+                }}>
+                  <input
+                    type="text"
+                    value={quickAddTitle}
+                    onChange={(e) => setQuickAddTitle(e.target.value)}
+                    placeholder='Try "Call mom tomorrow" or "Report due friday"'
+                    autoFocus
+                    className="w-full px-4 py-3 text-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-2"
+                  />
+                  
+                  {/* Parsed date indicator */}
+                  {parsed.date && (
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                      <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Due {formatDate(parsed.date)}
+                      </span>
+                      <span className="text-xs text-gray-400">(from "{parsed.matched}")</span>
+                    </div>
+                  )}
+                  
+                  {/* Quick date shortcuts */}
+                  {!parsed.date && (
+                    <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+                      <span className="text-xs text-gray-400 whitespace-nowrap">Due:</span>
+                      {DATE_SHORTCUTS.map(shortcut => (
+                        <button
+                          key={shortcut.label}
+                          type="button"
+                          onClick={() => setQuickAddTitle(prev => `${prev} ${shortcut.label.toLowerCase()}`.trim())}
+                          className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
+                        >
+                          {shortcut.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-3 mb-4">
+                    <select
+                      value={quickAddProject}
+                      onChange={(e) => setQuickAddProject(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                    >
+                      {projects.filter(p => !p.archived).map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickAddOpen(false)
+                        setEditingTask(null)
+                        setTaskModalOpen(true)
+                      }}
+                      className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                    >
+                      More options
+                    </button>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={!quickAddTitle.trim() || saving}
+                    className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                  >
+                    {saving ? 'Adding...' : 'Add Task'}
+                  </button>
+                </form>
+              )
+            })()}
             
-            <p className="mt-3 text-xs text-center text-gray-400">Press Q anytime to quick add</p>
+            <p className="mt-3 text-xs text-center text-gray-400">Try "tomorrow", "next friday", "in 2 weeks"</p>
           </div>
         </div>
       )}
