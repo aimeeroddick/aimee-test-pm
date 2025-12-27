@@ -184,14 +184,15 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null
   
   const shortcuts = [
-    { keys: ['⌘/Ctrl', 'N'], description: 'New task' },
+    { keys: ['Q'], description: 'Quick add task' },
+    { keys: ['⌘/Ctrl', 'T'], description: 'New task (full form)' },
     { keys: ['⌘/Ctrl', 'P'], description: 'New project' },
     { keys: ['⌘/Ctrl', 'S'], description: 'Search tasks' },
     { keys: ['/'], description: 'Quick search' },
     { keys: ['⌘/Ctrl', 'D'], description: 'My Day view' },
     { keys: ['⌘/Ctrl', 'B'], description: 'Board view' },
     { keys: ['⌘/Ctrl', 'L'], description: 'Calendar view' },
-    { keys: ['⌘/Ctrl', 'M'], description: 'Meeting notes' },
+    { keys: ['⌘/Ctrl', 'N'], description: 'Import notes' },
     { keys: ['Esc'], description: 'Close modal' },
     { keys: ['?'], description: 'Show this help' },
   ]
@@ -2683,6 +2684,14 @@ export default function KanbanBoard() {
   
   // Archive filter
   const [showArchived, setShowArchived] = useState(false)
+  
+  // Quick Add mode
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddTitle, setQuickAddTitle] = useState('')
+  const [quickAddProject, setQuickAddProject] = useState('')
+  
+  // Daily Planning mode
+  const [planningModeOpen, setPlanningModeOpen] = useState(false)
 
   // Dark mode effect
   useEffect(() => {
@@ -2716,6 +2725,16 @@ export default function KanbanBoard() {
       if (e.key === '/') {
         e.preventDefault()
         setSearchModalOpen(true)
+        return
+      }
+      
+      // q for quick add (no modifier needed)
+      if (e.key === 'q') {
+        e.preventDefault()
+        if (projects.length > 0) {
+          setQuickAddProject(projects[0]?.id || '')
+          setQuickAddOpen(true)
+        }
         return
       }
       
@@ -3704,6 +3723,42 @@ export default function KanbanBoard() {
       setSaving(false)
     }
   }
+  
+  // Quick Add - create task with just title and optional due date
+  const handleQuickAdd = async (title, projectId, dueDate = null) => {
+    if (!title.trim()) return
+    
+    const targetProject = projectId || projects[0]?.id
+    if (!targetProject) return
+    
+    try {
+      setSaving(true)
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: title.trim(),
+          project_id: targetProject,
+          status: 'backlog',
+          due_date: dueDate,
+          energy_level: 'medium',
+          category: 'deliverable',
+          source: 'ad_hoc'
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      setTasks(prev => [...prev, { ...data, attachments: [], dependencies: [] }])
+      setQuickAddTitle('')
+      setQuickAddOpen(false)
+    } catch (err) {
+      console.error('Error creating task:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
@@ -3749,7 +3804,10 @@ export default function KanbanBoard() {
       
       const { error } = await supabase
         .from('tasks')
-        .update({ status: newStatus })
+        .update({ 
+          status: newStatus,
+          completed_at: newStatus === 'done' ? new Date().toISOString() : null
+        })
         .eq('id', taskId)
       
       if (error) throw error
@@ -3759,7 +3817,11 @@ export default function KanbanBoard() {
       if (newStatus === 'done' && task?.recurrence_type) {
         await fetchData()
       } else {
-        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+        setTasks(tasks.map(t => t.id === taskId ? { 
+          ...t, 
+          status: newStatus,
+          completed_at: newStatus === 'done' ? new Date().toISOString() : null
+        } : t))
       }
       
       // Show undo toast
@@ -3901,6 +3963,76 @@ export default function KanbanBoard() {
   const dueTodayCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'today').length
   const blockedCount = filteredTasks.filter((t) => isBlocked(t, tasks) && t.status !== 'done').length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+  
+  // Streak calculation - days in a row with at least one completed task
+  const calculateStreak = () => {
+    const completedTasks = tasks.filter(t => t.status === 'done' && t.completed_at)
+    if (completedTasks.length === 0) return 0
+    
+    // Group completions by date
+    const completionDates = new Set(
+      completedTasks.map(t => new Date(t.completed_at).toDateString())
+    )
+    
+    // Count consecutive days going backwards from today
+    let streak = 0
+    let checkDate = new Date()
+    checkDate.setHours(0, 0, 0, 0)
+    
+    while (completionDates.has(checkDate.toDateString())) {
+      streak++
+      checkDate.setDate(checkDate.getDate() - 1)
+    }
+    
+    // If no completion today, check if yesterday had one (streak not broken yet)
+    if (streak === 0) {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      yesterday.setHours(0, 0, 0, 0)
+      
+      while (completionDates.has(yesterday.toDateString())) {
+        streak++
+        yesterday.setDate(yesterday.getDate() - 1)
+      }
+    }
+    
+    return streak
+  }
+  
+  const currentStreak = calculateStreak()
+  
+  // Weekly stats
+  const getWeeklyStats = () => {
+    const now = new Date()
+    const weekAgo = new Date(now)
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    
+    const completedThisWeek = tasks.filter(t => {
+      if (t.status !== 'done' || !t.completed_at) return false
+      const completedDate = new Date(t.completed_at)
+      return completedDate >= weekAgo && completedDate <= now
+    })
+    
+    return {
+      count: completedThisWeek.length,
+      time: completedThisWeek.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+    }
+  }
+  
+  const weeklyStats = getWeeklyStats()
+  
+  // Today's progress
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const completedToday = tasks.filter(t => 
+    t.status === 'done' && 
+    t.completed_at && 
+    new Date(t.completed_at) >= todayStart
+  ).length
+  const todaysDueTasks = tasks.filter(t => 
+    t.due_date === new Date().toISOString().split('T')[0] && 
+    t.status !== 'done'
+  ).length
 
   if (loading) {
     return (
@@ -4309,6 +4441,28 @@ export default function KanbanBoard() {
       {currentView === 'board' && (
         <div className="bg-white/60 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 sm:py-3 overflow-x-auto">
           <div className="max-w-full mx-auto flex items-center gap-3 sm:gap-6 text-sm min-w-max">
+            {/* Today Widget */}
+            <div className="flex items-center gap-2 sm:gap-3 pr-3 sm:pr-4 border-r border-gray-200 dark:border-gray-700">
+              {/* Streak */}
+              {currentStreak > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 rounded-lg" title={`${currentStreak} day streak!`}>
+                  <span className="text-amber-500">🔥</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
+                </div>
+              )}
+              {/* Today's progress */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-green-500">✓</span>
+                <span className="font-semibold text-gray-700 dark:text-gray-300">{completedToday}</span>
+                <span className="text-gray-400 dark:text-gray-500">today</span>
+              </div>
+              {/* Weekly stats */}
+              <div className="hidden sm:flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                <span>•</span>
+                <span>{weeklyStats.count} this week</span>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-gray-500 dark:text-gray-400">Active:</span>
               <span className="font-semibold text-gray-800 dark:text-gray-200">{filteredTasks.filter(t => t.status !== 'done').length}</span>
@@ -4933,6 +5087,92 @@ Or we can extract from:
         isOpen={shortcutsModalOpen}
         onClose={() => setShortcutsModalOpen(false)}
       />
+      
+      {/* Quick Add Modal */}
+      {quickAddOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setQuickAddOpen(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Quick Add Task</h3>
+              <button
+                onClick={() => setQuickAddOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              handleQuickAdd(quickAddTitle, quickAddProject)
+            }}>
+              <input
+                type="text"
+                value={quickAddTitle}
+                onChange={(e) => setQuickAddTitle(e.target.value)}
+                placeholder="What needs to be done?"
+                autoFocus
+                className="w-full px-4 py-3 text-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3"
+              />
+              
+              <div className="flex items-center gap-3 mb-4">
+                <select
+                  value={quickAddProject}
+                  onChange={(e) => setQuickAddProject(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                >
+                  {projects.filter(p => !p.archived).map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickAddOpen(false)
+                    setEditingTask(null)
+                    setTaskModalOpen(true)
+                  }}
+                  className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                >
+                  More options
+                </button>
+              </div>
+              
+              <button
+                type="submit"
+                disabled={!quickAddTitle.trim() || saving}
+                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+              >
+                {saving ? 'Adding...' : 'Add Task'}
+              </button>
+            </form>
+            
+            <p className="mt-3 text-xs text-center text-gray-400">Press Q anytime to quick add</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Floating Action Button - Mobile only */}
+      <button
+        onClick={() => {
+          if (projects.length > 0) {
+            setQuickAddProject(projects[0]?.id || '')
+            setQuickAddOpen(true)
+          }
+        }}
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center z-30 active:scale-95 transition-transform"
+        disabled={projects.length === 0}
+      >
+        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      </button>
     </div>
   )
 }
