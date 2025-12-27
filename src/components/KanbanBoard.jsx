@@ -28,6 +28,44 @@ const SOURCES = [
   { id: 'client_request', label: 'Client Request', icon: '🎯' },
 ]
 
+// Default system categories (always available)
+const DEFAULT_CATEGORIES = CATEGORIES.map(c => ({ name: c.label, color: c.color, id: c.id, isDefault: true }))
+
+// Helper to merge global + project lists, removing duplicates (case-insensitive)
+const getMergedList = (globalItems = [], projectItems = [], defaultItems = []) => {
+  const seen = new Set()
+  const result = []
+  
+  // Add defaults first (for categories)
+  defaultItems.forEach(item => {
+    const key = (item.name || item).toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(typeof item === 'string' ? { name: item } : item)
+    }
+  })
+  
+  // Add global items
+  globalItems.forEach(item => {
+    const key = (item.name || item).toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(typeof item === 'string' ? { name: item } : item)
+    }
+  })
+  
+  // Add project items
+  projectItems.forEach(item => {
+    const key = (typeof item === 'string' ? item : item.name).toLowerCase()
+    if (!seen.has(key)) {
+      seen.add(key)
+      result.push(typeof item === 'string' ? { name: item } : item)
+    }
+  })
+  
+  return result
+}
+
 const RECURRENCE_TYPES = [
   { id: null, label: 'No recurrence' },
   { id: 'daily', label: 'Daily' },
@@ -423,11 +461,19 @@ const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
   const [editColor, setEditColor] = useState('')
   
   useEffect(() => {
-    if (isOpen && userLists) {
+    if (isOpen) {
+      // For categories, merge system defaults with user's custom categories
+      const userCategories = userLists?.categories || []
+      const existingNames = new Set(userCategories.map(c => c.name.toLowerCase()))
+      
+      // Add system defaults that aren't already in user's list
+      const defaultCats = DEFAULT_CATEGORIES.filter(dc => !existingNames.has(dc.name.toLowerCase()))
+        .map(dc => ({ ...dc, isDefault: true }))
+      
       setItems({
-        assignees: userLists.assignees || [],
-        customers: userLists.customers || [],
-        categories: userLists.categories || []
+        assignees: userLists?.assignees || [],
+        customers: userLists?.customers || [],
+        categories: [...defaultCats, ...userCategories]
       })
     }
   }, [isOpen, userLists])
@@ -461,6 +507,7 @@ const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
   }
   
   const handleStartEdit = (item) => {
+    if (item.isDefault) return // Can't edit default categories
     setEditingId(item.id)
     setEditName(item.name)
     setEditColor(item.color || '#6366F1')
@@ -563,13 +610,20 @@ const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
                   ) : (
                     <>
                       {currentTab.hasColor && <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: item.color || '#6B7280' }} />}
-                      <span className="flex-1 text-gray-700 dark:text-gray-200">{item.name}</span>
-                      <button onClick={() => handleStartEdit(item)} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded opacity-0 group-hover:opacity-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                      </button>
-                      <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
+                      <span className="flex-1 text-gray-700 dark:text-gray-200">
+                        {item.name}
+                        {item.isDefault && <span className="ml-2 text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">System</span>}
+                      </span>
+                      {!item.isDefault && (
+                        <button onClick={() => handleStartEdit(item)} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded opacity-0 group-hover:opacity-100">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                      )}
+                      {!item.isDefault && (
+                        <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -580,7 +634,15 @@ const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
         
         <div className="flex justify-end gap-3 p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
           <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium">Cancel</button>
-          <button onClick={() => { onSave(items); onClose() }} className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-medium">Save Changes</button>
+          <button onClick={() => { 
+            // Filter out default categories - they don't need to be saved
+            const itemsToSave = {
+              ...items,
+              categories: items.categories.filter(c => !c.isDefault)
+            }
+            onSave(itemsToSave); 
+            onClose() 
+          }} className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-medium">Save Changes</button>
         </div>
       </div>
     </div>
@@ -2650,8 +2712,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">No customer</option>
-                    {selectedProject?.customers?.map((cust) => (
-                      <option key={cust} value={cust}>{cust}</option>
+                    {getMergedList(userLists?.customers || [], selectedProject?.customers || []).map((cust) => (
+                      <option key={cust.name || cust} value={cust.name || cust}>{cust.name || cust}</option>
                     ))}
                     <option value="__other__">Other (enter name)</option>
                   </select>
@@ -2940,8 +3002,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">Unassigned</option>
-                    {selectedProject?.members?.map((member) => (
-                      <option key={member} value={member}>{member}</option>
+                    {getMergedList(userLists?.assignees || [], selectedProject?.members || []).map((member) => (
+                      <option key={member.name || member} value={member.name || member}>{member.name || member}</option>
                     ))}
                     <option value="__other__">Other (enter name)</option>
                   </select>
@@ -2975,8 +3037,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                  <option value="">No category</option>
+                  {getMergedList(userLists?.categories || [], [], DEFAULT_CATEGORIES).map((cat) => (
+                    <option key={cat.id || cat.name} value={cat.id || cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
