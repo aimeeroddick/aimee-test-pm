@@ -4287,19 +4287,14 @@ export default function KanbanBoard() {
                 {/* Nav Dropdown Menu - Slide in drawer on mobile */}
                 {navMenuOpen && (
                   <>
-                    {/* Backdrop - darker on mobile to fully hide content */}
-                    <div 
-                      className="fixed inset-0 z-[60] bg-black/50 sm:bg-black/20" 
-                      onClick={() => setNavMenuOpen(false)} 
-                    />
-                    {/* Menu drawer */}
-                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 bg-white dark:bg-gray-900 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 z-[70] overflow-y-auto">
+                    <div className="fixed inset-0 z-[999] bg-black/60 sm:bg-black/20" onClick={() => setNavMenuOpen(false)} />
+                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-64 sm:w-56 sm:mt-2 bg-white dark:bg-gray-800 sm:rounded-xl shadow-xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] transform transition-transform">
                       {/* Mobile header */}
-                      <div className="sm:hidden flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                      <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
                         <button
                           onClick={() => setNavMenuOpen(false)}
-                          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                         >
                           <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -4307,7 +4302,6 @@ export default function KanbanBoard() {
                         </button>
                       </div>
                       
-                      <div className="py-2">
                       <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Views</div>
                       <button
                         onClick={() => { setCurrentView('myday'); setNavMenuOpen(false) }}
@@ -4383,7 +4377,6 @@ export default function KanbanBoard() {
                           <span className="text-lg">🚪</span>
                           <span className="font-medium">Sign Out</span>
                         </button>
-                      </div>
                       </div>
                     </div>
                   </>
