@@ -3076,9 +3076,10 @@ export default function KanbanBoard() {
         
         if (listData) {
           const lists = { assignees: [], customers: [], categories: [] }
+          const keyMap = { assignee: 'assignees', customer: 'customers', category: 'categories' }
           listData.forEach(item => {
-            const key = item.list_type + 's'
-            if (lists[key]) {
+            const key = keyMap[item.list_type]
+            if (key && lists[key]) {
               lists[key].push({ id: item.id, name: item.name, color: item.color })
             }
           })
