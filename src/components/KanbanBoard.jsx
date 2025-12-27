@@ -2068,6 +2068,63 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
+            {/* Customer & Energy Level - side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
+                {!useCustomCustomer ? (
+                  <select
+                    value={formData.customer}
+                    onChange={(e) => {
+                      if (e.target.value === '__other__') {
+                        setUseCustomCustomer(true)
+                        setFormData({ ...formData, customer: '' })
+                      } else {
+                        setFormData({ ...formData, customer: e.target.value })
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">No customer</option>
+                    {selectedProject?.customers?.map((cust) => (
+                      <option key={cust} value={cust}>{cust}</option>
+                    ))}
+                    <option value="__other__">Other (enter name)</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customCustomer}
+                      onChange={(e) => setCustomCustomer(e.target.value)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="Customer name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setUseCustomCustomer(false); setCustomCustomer('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Energy Level</label>
+                <select
+                  value={formData.energy_level}
+                  onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                >
+                  {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
+                    <option key={key} value={key}>{val.icon} {val.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
             {/* Start Date & Due Date side by side */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -2129,63 +2186,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🚩 Critical Priority</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">- needs immediate attention</span>
             </label>
-            
-            {/* Customer & Energy Level - side by side */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
-                {!useCustomCustomer ? (
-                  <select
-                    value={formData.customer}
-                    onChange={(e) => {
-                      if (e.target.value === '__other__') {
-                        setUseCustomCustomer(true)
-                        setFormData({ ...formData, customer: '' })
-                      } else {
-                        setFormData({ ...formData, customer: e.target.value })
-                      }
-                    }}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="">No customer</option>
-                    {selectedProject?.customers?.map((cust) => (
-                      <option key={cust} value={cust}>{cust}</option>
-                    ))}
-                    <option value="__other__">Other (enter name)</option>
-                  </select>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={customCustomer}
-                      onChange={(e) => setCustomCustomer(e.target.value)}
-                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      placeholder="Customer name"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { setUseCustomCustomer(false); setCustomCustomer('') }}
-                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Energy Level</label>
-                <select
-                  value={formData.energy_level}
-                  onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
-                    <option key={key} value={key}>{val.icon} {val.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
             
             {/* Recurrence Toggle - compact like critical priority */}
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
