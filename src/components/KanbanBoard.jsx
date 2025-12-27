@@ -51,6 +51,7 @@ const COLUMNS = [
 ]
 
 const DONE_DISPLAY_LIMIT = 5
+const BACKLOG_DISPLAY_LIMIT = 10
 
 // Customer colors for auto-assignment
 const CUSTOMER_COLORS = [
@@ -2279,16 +2280,26 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
+  const [showAllBacklog, setShowAllBacklog] = useState(false)
   
   const totalMinutes = tasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   const criticalCount = tasks.filter(t => t.critical).length
   const readyCount = tasks.filter(t => isReadyToStart(t)).length
   
   const isDoneColumn = column.id === 'done'
-  const displayTasks = isDoneColumn && !showAllDone 
-    ? tasks.slice(0, DONE_DISPLAY_LIMIT) 
-    : tasks
-  const hiddenCount = isDoneColumn ? tasks.length - DONE_DISPLAY_LIMIT : 0
+  const isBacklogColumn = column.id === 'backlog'
+  
+  // Calculate display tasks based on column type and limits
+  let displayTasks = tasks
+  let hiddenCount = 0
+  
+  if (isDoneColumn && !showAllDone) {
+    displayTasks = tasks.slice(0, DONE_DISPLAY_LIMIT)
+    hiddenCount = Math.max(0, tasks.length - DONE_DISPLAY_LIMIT)
+  } else if (isBacklogColumn && !showAllBacklog) {
+    displayTasks = tasks.slice(0, BACKLOG_DISPLAY_LIMIT)
+    hiddenCount = Math.max(0, tasks.length - BACKLOG_DISPLAY_LIMIT)
+  }
   
   return (
     <div
@@ -2353,6 +2364,24 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           <button
             onClick={() => setShowAllDone(false)}
             className="w-full py-3 text-sm text-gray-500 hover:text-gray-700 font-medium bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all"
+          >
+            Show less ↑
+          </button>
+        )}
+        
+        {isBacklogColumn && hiddenCount > 0 && !showAllBacklog && (
+          <button
+            onClick={() => setShowAllBacklog(true)}
+            className="w-full py-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-indigo-300 transition-all"
+          >
+            View all {tasks.length} backlog tasks →
+          </button>
+        )}
+        
+        {isBacklogColumn && showAllBacklog && tasks.length > BACKLOG_DISPLAY_LIMIT && (
+          <button
+            onClick={() => setShowAllBacklog(false)}
+            className="w-full py-3 text-sm text-gray-500 hover:text-gray-700 font-medium bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-gray-300 transition-all"
           >
             Show less ↑
           </button>
@@ -4739,11 +4768,30 @@ export default function KanbanBoard() {
     return true
   })
 
+  // Check if a task has a future start date (not ready to start yet)
+  const hasFutureStartDate = (task) => {
+    if (!task.start_date) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const start = new Date(task.start_date)
+    start.setHours(0, 0, 0, 0)
+    return start > today
+  }
+
   // Sort tasks by priority: Critical > Due Date (soonest) > Energy Level > Created Date
-  const sortTasksByPriority = (tasks) => {
+  // For backlog: Future start date tasks go to the bottom
+  const sortTasksByPriority = (tasks, isBacklog = false) => {
     const energyOrder = { high: 0, medium: 1, low: 2 }
     
     return [...tasks].sort((a, b) => {
+      // For backlog: Push future start date tasks to the bottom
+      if (isBacklog) {
+        const aFuture = hasFutureStartDate(a)
+        const bFuture = hasFutureStartDate(b)
+        if (aFuture && !bFuture) return 1
+        if (!aFuture && bFuture) return -1
+      }
+      
       // 1. Critical tasks first
       if (a.critical && !b.critical) return -1
       if (!a.critical && b.critical) return 1
@@ -4771,7 +4819,7 @@ export default function KanbanBoard() {
     })
   }
 
-  const getTasksByStatus = (status) => sortTasksByPriority(filteredTasks.filter((t) => t.status === status))
+  const getTasksByStatus = (status) => sortTasksByPriority(filteredTasks.filter((t) => t.status === status), status === 'backlog')
 
   // Stats
   const criticalCount = filteredTasks.filter((t) => t.critical && t.status !== 'done').length
