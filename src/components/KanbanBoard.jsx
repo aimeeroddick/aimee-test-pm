@@ -1697,14 +1697,15 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       updates.my_day_date = todayStr
     }
     
+    const taskId = draggedTask.id
+    setDraggedTask(null)
+    
     try {
-      await onUpdateTask(draggedTask.id, updates)
-      console.log('Task updated successfully')
+      await onUpdateTask(taskId, updates)
+      console.log('Task updated successfully with:', updates)
     } catch (err) {
       console.error('Error updating task:', err)
     }
-    
-    setDraggedTask(null)
   }
   
   // Handle drop on date (monthly view - no time)
