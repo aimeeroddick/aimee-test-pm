@@ -810,37 +810,57 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const blockedTasks = activeTasks.filter(t => isBlocked(t, allTasks))
   const criticalTasks = activeTasks.filter(t => t.critical && !overdueTasks.includes(t) && !dueTodayTasks.includes(t))
   
-  // Suggested tasks based on energy and time
-  const getSuggestedTasks = () => {
-    let candidates = [...inProgressTasks, ...dueTodayTasks, ...readyToStartTasks]
+  // Focus Queue: Today's priority tasks + backlog suggestions
+  const getFocusQueue = () => {
+    // SECTION 1: Today's Tasks (in progress + due today + overdue) - always show these first
+    let todaysTasks = [...inProgressTasks, ...dueTodayTasks, ...overdueTasks]
       .filter(t => !isBlocked(t, allTasks))
+    todaysTasks = [...new Map(todaysTasks.map(t => [t.id, t])).values()]
     
-    candidates = [...new Map(candidates.map(t => [t.id, t])).values()]
+    // SECTION 2: Backlog suggestions (ready to start tasks not due today)
+    let backlogSuggestions = readyToStartTasks
+      .filter(t => !isBlocked(t, allTasks))
+      .filter(t => !dueTodayTasks.some(dt => dt.id === t.id))
+      .filter(t => !inProgressTasks.some(ip => ip.id === t.id))
     
+    // Apply energy filter to backlog suggestions only
     if (selectedEnergy !== 'all') {
-      candidates = candidates.filter(t => t.energy_level === selectedEnergy)
+      backlogSuggestions = backlogSuggestions.filter(t => t.energy_level === selectedEnergy)
     }
     
+    // Apply time filter to backlog suggestions only
     if (availableTime) {
       const minutes = parseInt(availableTime)
-      candidates = candidates.filter(t => !t.time_estimate || t.time_estimate <= minutes)
+      backlogSuggestions = backlogSuggestions.filter(t => !t.time_estimate || t.time_estimate <= minutes)
     }
     
-    candidates.sort((a, b) => {
+    // Sort today's tasks: critical first, then by due date
+    todaysTasks.sort((a, b) => {
       if (a.critical && !b.critical) return -1
       if (!a.critical && b.critical) return 1
-      if (a.due_date && !b.due_date) return -1
-      if (!a.due_date && b.due_date) return 1
-      if (a.due_date && b.due_date) {
-        return new Date(a.due_date) - new Date(b.due_date)
-      }
+      // Overdue first
+      const aOverdue = getDueDateStatus(a.due_date, a.status) === 'overdue'
+      const bOverdue = getDueDateStatus(b.due_date, b.status) === 'overdue'
+      if (aOverdue && !bOverdue) return -1
+      if (!aOverdue && bOverdue) return 1
+      if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date)
+      return 0
+    })
+    
+    // Sort backlog by critical, then time estimate (quick wins first)
+    backlogSuggestions.sort((a, b) => {
+      if (a.critical && !b.critical) return -1
+      if (!a.critical && b.critical) return 1
       return (a.time_estimate || 999) - (b.time_estimate || 999)
     })
     
-    return candidates.slice(0, 5)
+    return {
+      todaysTasks: todaysTasks.slice(0, 5),
+      backlogSuggestions: backlogSuggestions.slice(0, 3)
+    }
   }
   
-  const suggestedTasks = getSuggestedTasks()
+  const focusQueue = getFocusQueue()
   
   // Calculate daily progress
   const todayStart = new Date()
@@ -1143,85 +1163,120 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Smart Suggestions */}
+        {/* Focus Queue */}
         <div className="mb-8">
           <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl p-1">
-            <div className="bg-white rounded-[22px] p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white dark:bg-gray-900 rounded-[22px] p-6">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
                     <span className="text-xl">✨</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800">Focus Queue</h3>
-                    <p className="text-sm text-gray-500">Tasks matched to your energy and time</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {/* Energy suggestion based on time of day */}
-                  {(() => {
-                    const hour = new Date().getHours()
-                    const suggestion = hour < 10 ? { level: 'high', text: 'Morning power! Try high-energy tasks', icon: '⚡' } :
-                                       hour < 14 ? { level: 'medium', text: 'Mid-day focus. Medium energy works well', icon: '→' } :
-                                       hour < 17 ? { level: 'low', text: 'Afternoon wind-down. Low-energy tasks?', icon: '○' } :
-                                       { level: 'low', text: 'Evening mode. Light tasks recommended', icon: '🌙' }
-                    
-                    return selectedEnergy === 'all' && (
-                      <button
-                        onClick={() => setSelectedEnergy(suggestion.level)}
-                        className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 rounded-lg text-xs font-medium hover:from-amber-100 hover:to-orange-100 transition-all"
-                      >
-                        <span>{suggestion.icon}</span>
-                        <span>{suggestion.text}</span>
-                      </button>
-                    )
-                  })()}
-                  <select
-                    value={selectedEnergy}
-                    onChange={(e) => setSelectedEnergy(e.target.value)}
-                    className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  >
-                    <option value="all">Any energy</option>
-                    <option value="high">⚡ High</option>
-                    <option value="medium">→ Medium</option>
-                    <option value="low">○ Low</option>
-                  </select>
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-                    <span className="text-sm text-gray-500">I have</span>
-                    <input
-                      type="number"
-                      value={availableTime}
-                      onChange={(e) => setAvailableTime(e.target.value)}
-                      placeholder="30"
-                      className="w-14 px-2 py-1 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
-                    />
-                    <span className="text-sm text-gray-500">mins</span>
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">Focus Queue</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Your priorities for today + quick wins from backlog</p>
                   </div>
                 </div>
               </div>
               
-              {suggestedTasks.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-4xl">🎉</span>
+              {/* Today's Tasks Section */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">🎯</span>
+                  <h4 className="font-semibold text-gray-700 dark:text-gray-300">Today's Priority</h4>
+                  <span className="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full">
+                    {focusQueue.todaysTasks.length} task{focusQueue.todaysTasks.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                
+                {focusQueue.todaysTasks.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-3xl">✅</span>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">No urgent tasks! You're on top of things.</p>
                   </div>
-                  <h4 className="text-lg font-bold text-gray-800 mb-2">You're all caught up!</h4>
-                  <p className="text-gray-500">No matching tasks right now. Time for a break?</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {suggestedTasks.map((task, index) => (
-                    <div key={task.id} className="relative">
-                      {index === 0 && (
-                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                          <span className="text-white text-[10px] font-bold">1</span>
-                        </div>
-                      )}
-                      <TaskCard task={task} showStatus={true} />
+                ) : (
+                  <div className="space-y-2">
+                    {focusQueue.todaysTasks.map((task, index) => (
+                      <div key={task.id} className="relative">
+                        {index === 0 && (
+                          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                            <span className="text-white text-[10px] font-bold">1</span>
+                          </div>
+                        )}
+                        <TaskCard task={task} showStatus={true} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Backlog Suggestions Section */}
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">💡</span>
+                    <h4 className="font-semibold text-gray-700 dark:text-gray-300">Quick Wins from Backlog</h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Energy suggestion based on time of day */}
+                    {(() => {
+                      const hour = new Date().getHours()
+                      const suggestion = hour < 10 ? { level: 'high', text: 'Morning energy ⚡', icon: '⚡' } :
+                                         hour < 14 ? { level: 'medium', text: 'Mid-day focus →', icon: '→' } :
+                                         hour < 17 ? { level: 'low', text: 'Wind-down ○', icon: '○' } :
+                                         { level: 'low', text: 'Evening 🌙', icon: '🌙' }
+                      
+                      return selectedEnergy === 'all' && (
+                        <button
+                          onClick={() => setSelectedEnergy(suggestion.level)}
+                          className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all"
+                        >
+                          <span>{suggestion.icon}</span>
+                          <span className="hidden sm:inline">{suggestion.text}</span>
+                        </button>
+                      )
+                    })()}
+                    <select
+                      value={selectedEnergy}
+                      onChange={(e) => setSelectedEnergy(e.target.value)}
+                      className="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="all">Any energy</option>
+                      <option value="high">⚡ High</option>
+                      <option value="medium">→ Medium</option>
+                      <option value="low">○ Low</option>
+                    </select>
+                    <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 rounded-lg px-2 py-1">
+                      <input
+                        type="number"
+                        value={availableTime}
+                        onChange={(e) => setAvailableTime(e.target.value)}
+                        placeholder="30"
+                        className="w-12 px-1 py-0.5 text-sm border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
+                      />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">mins</span>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
+                
+                {focusQueue.backlogSuggestions.length === 0 ? (
+                  <div className="text-center py-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-2xl">🌟</span>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
+                      {selectedEnergy !== 'all' || availableTime 
+                        ? 'No matching tasks. Try adjusting filters.' 
+                        : 'Backlog is clear! Add tasks to get suggestions.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {focusQueue.backlogSuggestions.map((task) => (
+                      <TaskCard key={task.id} task={task} showStatus={true} compact />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
