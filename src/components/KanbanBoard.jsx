@@ -112,6 +112,36 @@ const isBlocked = (task, allTasks) => {
   })
 }
 
+// Check if task is in My Day (auto-included by start date OR manually added)
+const isInMyDay = (task) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = today.toISOString().split('T')[0]
+  
+  // Auto-included: start_date <= today (and task not done)
+  if (task.start_date && task.status !== 'done') {
+    const startDate = new Date(task.start_date)
+    startDate.setHours(0, 0, 0, 0)
+    if (startDate <= today) return true
+  }
+  
+  // Manually added: my_day_date exists (persists until completed or removed)
+  // For incomplete tasks, my_day_date means "manually added"
+  if (task.my_day_date && task.status !== 'done') return true
+  
+  // Completed tasks with my_day_date today still show (struck through)
+  if (task.my_day_date === todayStr && task.status === 'done') return true
+  
+  // Completed today (by completed_at) also show
+  if (task.status === 'done' && task.completed_at) {
+    const completedDate = new Date(task.completed_at)
+    completedDate.setHours(0, 0, 0, 0)
+    if (completedDate.getTime() === today.getTime()) return true
+  }
+  
+  return false
+}
+
 const getNextRecurrenceDate = (currentDate, recurrenceType) => {
   const date = new Date(currentDate)
   switch (recurrenceType) {
@@ -1712,6 +1742,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                     style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
                   >
                     {energyStyle.icon} {task.energy_level}
+                  </span>
+                )}
+                {isInMyDay(task) && (
+                  <span className="text-amber-500" title="In My Day">
+                    ☀️
                   </span>
                 )}
                 {task.assignee && (
