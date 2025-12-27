@@ -1556,9 +1556,19 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
   }
   
   // Format time for display (12-hour format with AM/PM)
+  // Handles both "07:00" (24-hour) and "7:00 AM" (12-hour) input formats
   const formatTimeDisplay = (timeStr) => {
     if (!timeStr) return ''
+    
+    // Check if already in 12-hour format (contains AM/PM)
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      return timeStr
+    }
+    
+    // Parse 24-hour format (HH:MM)
     const [h, m] = timeStr.split(':').map(Number)
+    if (isNaN(h) || isNaN(m)) return timeStr // Return as-is if can't parse
+    
     const hour = h % 12 || 12
     const ampm = h < 12 ? 'AM' : 'PM'
     return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
