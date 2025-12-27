@@ -52,6 +52,45 @@ const COLUMNS = [
 
 const DONE_DISPLAY_LIMIT = 5
 
+// Color palette for settings picker
+const COLOR_PALETTE = [
+  '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', 
+  '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9',
+  '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF',
+  '#EC4899', '#F43F5E', '#78716C', '#6B7280', '#64748B'
+]
+
+// Customer colors for auto-assignment
+const CUSTOMER_COLORS = [
+  { bg: '#EDE9FE', text: '#7C3AED', border: '#C4B5FD' },
+  { bg: '#DBEAFE', text: '#2563EB', border: '#93C5FD' },
+  { bg: '#D1FAE5', text: '#059669', border: '#6EE7B7' },
+  { bg: '#FEF3C7', text: '#D97706', border: '#FCD34D' },
+  { bg: '#FCE7F3', text: '#DB2777', border: '#F9A8D4' },
+  { bg: '#E0E7FF', text: '#4F46E5', border: '#A5B4FC' },
+  { bg: '#CCFBF1', text: '#0D9488', border: '#5EEAD4' },
+  { bg: '#FEE2E2', text: '#DC2626', border: '#FCA5A5' },
+  { bg: '#F3E8FF', text: '#9333EA', border: '#D8B4FE' },
+  { bg: '#CFFAFE', text: '#0891B2', border: '#67E8F9' },
+]
+
+const getCustomerColor = (customerName, userLists = null) => {
+  if (!customerName) return null
+  // Check if user has defined a color for this customer
+  if (userLists?.customers) {
+    const defined = userLists.customers.find(c => c.name === customerName)
+    if (defined?.color) {
+      return { bg: defined.color + '20', text: defined.color, border: defined.color + '60' }
+    }
+  }
+  // Fall back to auto-assigned color
+  let hash = 0
+  for (let i = 0; i < customerName.length; i++) {
+    hash = customerName.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return CUSTOMER_COLORS[Math.abs(hash) % CUSTOMER_COLORS.length]
+}
+
 // Utility functions
 const getDueDateStatus = (dueDate, status) => {
   if (!dueDate || status === 'done') return null
@@ -368,6 +407,181 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
           </button>
         </div>
         <div className="p-4 sm:p-6">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+// Settings Modal Component
+const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
+  const [activeTab, setActiveTab] = useState('customers')
+  const [items, setItems] = useState({ assignees: [], customers: [], categories: [] })
+  const [newItemName, setNewItemName] = useState('')
+  const [newItemColor, setNewItemColor] = useState('#6366F1')
+  const [editingId, setEditingId] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editColor, setEditColor] = useState('')
+  
+  useEffect(() => {
+    if (isOpen && userLists) {
+      setItems({
+        assignees: userLists.assignees || [],
+        customers: userLists.customers || [],
+        categories: userLists.categories || []
+      })
+    }
+  }, [isOpen, userLists])
+  
+  if (!isOpen) return null
+  
+  const tabs = [
+    { id: 'customers', label: 'Customers', hasColor: true },
+    { id: 'assignees', label: 'Assignees', hasColor: false },
+    { id: 'categories', label: 'Categories', hasColor: true }
+  ]
+  
+  const currentTab = tabs.find(t => t.id === activeTab)
+  const currentItems = items[activeTab] || []
+  
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return
+    const newItem = {
+      id: `temp-${Date.now()}`,
+      name: newItemName.trim(),
+      color: currentTab.hasColor ? newItemColor : null,
+      isNew: true
+    }
+    setItems({ ...items, [activeTab]: [...currentItems, newItem] })
+    setNewItemName('')
+    setNewItemColor('#6366F1')
+  }
+  
+  const handleDeleteItem = (id) => {
+    setItems({ ...items, [activeTab]: currentItems.filter(item => item.id !== id) })
+  }
+  
+  const handleStartEdit = (item) => {
+    setEditingId(item.id)
+    setEditName(item.name)
+    setEditColor(item.color || '#6366F1')
+  }
+  
+  const handleSaveEdit = (id) => {
+    setItems({
+      ...items,
+      [activeTab]: currentItems.map(item => 
+        item.id === id ? { ...item, name: editName, color: currentTab.hasColor ? editColor : null } : item
+      )
+    })
+    setEditingId(null)
+  }
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Settings</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex border-b border-gray-100 dark:border-gray-800 px-6">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        
+        <div className="p-6 max-h-[50vh] overflow-y-auto">
+          <div className="flex gap-3 mb-4">
+            <input
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+              placeholder={`Add new ${activeTab.slice(0, -1)}...`}
+              className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+            {currentTab.hasColor && (
+              <input
+                type="color"
+                value={newItemColor}
+                onChange={(e) => setNewItemColor(e.target.value)}
+                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-200"
+              />
+            )}
+            <button onClick={handleAddItem} className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-medium">
+              Add
+            </button>
+          </div>
+          
+          {currentTab.hasColor && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <span className="text-xs text-gray-500 w-full mb-1">Quick colors:</span>
+              {COLOR_PALETTE.map(color => (
+                <button
+                  key={color}
+                  onClick={() => setNewItemColor(color)}
+                  className={`w-6 h-6 rounded-full border-2 hover:scale-110 ${newItemColor === color ? 'border-gray-800 scale-110' : 'border-transparent'}`}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            {currentItems.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">No {activeTab} defined yet</p>
+            ) : (
+              currentItems.map(item => (
+                <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg group">
+                  {editingId === item.id ? (
+                    <>
+                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
+                        className="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" autoFocus />
+                      {currentTab.hasColor && <input type="color" value={editColor} onChange={(e) => setEditColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer" />}
+                      <button onClick={() => handleSaveEdit(item.id)} className="p-1.5 text-green-600 hover:bg-green-100 rounded">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {currentTab.hasColor && <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: item.color || '#6B7280' }} />}
+                      <span className="flex-1 text-gray-700 dark:text-gray-200">{item.name}</span>
+                      <button onClick={() => handleStartEdit(item)} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded opacity-0 group-hover:opacity-100">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      </button>
+                      <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+          <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium">Cancel</button>
+          <button onClick={() => { onSave(items); onClose() }} className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-medium">Save Changes</button>
+        </div>
       </div>
     </div>
   )
@@ -2674,6 +2888,8 @@ export default function KanbanBoard() {
     return false
   })
   const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [userLists, setUserLists] = useState({ assignees: [], customers: [], categories: [] })
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
   const [showArchivedProjects, setShowArchivedProjects] = useState(false)
@@ -2851,6 +3067,27 @@ export default function KanbanBoard() {
     setError(null)
     
     try {
+      // Load user list settings
+      try {
+        const { data: listData } = await supabase
+          .from('user_list_items')
+          .select('*')
+          .order('sort_order')
+        
+        if (listData) {
+          const lists = { assignees: [], customers: [], categories: [] }
+          listData.forEach(item => {
+            const key = item.list_type + 's'
+            if (lists[key]) {
+              lists[key].push({ id: item.id, name: item.name, color: item.color })
+            }
+          })
+          setUserLists(lists)
+        }
+      } catch (e) {
+        console.log('User lists not loaded:', e)
+      }
+      
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
@@ -3412,6 +3649,33 @@ export default function KanbanBoard() {
       setError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  
+  const saveUserLists = async (newLists) => {
+    if (!user) return
+    try {
+      await supabase.from('user_list_items').delete().eq('user_id', user.id)
+      const itemsToInsert = []
+      Object.entries(newLists).forEach(([listType, items]) => {
+        const type = listType.slice(0, -1)
+        items.forEach((item, index) => {
+          itemsToInsert.push({
+            user_id: user.id,
+            list_type: type,
+            name: item.name,
+            color: item.color,
+            sort_order: index
+          })
+        })
+      })
+      if (itemsToInsert.length > 0) {
+        await supabase.from('user_list_items').insert(itemsToInsert)
+      }
+      setUserLists(newLists)
+    } catch (err) {
+      console.error('Error saving user lists:', err)
     }
   }
 
@@ -4360,6 +4624,17 @@ export default function KanbanBoard() {
               </button>
               
               <button
+                onClick={() => setSettingsModalOpen(true)}
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title="Settings"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              
+              <button
                 onClick={signOut}
                 className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Sign Out"
@@ -5077,6 +5352,13 @@ export default function KanbanBoard() {
         allTasks={tasks}
       />
       
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        userLists={userLists}
+        onSave={saveUserLists}
+      />
+      
       {/* Meeting Notes Import Modal */}
       <Modal 
         isOpen={meetingNotesModalOpen} 
@@ -5567,4 +5849,3 @@ Or we can extract from:
     </div>
   )
 }
-// Force rebuild
