@@ -3583,10 +3583,12 @@ export default function KanbanBoard() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [projects, meetingNotesData])
 
-  // Fetch data on mount
+  // Fetch data on mount and when user changes
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (user) {
+      fetchData()
+    }
+  }, [user])
 
   const fetchData = async () => {
     setLoading(true)
@@ -3598,6 +3600,7 @@ export default function KanbanBoard() {
         const { data: listData } = await supabase
           .from('user_list_items')
           .select('*')
+          .eq('user_id', user.id)
           .order('sort_order')
         
         if (listData) {
@@ -4170,6 +4173,9 @@ export default function KanbanBoard() {
         }
       }
 
+      // Sync project customers/members to global settings
+      await syncProjectDataToGlobal(projectData.customers || [], projectData.members || [])
+
       await fetchData()
     } catch (err) {
       console.error('Error saving project:', err)
@@ -4203,6 +4209,76 @@ export default function KanbanBoard() {
       setUserLists(newLists)
     } catch (err) {
       console.error('Error saving user lists:', err)
+    }
+  }
+
+  // Sync project-level customers and assignees to global settings
+  const syncProjectDataToGlobal = async (projectCustomers, projectMembers) => {
+    if (!user) return
+    
+    try {
+      // Get current global settings
+      const { data: currentData } = await supabase
+        .from('user_list_items')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      const existingCustomers = new Set((currentData || []).filter(d => d.list_type === 'customer').map(d => d.name.toLowerCase()))
+      const existingAssignees = new Set((currentData || []).filter(d => d.list_type === 'assignee').map(d => d.name.toLowerCase()))
+      
+      const itemsToAdd = []
+      const maxOrder = Math.max(0, ...(currentData || []).map(d => d.sort_order || 0))
+      let orderCounter = maxOrder + 1
+      
+      // Add new customers
+      projectCustomers.forEach(name => {
+        if (name && !existingCustomers.has(name.toLowerCase())) {
+          itemsToAdd.push({
+            user_id: user.id,
+            list_type: 'customer',
+            name: name,
+            color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+            sort_order: orderCounter++
+          })
+        }
+      })
+      
+      // Add new assignees
+      projectMembers.forEach(name => {
+        if (name && !existingAssignees.has(name.toLowerCase())) {
+          itemsToAdd.push({
+            user_id: user.id,
+            list_type: 'assignee',
+            name: name,
+            color: null,
+            sort_order: orderCounter++
+          })
+        }
+      })
+      
+      if (itemsToAdd.length > 0) {
+        await supabase.from('user_list_items').insert(itemsToAdd)
+        // Refresh the user lists
+        const { data: newData } = await supabase
+          .from('user_list_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('sort_order')
+        
+        if (newData) {
+          const lists = { assignees: [], customers: [], categories: [] }
+          const keyMap = { assignee: 'assignees', customer: 'customers', category: 'categories' }
+          newData.forEach(item => {
+            const key = keyMap[item.list_type]
+            if (key && lists[key]) {
+              lists[key].push({ id: item.id, name: item.name, color: item.color })
+            }
+          })
+          setUserLists(lists)
+        }
+      }
+    } catch (err) {
+      console.error('Error syncing project data to global:', err)
     }
   }
 
