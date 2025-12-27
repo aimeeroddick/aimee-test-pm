@@ -1399,291 +1399,153 @@ const CriticalToggle = ({ checked, onChange }) => (
 
 // Task Card Component
 const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate }) => {
-const [showStatusPicker, setShowStatusPicker] = useState(false)
-const dueDateStatus = getDueDateStatus(task.due_date, task.status)
-const energyStyle = ENERGY_LEVELS[task.energy_level]
-const category = CATEGORIES.find(c => c.id === task.category)
-const source = SOURCES.find(s => s.id === task.source)
-const readyToStart = isReadyToStart(task)
-const blocked = isBlocked(task, allTasks)
-const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
-const isDone = task.status === 'done'
-const isToday = task.due_date === new Date().toISOString().split('T')[0]
+  const [showStatusPicker, setShowStatusPicker] = useState(false)
+  const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+  const blocked = isBlocked(task, allTasks)
+  const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
+  const isDone = task.status === 'done'
+  const readyToStart = isReadyToStart(task)
+  
+  // Accent color for left border
+  const accentColor = blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
+  
+  // Check if card has expandable content
+  const hasExpandableContent = task.description || 
+    (task.subtasks && task.subtasks.length > 0) || 
+    task.time_estimate || 
+    task.assignee ||
+    (task.attachments?.length > 0)
 
-// Determine card accent color
-const accentColor = blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : (category?.color || COLUMN_COLORS[task.status])
-
-return (
-<div
-draggable
-onDragStart={(e) => onDragStart(e, task)}
-onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-className={`task-card bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-sm border cursor-pointer transition-all group ${
-isSelected
-? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600 shadow-lg shadow-indigo-500/10'
-: blocked
-? 'border-orange-200 dark:border-orange-800 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/5'
-: task.critical 
-? 'border-red-200 dark:border-red-800 hover:border-red-300 hover:shadow-lg hover:shadow-red-500/5'
-    : readyToStart
-    ? 'border-green-200 dark:border-green-800 hover:border-green-300 hover:shadow-lg hover:shadow-green-500/5'
-      : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-md'
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, task)}
+      onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
+      className={`task-card bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group ${
+        isSelected
+          ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600'
+          : blocked
+          ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300'
+          : task.critical 
+          ? 'border-red-200 dark:border-red-800 hover:border-red-300'
+          : readyToStart
+          ? 'border-green-200 dark:border-green-800 hover:border-green-300'
+          : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
       }`}
       style={{ 
-        borderLeftWidth: '4px', 
-        borderLeftColor: accentColor,
-        // Subtle gradient overlay for special states
-        background: blocked ? 'linear-gradient(135deg, rgba(249,115,22,0.03) 0%, transparent 50%)' : 
-                   task.critical ? 'linear-gradient(135deg, rgba(239,68,68,0.03) 0%, transparent 50%)' : 
-                   readyToStart ? 'linear-gradient(135deg, rgba(16,185,129,0.03) 0%, transparent 50%)' : undefined
+        borderLeftWidth: '3px', 
+        borderLeftColor: accentColor
       }}
     >
-      {/* Quick Complete Checkbox or Bulk Select */}
-      <div className="flex items-start gap-3">
+      {/* Main Row: Checkbox + Title + Icons + Due Date */}
+      <div className="flex items-start gap-2">
+        {/* Checkbox */}
         {bulkSelectMode ? (
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleSelect?.(task.id)
-            }}
-            className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-              isSelected
-                ? 'bg-indigo-500 border-indigo-500 text-white'
-                : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+            onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
+            className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+              isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-600'
             }`}
           >
-            {isSelected && (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
+            {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
           </button>
         ) : onQuickComplete && (
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuickComplete(task.id, isDone ? 'todo' : 'done')
-            }}
-            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-              isDone
-                ? 'bg-emerald-500 border-emerald-500 text-white'
-                : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+            onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
+            className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+              isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400'
             }`}
-            title={isDone ? 'Mark as not done' : 'Mark as done'}
           >
-            {isDone && (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
+            {isDone && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
           </button>
         )}
-        <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-        {blocked && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-md bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Blocked
-          </span>
-        )}
-        {task.critical && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-md bg-gradient-to-r from-red-100 to-rose-100 dark:from-red-900/40 dark:to-rose-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
-            <span>🚩</span>
-            Critical
-          </span>
-        )}
-        {recurrence && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {recurrence.label}
-          </span>
-        )}
-        {readyToStart && !blocked && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-md bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Ready
-          </span>
-        )}
-        {category && (
-          <span 
-            className="px-2 py-0.5 text-xs font-medium rounded-md text-white shadow-sm"
-            style={{ backgroundColor: category.color }}
-          >
-            {category.label}
-          </span>
-        )}
-      </div>
-      
-      <h4 className="font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">
-        {task.title}
-      </h4>
-      
-      {task.customer && (
-        <p className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-2">
-          {task.customer}
-        </p>
-      )}
-      
-      {task.description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{task.description}</p>
-      )}
-      
-      {/* Subtasks Progress */}
-      {task.subtasks && task.subtasks.length > 0 && (
-        <div className="mb-3">
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <span>{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks</span>
-          </div>
-          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-indigo-500 transition-all duration-300"
-              style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
-      
-      <div className="flex items-center gap-3 mb-3 text-xs">
-        {task.time_estimate && (
-          <span className="flex items-center gap-1 text-gray-500">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {formatTimeEstimate(task.time_estimate)}
-          </span>
-        )}
-        {energyStyle && (
-          <span 
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
-          >
-            {energyStyle.icon} {task.energy_level}
-          </span>
-        )}
-        {source && (
-          <span className="text-gray-400" title={source.label}>
-            {source.icon}
-          </span>
-        )}
-        {task.attachments?.length > 0 && (
-          <span className="text-gray-400 dark:text-gray-500 flex items-center gap-1">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-            </svg>
-            {task.attachments.length}
-          </span>
-        )}
-      </div>
-      
-      {/* Image thumbnails */}
-      {task.attachments?.filter(a => a.file_type?.startsWith('image/')).length > 0 && (
-        <div className="mt-2 flex gap-1.5 overflow-x-auto">
-          {task.attachments.filter(a => a.file_type?.startsWith('image/')).slice(0, 3).map((att, i) => (
-            <div key={att.id || i} className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-              <img 
-                src={att.file_url} 
-                alt="" 
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          ))}
-          {task.attachments.filter(a => a.file_type?.startsWith('image/')).length > 3 && (
-            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 font-medium">
-              +{task.attachments.filter(a => a.file_type?.startsWith('image/')).length - 3}
-            </div>
-          )}
-        </div>
-      )}
-      
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <div className="flex items-center gap-2 min-w-0">
-          {task.assignee && (
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-medium text-white bg-purple-500">
-                {task.assignee.charAt(0).toUpperCase()}
-              </div>
-              <span className="text-gray-600 dark:text-gray-400 text-xs truncate">{task.assignee}</span>
-            </div>
-          )}
-        </div>
         
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Move to To Do button - show for backlog tasks */}
-          {onStatusChange && task.status === 'backlog' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onStatusChange(task.id, 'todo')
-              }}
-              className="opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all"
-              title="Move to To Do"
-            >
-              <span>📋</span>
-              <span className="hidden sm:inline">To Do</span>
-            </button>
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Title Row with inline icons */}
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {blocked && <span title="Blocked" className="text-orange-500">🔒</span>}
+            {task.critical && <span title="Critical" className="text-red-500">🚩</span>}
+            {recurrence && <span title={recurrence.label} className="text-blue-500">🔁</span>}
+            {readyToStart && !blocked && <span title="Ready to start" className="text-green-500 text-xs">✓</span>}
+            
+            <h4 className="flex-1 font-medium text-sm text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+              {task.title}
+            </h4>
+          </div>
+          
+          {task.customer && (
+            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium truncate mb-1">{task.customer}</p>
           )}
-          {task.start_date && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${
-              readyToStart ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-500'
-            }`}>
-              <span>Start:</span>
-              {formatDate(task.start_date)}
+          
+          {hasExpandableContent && (
+            <div className="hidden group-hover:block mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 space-y-1.5">
+              {task.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{task.description}</p>
+              )}
+              
+              {task.subtasks && task.subtasks.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-indigo-500" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
+                  </div>
+                  <span className="text-xs text-gray-400">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                {task.time_estimate && <span>⏱ {formatTimeEstimate(task.time_estimate)}</span>}
+                {task.assignee && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-purple-500 text-white text-[10px] flex items-center justify-center">{task.assignee.charAt(0).toUpperCase()}</span>
+                    <span className="truncate max-w-[60px]">{task.assignee}</span>
+                  </span>
+                )}
+                {task.attachments?.length > 0 && <span>📎 {task.attachments.length}</span>}
+              </div>
             </div>
           )}
-          {task.due_date && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${
-              dueDateStatus === 'overdue'
-                ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                : dueDateStatus === 'today'
-                ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                : dueDateStatus === 'soon'
-                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                : 'bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-            }`}>
-              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{formatDate(task.due_date)}</span>
+          
+          <div className="flex items-center justify-between gap-2 mt-1.5">
+            <div className="flex items-center gap-1.5">
+              {task.due_date && (
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
+                  dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' :
+                  dueDateStatus === 'today' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' :
+                  dueDateStatus === 'soon' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' :
+                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                }`}>
+                  {formatDate(task.due_date)}
+                </span>
+              )}
+              
+              {showProject && project && (
+                <span className="text-xs text-gray-400 truncate max-w-[80px]">{project.name}</span>
+              )}
             </div>
-          )}
+            
+            {onStatusChange && task.status === 'backlog' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, 'todo') }}
+                className="opacity-0 group-hover:opacity-100 px-1.5 py-0.5 rounded text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-all"
+              >
+                → To Do
+              </button>
+            )}
+          </div>
         </div>
       </div>
       
-      {showProject && project && (
-        <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
-          <span className="text-xs text-gray-400">{project.name}</span>
-        </div>
-      )}
-      
-      {/* Mobile Status Picker - only show on touch devices */}
       {onStatusChange && (
-        <div className="sm:hidden mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div className="sm:hidden mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
           {showStatusPicker ? (
             <div className="flex gap-1">
               {COLUMNS.map(col => (
                 <button
                   key={col.id}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (col.id !== task.status) {
-                      onStatusChange(task.id, col.id)
-                    }
-                    setShowStatusPicker(false)
-                  }}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    col.id === task.status
-                      ? 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 active:bg-gray-200'
+                  onClick={(e) => { e.stopPropagation(); if (col.id !== task.status) onStatusChange(task.id, col.id); setShowStatusPicker(false) }}
+                  className={`flex-1 py-1 rounded text-xs font-medium ${
+                    col.id === task.status ? 'bg-gray-200 dark:bg-gray-600' : 'bg-gray-100 dark:bg-gray-700'
                   }`}
                   style={col.id === task.status ? { backgroundColor: col.color + '30', color: col.color } : {}}
                 >
@@ -1693,28 +1555,19 @@ isSelected
             </div>
           ) : (
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowStatusPicker(true)
-              }}
-              className="w-full flex items-center justify-center gap-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-600"
+              onClick={(e) => { e.stopPropagation(); setShowStatusPicker(true) }}
+              className="w-full py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
               Move to...
             </button>
           )}
         </div>
       )}
-        </div>
-      </div>
     </div>
   )
 }
 
-// Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect }) => {
+
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
