@@ -1494,16 +1494,35 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
   const [selectedDate, setSelectedDate] = useState(null)
   const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [draggedTask, setDraggedTask] = useState(null)
+  const calendarScrollRef = useRef(null)
+  
+  // Auto-scroll to 6am when daily/weekly view loads
+  useEffect(() => {
+    if ((viewMode === 'daily' || viewMode === 'weekly') && calendarScrollRef.current) {
+      // 6am = slot index 12 (6*2), each slot is 32px
+      const scrollTo6am = 12 * 32
+      calendarScrollRef.current.scrollTop = scrollTo6am
+    }
+  }, [viewMode, currentDate])
   
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   
   // Generate hours for day/week view (12am to 11pm)
-  const hours = Array.from({ length: 24 }, (_, i) => {
-    const hour = i % 12 || 12
-    const ampm = i < 12 ? 'AM' : 'PM'
-    return { hour: i, label: `${hour}:00 ${ampm}` }
+  // Generate 30-minute time slots (48 total)
+  const timeSlots = Array.from({ length: 48 }, (_, i) => {
+    const totalMinutes = i * 30
+    const h = Math.floor(totalMinutes / 60)
+    const m = totalMinutes % 60
+    const hour = h % 12 || 12
+    const ampm = h < 12 ? 'AM' : 'PM'
+    return { 
+      slotIndex: i, 
+      minutes: totalMinutes,
+      label: `${hour}:${m.toString().padStart(2, '0')} ${ampm}`,
+      isHour: m === 0 // Only show label for full hours
+    }
   })
   
   // Format time from minutes since midnight
@@ -1598,17 +1617,17 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     return tasks.filter(t => t.start_date === dateStr || t.due_date === dateStr)
   }
   
-  // Get tasks for a specific hour on a date
-  const getTasksForHour = (date, hour) => {
+  // Get tasks for a specific 30-minute slot on a date
+  const getTasksForSlot = (date, slotIndex) => {
     const dateStr = date.toISOString().split('T')[0]
-    const hourStart = hour * 60
-    const hourEnd = (hour + 1) * 60
+    const slotStart = slotIndex * 30
+    const slotEnd = slotStart + 30
     
     return tasks.filter(t => {
       if (t.start_date !== dateStr) return false
       const startTime = t.start_time ? parseTimeToMinutes(t.start_time) : null
       if (startTime === null) return false
-      return startTime >= hourStart && startTime < hourEnd
+      return startTime >= slotStart && startTime < slotEnd
     })
   }
   
@@ -1619,13 +1638,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     e.dataTransfer.setData('text/plain', task.id)
   }
   
-  // Handle drop on time slot
-  const handleDropOnSlot = async (date, hour) => {
+  // Handle drop on time slot (30-minute increments)
+  const handleDropOnSlot = async (date, slotIndex) => {
     if (!draggedTask || !onUpdateTask) return
     
     const dateStr = date.toISOString().split('T')[0]
     const todayStr = new Date().toISOString().split('T')[0]
-    const startTimeMinutes = hour * 60
+    const startTimeMinutes = slotIndex * 30
     const startTime = formatTime(startTimeMinutes)
     
     // Calculate end time based on time_estimate
@@ -1892,56 +1911,66 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       <div className="flex gap-6">
         {/* Main Calendar */}
         <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="grid grid-cols-[80px_1fr] divide-x divide-gray-200 dark:divide-gray-700">
-            {/* Time column */}
-            <div className="bg-gray-50 dark:bg-gray-800">
-              <div className="h-12 border-b border-gray-200 dark:border-gray-700" />
-              {hours.map(({ hour, label }) => (
-                <div key={hour} className="h-16 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
-                  {label}
-                </div>
-              ))}
+          {/* Fixed header */}
+          <div className="grid grid-cols-[60px_1fr] divide-x divide-gray-200 dark:divide-gray-700 border-b border-gray-200 dark:border-gray-700">
+            <div className="h-12 bg-gray-50 dark:bg-gray-800" />
+            <div className={`h-12 flex items-center justify-center font-semibold ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300'}`}>
+              {fullDayNames[currentDate.getDay()]} {currentDate.getDate()}
             </div>
-            
-            {/* Day column */}
-            <div>
-              <div className={`h-12 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 font-semibold ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>
-                {fullDayNames[currentDate.getDay()]} {currentDate.getDate()}
-              </div>
-              {hours.map(({ hour }) => {
-                const hourTasks = getTasksForHour(currentDate, hour)
-                return (
-                  <div
-                    key={hour}
-                    className="h-16 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
-                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                    onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, hour) }}
-                  >
-                    {hourTasks.map(task => {
-                      const duration = task.time_estimate || 60
-                      const heightSlots = Math.ceil(duration / 60)
-                      return (
-                        <div
-                          key={task.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, task)}
-                          onClick={() => onEditTask(task)}
-                          className={`absolute left-1 right-1 px-2 py-1 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 ${
-                            task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
-                            task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                            'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
-                          }`}
-                          style={{ height: `${heightSlots * 64 - 4}px`, top: '2px' }}
-                          title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
-                        >
-                          <div className="truncate">{task.critical && '🚩 '}{task.title}</div>
-                          {task.start_time && <div className="text-[10px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>}
-                        </div>
-                      )
-                    })}
+          </div>
+          {/* Scrollable time grid */}
+          <div ref={calendarScrollRef} className="max-h-[600px] overflow-y-auto">
+            <div className="grid grid-cols-[60px_1fr] divide-x divide-gray-200 dark:divide-gray-700">
+              {/* Time column */}
+              <div className="bg-gray-50 dark:bg-gray-800">
+                {timeSlots.map(({ slotIndex, label, isHour }) => (
+                  <div key={slotIndex} className="h-8 px-2 flex items-center justify-end border-b border-gray-100 dark:border-gray-800">
+                    {isHour && <span className="text-[10px] text-gray-500 dark:text-gray-400">{label}</span>}
                   </div>
-                )
-              })}
+                ))}
+              </div>
+              
+              {/* Day column */}
+              <div className="relative">
+                {timeSlots.map(({ slotIndex, isHour }) => {
+                  const slotTasks = getTasksForSlot(currentDate, slotIndex)
+                  return (
+                    <div
+                      key={slotIndex}
+                      className={`h-8 border-b relative transition-colors ${
+                        isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
+                      } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                      onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, slotIndex) }}
+                    >
+                      {slotTasks.map(task => {
+                        const duration = task.time_estimate || 30
+                        const heightSlots = Math.ceil(duration / 30)
+                        return (
+                          <div
+                            key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            onClick={() => onEditTask(task)}
+                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden ${
+                              task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                              task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                              'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                            }`}
+                            style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
+                            title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
+                          >
+                            <div className="truncate text-[11px]">{task.critical && '🚩 '}{task.title}</div>
+                            {heightSlots > 1 && task.start_time && (
+                              <div className="text-[9px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -1981,64 +2010,79 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     
     return (
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="grid grid-cols-[80px_repeat(7,1fr)] divide-x divide-gray-200 dark:divide-gray-700">
-          {/* Time column */}
-          <div className="bg-gray-50 dark:bg-gray-800">
-            <div className="h-12 border-b border-gray-200 dark:border-gray-700" />
-            {hours.map(({ hour, label }) => (
-              <div key={hour} className="h-14 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
-                {label}
-              </div>
-            ))}
-          </div>
-          
-          {/* Day columns */}
+        {/* Fixed header */}
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] divide-x divide-gray-200 dark:divide-gray-700 border-b border-gray-200 dark:border-gray-700">
+          <div className="h-12 bg-gray-50 dark:bg-gray-800" />
           {weekDates.map((date, idx) => {
             const dateStr = date.toISOString().split('T')[0]
             const isToday = dateStr === todayStr
-            
             return (
-              <div key={idx} className="min-w-[100px]">
-                <div className={`h-12 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{dayNames[date.getDay()]}</span>
-                  <span className={`text-sm font-semibold ${isToday ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{date.getDate()}</span>
-                </div>
-                {hours.map(({ hour }) => {
-                  const hourTasks = getTasksForHour(date, hour)
-                  return (
-                    <div
-                      key={hour}
-                      className="h-14 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
-                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                      onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, hour) }}
-                    >
-                      {hourTasks.map(task => {
-                        const duration = task.time_estimate || 60
-                        const heightSlots = Math.min(Math.ceil(duration / 60), 4) // Cap at 4 hours for weekly view
-                        return (
-                          <div
-                            key={task.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, task)}
-                            onClick={() => onEditTask(task)}
-                            className={`absolute left-0.5 right-0.5 px-1 py-0.5 rounded text-[10px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 truncate ${
-                              task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
-                              task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                              'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
-                            }`}
-                            style={{ height: `${heightSlots * 56 - 4}px`, top: '2px' }}
-                            title={task.title}
-                          >
-                            {task.critical && '🚩 '}{task.title}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })}
+              <div key={idx} className={`h-12 flex flex-col items-center justify-center ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{dayNames[date.getDay()]}</span>
+                <span className={`text-sm font-semibold ${isToday ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{date.getDate()}</span>
               </div>
             )
           })}
+        </div>
+        
+        {/* Scrollable time grid */}
+        <div ref={calendarScrollRef} className="max-h-[600px] overflow-y-auto">
+          <div className="grid grid-cols-[60px_repeat(7,1fr)] divide-x divide-gray-200 dark:divide-gray-700">
+            {/* Time column */}
+            <div className="bg-gray-50 dark:bg-gray-800">
+              {timeSlots.map(({ slotIndex, label, isHour }) => (
+                <div key={slotIndex} className="h-6 px-1 flex items-center justify-end border-b border-gray-100 dark:border-gray-800">
+                  {isHour && <span className="text-[9px] text-gray-500 dark:text-gray-400">{label}</span>}
+                </div>
+              ))}
+            </div>
+            
+            {/* Day columns */}
+            {weekDates.map((date, idx) => {
+              const dateStr = date.toISOString().split('T')[0]
+              const isToday = dateStr === todayStr
+              
+              return (
+                <div key={idx} className={`min-w-[80px] ${isToday ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                  {timeSlots.map(({ slotIndex, isHour }) => {
+                    const slotTasks = getTasksForSlot(date, slotIndex)
+                    return (
+                      <div
+                        key={slotIndex}
+                        className={`h-6 border-b relative transition-colors ${
+                          isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
+                        } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
+                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                        onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, slotIndex) }}
+                      >
+                        {slotTasks.map(task => {
+                          const duration = task.time_estimate || 30
+                          const heightSlots = Math.min(Math.ceil(duration / 30), 8) // Cap at 4 hours for weekly
+                          return (
+                            <div
+                              key={task.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, task)}
+                              onClick={() => onEditTask(task)}
+                              className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 truncate overflow-hidden ${
+                                task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                                task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                                'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                              }`}
+                              style={{ height: `${heightSlots * 24 - 2}px`, top: '1px' }}
+                              title={task.title}
+                            >
+                              {task.critical && '🚩'}{task.title}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     )
