@@ -114,30 +114,22 @@ const isBlocked = (task, allTasks) => {
 
 // Check if task is in My Day (auto-included by start date OR manually added)
 const isInMyDay = (task) => {
+  // This function is used for the sun indicator on board cards
+  // Done tasks should NOT show the sun indicator
+  if (task.status === 'done') return false
+  
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const todayStr = today.toISOString().split('T')[0]
   
-  // Auto-included: start_date <= today (and task not done)
-  if (task.start_date && task.status !== 'done') {
+  // Auto-included: start_date <= today
+  if (task.start_date) {
     const startDate = new Date(task.start_date)
     startDate.setHours(0, 0, 0, 0)
     if (startDate <= today) return true
   }
   
-  // Manually added: my_day_date exists (persists until completed or removed)
-  // For incomplete tasks, my_day_date means "manually added"
-  if (task.my_day_date && task.status !== 'done') return true
-  
-  // Completed tasks with my_day_date today still show (struck through)
-  if (task.my_day_date === todayStr && task.status === 'done') return true
-  
-  // Completed today (by completed_at) also show
-  if (task.status === 'done' && task.completed_at) {
-    const completedDate = new Date(task.completed_at)
-    completedDate.setHours(0, 0, 0, 0)
-    if (completedDate.getTime() === today.getTime()) return true
-  }
+  // Manually added: my_day_date exists
+  if (task.my_day_date) return true
   
   return false
 }
@@ -1550,15 +1542,34 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const greetingEmoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : '🌙'
   
   const taskInMyDay = (task) => {
+    // For done tasks, show if they were in My Day and completed today
     if (task.status === 'done') {
-      if (task.my_day_date === todayStr) return true
+      // Must have been completed today to show
+      if (!task.completed_at) return false
+      const completedDate = new Date(task.completed_at)
+      completedDate.setHours(0, 0, 0, 0)
+      if (completedDate.getTime() !== today.getTime()) return false
+      
+      // Was manually added to My Day
+      if (task.my_day_date) return true
+      
+      // Was auto-added via start_date
+      if (task.start_date) {
+        const startDate = new Date(task.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (startDate <= today) return true
+      }
       return false
     }
+    
+    // For active tasks: auto-included if start_date <= today
     if (task.start_date) {
       const startDate = new Date(task.start_date)
       startDate.setHours(0, 0, 0, 0)
       if (startDate <= today) return true
     }
+    
+    // Manually added via my_day_date
     if (task.my_day_date) return true
     return false
   }
