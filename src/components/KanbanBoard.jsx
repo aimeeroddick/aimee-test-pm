@@ -646,7 +646,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'summary-bar',
       title: 'Welcome to Trackli! 👋',
-      description: 'Let me show you around. This is your Summary Bar - click any stat to filter your tasks quickly.',
+      description: 'This is your Summary Bar - click any stat to filter tasks. Use the ☀️ My Day filter to see your daily focus, or filter by assignee, customer, category and more.',
       position: 'bottom',
     },
     {
@@ -658,13 +658,19 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'task-card',
       title: 'Task Cards',
-      description: 'Each card shows key info at a glance. The left border color indicates status. Hover to see more details!',
+      description: 'Each card shows key info at a glance. Look for the ☀️ sun icon on cards in your My Day list! Hover to see details and attachments.',
       position: 'right',
+    },
+    {
+      target: 'views',
+      title: 'Multiple Views',
+      description: 'Switch between Board, My Day, All Tasks (with sorting & CSV export), Calendar, and Progress views using the menu.',
+      position: 'bottom',
     },
     {
       target: 'add-task',
       title: 'Create Tasks',
-      description: 'Click here or press ⌘T to create a new task. You can also press ⌘P for a new project.',
+      description: 'Click here or press ⌘T to create a new task. Attach files, set dependencies, and configure recurring schedules.',
       position: 'bottom',
     },
     {
@@ -689,7 +695,8 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 0 ? 'top-32 left-1/2 -translate-x-1/2' :
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
-          step === 3 ? 'top-20 right-32' :
+          step === 3 ? 'top-24 left-8' :
+          step === 4 ? 'top-20 right-32' :
           'top-20 right-32'
         }`}
       >
@@ -767,6 +774,8 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
   
   const tabs = [
     { id: 'board', label: 'Board', icon: '📋' },
+    { id: 'myday', label: 'My Day', icon: '☀️' },
+    { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
     { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
   ]
@@ -945,6 +954,165 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   <li>• Attachments count</li>
                 </ul>
               </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
+                  Filtering Tasks
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Use the filter bar above the board to narrow down your tasks:</p>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Quick Filters (Summary Bar):</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>☀️ My Day – Tasks in your daily focus</div>
+                      <div>🟢 Active – To Do + In Progress</div>
+                      <div>🟣 Backlog – Future work</div>
+                      <div>🟠 Due Today</div>
+                      <div>🔴 Overdue</div>
+                      <div>🚩 Critical – Flagged tasks</div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Field Filters:</p>
+                    <p className="text-sm text-gray-500 mb-2">Use the "Filter by..." dropdown to filter by:</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>• Assignee</div>
+                      <div>• Customer</div>
+                      <div>• Category</div>
+                      <div>• Effort Level</div>
+                      <div>• Source</div>
+                      <div>• Due Date</div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Search:</p>
+                    <p className="text-sm text-gray-500">Type in the search box to find tasks by title or description. Press ⌘K to jump to search.</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-3">💡 Active filters show a count badge. Click "Clear" to reset all filters.</p>
+              </section>
+            </div>
+          )}
+          
+          {activeTab === 'myday' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">☀️</span>
+                  What is My Day?
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
+                  How Tasks Appear in My Day
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-green-600 dark:text-green-400 mb-1">Auto-included:</p>
+                    <p className="text-sm text-gray-500">Tasks with a start date of today or earlier automatically appear in My Day</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Manually added:</p>
+                    <p className="text-sm text-gray-500">Drag tasks from Recommendations into the "My Day" section to add them to your focus list</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Sun Icon on Cards (☀️)
+                </h3>
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                  <p className="text-gray-700 dark:text-gray-300">Tasks in your My Day list show a <span className="text-lg">☀️</span> sun icon on their card in the board view, right below the effort bars. This helps you quickly identify your daily focus tasks while browsing the board.</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
+                  Recommendations
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Below your My Day tasks, you'll see smart recommendations:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                    <span className="font-semibold text-red-600">🔴 Overdue</span>
+                    <p className="text-sm text-gray-500">Past due date</p>
+                  </div>
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                    <span className="font-semibold text-orange-600">🟠 Due Today</span>
+                    <p className="text-sm text-gray-500">Due today</p>
+                  </div>
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                    <span className="font-semibold text-yellow-600">🟡 Due Soon</span>
+                    <p className="text-sm text-gray-500">Due in next 3 days</p>
+                  </div>
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                    <span className="font-semibold text-green-600">🟢 Quick Wins</span>
+                    <p className="text-sm text-gray-500">Low effort tasks</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  Daily Reset
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">Manually added tasks clear from My Day at midnight (or when completed), giving you a fresh start each day. Auto-included tasks based on start date will remain until their start date passes.</p>
+              </section>
+            </div>
+          )}
+          
+          {activeTab === 'alltasks' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗃️</span>
+                  All Tasks View
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘T</kbd>.</p>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
+                  Sorting
+                </h3>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <p className="text-gray-600 dark:text-gray-400">Click any column header to sort by that field. Click again to reverse the sort order. An arrow indicator shows the current sort direction.</p>
+                  <div className="mt-2 text-sm text-gray-500">Sortable columns: Title, Project, Status, Due Date, Start Date, Assignee, Customer, Category, Effort, Source, Time Estimate, Created</div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Filtering
+                </h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• Click the <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium">Filters</span> button to show filter inputs for each column</p>
+                  <p>• Type in the filter boxes below column headers to narrow results</p>
+                  <p>• Click <span className="text-red-600">Clear Filters</span> to reset all filters</p>
+                  <p>• Active filters show a dot indicator on the Filters button</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">3</span>
+                  Export to CSV
+                </h3>
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                  <p className="text-gray-700 dark:text-gray-300 mb-2">Click the <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">Export CSV</span> button to download your tasks.</p>
+                  <p className="text-sm text-gray-500">The export includes: Title, Project, Status, Critical, Due Date, Start Date, Assignee, Customer, Category, Effort, Source, Time Estimate, Description, and Created date.</p>
+                  <p className="text-sm text-gray-500 mt-2">💡 Only currently filtered/visible tasks are exported, making it easy to export specific subsets of your data.</p>
+                </div>
+              </section>
             </div>
           )}
           
@@ -1043,6 +1211,34 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   <p>• Set a recurrence pattern: Daily, Weekly, Bi-weekly, Monthly</p>
                   <p>• When completed, a new instance is automatically created</p>
                   <p>• Recurring tasks show 🔁 on the card</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">6</span>
+                  Attachments
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Adding Attachments:</p>
+                    <div className="space-y-1 text-sm text-gray-500">
+                      <p>• Open a task and go to the Details tab</p>
+                      <p>• Drag & drop files or click "Choose files"</p>
+                      <p>• Supports images, PDFs, documents, and more</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Viewing Attachments:</p>
+                    <div className="space-y-1 text-sm text-gray-500">
+                      <p>• Click any attachment to open the viewer</p>
+                      <p>• PDFs display inline with page navigation</p>
+                      <p>• Images show in a lightbox view</p>
+                      <p>• Use ← → arrow keys to navigate between multiple attachments</p>
+                      <p>• Click the download icon to save files locally</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500">💡 Tasks with attachments show a 📎 icon with count on the card</p>
                 </div>
               </section>
             </div>
