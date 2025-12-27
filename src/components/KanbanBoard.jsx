@@ -1535,13 +1535,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange }) => {
-  const [selectedEnergy, setSelectedEnergy] = useState('all')
-  const [availableTime, setAvailableTime] = useState('')
-  const [expandedSection, setExpandedSection] = useState(null)
+const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate }) => {
+  const [dragOverMyDay, setDragOverMyDay] = useState(false)
+  const [expandedSection, setExpandedSection] = useState('overdue')
   
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const todayStr = today.toISOString().split('T')[0]
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   
@@ -1549,119 +1549,139 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const greetingEmoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : '🌙'
   
-  // Filter tasks for different sections
-  const activeTasks = tasks.filter(t => t.status !== 'done')
-  
-  const overdueTasks = activeTasks.filter(t => getDueDateStatus(t.due_date, t.status) === 'overdue')
-  const dueTodayTasks = activeTasks.filter(t => getDueDateStatus(t.due_date, t.status) === 'today')
-  const inProgressTasks = activeTasks.filter(t => t.status === 'in_progress')
-  const readyToStartTasks = activeTasks.filter(t => isReadyToStart(t) && !isBlocked(t, allTasks))
-  const blockedTasks = activeTasks.filter(t => isBlocked(t, allTasks))
-  const criticalTasks = activeTasks.filter(t => t.critical && !overdueTasks.includes(t) && !dueTodayTasks.includes(t))
-  
-  // Focus Queue: Today's priority tasks + backlog suggestions
-  const getFocusQueue = () => {
-    // SECTION 1: Today's Tasks (in progress + due today + overdue) - always show these first
-    let todaysTasks = [...inProgressTasks, ...dueTodayTasks, ...overdueTasks]
-      .filter(t => !isBlocked(t, allTasks))
-    todaysTasks = [...new Map(todaysTasks.map(t => [t.id, t])).values()]
-    
-    // SECTION 2: Backlog suggestions (ready to start tasks not due today)
-    let backlogSuggestions = readyToStartTasks
-      .filter(t => !isBlocked(t, allTasks))
-      .filter(t => !dueTodayTasks.some(dt => dt.id === t.id))
-      .filter(t => !inProgressTasks.some(ip => ip.id === t.id))
-    
-    // Apply energy filter to backlog suggestions only
-    if (selectedEnergy !== 'all') {
-      backlogSuggestions = backlogSuggestions.filter(t => t.energy_level === selectedEnergy)
+  const taskInMyDay = (task) => {
+    if (task.status === 'done') {
+      if (task.my_day_date === todayStr) return true
+      return false
     }
-    
-    // Apply time filter to backlog suggestions only
-    if (availableTime) {
-      const minutes = parseInt(availableTime)
-      backlogSuggestions = backlogSuggestions.filter(t => !t.time_estimate || t.time_estimate <= minutes)
+    if (task.start_date) {
+      const startDate = new Date(task.start_date)
+      startDate.setHours(0, 0, 0, 0)
+      if (startDate <= today) return true
     }
-    
-    // Sort today's tasks: critical first, then by due date
-    todaysTasks.sort((a, b) => {
-      if (a.critical && !b.critical) return -1
-      if (!a.critical && b.critical) return 1
-      // Overdue first
-      const aOverdue = getDueDateStatus(a.due_date, a.status) === 'overdue'
-      const bOverdue = getDueDateStatus(b.due_date, b.status) === 'overdue'
-      if (aOverdue && !bOverdue) return -1
-      if (!aOverdue && bOverdue) return 1
-      if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date)
-      return 0
-    })
-    
-    // Sort backlog by critical, then time estimate (quick wins first)
-    backlogSuggestions.sort((a, b) => {
-      if (a.critical && !b.critical) return -1
-      if (!a.critical && b.critical) return 1
-      return (a.time_estimate || 999) - (b.time_estimate || 999)
-    })
-    
-    return {
-      todaysTasks: todaysTasks.slice(0, 5),
-      backlogSuggestions: backlogSuggestions.slice(0, 3)
+    if (task.my_day_date) return true
+    return false
+  }
+  
+  const isAutoAdded = (task) => {
+    if (task.start_date) {
+      const startDate = new Date(task.start_date)
+      startDate.setHours(0, 0, 0, 0)
+      if (startDate <= today) return true
+    }
+    return false
+  }
+  
+  const myDayTasks = tasks.filter(t => taskInMyDay(t))
+  const myDayActive = myDayTasks.filter(t => t.status !== 'done')
+  const myDayCompleted = myDayTasks.filter(t => t.status === 'done')
+  
+  myDayActive.sort((a, b) => {
+    if (a.critical && !b.critical) return -1
+    if (!a.critical && b.critical) return 1
+    const aOverdue = getDueDateStatus(a.due_date, a.status) === 'overdue'
+    const bOverdue = getDueDateStatus(b.due_date, b.status) === 'overdue'
+    if (aOverdue && !bOverdue) return -1
+    if (!aOverdue && bOverdue) return 1
+    if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date)
+    return 0
+  })
+  
+  const notInMyDay = tasks.filter(t => !taskInMyDay(t) && t.status !== 'done')
+  const eligibleForRecommendation = notInMyDay.filter(t => 
+    (t.status === 'todo' || t.status === 'in_progress') && !isBlocked(t, allTasks)
+  )
+  
+  const overdueTasks = eligibleForRecommendation.filter(t => 
+    getDueDateStatus(t.due_date, t.status) === 'overdue'
+  )
+  
+  const dueTodayTasks = eligibleForRecommendation.filter(t => 
+    getDueDateStatus(t.due_date, t.status) === 'today' && !overdueTasks.includes(t)
+  )
+  
+  const dueSoonTasks = eligibleForRecommendation.filter(t => {
+    if (!t.due_date || overdueTasks.includes(t) || dueTodayTasks.includes(t)) return false
+    const dueDate = new Date(t.due_date)
+    dueDate.setHours(0, 0, 0, 0)
+    const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
+    return diffDays > 0 && diffDays <= 3
+  })
+  
+  const quickWinTasks = eligibleForRecommendation.filter(t => 
+    t.energy_level === 'low' && 
+    !overdueTasks.includes(t) && 
+    !dueTodayTasks.includes(t) && 
+    !dueSoonTasks.includes(t)
+  ).slice(0, 5)
+  
+  const totalMyDayTime = myDayActive.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+  const completedTime = myDayCompleted.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+  const progressPercent = myDayTasks.length > 0 
+    ? Math.round((myDayCompleted.length / myDayTasks.length) * 100) 
+    : 0
+  
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setDragOverMyDay(true)
+  }
+  
+  const handleDragLeave = () => {
+    setDragOverMyDay(false)
+  }
+  
+  const handleDropOnMyDay = (e) => {
+    e.preventDefault()
+    setDragOverMyDay(false)
+    const taskId = e.dataTransfer.getData('taskId')
+    if (taskId) {
+      onUpdateMyDayDate(taskId, todayStr)
     }
   }
   
-  const focusQueue = getFocusQueue()
+  const handleRemoveFromMyDay = (e, task) => {
+    e.stopPropagation()
+    onUpdateMyDayDate(task.id, null)
+  }
   
-  // Calculate daily progress
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const completedToday = tasks.filter(t => {
-    if (t.status !== 'done' || !t.completed_at) return false
-    return new Date(t.completed_at) >= todayStart
-  })
-  
-  const totalTimeCompleted = completedToday.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
-  const totalTimeRemaining = [...dueTodayTasks, ...inProgressTasks].reduce((sum, t) => sum + (t.time_estimate || 0), 0)
-  
-  // Progress calculation
-  const totalTodayTasks = dueTodayTasks.length + completedToday.length
-  const progressPercent = totalTodayTasks > 0 ? Math.round((completedToday.length / totalTodayTasks) * 100) : 0
-  
-  const TaskCard = ({ task, showStatus = false, compact = false }) => {
+  const TaskCard = ({ task, showRemove = false, isCompleted = false }) => {
     const project = projects.find(p => p.id === task.project_id)
-    const category = CATEGORIES.find(c => c.id === task.category)
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
     
     return (
       <div
+        draggable={!isCompleted}
+        onDragStart={(e) => {
+          e.dataTransfer.setData('taskId', task.id)
+          onDragStart && onDragStart(e, task)
+        }}
         onClick={() => onEditTask(task)}
-        className={`group relative p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
-          blocked ? 'bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200' : 
-          task.critical ? 'bg-gradient-to-br from-red-50 to-pink-50 border border-red-200' : 
-          'bg-white border border-gray-100 hover:border-indigo-200'
+        className={`group relative p-4 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
+          isCompleted 
+            ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
+            : blocked 
+              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800' 
+              : task.critical 
+                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800' 
+                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
         }`}
       >
-        {/* Priority indicator bar */}
-        <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-full ${
-          task.critical ? 'bg-red-400' : blocked ? 'bg-orange-400' : 'bg-indigo-400'
-        }`} />
-        
-        <div className="flex items-start gap-3 pl-3">
-          {/* Quick complete */}
+        <div className="flex items-start gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation()
               onQuickStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')
             }}
-            className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-              task.status === 'done' 
-                ? 'bg-emerald-500 border-emerald-500 text-white scale-110' 
-                : 'border-gray-300 hover:border-emerald-400 hover:bg-emerald-50'
+            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+              task.status === 'done'
+                ? 'bg-emerald-500 border-emerald-500 text-white'
+                : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
             }`}
           >
             {task.status === 'done' && (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             )}
@@ -1669,135 +1689,89 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h4 className={`font-medium leading-tight ${
-                task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'
+              <h4 className={`font-medium text-sm leading-tight ${
+                isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-100'
               }`}>
+                {task.critical && !isCompleted && <span className="text-red-500 mr-1">🚩</span>}
+                {blocked && !isCompleted && <span className="text-orange-500 mr-1">🔒</span>}
                 {task.title}
               </h4>
+              
+              {showRemove && !isAutoAdded(task) && !isCompleted && (
+                <button
+                  onClick={(e) => handleRemoveFromMyDay(e, task)}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                  title="Remove from My Day"
+                >
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
+              {project && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  {project.name}
+                </span>
+              )}
               {task.due_date && (
-                <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-lg ${
-                  dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700' :
-                  dueDateStatus === 'today' ? 'bg-amber-100 text-amber-700' :
-                  dueDateStatus === 'soon' ? 'bg-orange-100 text-orange-700' :
-                  'bg-gray-100 text-gray-600'
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                  dueDateStatus === 'today' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                  dueDateStatus === 'soon' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                 }`}>
-                  {dueDateStatus === 'overdue' && '⚠️ '}
                   {formatDate(task.due_date)}
                 </span>
               )}
-            </div>
-            
-            {/* Tags row */}
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {blocked && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
-                  🔒 Blocked
+              {energyStyle && (
+                <span className="text-xs" title={`${energyStyle.label} effort`}>
+                  {task.energy_level === 'low' && <span style={{color: energyStyle.text}}>▰</span>}
+                  {task.energy_level === 'medium' && <span style={{color: energyStyle.text}}>▰▰</span>}
+                  {task.energy_level === 'high' && <span style={{color: energyStyle.text}}>▰▰▰</span>}
                 </span>
               )}
-              {task.critical && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">
-                  🚩 Critical
-                </span>
-              )}
-              {showStatus && (
-                <span 
-                  className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
-                  style={{ backgroundColor: COLUMN_COLORS[task.status] }}
-                >
-                  {COLUMNS.find(c => c.id === task.status)?.title}
-                </span>
-              )}
-              {category && (
-                <span 
-                  className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: category.color }}
-                >
-                  {category.label}
+              {task.time_estimate && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {task.time_estimate < 60 ? `${task.time_estimate}m` : `${Math.round(task.time_estimate / 60)}h`}
                 </span>
               )}
             </div>
-            
-            {/* Meta row */}
-            {!compact && (
-              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                {project && (
-                  <span className="flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                    {project.name}
-                  </span>
-                )}
-                {task.time_estimate && (
-                  <span className="flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {formatTimeEstimate(task.time_estimate)}
-                  </span>
-                )}
-                {energyStyle && (
-                  <span 
-                    className="px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
-                  >
-                    {energyStyle.icon} {task.energy_level}
-                  </span>
-                )}
-                {isInMyDay(task) && (
-                  <span className="text-amber-500" title="In My Day">
-                    ☀️
-                  </span>
-                )}
-                {task.assignee && (
-                  <span className="flex items-center gap-1">
-                    <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-medium">
-                      {task.assignee.charAt(0).toUpperCase()}
-                    </div>
-                    {task.assignee}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
     )
   }
   
-  const Section = ({ title, icon, tasks, color, gradient, showStatus = false, defaultExpanded = true }) => {
-    const isExpanded = expandedSection === null ? defaultExpanded : expandedSection === title
-    
+  const RecommendationSection = ({ title, emoji, color, tasks, id }) => {
     if (tasks.length === 0) return null
+    const isExpanded = expandedSection === id
     
     return (
-      <div className="mb-6">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         <button
-          onClick={() => setExpandedSection(isExpanded ? (expandedSection === title ? null : title) : title)}
-          className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${gradient} border border-transparent hover:shadow-md`}
+          onClick={() => setExpandedSection(isExpanded ? null : id)}
+          className={`w-full px-4 py-3 flex items-center justify-between ${color} transition-colors`}
         >
-          <span className="text-2xl">{icon}</span>
-          <div className="flex-1 text-left">
-            <h3 className="font-bold text-gray-800">{title}</h3>
-            <p className="text-sm text-gray-500">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p>
+          <div className="flex items-center gap-2">
+            <span>{emoji}</span>
+            <span className="font-medium text-sm">{title}</span>
+            <span className="text-xs bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full">{tasks.length}</span>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-bold ${color}`}>
-            {tasks.length}
-          </span>
-          <svg 
-            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
+          <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         
         {isExpanded && (
-          <div className="mt-3 space-y-3 pl-4">
+          <div className="p-3 space-y-2 bg-white dark:bg-gray-900">
             {tasks.map(task => (
-              <TaskCard key={task.id} task={task} showStatus={showStatus} />
+              <TaskCard key={task.id} task={task} />
             ))}
           </div>
         )}
@@ -1806,305 +1780,142 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   }
   
   return (
-    <div className="min-h-screen">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-yellow-200 to-orange-200 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-200 to-indigo-200 rounded-full blur-3xl opacity-30 translate-y-1/2 -translate-x-1/2" />
-        
-        <div className="relative max-w-5xl mx-auto px-6 py-12">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-indigo-600 font-medium mb-2">
-                {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
-              </p>
-              <h1 className="text-4xl font-black text-gray-900 mb-2">
-                {greeting} {greetingEmoji}
-              </h1>
-              <p className="text-gray-500 text-lg">
-                {activeTasks.length === 0 
-                  ? "You're all caught up! Enjoy your day." 
-                  : `You have ${activeTasks.length} active task${activeTasks.length !== 1 ? 's' : ''} to tackle.`
-                }
-              </p>
-            </div>
-            
-            {/* Progress Ring */}
-            <div className="relative">
-              <ProgressRing progress={progressPercent} size={140} strokeWidth={10} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-gray-800">{progressPercent}%</span>
-                <span className="text-xs text-gray-500">today</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-4 gap-4 mt-8">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-gray-800">{completedToday.length}</div>
-                  <div className="text-sm text-gray-500">Done today</div>
-                </div>
-              </div>
-              {totalTimeCompleted > 0 && (
-                <div className="mt-3 text-xs text-emerald-600 font-medium bg-emerald-50 px-3 py-1 rounded-full inline-block">
-                  {formatTimeEstimate(totalTimeCompleted)} completed
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-gray-800">{dueTodayTasks.length}</div>
-                  <div className="text-sm text-gray-500">Due today</div>
-                </div>
-              </div>
-              {totalTimeRemaining > 0 && (
-                <div className="mt-3 text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full inline-block">
-                  {formatTimeEstimate(totalTimeRemaining)} remaining
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-gray-800">{inProgressTasks.length}</div>
-                  <div className="text-sm text-gray-500">In progress</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-white/50 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  overdueTasks.length > 0 ? 'bg-red-100' : 'bg-gray-100'
-                }`}>
-                  <svg className={`w-6 h-6 ${overdueTasks.length > 0 ? 'text-red-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className={`text-2xl font-black ${overdueTasks.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                    {overdueTasks.length}
-                  </div>
-                  <div className="text-sm text-gray-500">Overdue</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+          {greetingEmoji} {greeting}
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
+          {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
+        </p>
       </div>
       
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Focus Queue */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl p-1">
-            <div className="bg-white dark:bg-gray-900 rounded-[22px] p-6">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                    <span className="text-xl">✨</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-800 dark:text-gray-100">Focus Queue</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Your priorities for today + quick wins from backlog</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Today's Tasks Section */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg">🎯</span>
-                  <h4 className="font-semibold text-gray-700 dark:text-gray-300">Today's Priority</h4>
-                  <span className="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full">
-                    {focusQueue.todaysTasks.length} task{focusQueue.todaysTasks.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                
-                {focusQueue.todaysTasks.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="text-3xl">✅</span>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">No urgent tasks! You're on top of things.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {focusQueue.todaysTasks.map((task, index) => (
-                      <div key={task.id} className="relative">
-                        {index === 0 && (
-                          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
-                            <span className="text-white text-[10px] font-bold">1</span>
-                          </div>
-                        )}
-                        <TaskCard task={task} showStatus={true} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Backlog Suggestions Section */}
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">💡</span>
-                    <h4 className="font-semibold text-gray-700 dark:text-gray-300">Quick Wins from Backlog</h4>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {/* Energy suggestion based on time of day */}
-                    {(() => {
-                      const hour = new Date().getHours()
-                      const suggestion = hour < 10 ? { level: 'high', text: 'Morning energy ⚡', icon: '⚡' } :
-                                         hour < 14 ? { level: 'medium', text: 'Mid-day focus →', icon: '→' } :
-                                         hour < 17 ? { level: 'low', text: 'Wind-down ○', icon: '○' } :
-                                         { level: 'low', text: 'Evening 🌙', icon: '🌙' }
-                      
-                      return selectedEnergy === 'all' && (
-                        <button
-                          onClick={() => setSelectedEnergy(suggestion.level)}
-                          className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all"
-                        >
-                          <span>{suggestion.icon}</span>
-                          <span className="hidden sm:inline">{suggestion.text}</span>
-                        </button>
-                      )
-                    })()}
-                    <select
-                      value={selectedEnergy}
-                      onChange={(e) => setSelectedEnergy(e.target.value)}
-                      className="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="all">Any energy</option>
-                      <option value="high">⚡ High</option>
-                      <option value="medium">→ Medium</option>
-                      <option value="low">○ Low</option>
-                    </select>
-                    <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 rounded-lg px-2 py-1">
-                      <input
-                        type="number"
-                        value={availableTime}
-                        onChange={(e) => setAvailableTime(e.target.value)}
-                        placeholder="30"
-                        className="w-12 px-1 py-0.5 text-sm border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-center"
-                      />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">mins</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {focusQueue.backlogSuggestions.length === 0 ? (
-                  <div className="text-center py-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="text-2xl">🌟</span>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-                      {selectedEnergy !== 'all' || availableTime 
-                        ? 'No matching tasks. Try adjusting filters.' 
-                        : 'Backlog is clear! Add tasks to get suggestions.'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {focusQueue.backlogSuggestions.map((task) => (
-                      <TaskCard key={task.id} task={task} showStatus={true} compact />
-                    ))}
-                  </div>
-                )}
-              </div>
+      {myDayTasks.length > 0 && (
+        <div className="mb-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Progress</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {myDayCompleted.length} of {myDayTasks.length} tasks ({progressPercent}%)
+            </span>
+          </div>
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          {totalMyDayTime > 0 && (
+            <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+              <span>~{Math.round(totalMyDayTime / 60)}h remaining</span>
+              <span>~{Math.round(completedTime / 60)}h completed</span>
             </div>
+          )}
+        </div>
+      )}
+      
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xl">☀️</span>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
+            <span className="text-sm text-gray-500 dark:text-gray-400">({myDayActive.length} active)</span>
+          </div>
+          
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDropOnMyDay}
+            className={`min-h-[200px] rounded-xl border-2 border-dashed transition-all ${
+              dragOverMyDay 
+                ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' 
+                : 'border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            {myDayActive.length === 0 && myDayCompleted.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[200px] text-gray-400 dark:text-gray-500">
+                <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <p className="text-sm">Drag tasks here to plan your day</p>
+                <p className="text-xs mt-1">Tasks with start dates ≤ today appear automatically</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-3">
+                {myDayActive.map(task => (
+                  <TaskCard key={task.id} task={task} showRemove={true} />
+                ))}
+                
+                {myDayCompleted.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 pt-4 pb-2">
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Completed today ({myDayCompleted.length})</span>
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                    {myDayCompleted.map(task => (
+                      <TaskCard key={task.id} task={task} isCompleted={true} />
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
-        {/* Task Sections */}
-        <Section 
-          title="Overdue" 
-          icon="🔴" 
-          tasks={overdueTasks} 
-          color="bg-red-100 text-red-700"
-          gradient="bg-gradient-to-r from-red-50 to-pink-50"
-        />
-        
-        <Section 
-          title="Due Today" 
-          icon="📅" 
-          tasks={dueTodayTasks} 
-          color="bg-amber-100 text-amber-700"
-          gradient="bg-gradient-to-r from-amber-50 to-orange-50"
-        />
-        
-        <Section 
-          title="In Progress" 
-          icon="🔄" 
-          tasks={inProgressTasks} 
-          color="bg-indigo-100 text-indigo-700"
-          gradient="bg-gradient-to-r from-indigo-50 to-blue-50"
-        />
-        
-        <Section 
-          title="Ready to Start" 
-          icon="🟢" 
-          tasks={readyToStartTasks.filter(t => !dueTodayTasks.includes(t) && !inProgressTasks.includes(t))} 
-          color="bg-emerald-100 text-emerald-700"
-          gradient="bg-gradient-to-r from-emerald-50 to-teal-50"
-          defaultExpanded={false}
-        />
-        
-        {blockedTasks.length > 0 && (
-          <Section 
-            title="Blocked" 
-            icon="🔒" 
-            tasks={blockedTasks} 
-            color="bg-orange-100 text-orange-700"
-            gradient="bg-gradient-to-r from-orange-50 to-amber-50"
-            showStatus={true}
-            defaultExpanded={false}
-          />
-        )}
-        
-        {criticalTasks.length > 0 && (
-          <Section 
-            title="Other Critical" 
-            icon="🚩" 
-            tasks={criticalTasks} 
-            color="bg-red-100 text-red-700"
-            gradient="bg-gradient-to-r from-red-50 to-rose-50"
-            showStatus={true}
-            defaultExpanded={false}
-          />
-        )}
-        
-        {/* Empty state */}
-        {activeTasks.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100 flex items-center justify-center mx-auto mb-6">
-              <span className="text-6xl">🎊</span>
-            </div>
-            <h3 className="text-2xl font-black text-gray-800 mb-3">All clear!</h3>
-            <p className="text-gray-500 text-lg max-w-md mx-auto">
-              You have no active tasks. Time to add some or take a well-deserved break!
-            </p>
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xl">💡</span>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Recommendations</h2>
           </div>
-        )}
+          
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Drag tasks to My Day to add them to your focus list
+          </p>
+          
+          <div className="space-y-3">
+            <RecommendationSection
+              id="overdue"
+              title="Overdue"
+              emoji="🔴"
+              color="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+              tasks={overdueTasks}
+            />
+            
+            <RecommendationSection
+              id="dueToday"
+              title="Due Today"
+              emoji="🟠"
+              color="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400"
+              tasks={dueTodayTasks}
+            />
+            
+            <RecommendationSection
+              id="dueSoon"
+              title="Due Soon"
+              emoji="🟡"
+              color="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"
+              tasks={dueSoonTasks}
+            />
+            
+            <RecommendationSection
+              id="quickWins"
+              title="Quick Wins"
+              emoji="🟢"
+              color="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+              tasks={quickWinTasks}
+            />
+            
+            {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && (
+              <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm">No recommendations</p>
+                <p className="text-xs mt-1">All eligible tasks are in My Day!</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
