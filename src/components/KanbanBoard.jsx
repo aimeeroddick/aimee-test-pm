@@ -4,9 +4,9 @@ import { supabase } from '../lib/supabase'
 
 // Constants
 const ENERGY_LEVELS = {
-  high: { bg: '#FEE2E2', text: '#DC2626', icon: '🔴', label: 'High Effort' },
-  medium: { bg: '#FEF3C7', text: '#D97706', icon: '🟡', label: 'Medium Effort' },
-  low: { bg: '#D1FAE5', text: '#059669', icon: '🟢', label: 'Low Effort' },
+  high: { bg: '#FEE2E2', text: '#DC2626', icon: '▰▰▰', label: 'High Effort' },
+  medium: { bg: '#FEF3C7', text: '#D97706', icon: '▰▰', label: 'Medium Effort' },
+  low: { bg: '#D1FAE5', text: '#059669', icon: '▰', label: 'Low Effort' },
 }
 
 const CATEGORIES = [
@@ -1704,7 +1704,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           )}
           {/* Effort Indicator */}
           {energyStyle && (
-            <span className="text-[10px]" title={energyStyle.label}>{energyStyle.icon}</span>
+            <span className="text-[10px] font-bold" style={{ color: energyStyle.text }} title={energyStyle.label}>{energyStyle.icon}</span>
           )}
         </div>
         
