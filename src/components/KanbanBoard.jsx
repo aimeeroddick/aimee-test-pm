@@ -4286,6 +4286,13 @@ export default function KanbanBoard() {
                         <span className="text-lg">📁</span>
                         <span className="font-medium">Projects</span>
                       </button>
+                      <button
+                        onClick={() => { setCurrentView('progress'); setNavMenuOpen(false) }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'progress' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                      >
+                        <span className="text-lg">📊</span>
+                        <span className="font-medium">Progress</span>
+                      </button>
                       
                       {/* Mobile-only options */}
                       <div className="sm:hidden">
@@ -4327,7 +4334,7 @@ export default function KanbanBoard() {
               
               {/* Current view indicator */}
               <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : '📁 Projects'}
+                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
               </span>
             </div>
             
@@ -4904,6 +4911,153 @@ export default function KanbanBoard() {
                   </div>
                 </div>
               )}
+            </main>
+          )}
+          
+          {currentView === 'progress' && (
+            <main className="max-w-4xl mx-auto px-6 py-8">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📊 Progress Dashboard</h2>
+              
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🔥</span>
+                    <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Day Streak</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">✅</span>
+                    <span className="text-3xl font-bold text-green-600 dark:text-green-400">{completedToday}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed Today</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">📅</span>
+                    <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{weeklyStats.count}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">This Week</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">⏱️</span>
+                    <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{formatTimeEstimate(weeklyStats.time) || '0h'}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Time This Week</p>
+                </div>
+              </div>
+              
+              {/* Weekly Activity Chart */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Last 7 Days</h3>
+                <div className="flex items-end justify-between gap-2 h-32">
+                  {(() => {
+                    const days = []
+                    for (let i = 6; i >= 0; i--) {
+                      const date = new Date()
+                      date.setDate(date.getDate() - i)
+                      date.setHours(0, 0, 0, 0)
+                      const dateStr = date.toDateString()
+                      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+                      const count = tasks.filter(t => 
+                        t.status === 'done' && 
+                        t.completed_at && 
+                        new Date(t.completed_at).toDateString() === dateStr
+                      ).length
+                      days.push({ dayName, count, isToday: i === 0 })
+                    }
+                    const maxCount = Math.max(...days.map(d => d.count), 1)
+                    
+                    return days.map((day, idx) => (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full flex items-end justify-center" style={{ height: '80px' }}>
+                          <div 
+                            className={`w-full max-w-[40px] rounded-t-lg transition-all ${
+                              day.isToday 
+                                ? 'bg-gradient-to-t from-indigo-500 to-purple-500' 
+                                : 'bg-indigo-200 dark:bg-indigo-800'
+                            }`}
+                            style={{ height: `${Math.max((day.count / maxCount) * 100, 8)}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          day.isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
+                        }`}>
+                          {day.dayName}
+                        </span>
+                        <span className={`text-xs ${
+                          day.isToday ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-400 dark:text-gray-500'
+                        }`}>
+                          {day.count}
+                        </span>
+                      </div>
+                    ))
+                  })()}
+                </div>
+              </div>
+              
+              {/* Project Progress */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Project Progress</h3>
+                <div className="space-y-4">
+                  {projects.filter(p => !p.archived).map(project => {
+                    const projectTasks = tasks.filter(t => t.project_id === project.id)
+                    const doneTasks = projectTasks.filter(t => t.status === 'done').length
+                    const progress = projectTasks.length > 0 ? Math.round((doneTasks / projectTasks.length) * 100) : 0
+                    
+                    return (
+                      <div key={project.id}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{project.name}</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">{doneTasks}/{projectTasks.length} tasks</span>
+                        </div>
+                        <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              
+              {/* Recent Completions */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Recently Completed</h3>
+                <div className="space-y-3">
+                  {tasks
+                    .filter(t => t.status === 'done' && t.completed_at)
+                    .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
+                    .slice(0, 10)
+                    .map(task => {
+                      const project = projects.find(p => p.id === task.project_id)
+                      const completedDate = new Date(task.completed_at)
+                      const isToday = completedDate.toDateString() === new Date().toDateString()
+                      
+                      return (
+                        <div key={task.id} className="flex items-center gap-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                          <span className="text-green-500">✓</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-700 dark:text-gray-300 truncate">{task.title}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{project?.name}</p>
+                          </div>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                            {isToday ? 'Today' : formatDate(task.completed_at)}
+                          </span>
+                        </div>
+                      )
+                    })
+                  }
+                  {tasks.filter(t => t.status === 'done').length === 0 && (
+                    <p className="text-center py-8 text-gray-500 dark:text-gray-400">No completed tasks yet. Get started! 💪</p>
+                  )}
+                </div>
+              </div>
             </main>
           )}
           
