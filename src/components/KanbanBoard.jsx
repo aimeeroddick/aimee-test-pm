@@ -1516,6 +1516,26 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     return PROJECT_COLORS[index]
   }
   
+  // Check if a task overlaps with other tasks on the same day
+  const hasOverlap = (task, date) => {
+    if (!task.start_time) return false
+    const dateStr = date.toISOString().split('T')[0]
+    const taskStart = parseTimeToMinutes(task.start_time)
+    const taskEnd = taskStart + (task.time_estimate || 30)
+    
+    return tasks.some(t => {
+      if (t.id === task.id) return false
+      if (t.start_date !== dateStr) return false
+      if (!t.start_time) return false
+      
+      const otherStart = parseTimeToMinutes(t.start_time)
+      const otherEnd = otherStart + (t.time_estimate || 30)
+      
+      // Check for overlap
+      return (taskStart < otherEnd && taskEnd > otherStart)
+    })
+  }
+  
   // Auto-scroll to 6am when daily/weekly view loads
   useEffect(() => {
     if ((viewMode === 'daily' || viewMode === 'weekly') && calendarScrollRef.current) {
@@ -2174,6 +2194,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         const duration = task.time_estimate || 30
                         const heightSlots = Math.ceil(duration / 30)
                         const projectColor = getProjectColor(task.project_id)
+                        const isOverlapping = hasOverlap(task, currentDate)
                         return (
                           <div
                             key={task.id}
@@ -2184,12 +2205,15 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                               `${projectColor.bg} ${projectColor.text}`
-                            }`}
+                            } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''}`}
                             style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
-                            title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}`}
+                            title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
                           >
                             <div className="flex items-start justify-between gap-1">
-                              <div className="truncate text-[11px]">{task.critical && '🚩 '}{task.title}</div>
+                              <div className="truncate text-[11px]">
+                                {isOverlapping && <span title="Time conflict">⚠️ </span>}
+                                {task.critical && '🚩 '}{task.title}
+                              </div>
                               {/* Quick status button */}
                               {task.status !== 'done' && (
                                 <button
