@@ -1488,13 +1488,52 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
   )
 }
 
-// Calendar View Component
-const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
+// Calendar View Component - Daily/Weekly/Monthly
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
+  const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
+  const [draggedTask, setDraggedTask] = useState(null)
   
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  
+  // Generate hours for day/week view (12am to 11pm)
+  const hours = Array.from({ length: 24 }, (_, i) => {
+    const hour = i % 12 || 12
+    const ampm = i < 12 ? 'AM' : 'PM'
+    return { hour: i, label: `${hour}:00 ${ampm}` }
+  })
+  
+  // Format time from minutes since midnight
+  const formatTime = (minutes) => {
+    if (minutes === null || minutes === undefined) return ''
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    const hour = h % 12 || 12
+    const ampm = h < 12 ? 'AM' : 'PM'
+    return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+  }
+  
+  // Parse time string to minutes since midnight
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return null
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i)
+    if (!match) return null
+    let hours = parseInt(match[1])
+    const minutes = parseInt(match[2])
+    const ampm = match[3]?.toUpperCase()
+    if (ampm === 'PM' && hours !== 12) hours += 12
+    if (ampm === 'AM' && hours === 12) hours = 0
+    return hours * 60 + minutes
+  }
+  
+  // Calculate end time based on start time and duration
+  const calculateEndTime = (startMinutes, durationMinutes) => {
+    if (startMinutes === null || !durationMinutes) return null
+    return startMinutes + durationMinutes
+  }
   
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -1507,13 +1546,114 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
+  // Navigation functions based on view mode
+  const prevPeriod = () => {
+    const newDate = new Date(currentDate)
+    if (viewMode === 'daily') {
+      newDate.setDate(newDate.getDate() - 1)
+    } else if (viewMode === 'weekly') {
+      newDate.setDate(newDate.getDate() - 7)
+    } else {
+      newDate.setMonth(newDate.getMonth() - 1)
+    }
+    setCurrentDate(newDate)
+  }
+  
+  const nextPeriod = () => {
+    const newDate = new Date(currentDate)
+    if (viewMode === 'daily') {
+      newDate.setDate(newDate.getDate() + 1)
+    } else if (viewMode === 'weekly') {
+      newDate.setDate(newDate.getDate() + 7)
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1)
+    }
+    setCurrentDate(newDate)
+  }
+  
   const goToToday = () => setCurrentDate(new Date())
+  
+  // Get week start (Sunday) for current date
+  const getWeekStart = (date) => {
+    const d = new Date(date)
+    const day = d.getDay()
+    d.setDate(d.getDate() - day)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+  
+  // Get week dates
+  const getWeekDates = () => {
+    const weekStart = getWeekStart(currentDate)
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart)
+      d.setDate(d.getDate() + i)
+      return d
+    })
+  }
   
   const getTasksForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0]
-    return tasks.filter(t => t.due_date === dateStr)
+    // Show tasks with either start_date or due_date on this day
+    return tasks.filter(t => t.start_date === dateStr || t.due_date === dateStr)
+  }
+  
+  // Get tasks for a specific hour on a date
+  const getTasksForHour = (date, hour) => {
+    const dateStr = date.toISOString().split('T')[0]
+    const hourStart = hour * 60
+    const hourEnd = (hour + 1) * 60
+    
+    return tasks.filter(t => {
+      if (t.start_date !== dateStr) return false
+      const startTime = t.start_time ? parseTimeToMinutes(t.start_time) : null
+      if (startTime === null) return false
+      return startTime >= hourStart && startTime < hourEnd
+    })
+  }
+  
+  // Handle drag start
+  const handleDragStart = (e, task) => {
+    setDraggedTask(task)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', task.id)
+  }
+  
+  // Handle drop on time slot
+  const handleDropOnSlot = async (date, hour) => {
+    if (!draggedTask || !onUpdateTask) return
+    
+    const dateStr = date.toISOString().split('T')[0]
+    const startTimeMinutes = hour * 60
+    const startTime = formatTime(startTimeMinutes)
+    
+    // Calculate end time based on time_estimate
+    const duration = draggedTask.time_estimate || 60 // default 1 hour
+    const endTimeMinutes = startTimeMinutes + duration
+    const endTime = formatTime(endTimeMinutes)
+    
+    await onUpdateTask(draggedTask.id, {
+      start_date: dateStr,
+      start_time: startTime,
+      end_time: endTime
+    })
+    
+    setDraggedTask(null)
+  }
+  
+  // Handle drop on date (monthly view - no time)
+  const handleDropOnDate = async (date) => {
+    if (!draggedTask || !onUpdateTask) return
+    
+    const dateStr = date.toISOString().split('T')[0]
+    
+    await onUpdateTask(draggedTask.id, {
+      start_date: dateStr,
+      start_time: null,
+      end_time: null
+    })
+    
+    setDraggedTask(null)
   }
   
   const renderCalendarDays = () => {
@@ -1542,23 +1682,25 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
         <div
           key={day}
           onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-          className={`h-28 p-2 border-b border-r border-gray-100 cursor-pointer transition-all hover:bg-indigo-50/50 ${
-            isToday ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : 
-            isSelected ? 'bg-indigo-100' : 
-            isPast ? 'bg-gray-50/30' : 'bg-white'
+          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+          onDrop={(e) => { e.preventDefault(); handleDropOnDate(date) }}
+          className={`h-28 p-2 border-b border-r border-gray-100 dark:border-gray-800 cursor-pointer transition-all hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 ${
+            isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-inset ring-indigo-400' : 
+            isSelected ? 'bg-indigo-100 dark:bg-indigo-900/50' : 
+            isPast ? 'bg-gray-50/30 dark:bg-gray-800/30' : 'bg-white dark:bg-gray-900'
           }`}
         >
           <div className="flex items-center justify-between mb-1">
             <span className={`text-sm font-semibold ${
-              isToday ? 'text-indigo-600' : isPast ? 'text-gray-400' : 'text-gray-700'
+              isToday ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'
             }`}>
               {day}
             </span>
             {dayTasks.length > 0 && (
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                overdueTasks.length > 0 ? 'bg-red-100 text-red-700' :
-                criticalTasks.length > 0 ? 'bg-orange-100 text-orange-700' :
-                'bg-gray-100 text-gray-600'
+                overdueTasks.length > 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                criticalTasks.length > 0 ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
+                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}>
                 {dayTasks.length}
               </span>
@@ -1570,12 +1712,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
               return (
                 <div
                   key={task.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
                   onClick={(e) => { e.stopPropagation(); onEditTask(task) }}
-                  className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-all hover:ring-2 hover:ring-indigo-300 ${
-                    task.status === 'done' ? 'bg-green-100 text-green-700 line-through' :
-                    task.critical ? 'bg-red-100 text-red-700' :
-                    isPast && !isToday ? 'bg-red-50 text-red-600' :
-                    'bg-indigo-100 text-indigo-700'
+                  className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600 ${
+                    task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                    task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                    isPast && !isToday ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                    'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
                   }`}
                   title={task.title}
                 >
@@ -1584,7 +1728,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
               )
             })}
             {dayTasks.length > 3 && (
-              <div className="text-xs text-gray-400 px-2">
+              <div className="text-xs text-gray-400 dark:text-gray-500 px-2">
                 +{dayTasks.length - 3} more
               </div>
             )}
@@ -1596,62 +1740,258 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
     return days
   }
   
-  const selectedTasks = selectedDate ? tasks.filter(t => t.due_date === selectedDate) : []
+  const selectedTasks = selectedDate ? tasks.filter(t => t.due_date === selectedDate || t.start_date === selectedDate) : []
+  
+  // Get header title based on view mode
+  const getHeaderTitle = () => {
+    if (viewMode === 'daily') {
+      return currentDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    } else if (viewMode === 'weekly') {
+      const weekDates = getWeekDates()
+      const startDate = weekDates[0]
+      const endDate = weekDates[6]
+      if (startDate.getMonth() === endDate.getMonth()) {
+        return `${startDate.getDate()} - ${endDate.getDate()} ${monthNames[startDate.getMonth()]} ${startDate.getFullYear()}`
+      } else {
+        return `${startDate.getDate()} ${monthNames[startDate.getMonth()].slice(0,3)} - ${endDate.getDate()} ${monthNames[endDate.getMonth()].slice(0,3)} ${endDate.getFullYear()}`
+      }
+    }
+    return `${monthNames[month]} ${year}`
+  }
+  
+  // Render Daily View
+  const renderDailyView = () => {
+    const dateStr = currentDate.toISOString().split('T')[0]
+    const isToday = currentDate.toDateString() === new Date().toDateString()
+    
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="grid grid-cols-[80px_1fr] divide-x divide-gray-200 dark:divide-gray-700">
+          {/* Time column */}
+          <div className="bg-gray-50 dark:bg-gray-800">
+            <div className="h-12 border-b border-gray-200 dark:border-gray-700" /> {/* Header spacer */}
+            {hours.map(({ hour, label }) => (
+              <div key={hour} className="h-16 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
+                {label}
+              </div>
+            ))}
+          </div>
+          
+          {/* Day column */}
+          <div>
+            <div className={`h-12 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 font-semibold ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>
+              {fullDayNames[currentDate.getDay()]} {currentDate.getDate()}
+            </div>
+            {hours.map(({ hour }) => {
+              const hourTasks = getTasksForHour(currentDate, hour)
+              return (
+                <div
+                  key={hour}
+                  className="h-16 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
+                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                  onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, hour) }}
+                >
+                  {hourTasks.map(task => {
+                    const duration = task.time_estimate || 60
+                    const heightSlots = Math.ceil(duration / 60)
+                    return (
+                      <div
+                        key={task.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task)}
+                        onClick={() => onEditTask(task)}
+                        className={`absolute left-1 right-1 px-2 py-1 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 ${
+                          task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                          task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                          'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                        }`}
+                        style={{ height: `${heightSlots * 64 - 4}px`, top: '2px' }}
+                        title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
+                      >
+                        <div className="truncate">{task.critical && '🚩 '}{task.title}</div>
+                        {task.start_time && <div className="text-[10px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  // Render Weekly View
+  const renderWeeklyView = () => {
+    const weekDates = getWeekDates()
+    const todayStr = new Date().toISOString().split('T')[0]
+    
+    return (
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="grid grid-cols-[80px_repeat(7,1fr)] divide-x divide-gray-200 dark:divide-gray-700">
+          {/* Time column */}
+          <div className="bg-gray-50 dark:bg-gray-800">
+            <div className="h-12 border-b border-gray-200 dark:border-gray-700" />
+            {hours.map(({ hour, label }) => (
+              <div key={hour} className="h-14 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
+                {label}
+              </div>
+            ))}
+          </div>
+          
+          {/* Day columns */}
+          {weekDates.map((date, idx) => {
+            const dateStr = date.toISOString().split('T')[0]
+            const isToday = dateStr === todayStr
+            
+            return (
+              <div key={idx} className="min-w-[100px]">
+                <div className={`h-12 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{dayNames[date.getDay()]}</span>
+                  <span className={`text-sm font-semibold ${isToday ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{date.getDate()}</span>
+                </div>
+                {hours.map(({ hour }) => {
+                  const hourTasks = getTasksForHour(date, hour)
+                  return (
+                    <div
+                      key={hour}
+                      className="h-14 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                      onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, hour) }}
+                    >
+                      {hourTasks.map(task => {
+                        const duration = task.time_estimate || 60
+                        const heightSlots = Math.min(Math.ceil(duration / 60), 4) // Cap at 4 hours for weekly view
+                        return (
+                          <div
+                            key={task.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            onClick={() => onEditTask(task)}
+                            className={`absolute left-0.5 right-0.5 px-1 py-0.5 rounded text-[10px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 truncate ${
+                              task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                              task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                              'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                            }`}
+                            style={{ height: `${heightSlots * 56 - 4}px`, top: '2px' }}
+                            title={task.title}
+                          >
+                            {task.critical && '🚩 '}{task.title}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
   
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-full mx-auto px-6 py-8 overflow-x-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
-            {monthNames[month]} {year}
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            {getHeaderTitle()}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {tasks.filter(t => t.due_date && t.status !== 'done').length} tasks with due dates
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {tasks.filter(t => (t.due_date || t.start_date) && t.status !== 'done').length} tasks scheduled
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={goToToday}
-            className="px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-          >
-            Today
-          </button>
-          <button
-            onClick={prevMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={nextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+        
+        <div className="flex items-center gap-4">
+          {/* View Mode Switcher */}
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('daily')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                viewMode === 'daily' 
+                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode('weekly')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                viewMode === 'weekly' 
+                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setViewMode('monthly')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                viewMode === 'monthly' 
+                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+            >
+              Month
+            </button>
+          </div>
+          
+          {/* Navigation */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goToToday}
+              className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+            >
+              Today
+            </button>
+            <button
+              onClick={prevPeriod}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={nextPeriod}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       
-      {/* Calendar Grid */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
-          {dayNames.map(day => (
-            <div key={day} className="py-3 text-center text-sm font-semibold text-gray-600">
-              {day}
+      {/* Daily View */}
+      {viewMode === 'daily' && renderDailyView()}
+      
+      {/* Weekly View */}
+      {viewMode === 'weekly' && renderWeeklyView()}
+      
+      {/* Monthly View */}
+      {viewMode === 'monthly' && (
+        <>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              {dayNames.map(day => (
+                <div key={day} className="py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        
-        {/* Calendar Days */}
-        <div className="grid grid-cols-7">
-          {renderCalendarDays()}
-        </div>
-      </div>
+            
+            {/* Calendar Days */}
+            <div className="grid grid-cols-7">
+              {renderCalendarDays()}
+            </div>
+          </div>
       
       {/* Selected Date Tasks */}
       {selectedDate && (
@@ -1711,21 +2051,49 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks }) => {
         </div>
       )}
       
-      {/* Legend */}
-      <div className="mt-6 flex items-center gap-6 text-sm text-gray-500">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-indigo-400" />
-          <span>Today</span>
+      {/* Legend - Monthly View */}
+          <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-indigo-400" />
+              <span>Today</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-red-100 dark:bg-red-900/50" />
+              <span>Overdue / Critical</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/50" />
+              <span>Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs">📌</span>
+              <span>Drag tasks to reschedule</span>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* Legend - Day/Week Views */}
+      {(viewMode === 'daily' || viewMode === 'weekly') && (
+        <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-indigo-100 dark:bg-indigo-900/50" />
+            <span>Scheduled</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-red-100 dark:bg-red-900/50" />
+            <span>Critical</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/50" />
+            <span>Completed</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs">📌</span>
+            <span>Drag tasks to schedule time</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-red-100" />
-          <span>Overdue / Critical</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-green-100" />
-          <span>Completed</span>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -2981,6 +3349,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     status: 'backlog',
     critical: false,
     start_date: '',
+    start_time: '',
+    end_time: '',
     due_date: '',
     assignee: '',
     time_estimate: '',
@@ -3047,6 +3417,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         status: task.status || 'backlog',
         critical: task.critical || false,
         start_date: task.start_date || '',
+        start_time: task.start_time || '',
+        end_time: task.end_time || '',
         due_date: task.due_date || '',
         assignee: isCustomAssignee ? '' : (task.assignee || ''),
         time_estimate: task.time_estimate || '',
@@ -3073,6 +3445,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         status: 'backlog',
         critical: false,
         start_date: '',
+        start_time: '',
+        end_time: '',
         due_date: '',
         assignee: '',
         time_estimate: '',
@@ -3315,6 +3689,28 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                />
+              </div>
+            </div>
+            
+            {/* Start Time & End Time side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
+                <input
+                  type="time"
+                  value={formData.start_time || ''}
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
+                <input
+                  type="time"
+                  value={formData.end_time || ''}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
               </div>
@@ -5224,6 +5620,8 @@ export default function KanbanBoard() {
             status: taskData.status,
             critical: taskData.critical,
             start_date: taskData.start_date || null,
+            start_time: taskData.start_time || null,
+            end_time: taskData.end_time || null,
             due_date: taskData.due_date || null,
             assignee: taskData.assignee || null,
             time_estimate: taskData.time_estimate,
@@ -5269,6 +5667,8 @@ export default function KanbanBoard() {
             status: taskData.status,
             critical: taskData.critical,
             start_date: taskData.start_date || null,
+            start_time: taskData.start_time || null,
+            end_time: taskData.end_time || null,
             due_date: taskData.due_date || null,
             assignee: taskData.assignee || null,
             time_estimate: taskData.time_estimate,
@@ -5504,6 +5904,23 @@ export default function KanbanBoard() {
       setTasks(tasks.map(t => t.id === taskId ? { ...t, due_date: dueDate } : t))
     } catch (err) {
       console.error('Error setting due date:', err)
+      setError(err.message)
+    }
+  }
+  
+  // Calendar task update (for drag-drop scheduling)
+  const handleCalendarTaskUpdate = async (taskId, updates) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, ...updates } : t))
+    } catch (err) {
+      console.error('Error updating task from calendar:', err)
       setError(err.message)
     }
   }
@@ -6520,6 +6937,7 @@ export default function KanbanBoard() {
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 allTasks={tasks}
+                onUpdateTask={handleCalendarTaskUpdate}
               />
             </div>
           )}
