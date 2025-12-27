@@ -5039,6 +5039,10 @@ export default function KanbanBoard() {
       }
 
       await fetchData()
+      
+      // Show notification
+      const isNew = !taskData.id
+      showNotification(isNew ? "✓ Task created" : "✓ Task saved")
     } catch (err) {
       console.error('Error saving task:', err)
       setError(err.message)
@@ -5063,6 +5067,7 @@ export default function KanbanBoard() {
       if (error) throw error
       
       await fetchData()
+      showNotification('Task deleted')
     } catch (err) {
       console.error('Error deleting task:', err)
       setError(err.message)
