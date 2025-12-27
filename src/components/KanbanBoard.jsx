@@ -291,6 +291,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
     { keys: ['⌘/Ctrl', 'D'], description: 'My Day view' },
     { keys: ['⌘/Ctrl', 'B'], description: 'Board view' },
     { keys: ['⌘/Ctrl', 'L'], description: 'Calendar view' },
+    { keys: ['⌘/Ctrl', 'T'], description: 'All Tasks view' },
     { keys: ['⌘/Ctrl', 'N'], description: 'Import notes' },
     { keys: ['Esc'], description: 'Close modal' },
     { keys: ['?'], description: 'Show this help' },
@@ -2074,6 +2075,336 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   )
 }
 
+// Task Table View Component
+const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
+  const [sortField, setSortField] = useState('created_at')
+  const [sortDirection, setSortDirection] = useState('desc')
+  const [columnFilters, setColumnFilters] = useState({})
+  const [showFilters, setShowFilters] = useState(false)
+  
+  // Get unique values for filter dropdowns
+  const getUniqueValues = (field) => {
+    const values = tasks.map(t => {
+      if (field === 'project') return projects.find(p => p.id === t.project_id)?.name
+      if (field === 'category') return CATEGORIES.find(c => c.id === t.category)?.label
+      if (field === 'source') return SOURCES.find(s => s.id === t.source)?.label
+      return t[field]
+    }).filter(Boolean)
+    return [...new Set(values)].sort()
+  }
+  
+  // Handle sort
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+  
+  // Filter tasks
+  const filteredTasks = tasks.filter(task => {
+    for (const [field, value] of Object.entries(columnFilters)) {
+      if (!value) continue
+      
+      let taskValue
+      if (field === 'project') {
+        taskValue = projects.find(p => p.id === task.project_id)?.name || ''
+      } else if (field === 'category') {
+        taskValue = CATEGORIES.find(c => c.id === task.category)?.label || ''
+      } else if (field === 'source') {
+        taskValue = SOURCES.find(s => s.id === task.source)?.label || ''
+      } else {
+        taskValue = task[field] || ''
+      }
+      
+      if (value === '__blank__' && taskValue) return false
+      if (value !== '__blank__' && String(taskValue).toLowerCase() !== String(value).toLowerCase()) return false
+    }
+    return true
+  })
+  
+  // Sort tasks
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    let aVal, bVal
+    
+    if (sortField === 'project') {
+      aVal = projects.find(p => p.id === a.project_id)?.name || ''
+      bVal = projects.find(p => p.id === b.project_id)?.name || ''
+    } else if (sortField === 'category') {
+      aVal = CATEGORIES.find(c => c.id === a.category)?.label || ''
+      bVal = CATEGORIES.find(c => c.id === b.category)?.label || ''
+    } else {
+      aVal = a[sortField] ?? ''
+      bVal = b[sortField] ?? ''
+    }
+    
+    // Handle dates
+    if (sortField.includes('date') || sortField === 'created_at') {
+      aVal = aVal ? new Date(aVal).getTime() : 0
+      bVal = bVal ? new Date(bVal).getTime() : 0
+    }
+    
+    // Handle booleans
+    if (typeof aVal === 'boolean') aVal = aVal ? 1 : 0
+    if (typeof bVal === 'boolean') bVal = bVal ? 1 : 0
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  })
+  
+  // Export to CSV
+  const exportToCSV = () => {
+    const headers = ['Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
+    const rows = sortedTasks.map(t => [
+      t.title || '',
+      projects.find(p => p.id === t.project_id)?.name || '',
+      t.status || '',
+      t.critical ? 'Yes' : 'No',
+      t.due_date || '',
+      t.start_date || '',
+      t.assignee || '',
+      t.customer || '',
+      CATEGORIES.find(c => c.id === t.category)?.label || '',
+      t.energy_level || '',
+      SOURCES.find(s => s.id === t.source)?.label || '',
+      t.time_estimate ? `${t.time_estimate}m` : '',
+      (t.description || '').replace(/[\n\r,]/g, ' '),
+      t.created_at ? new Date(t.created_at).toLocaleDateString() : ''
+    ])
+    
+    const csvContent = [headers, ...rows].map(row => 
+      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+    ).join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `trackli-tasks-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+  }
+  
+  // Column definitions
+  const columns = [
+    { key: 'title', label: 'Title', width: 'min-w-[200px]' },
+    { key: 'project', label: 'Project', width: 'min-w-[120px]' },
+    { key: 'status', label: 'Status', width: 'min-w-[100px]' },
+    { key: 'critical', label: 'Critical', width: 'min-w-[80px]' },
+    { key: 'due_date', label: 'Due Date', width: 'min-w-[100px]' },
+    { key: 'start_date', label: 'Start Date', width: 'min-w-[100px]' },
+    { key: 'assignee', label: 'Assignee', width: 'min-w-[120px]' },
+    { key: 'customer', label: 'Customer', width: 'min-w-[120px]' },
+    { key: 'category', label: 'Category', width: 'min-w-[120px]' },
+    { key: 'energy_level', label: 'Effort', width: 'min-w-[100px]' },
+    { key: 'source', label: 'Source', width: 'min-w-[100px]' },
+    { key: 'time_estimate', label: 'Est. Time', width: 'min-w-[90px]' },
+    { key: 'created_at', label: 'Created', width: 'min-w-[100px]' },
+  ]
+  
+  const getCellValue = (task, key) => {
+    switch (key) {
+      case 'project':
+        return projects.find(p => p.id === task.project_id)?.name || '-'
+      case 'status':
+        return { backlog: 'Backlog', todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[task.status] || task.status
+      case 'critical':
+        return task.critical ? '🚨 Yes' : '-'
+      case 'due_date':
+      case 'start_date':
+        return task[key] ? formatDate(task[key]) : '-'
+      case 'category':
+        return CATEGORIES.find(c => c.id === task.category)?.label || '-'
+      case 'energy_level':
+        return { high: '▰▰▰ High', medium: '▰▰ Medium', low: '▰ Low' }[task.energy_level] || '-'
+      case 'source':
+        const src = SOURCES.find(s => s.id === task.source)
+        return src ? `${src.icon} ${src.label}` : '-'
+      case 'time_estimate':
+        return task.time_estimate ? formatTimeEstimate(task.time_estimate) : '-'
+      case 'created_at':
+        return task.created_at ? new Date(task.created_at).toLocaleDateString() : '-'
+      default:
+        return task[key] || '-'
+    }
+  }
+  
+  const getStatusColor = (status) => {
+    const colors = {
+      backlog: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+      todo: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+      in_progress: 'bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300',
+      done: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+    }
+    return colors[status] || 'bg-gray-100 text-gray-700'
+  }
+  
+  return (
+    <div className="h-full flex flex-col">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">All Tasks</h2>
+          <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-600 dark:text-gray-300">
+            {sortedTasks.length} {sortedTasks.length === 1 ? 'task' : 'tasks'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              showFilters || Object.values(columnFilters).some(v => v)
+                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+            {Object.values(columnFilters).some(v => v) && (
+              <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+            )}
+          </button>
+          {Object.values(columnFilters).some(v => v) && (
+            <button
+              onClick={() => setColumnFilters({})}
+              className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            >
+              Clear Filters
+            </button>
+          )}
+          <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-900/70 rounded-lg text-sm font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse">
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-gray-50 dark:bg-gray-800">
+              {columns.map(col => (
+                <th
+                  key={col.key}
+                  className={`${col.width} px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700`}
+                >
+                  <button
+                    onClick={() => handleSort(col.key)}
+                    className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  >
+                    {col.label}
+                    {sortField === col.key && (
+                      <svg className={`w-4 h-4 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    )}
+                  </button>
+                </th>
+              ))}
+            </tr>
+            {showFilters && (
+              <tr className="bg-gray-100 dark:bg-gray-800/50">
+                {columns.map(col => (
+                  <th key={`filter-${col.key}`} className="px-2 py-2 border-b border-gray-200 dark:border-gray-700">
+                    {['title', 'time_estimate', 'created_at'].includes(col.key) ? (
+                      <span className="text-xs text-gray-400">-</span>
+                    ) : (
+                      <select
+                        value={columnFilters[col.key] || ''}
+                        onChange={(e) => setColumnFilters({ ...columnFilters, [col.key]: e.target.value })}
+                        className="w-full px-2 py-1 text-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="">All</option>
+                        <option value="__blank__">(Blank)</option>
+                        {col.key === 'status' && (
+                          <>
+                            <option value="backlog">Backlog</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="done">Done</option>
+                          </>
+                        )}
+                        {col.key === 'critical' && (
+                          <>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                          </>
+                        )}
+                        {col.key === 'energy_level' && (
+                          <>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </>
+                        )}
+                        {['project', 'assignee', 'customer', 'category', 'source'].includes(col.key) && 
+                          getUniqueValues(col.key).map(v => (
+                            <option key={v} value={v}>{v}</option>
+                          ))
+                        }
+                      </select>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            )}
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {sortedTasks.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                  No tasks found
+                </td>
+              </tr>
+            ) : (
+              sortedTasks.map(task => (
+                <tr
+                  key={task.id}
+                  onClick={() => onEditTask(task)}
+                  className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                >
+                  {columns.map(col => (
+                    <td key={`${task.id}-${col.key}`} className="px-4 py-3 text-sm">
+                      {col.key === 'title' ? (
+                        <div className="flex items-center gap-2">
+                          {task.critical && <span className="text-red-500">🚨</span>}
+                          <span className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[250px]">{task.title}</span>
+                        </div>
+                      ) : col.key === 'status' ? (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                          {getCellValue(task, col.key)}
+                        </span>
+                      ) : col.key === 'critical' ? (
+                        <span className={task.critical ? 'text-red-500 font-medium' : 'text-gray-400'}>
+                          {getCellValue(task, col.key)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {getCellValue(task, col.key)}
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // Critical Toggle Component
 const CriticalToggle = ({ checked, onChange }) => (
   <button
@@ -3639,6 +3970,13 @@ export default function KanbanBoard() {
         return
       }
       
+      // Cmd/Ctrl/Alt + T for All Tasks view
+      if (modifier && e.key === 't') {
+        e.preventDefault()
+        setCurrentView('tasks')
+        return
+      }
+      
       // ? for keyboard shortcuts help
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
@@ -5089,6 +5427,14 @@ export default function KanbanBoard() {
                         <span className="font-medium">Calendar</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘L</span>
                       </button>
+                      <button
+                        onClick={() => { setCurrentView('tasks'); setNavMenuOpen(false) }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'tasks' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                      >
+                        <span className="text-lg">🗃️</span>
+                        <span className="font-medium">All Tasks</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘T</span>
+                      </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
                       <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Manage</div>
@@ -5147,7 +5493,7 @@ export default function KanbanBoard() {
               
               {/* Current view indicator */}
               <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
+                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : currentView === 'tasks' ? '🗃️ All Tasks' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
               </span>
             </div>
             
@@ -5648,6 +5994,17 @@ export default function KanbanBoard() {
           {currentView === 'calendar' && (
             <div key="calendar" className="animate-fadeIn">
               <CalendarView
+                tasks={tasks}
+                projects={projects}
+                onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+                allTasks={tasks}
+              />
+            </div>
+          )}
+          
+          {currentView === 'tasks' && (
+            <div key="tasks" className="animate-fadeIn h-[calc(100vh-140px)]">
+              <TaskTableView
                 tasks={tasks}
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
