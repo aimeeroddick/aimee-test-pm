@@ -152,6 +152,7 @@ CREATE TABLE tasks (
     source_link TEXT,
     customer TEXT,
     notes TEXT,
+    my_day_date DATE, -- Date when manually added to My Day (NULL = not manually added)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
