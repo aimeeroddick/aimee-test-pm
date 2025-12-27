@@ -2122,6 +2122,23 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               
               {/* Day column */}
               <div className="relative">
+                {/* Current time indicator */}
+                {isToday && (() => {
+                  const now = new Date()
+                  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes()
+                  const topPosition = (minutesSinceMidnight / 30) * 32 // 32px per 30-min slot
+                  return (
+                    <div 
+                      className="absolute left-0 right-0 z-20 pointer-events-none"
+                      style={{ top: `${topPosition}px` }}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <div className="flex-1 h-0.5 bg-red-500" />
+                      </div>
+                    </div>
+                  )
+                })()}
                 {timeSlots.map(({ slotIndex, isHour }) => {
                   const slotTasks = getTasksForSlot(currentDate, slotIndex)
                   return (
@@ -2253,7 +2270,21 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               const isToday = dateStr === todayStr
               
               return (
-                <div key={idx} className={`min-w-[80px] ${isToday ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                <div key={idx} className={`min-w-[80px] relative ${isToday ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                  {/* Current time indicator for today */}
+                  {isToday && (() => {
+                    const now = new Date()
+                    const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes()
+                    const topPosition = (minutesSinceMidnight / 30) * 24 // 24px per 30-min slot in weekly
+                    return (
+                      <div 
+                        className="absolute left-0 right-0 z-20 pointer-events-none"
+                        style={{ top: `${topPosition}px` }}
+                      >
+                        <div className="h-0.5 bg-red-500" />
+                      </div>
+                    )
+                  })()}
                   {timeSlots.map(({ slotIndex, isHour }) => {
                     const slotTasks = getTasksForSlot(date, slotIndex)
                     return (
