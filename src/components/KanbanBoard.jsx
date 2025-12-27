@@ -1688,18 +1688,25 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       
       {/* Card Content */}
       <div className="flex items-start gap-2">
-        {/* Checkbox */}
-        {bulkSelectMode ? (
-          <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
-            className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500'}`}>
-            {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-          </button>
-        ) : onQuickComplete && (
-          <button onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
-            className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'}`}>
-            {isDone && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-          </button>
-        )}
+        {/* Checkbox + Effort Column */}
+        <div className="flex flex-col items-center gap-1">
+          {/* Checkbox */}
+          {bulkSelectMode ? (
+            <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
+              className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500'}`}>
+              {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+            </button>
+          ) : onQuickComplete && (
+            <button onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'}`}>
+              {isDone && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+            </button>
+          )}
+          {/* Effort Indicator */}
+          {energyStyle && (
+            <span className="text-[10px]" title={energyStyle.label}>{energyStyle.icon}</span>
+          )}
+        </div>
         
         <div className="flex-1 min-w-0">
           {/* Title Row */}
@@ -1729,11 +1736,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             {task.time_estimate && (
               <span className="flex items-center gap-0.5">
                 <span>⏱</span> {formatTimeEstimate(task.time_estimate)}
-              </span>
-            )}
-            {energyStyle && (
-              <span className="flex items-center gap-0.5" title={energyStyle.label}>
-                <span>{energyStyle.icon}</span>
               </span>
             )}
           </div>
