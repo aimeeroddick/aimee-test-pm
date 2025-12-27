@@ -3505,6 +3505,10 @@ export default function KanbanBoard() {
   const [filterDueToday, setFilterDueToday] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   
+  // Field filter (assignee, customer, effort, category, etc.)
+  const [filterField, setFilterField] = useState('')
+  const [filterValue, setFilterValue] = useState('')
+  
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
   const [filterTimeValue, setFilterTimeValue] = useState('')
@@ -4740,7 +4744,7 @@ export default function KanbanBoard() {
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
   // Check if any filters are active
-  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || searchQuery.trim()
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || searchQuery.trim() || (filterField && filterValue !== '')
   
   // Clear all filters
   const clearFilters = () => {
@@ -4748,6 +4752,8 @@ export default function KanbanBoard() {
     setFilterOverdue(false)
     setFilterBlocked(false)
     setSearchQuery('')
+    setFilterField('')
+    setFilterValue('')
   }
 
   const readyToStartCount = tasks.filter((t) => {
@@ -4776,6 +4782,29 @@ export default function KanbanBoard() {
       const matchesAssignee = t.assignee?.toLowerCase().includes(query)
       const matchesProject = projects.find(p => p.id === t.project_id)?.name?.toLowerCase().includes(query)
       if (!matchesTitle && !matchesDescription && !matchesCustomer && !matchesAssignee && !matchesProject) return false
+    }
+    
+    // Field filter
+    if (filterField && filterValue !== '') {
+      if (filterValue === '__blank__') {
+        // Filter for blank/empty values
+        if (filterField === 'assignee' && t.assignee) return false
+        if (filterField === 'customer' && t.customer) return false
+        if (filterField === 'category' && t.category) return false
+        if (filterField === 'energy_level' && t.energy_level) return false
+        if (filterField === 'source' && t.source) return false
+        if (filterField === 'due_date' && t.due_date) return false
+      } else {
+        // Filter for specific value
+        if (filterField === 'assignee' && t.assignee !== filterValue) return false
+        if (filterField === 'customer' && t.customer !== filterValue) return false
+        if (filterField === 'category' && t.category !== filterValue) return false
+        if (filterField === 'energy_level' && t.energy_level !== filterValue) return false
+        if (filterField === 'source' && t.source !== filterValue) return false
+        if (filterField === 'due_date') {
+          if (filterValue === 'has_date' && !t.due_date) return false
+        }
+      }
     }
     
     // Legacy filters (if still used elsewhere)
@@ -5263,7 +5292,75 @@ export default function KanbanBoard() {
                 </label>
               </div>
               
-              
+              {/* Field Filter */}
+              <div className="flex items-center gap-1.5">
+                <div className="relative">
+                  <select
+                    value={filterField}
+                    onChange={(e) => { setFilterField(e.target.value); setFilterValue('') }}
+                    className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                  >
+                    <option value="">Filter by...</option>
+                    <option value="assignee">Assignee</option>
+                    <option value="customer">Customer</option>
+                    <option value="category">Category</option>
+                    <option value="energy_level">Effort</option>
+                    <option value="source">Source</option>
+                    <option value="due_date">Due Date</option>
+                  </select>
+                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {filterField && (
+                  <div className="relative">
+                    <select
+                      value={filterValue}
+                      onChange={(e) => setFilterValue(e.target.value)}
+                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    >
+                      <option value="">Select value...</option>
+                      <option value="__blank__">(Blank)</option>
+                      {filterField === 'assignee' && allAssignees.map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                      {filterField === 'customer' && allCustomers.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      {filterField === 'category' && CATEGORIES.map(c => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
+                      ))}
+                      {filterField === 'energy_level' && (
+                        <>
+                          <option value="high">High Effort</option>
+                          <option value="medium">Medium Effort</option>
+                          <option value="low">Low Effort</option>
+                        </>
+                      )}
+                      {filterField === 'source' && SOURCES.map(s => (
+                        <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+                      ))}
+                      {filterField === 'due_date' && (
+                        <option value="has_date">Has Due Date</option>
+                      )}
+                    </select>
+                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                )}
+                {filterField && filterValue && (
+                  <button
+                    onClick={() => { setFilterField(''); setFilterValue('') }}
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Clear filter"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               
               {/* Search Bar */}
               <div className="relative flex-1 min-w-[150px] max-w-xs">
