@@ -1633,7 +1633,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group ${
+      className={`task-card relative bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] ${
         isSelected ? 'ring-2 ring-indigo-500 border-indigo-300' :
         blocked ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300' :
         task.critical ? 'border-red-200 dark:border-red-800 hover:border-red-300' :
@@ -1644,7 +1644,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
     >
       {/* Hover Popup Bubble */}
       {hasExtraInfo && (
-        <div className="absolute left-full top-0 ml-2 z-50 w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+        <div className="absolute left-full top-0 ml-2 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
           {/* Category & Source Row */}
           {(category || source) && (
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -1775,7 +1775,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`flex-shrink-0 w-[280px] sm:w-[320px] md:flex-1 md:min-w-[300px] md:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all ${
+      className={`flex-shrink-0 w-[280px] sm:w-[320px] md:flex-1 md:min-w-[300px] md:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
       }`}
       onDragOver={(e) => {
@@ -1803,7 +1803,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">• {readyCount} ready</span>}
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-3 overflow-visible">
         {displayTasks.map((task) => (
           <TaskCard
             key={task.id}
@@ -5258,7 +5258,7 @@ export default function KanbanBoard() {
           
           {currentView === 'board' && (
             <main className="max-w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
-              <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 sm:pb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
+              <div className="flex gap-3 sm:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
                 {COLUMNS.map((column) => (
                   <Column
                     key={column.id}
