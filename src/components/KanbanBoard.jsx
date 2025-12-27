@@ -1494,6 +1494,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
   const [selectedDate, setSelectedDate] = useState(null)
   const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [draggedTask, setDraggedTask] = useState(null)
+  const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const calendarScrollRef = useRef(null)
   
   // Auto-scroll to 6am when daily/weekly view loads
@@ -1504,6 +1505,27 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       calendarScrollRef.current.scrollTop = scrollTo6am
     }
   }, [viewMode, currentDate])
+  
+  // Track resize movements globally
+  useEffect(() => {
+    if (!resizingTask) return
+    
+    const handleMouseMove = (e) => {
+      e.preventDefault()
+    }
+    
+    const handleMouseUp = (e) => {
+      handleResizeEnd(e)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [resizingTask])
   
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -1640,7 +1662,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
   
   // Handle drop on time slot (30-minute increments)
   const handleDropOnSlot = async (date, slotIndex) => {
-    if (!draggedTask || !onUpdateTask) return
+    if (!draggedTask || !onUpdateTask) {
+      console.log('Drop failed: no draggedTask or onUpdateTask', { draggedTask, onUpdateTask })
+      return
+    }
     
     const dateStr = date.toISOString().split('T')[0]
     const todayStr = new Date().toISOString().split('T')[0]
@@ -1648,9 +1673,17 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     const startTime = formatTime(startTimeMinutes)
     
     // Calculate end time based on time_estimate
-    const duration = draggedTask.time_estimate || 60 // default 1 hour
+    const duration = draggedTask.time_estimate || 30 // default 30 mins
     const endTimeMinutes = startTimeMinutes + duration
     const endTime = formatTime(endTimeMinutes)
+    
+    console.log('Dropping task:', {
+      taskId: draggedTask.id,
+      dateStr,
+      startTime,
+      endTime,
+      duration
+    })
     
     const updates = {
       start_date: dateStr,
@@ -1663,7 +1696,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       updates.my_day_date = todayStr
     }
     
-    await onUpdateTask(draggedTask.id, updates)
+    try {
+      await onUpdateTask(draggedTask.id, updates)
+      console.log('Task updated successfully')
+    } catch (err) {
+      console.error('Error updating task:', err)
+    }
     
     setDraggedTask(null)
   }
@@ -1681,6 +1719,57 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     })
     
     setDraggedTask(null)
+  }
+  
+  // Handle resize start
+  const handleResizeStart = (e, task) => {
+    e.stopPropagation()
+    e.preventDefault()
+    setResizingTask({
+      task,
+      startY: e.clientY,
+      originalDuration: task.time_estimate || 30
+    })
+  }
+  
+  // Handle resize move
+  const handleResizeMove = (e) => {
+    if (!resizingTask) return
+    e.preventDefault()
+  }
+  
+  // Handle resize end
+  const handleResizeEnd = async (e) => {
+    if (!resizingTask || !onUpdateTask) {
+      setResizingTask(null)
+      return
+    }
+    
+    const deltaY = e.clientY - resizingTask.startY
+    // Each 32px = 30 minutes in daily view
+    const slotsDelta = Math.round(deltaY / 32)
+    const newDuration = Math.max(15, resizingTask.originalDuration + (slotsDelta * 30))
+    
+    // Calculate new end time
+    const startMinutes = parseTimeToMinutes(resizingTask.task.start_time)
+    if (startMinutes !== null) {
+      const newEndMinutes = startMinutes + newDuration
+      const newEndTime = formatTime(newEndMinutes)
+      
+      console.log('Resizing task:', {
+        taskId: resizingTask.task.id,
+        oldDuration: resizingTask.originalDuration,
+        newDuration,
+        newEndTime
+      })
+      
+      await onUpdateTask(resizingTask.task.id, {
+        time_estimate: newDuration,
+        end_time: newEndTime
+      })
+    }
+    
+    setResizingTask(null)
   }
   
   const renderCalendarDays = () => {
@@ -1818,31 +1907,45 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       return due > today && due <= threeDaysFromNow
     })
     
+    // Helper to check if task is already in a priority section
+    const isInPrioritySection = (t) => 
+      overdue.includes(t) || dueToday.includes(t) || dueSoon.includes(t)
+    
     const inProgress = unscheduled.filter(t => 
-      t.status === 'in_progress' && 
-      !overdue.includes(t) && 
-      !dueToday.includes(t) && 
-      !dueSoon.includes(t)
+      t.status === 'in_progress' && !isInPrioritySection(t)
     )
     
     const myDay = unscheduled.filter(t => 
       isInMyDay(t) && 
-      !overdue.includes(t) && 
-      !dueToday.includes(t) && 
-      !dueSoon.includes(t) &&
+      !isInPrioritySection(t) &&
       !inProgress.includes(t)
     )
     
-    const quickWins = unscheduled.filter(t => 
-      t.energy_level === 'low' &&
-      !overdue.includes(t) && 
-      !dueToday.includes(t) && 
-      !dueSoon.includes(t) &&
+    const todo = unscheduled.filter(t => 
+      t.status === 'todo' && 
+      !isInPrioritySection(t) &&
       !inProgress.includes(t) &&
       !myDay.includes(t)
     )
     
-    return { overdue, dueToday, dueSoon, inProgress, myDay, quickWins }
+    const backlog = unscheduled.filter(t => 
+      t.status === 'backlog' && 
+      !isInPrioritySection(t) &&
+      !inProgress.includes(t) &&
+      !myDay.includes(t) &&
+      !todo.includes(t)
+    )
+    
+    const quickWins = unscheduled.filter(t => 
+      t.energy_level === 'low' &&
+      !isInPrioritySection(t) &&
+      !inProgress.includes(t) &&
+      !myDay.includes(t) &&
+      !todo.includes(t) &&
+      !backlog.includes(t)
+    )
+    
+    return { overdue, dueToday, dueSoon, inProgress, myDay, todo, backlog, quickWins }
   }
   
   // Render Daily View
@@ -1850,7 +1953,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     const dateStr = currentDate.toISOString().split('T')[0]
     const isToday = currentDate.toDateString() === new Date().toDateString()
     const schedulable = getSchedulableTasks()
-    const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.quickWins.length
+    const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.todo.length + schedulable.backlog.length + schedulable.quickWins.length
     
     // Reusable task card component for sidebar
     const TaskCard = ({ task, highlight }) => (
@@ -1865,6 +1968,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
           highlight === 'pink' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
           highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
           highlight === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+          highlight === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+          highlight === 'gray' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
           'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
         }`}
       >
@@ -1949,10 +2054,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                         return (
                           <div
                             key={task.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, task)}
-                            onClick={() => onEditTask(task)}
-                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden ${
+                            draggable={!resizingTask}
+                            onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
+                            onClick={() => !resizingTask && onEditTask(task)}
+                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                               'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
@@ -1964,6 +2069,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                             {heightSlots > 1 && task.start_time && (
                               <div className="text-[9px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>
                             )}
+                            {/* Resize handle */}
+                            <div
+                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-transparent hover:bg-indigo-300/50 dark:hover:bg-indigo-600/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-b"
+                              onMouseDown={(e) => handleResizeStart(e, task)}
+                            />
                           </div>
                         )
                       })}
@@ -1993,6 +2103,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                   <Section title="Due Soon" icon="🟡" tasks={schedulable.dueSoon} highlight="yellow" />
                   <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
                   <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
+                  <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
+                  <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
                   <Section title="Quick Wins" icon="⚡" tasks={schedulable.quickWins} highlight="green" />
                 </>
               )}
