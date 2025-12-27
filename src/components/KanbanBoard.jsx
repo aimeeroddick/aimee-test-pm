@@ -2852,9 +2852,11 @@ export default function KanbanBoard() {
   const [editingProject, setEditingProject] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
   
-  // Unified filters: array of {type: 'assignee'|'customer'|'critical'|'status', value: string}
-  const [activeFilters, setActiveFilters] = useState([])
-  const [filterType, setFilterType] = useState('') // For the "add filter" UI
+  // Simple filters
+  const [filterCritical, setFilterCritical] = useState(false)
+  const [filterOverdue, setFilterOverdue] = useState(false)
+  const [filterBlocked, setFilterBlocked] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
@@ -4091,78 +4093,43 @@ export default function KanbanBoard() {
   const allAssignees = [...new Set(tasks.map(t => t.assignee).filter(Boolean))]
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
-  // Helper to get active filter value by type
-  const getFilterValue = (type) => activeFilters.find(f => f.type === type)?.value
+  // Check if any filters are active
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || searchQuery.trim()
   
-  // Helper to add a filter
-  const addFilter = (type, value) => {
-    // Remove existing filter of same type, then add new one
-    setActiveFilters(prev => [...prev.filter(f => f.type !== type), { type, value }])
-    setFilterType('')
-  }
-  
-  // Helper to remove a filter
-  const removeFilter = (type) => {
-    setActiveFilters(prev => prev.filter(f => f.type !== type))
-  }
-  
-  // Get filter options based on selected type
-  const getFilterOptions = (type) => {
-    switch (type) {
-      case 'assignee': return allAssignees.map(a => ({ value: a, label: a }))
-      case 'customer': return allCustomers.map(c => ({ value: c, label: c }))
-      case 'critical': return [
-        { value: 'critical', label: '🚩 Critical Only' },
-        { value: 'regular', label: 'Regular Only' }
-      ]
-      case 'status': return [
-        { value: 'backlog', label: 'Backlog' },
-        { value: 'todo', label: 'To Do' },
-        { value: 'in_progress', label: 'In Progress' },
-        { value: 'done', label: 'Done' }
-      ]
-      default: return []
-    }
-  }
-  
-  // Filter type labels
-  const filterTypeLabels = {
-    assignee: 'Assignee',
-    customer: 'Customer', 
-    critical: 'Priority',
-    status: 'Status'
+  // Clear all filters
+  const clearFilters = () => {
+    setFilterCritical(false)
+    setFilterOverdue(false)
+    setFilterBlocked(false)
+    setSearchQuery('')
   }
 
   const readyToStartCount = tasks.filter((t) => {
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
-    const assigneeFilter = getFilterValue('assignee')
-    const customerFilter = getFilterValue('customer')
-    const criticalFilter = getFilterValue('critical')
-    const statusFilter = getFilterValue('status')
-    if (assigneeFilter && t.assignee !== assigneeFilter) return false
-    if (customerFilter && t.customer !== customerFilter) return false
-    if (criticalFilter === 'critical' && !t.critical) return false
-    if (criticalFilter === 'regular' && t.critical) return false
-    if (statusFilter && t.status !== statusFilter) return false
-    if (filterTimeOperator !== 'all' && filterTimeValue) {
-      const timeVal = parseInt(filterTimeValue)
-      if (filterTimeOperator === 'lt' && (t.time_estimate || 0) >= timeVal) return false
-      if (filterTimeOperator === 'gt' && (t.time_estimate || 0) <= timeVal) return false
-    }
     return isReadyToStart(t)
   }).length
 
   const filteredTasks = tasks.filter((t) => {
+    // Project filter
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
-    const assigneeFilter = getFilterValue('assignee')
-    const customerFilter = getFilterValue('customer')
-    const criticalFilter = getFilterValue('critical')
-    const statusFilter = getFilterValue('status')
-    if (assigneeFilter && t.assignee !== assigneeFilter) return false
-    if (customerFilter && t.customer !== customerFilter) return false
-    if (criticalFilter === 'critical' && !t.critical) return false
-    if (criticalFilter === 'regular' && t.critical) return false
-    if (statusFilter && t.status !== statusFilter) return false
+    
+    // Quick toggle filters
+    if (filterCritical && !t.critical) return false
+    if (filterOverdue && getDueDateStatus(t.due_date, t.status) !== 'overdue') return false
+    if (filterBlocked && !isBlocked(t, tasks)) return false
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const matchesTitle = t.title?.toLowerCase().includes(query)
+      const matchesDescription = t.description?.toLowerCase().includes(query)
+      const matchesCustomer = t.customer?.toLowerCase().includes(query)
+      const matchesAssignee = t.assignee?.toLowerCase().includes(query)
+      const matchesProject = projects.find(p => p.id === t.project_id)?.name?.toLowerCase().includes(query)
+      if (!matchesTitle && !matchesDescription && !matchesCustomer && !matchesAssignee && !matchesProject) return false
+    }
+    
+    // Legacy filters (if still used elsewhere)
     if (filterReadyToStart && !isReadyToStart(t)) return false
     if (filterTimeOperator !== 'all' && filterTimeValue) {
       const timeVal = parseInt(filterTimeValue)
@@ -4608,79 +4575,79 @@ export default function KanbanBoard() {
               
               <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
               
-              {/* Active filter chips - with animation */}
-              {activeFilters.map((filter, index) => (
-                <span 
-                  key={filter.type}
-                  className={`animate-chipIn inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-sm whitespace-nowrap border border-indigo-200 dark:border-indigo-800 shadow-sm`}
-                  style={{ animationDelay: `${index * 50}ms` }}
+              {/* Quick Filter Toggles */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setFilterCritical(!filterCritical)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    filterCritical
+                      ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700'
+                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
                 >
-                  <span className="text-indigo-400 dark:text-indigo-500 text-xs font-medium">{filterTypeLabels[filter.type]}:</span>
-                  <span className="font-semibold">{filter.value === 'critical' ? '🚩 Critical' : filter.value === 'regular' ? 'Regular' : filter.value}</span>
-                  <button 
-                    onClick={() => removeFilter(filter.type)} 
-                    className="ml-0.5 p-0.5 hover:bg-indigo-200/50 dark:hover:bg-indigo-800/50 rounded-full transition-colors"
+                  <span>🚩</span>
+                  <span className="hidden sm:inline">Critical</span>
+                </button>
+                
+                <button
+                  onClick={() => setFilterOverdue(!filterOverdue)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    filterOverdue
+                      ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700'
+                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span>⚠️</span>
+                  <span className="hidden sm:inline">Overdue</span>
+                </button>
+                
+                <button
+                  onClick={() => setFilterBlocked(!filterBlocked)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    filterBlocked
+                      ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                      : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span>🔒</span>
+                  <span className="hidden sm:inline">Blocked</span>
+                </button>
+              </div>
+              
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+              
+              {/* Search Bar */}
+              <div className="relative flex-1 min-w-[150px] max-w-xs">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks..."
+                  className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors placeholder-gray-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </span>
-              ))}
-              
-              {/* Unified filter dropdown */}
-              <div className="relative flex items-center">
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className={`appearance-none pl-3 pr-7 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all ${
-                    filterType 
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
-                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <option value="">+ Add Filter</option>
-                  {!getFilterValue('assignee') && allAssignees.length > 0 && <option value="assignee">👤 Assignee</option>}
-                  {!getFilterValue('customer') && allCustomers.length > 0 && <option value="customer">🏢 Customer</option>}
-                  {!getFilterValue('critical') && <option value="critical">🚩 Priority</option>}
-                  {!getFilterValue('status') && <option value="status">📊 Status</option>}
-                </select>
-                <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                )}
               </div>
               
-              {filterType && (
-                <div className="relative animate-fadeIn">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        addFilter(filterType, e.target.value)
-                        setFilterType('')
-                      }
-                    }}
-                    className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border-2 border-indigo-400 dark:border-indigo-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium cursor-pointer"
-                    autoFocus
-                  >
-                    <option value="">Choose {filterTypeLabels[filterType]}...</option>
-                    {getFilterOptions(filterType).map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              )}
-              
-              {activeFilters.length > 0 && (
+              {/* Clear All Filters */}
+              {hasActiveFilters && (
                 <button
-                  onClick={() => setActiveFilters([])}
-                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   Clear
                 </button>
