@@ -1497,6 +1497,25 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const calendarScrollRef = useRef(null)
   
+  // Generate consistent color for project based on ID
+  const PROJECT_COLORS = [
+    { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
+    { bg: 'bg-purple-100 dark:bg-purple-900/50', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
+    { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
+    { bg: 'bg-orange-100 dark:bg-orange-900/50', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
+    { bg: 'bg-cyan-100 dark:bg-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
+    { bg: 'bg-pink-100 dark:bg-pink-900/50', text: 'text-pink-700 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800' },
+    { bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+    { bg: 'bg-teal-100 dark:bg-teal-900/50', text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-800' },
+  ]
+  
+  const getProjectColor = (projectId) => {
+    if (!projectId) return { bg: 'bg-indigo-100 dark:bg-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800' }
+    // Use project ID to get consistent color
+    const index = projectId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % PROJECT_COLORS.length
+    return PROJECT_COLORS[index]
+  }
+  
   // Auto-scroll to 6am when daily/weekly view loads
   useEffect(() => {
     if ((viewMode === 'daily' || viewMode === 'weekly') && calendarScrollRef.current) {
@@ -2154,6 +2173,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                       {slotTasks.map(task => {
                         const duration = task.time_estimate || 30
                         const heightSlots = Math.ceil(duration / 30)
+                        const projectColor = getProjectColor(task.project_id)
                         return (
                           <div
                             key={task.id}
@@ -2163,7 +2183,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                              'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                              `${projectColor.bg} ${projectColor.text}`
                             }`}
                             style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
                             title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}`}
@@ -2300,6 +2320,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         {slotTasks.map(task => {
                           const duration = task.time_estimate || 30
                           const heightSlots = Math.min(Math.ceil(duration / 30), 8) // Cap at 4 hours for weekly
+                          const projectColor = getProjectColor(task.project_id)
                           return (
                             <div
                               key={task.id}
@@ -2309,7 +2330,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                                 task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                                 task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                                'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                                `${projectColor.bg} ${projectColor.text}`
                               }`}
                               style={{ height: `${heightSlots * 24 - 2}px`, top: '1px' }}
                               title={task.title}
