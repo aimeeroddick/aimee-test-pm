@@ -36,11 +36,11 @@ const RECURRENCE_TYPES = [
 ]
 
 const COLUMN_COLORS = {
-  backlog: '#8B5CF6',
-  todo: '#6366F1',
-  in_progress: '#14B8A6',
+  backlog: '#9CA3AF',
+  todo: '#3B82F6',
+  in_progress: '#EC4899',
   blocked: '#EF4444',
-  done: '#10B981',
+  done: '#64748B',
 }
 
 const COLUMNS = [
