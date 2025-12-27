@@ -1668,6 +1668,30 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     e.dataTransfer.setData('text/plain', task.id)
   }
   
+  // Quick status advancement: backlog → todo → in_progress → done
+  const handleAdvanceStatus = async (e, task) => {
+    e.stopPropagation()
+    if (!onUpdateTask) return
+    
+    const statusOrder = ['backlog', 'todo', 'in_progress', 'done']
+    const currentIndex = statusOrder.indexOf(task.status)
+    const nextStatus = statusOrder[Math.min(currentIndex + 1, statusOrder.length - 1)]
+    
+    if (nextStatus !== task.status) {
+      await onUpdateTask(task.id, { status: nextStatus })
+    }
+  }
+  
+  // Get next status label for button
+  const getNextStatusLabel = (status) => {
+    switch (status) {
+      case 'backlog': return '→ To Do'
+      case 'todo': return '→ Start'
+      case 'in_progress': return '✓ Done'
+      default: return null
+    }
+  }
+  
   // Handle drop on time slot (30-minute increments)
   const handleDropOnSlot = async (date, slotIndex) => {
     if (!draggedTask || !onUpdateTask) {
@@ -1697,6 +1721,16 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       start_date: dateStr,
       start_time: startTime,
       end_time: endTime
+    }
+    
+    // Set due_date if it's blank
+    if (!draggedTask.due_date) {
+      updates.due_date = dateStr
+    }
+    
+    // Move backlog tasks to todo when scheduled
+    if (draggedTask.status === 'backlog') {
+      updates.status = 'todo'
     }
     
     // Auto-add to My Day if dropping on today
@@ -1970,7 +2004,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
         draggable
         onDragStart={(e) => handleDragStart(e, task)}
         onClick={() => onEditTask(task)}
-        className={`p-2.5 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+        className={`p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all hover:shadow-md select-none ${
           highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
           highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
           highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -1983,6 +2017,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
         }`}
       >
         <div className="flex items-start gap-2">
+          {/* Drag handle */}
+          <div className="text-gray-400 dark:text-gray-500 mt-0.5 shrink-0">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+            </svg>
+          </div>
           <div 
             className="w-2 h-2 rounded-full mt-1 shrink-0"
             style={{ backgroundColor: COLUMN_COLORS[task.status] }}
@@ -2074,7 +2114,19 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                             style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
                             title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}`}
                           >
-                            <div className="truncate text-[11px]">{task.critical && '🚩 '}{task.title}</div>
+                            <div className="flex items-start justify-between gap-1">
+                              <div className="truncate text-[11px]">{task.critical && '🚩 '}{task.title}</div>
+                              {/* Quick status button */}
+                              {task.status !== 'done' && (
+                                <button
+                                  onClick={(e) => handleAdvanceStatus(e, task)}
+                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title={getNextStatusLabel(task.status)}
+                                >
+                                  {task.status === 'in_progress' ? '✓' : '▶'}
+                                </button>
+                              )}
+                            </div>
                             {heightSlots > 1 && task.start_time && (
                               <div className="text-[9px] opacity-70">{formatTimeDisplay(task.start_time)}{task.end_time && ` - ${formatTimeDisplay(task.end_time)}`}</div>
                             )}
@@ -2185,7 +2237,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                               draggable
                               onDragStart={(e) => handleDragStart(e, task)}
                               onClick={() => onEditTask(task)}
-                              className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 truncate overflow-hidden ${
+                              className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                                 task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                                 task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                                 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
@@ -2193,7 +2245,18 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                               style={{ height: `${heightSlots * 24 - 2}px`, top: '1px' }}
                               title={task.title}
                             >
-                              {task.critical && '🚩'}{task.title}
+                              <div className="flex items-center justify-between">
+                                <span className="truncate">{task.critical && '🚩'}{task.title}</span>
+                                {task.status !== 'done' && (
+                                  <button
+                                    onClick={(e) => handleAdvanceStatus(e, task)}
+                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5"
+                                    title={getNextStatusLabel(task.status)}
+                                  >
+                                    {task.status === 'in_progress' ? '✓' : '▶'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           )
                         })}
