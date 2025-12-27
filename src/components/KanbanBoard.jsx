@@ -4014,6 +4014,7 @@ export default function KanbanBoard() {
   const [filterActive, setFilterActive] = useState(false)
   const [filterBacklog, setFilterBacklog] = useState(false)
   const [filterDueToday, setFilterDueToday] = useState(false)
+  const [filterMyDay, setFilterMyDay] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   
   // Field filter (assignee, customer, effort, category, etc.)
@@ -5346,7 +5347,7 @@ export default function KanbanBoard() {
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
   // Check if any filters are active
-  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || searchQuery.trim() || (filterField && filterValue !== '')
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || filterMyDay || searchQuery.trim() || (filterField && filterValue !== '')
   
   // Clear all filters
   const clearFilters = () => {
@@ -5374,6 +5375,7 @@ export default function KanbanBoard() {
     if (filterActive && !['todo', 'in_progress'].includes(t.status)) return false
     if (filterBacklog && t.status !== 'backlog') return false
     if (filterDueToday && getDueDateStatus(t.due_date, t.status) !== 'today') return false
+    if (filterMyDay && !isInMyDay(t)) return false
     
     // Search filter
     if (searchQuery.trim()) {
@@ -5477,6 +5479,7 @@ export default function KanbanBoard() {
   const overdueCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'overdue').length
   const dueTodayCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'today').length
   const blockedCount = filteredTasks.filter((t) => isBlocked(t, tasks) && t.status !== 'done').length
+  const myDayCount = filteredTasks.filter((t) => isInMyDay(t)).length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   
   // Streak calculation - days in a row with at least one completed task
@@ -6114,6 +6117,21 @@ export default function KanbanBoard() {
               <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterOverdue ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{overdueCount}</span>
             </button>
             
+            {/* My Day filter */}
+            <button
+              onClick={() => setFilterMyDay(!filterMyDay)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+                filterMyDay
+                  ? 'bg-amber-500 text-white'
+                  : myDayCount > 0
+                    ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              <span>☀️ My Day</span>
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterMyDay ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-900/50'}`}>{myDayCount}</span>
+            </button>
+            
             {/* Clear filters */}
             {hasActiveFilters && (
               <button
@@ -6125,6 +6143,7 @@ export default function KanbanBoard() {
                   setFilterOverdue(false)
                   setFilterBlocked(false)
                   setFilterReadyToStart(false)
+                  setFilterMyDay(false)
                   setSearchQuery('')
                 }}
                 className="flex items-center gap-1 px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs"
