@@ -4,9 +4,9 @@ import { supabase } from '../lib/supabase'
 
 // Constants
 const ENERGY_LEVELS = {
-  high: { bg: '#FEF3C7', text: '#92400E', icon: '⚡', label: 'High Energy' },
-  medium: { bg: '#E0E7FF', text: '#3730A3', icon: '→', label: 'Medium Energy' },
-  low: { bg: '#F0FDF4', text: '#166534', icon: '○', label: 'Low Energy' },
+  high: { bg: '#FEE2E2', text: '#DC2626', icon: '🔴', label: 'High Effort' },
+  medium: { bg: '#FEF3C7', text: '#D97706', icon: '🟡', label: 'Medium Effort' },
+  low: { bg: '#D1FAE5', text: '#059669', icon: '🟢', label: 'Low Effort' },
 }
 
 const CATEGORIES = [
@@ -1652,6 +1652,17 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           )}
           {/* Customer */}
           {task.customer && <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-2">{task.customer}</p>}
+          {/* Effort Level */}
+          {energyStyle && (
+            <div className="flex items-center gap-2 mb-2">
+              <span 
+                className="px-2 py-0.5 text-xs font-medium rounded-full"
+                style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
+              >
+                {energyStyle.icon} {energyStyle.label}
+              </span>
+            </div>
+          )}
           {/* Description */}
           {task.description && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-3">{task.description}</p>}
           {/* Assignee with icon */}
@@ -1718,6 +1729,11 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             {task.time_estimate && (
               <span className="flex items-center gap-0.5">
                 <span>⏱</span> {formatTimeEstimate(task.time_estimate)}
+              </span>
+            )}
+            {energyStyle && (
+              <span className="flex items-center gap-0.5" title={energyStyle.label}>
+                <span>{energyStyle.icon}</span>
               </span>
             )}
           </div>
@@ -2172,7 +2188,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Energy Level</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effort Level</label>
                 <select
                   value={formData.energy_level}
                   onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
