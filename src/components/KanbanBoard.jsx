@@ -2389,6 +2389,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {energyStyle && (
             <span className="text-[10px] font-bold" style={{ color: energyStyle.text }} title={energyStyle.label}>{energyStyle.icon}</span>
           )}
+          {/* My Day Indicator */}
+          {isInMyDay(task) && (
+            <span className="text-[10px]" title="In My Day">☀️</span>
+          )}
         </div>
         
         <div className="flex-1 min-w-0">
