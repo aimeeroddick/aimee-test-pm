@@ -1690,7 +1690,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   
@@ -1747,6 +1747,9 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onQuickComplete={onQuickComplete}
             onStatusChange={onStatusChange}
             onSetDueDate={onSetDueDate}
+            bulkSelectMode={bulkSelectMode}
+            isSelected={selectedTaskIds?.has(task.id)}
+            onToggleSelect={onToggleSelect}
           />
         ))}
         
@@ -5196,6 +5199,17 @@ export default function KanbanBoard() {
                     onQuickComplete={handleUpdateTaskStatus}
                     onStatusChange={handleUpdateTaskStatus}
                     onSetDueDate={handleSetDueDate}
+                    bulkSelectMode={bulkSelectMode}
+                    selectedTaskIds={selectedTaskIds}
+                    onToggleSelect={(taskId) => {
+                      const newSet = new Set(selectedTaskIds)
+                      if (newSet.has(taskId)) {
+                        newSet.delete(taskId)
+                      } else {
+                        newSet.add(taskId)
+                      }
+                      setSelectedTaskIds(newSet)
+                    }}
                   />
                 ))}
               </div>
