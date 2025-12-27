@@ -1681,7 +1681,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       days.push(
         <div
           key={day}
-          onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+          onClick={() => {
+            // Switch to daily view for this date
+            setCurrentDate(date)
+            setViewMode('daily')
+          }}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
           onDrop={(e) => { e.preventDefault(); handleDropOnDate(date) }}
           className={`h-28 p-2 border-b border-r border-gray-100 dark:border-gray-800 cursor-pointer transition-all hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 ${
@@ -1759,63 +1763,132 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     return `${monthNames[month]} ${year}`
   }
   
+  // Get unscheduled tasks (My Day + In Progress without start_time)
+  const getUnscheduledTasks = () => {
+    return tasks.filter(t => {
+      if (t.status === 'done') return false
+      // No start_time means not scheduled to a specific time
+      if (t.start_time) return false
+      // Include: In Progress, or in My Day, or has start_date today
+      const todayStr = new Date().toISOString().split('T')[0]
+      const isInProgress = t.status === 'in_progress'
+      const isMyDay = isInMyDay(t)
+      const hasTodayStart = t.start_date === todayStr
+      return isInProgress || isMyDay || hasTodayStart
+    })
+  }
+  
   // Render Daily View
   const renderDailyView = () => {
     const dateStr = currentDate.toISOString().split('T')[0]
     const isToday = currentDate.toDateString() === new Date().toDateString()
+    const unscheduledTasks = getUnscheduledTasks()
     
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="grid grid-cols-[80px_1fr] divide-x divide-gray-200 dark:divide-gray-700">
-          {/* Time column */}
-          <div className="bg-gray-50 dark:bg-gray-800">
-            <div className="h-12 border-b border-gray-200 dark:border-gray-700" /> {/* Header spacer */}
-            {hours.map(({ hour, label }) => (
-              <div key={hour} className="h-16 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
-                {label}
-              </div>
-            ))}
-          </div>
-          
-          {/* Day column */}
-          <div>
-            <div className={`h-12 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 font-semibold ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>
-              {fullDayNames[currentDate.getDay()]} {currentDate.getDate()}
-            </div>
-            {hours.map(({ hour }) => {
-              const hourTasks = getTasksForHour(currentDate, hour)
-              return (
-                <div
-                  key={hour}
-                  className="h-16 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
-                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                  onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, hour) }}
-                >
-                  {hourTasks.map(task => {
-                    const duration = task.time_estimate || 60
-                    const heightSlots = Math.ceil(duration / 60)
-                    return (
-                      <div
-                        key={task.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, task)}
-                        onClick={() => onEditTask(task)}
-                        className={`absolute left-1 right-1 px-2 py-1 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 ${
-                          task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
-                          task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                          'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
-                        }`}
-                        style={{ height: `${heightSlots * 64 - 4}px`, top: '2px' }}
-                        title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
-                      >
-                        <div className="truncate">{task.critical && '🚩 '}{task.title}</div>
-                        {task.start_time && <div className="text-[10px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>}
-                      </div>
-                    )
-                  })}
+      <div className="flex gap-6">
+        {/* Main Calendar */}
+        <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="grid grid-cols-[80px_1fr] divide-x divide-gray-200 dark:divide-gray-700">
+            {/* Time column */}
+            <div className="bg-gray-50 dark:bg-gray-800">
+              <div className="h-12 border-b border-gray-200 dark:border-gray-700" />
+              {hours.map(({ hour, label }) => (
+                <div key={hour} className="h-16 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-right border-b border-gray-100 dark:border-gray-800">
+                  {label}
                 </div>
-              )
-            })}
+              ))}
+            </div>
+            
+            {/* Day column */}
+            <div>
+              <div className={`h-12 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 font-semibold ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                {fullDayNames[currentDate.getDay()]} {currentDate.getDate()}
+              </div>
+              {hours.map(({ hour }) => {
+                const hourTasks = getTasksForHour(currentDate, hour)
+                return (
+                  <div
+                    key={hour}
+                    className="h-16 border-b border-gray-100 dark:border-gray-800 relative hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
+                    onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, hour) }}
+                  >
+                    {hourTasks.map(task => {
+                      const duration = task.time_estimate || 60
+                      const heightSlots = Math.ceil(duration / 60)
+                      return (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
+                          onClick={() => onEditTask(task)}
+                          className={`absolute left-1 right-1 px-2 py-1 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 ${
+                            task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                            task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                            'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                          }`}
+                          style={{ height: `${heightSlots * 64 - 4}px`, top: '2px' }}
+                          title={`${task.title}${task.start_time ? ` (${task.start_time}${task.end_time ? ' - ' + task.end_time : ''})` : ''}`}
+                        >
+                          <div className="truncate">{task.critical && '🚩 '}{task.title}</div>
+                          {task.start_time && <div className="text-[10px] opacity-70">{task.start_time}{task.end_time && ` - ${task.end_time}`}</div>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+        
+        {/* Unscheduled Tasks Sidebar */}
+        <div className="w-72 shrink-0">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+              <span>📋</span> Unscheduled
+              <span className="text-xs font-normal text-gray-500">({unscheduledTasks.length})</span>
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Drag to calendar to schedule</p>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {unscheduledTasks.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">All tasks scheduled! 🎉</p>
+              ) : (
+                unscheduledTasks.map(task => {
+                  const project = projects.find(p => p.id === task.project_id)
+                  return (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task)}
+                      onClick={() => onEditTask(task)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+                        task.critical ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                        task.status === 'in_progress' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
+                        'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+                          style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                            {task.critical && '🚩 '}{task.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {task.time_estimate && <span>⏱ {formatTimeEstimate(task.time_estimate)}</span>}
+                            {task.status === 'in_progress' && <span className="text-pink-600 dark:text-pink-400">In Progress</span>}
+                            {isInMyDay(task) && <span>☀️</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>
