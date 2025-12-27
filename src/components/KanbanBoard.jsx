@@ -4739,7 +4739,39 @@ export default function KanbanBoard() {
     return true
   })
 
-  const getTasksByStatus = (status) => filteredTasks.filter((t) => t.status === status)
+  // Sort tasks by priority: Critical > Due Date (soonest) > Energy Level > Created Date
+  const sortTasksByPriority = (tasks) => {
+    const energyOrder = { high: 0, medium: 1, low: 2 }
+    
+    return [...tasks].sort((a, b) => {
+      // 1. Critical tasks first
+      if (a.critical && !b.critical) return -1
+      if (!a.critical && b.critical) return 1
+      
+      // 2. Sort by due date (soonest first, no due date last)
+      const aHasDue = !!a.due_date
+      const bHasDue = !!b.due_date
+      
+      if (aHasDue && bHasDue) {
+        const dateCompare = new Date(a.due_date) - new Date(b.due_date)
+        if (dateCompare !== 0) return dateCompare
+      } else if (aHasDue && !bHasDue) {
+        return -1 // a has due date, b doesn't - a comes first
+      } else if (!aHasDue && bHasDue) {
+        return 1 // b has due date, a doesn't - b comes first
+      }
+      
+      // 3. Sort by energy level (high > medium > low)
+      const aEnergy = energyOrder[a.energy_level] ?? 1
+      const bEnergy = energyOrder[b.energy_level] ?? 1
+      if (aEnergy !== bEnergy) return aEnergy - bEnergy
+      
+      // 4. Sort by created date (oldest first)
+      return new Date(a.created_at) - new Date(b.created_at)
+    })
+  }
+
+  const getTasksByStatus = (status) => sortTasksByPriority(filteredTasks.filter((t) => t.status === status))
 
   // Stats
   const criticalCount = filteredTasks.filter((t) => t.critical && t.status !== 'done').length
