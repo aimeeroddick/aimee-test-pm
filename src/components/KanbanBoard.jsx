@@ -1669,7 +1669,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           onDragStart && onDragStart(e, task)
         }}
         onClick={() => onEditTask(task)}
-        className={`group relative p-4 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
+        className={`group relative p-4 rounded-xl cursor-grab active:cursor-grabbing select-none transition-all duration-200 hover:shadow-md ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
