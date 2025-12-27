@@ -587,8 +587,486 @@ const SettingsModal = ({ isOpen, onClose, userLists, onSave }) => {
   )
 }
 
-// Search Modal Component
-const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
+
+
+// Onboarding Overlay Component
+const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
+  const steps = [
+    {
+      target: 'summary-bar',
+      title: 'Welcome to Trackli! 👋',
+      description: 'Let me show you around. This is your Summary Bar - click any stat to filter your tasks quickly.',
+      position: 'bottom',
+    },
+    {
+      target: 'columns',
+      title: 'Kanban Board',
+      description: 'Your tasks flow from Backlog → To Do → In Progress → Done. Drag and drop to move tasks between columns.',
+      position: 'top',
+    },
+    {
+      target: 'task-card',
+      title: 'Task Cards',
+      description: 'Each card shows key info at a glance. The left border color indicates status. Hover to see more details!',
+      position: 'right',
+    },
+    {
+      target: 'add-task',
+      title: 'Create Tasks',
+      description: 'Click here or press ⌘T to create a new task. You can also press ⌘P for a new project.',
+      position: 'bottom',
+    },
+    {
+      target: 'settings',
+      title: 'Settings',
+      description: 'Customize your customers, assignees, and categories here. You can set colors for visual organization!',
+      position: 'bottom',
+    },
+    {
+      target: 'help',
+      title: 'Need Help?',
+      description: 'Click the ? icon anytime to access the full help guide. You\'re all set! 🎉',
+      position: 'bottom',
+    },
+  ]
+  
+  const currentStep = steps[step]
+  if (!currentStep) return null
+  
+  return (
+    <div className="fixed inset-0 z-[1000]">
+      {/* Dark overlay with spotlight cutout */}
+      <div className="absolute inset-0 bg-black/60" onClick={onSkip} />
+      
+      {/* Tooltip */}
+      <div 
+        className={`absolute z-[1001] max-w-sm animate-fadeIn ${
+          step === 0 ? 'top-32 left-1/2 -translate-x-1/2' :
+          step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
+          step === 2 ? 'top-60 left-[340px]' :
+          step === 3 ? 'top-20 right-32' :
+          step === 4 ? 'top-20 right-48' :
+          'top-20 right-32'
+        }`}
+      >
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5 mb-4">
+            {steps.map((_, i) => (
+              <div 
+                key={i}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === step ? 'w-6 bg-indigo-500' : 
+                  i < step ? 'bg-indigo-300' : 'bg-gray-200 dark:bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+          
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
+            {currentStep.title}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {currentStep.description}
+          </p>
+          
+          <div className="flex items-center justify-between">
+            <button
+              onClick={onSkip}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              Skip tour
+            </button>
+            <div className="flex gap-2">
+              {step > 0 && (
+                <button
+                  onClick={() => onNext(step - 1)}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
+                >
+                  Back
+                </button>
+              )}
+              <button
+                onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
+                className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
+              >
+                {step < steps.length - 1 ? 'Next' : 'Get Started!'}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Arrow pointer */}
+        <div className={`absolute w-4 h-4 bg-white dark:bg-gray-800 rotate-45 border-gray-200 dark:border-gray-700 ${
+          currentStep.position === 'bottom' ? '-top-2 left-1/2 -translate-x-1/2 border-t border-l' :
+          currentStep.position === 'top' ? '-bottom-2 left-1/2 -translate-x-1/2 border-b border-r' :
+          currentStep.position === 'right' ? '-left-2 top-8 border-l border-b' :
+          '-right-2 top-8 border-r border-t'
+        }`} />
+      </div>
+    </div>
+  )
+}
+
+// Help Modal Component
+const HelpModal = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState('board')
+  
+  if (!isOpen) return null
+  
+  const tabs = [
+    { id: 'board', label: 'Board', icon: '📋' },
+    { id: 'tasks', label: 'Tasks', icon: '✅' },
+    { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
+  ]
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[85vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xl">
+              ❓
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Trackli Help Guide</h2>
+              <p className="text-sm text-gray-500">Learn how to use Trackli effectively</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl">
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Tabs */}
+        <div className="flex gap-1 p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                activeTab === tab.id 
+                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+          {activeTab === 'board' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
+                  Summary Bar (Filter Stats)
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Click any stat to filter your tasks:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="font-semibold text-indigo-600">Active</span>
+                    <p className="text-sm text-gray-500">Tasks in To Do + In Progress</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="font-semibold text-purple-600">Backlog</span>
+                    <p className="text-sm text-gray-500">Future work not yet started</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="font-semibold text-red-600">🚩 Critical</span>
+                    <p className="text-sm text-gray-500">High priority flagged tasks</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="font-semibold text-orange-600">Due Today</span>
+                    <p className="text-sm text-gray-500">Tasks due today</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="font-semibold text-red-600">Overdue</span>
+                    <p className="text-sm text-gray-500">Past due date</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Kanban Columns
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#9CA3AF', backgroundColor: '#F9FAFB' }}>
+                    <span className="font-semibold text-gray-700">Backlog</span>
+                    <p className="text-xs text-gray-500">Future work</p>
+                  </div>
+                  <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#3B82F6', backgroundColor: '#EFF6FF' }}>
+                    <span className="font-semibold text-blue-700">To Do</span>
+                    <p className="text-xs text-gray-500">Ready to start</p>
+                  </div>
+                  <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#EC4899', backgroundColor: '#FDF2F8' }}>
+                    <span className="font-semibold text-pink-700">In Progress</span>
+                    <p className="text-xs text-gray-500">Active work</p>
+                  </div>
+                  <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#64748B', backgroundColor: '#F8FAFC' }}>
+                    <span className="font-semibold text-slate-700">Done</span>
+                    <p className="text-xs text-gray-500">Completed</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-3">💡 Drag and drop tasks between columns to change status</p>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
+                  Task Card Indicators
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border Colors:</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-6 rounded bg-orange-500"></div>
+                        <span>Orange = Blocked</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-6 rounded bg-red-500"></div>
+                        <span>Red = Critical</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-6 rounded bg-green-500"></div>
+                        <span>Green = Ready to Start</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-6 rounded bg-blue-500"></div>
+                        <span>Blue/Pink/Gray = Column</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Effort Indicator (under checkbox):</p>
+                    <div className="flex gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-bold">▰</span>
+                        <span>Low Effort</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-600 font-bold">▰▰</span>
+                        <span>Medium Effort</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-600 font-bold">▰▰▰</span>
+                        <span>High Effort</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Other Indicators:</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>🚩 = Critical/Flagged</div>
+                      <div>🔒 = Blocked by another task</div>
+                      <div>🔁 = Recurring task</div>
+                      <div>📅 = Due date (red if overdue)</div>
+                      <div>▶ = Start date</div>
+                      <div>⏱ = Time estimate</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  Hover Popup
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">Hover over any task card to see additional details:</p>
+                <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <li>• Category badge</li>
+                  <li>• Customer name</li>
+                  <li>• Effort level badge</li>
+                  <li>• Full description</li>
+                  <li>• Assignee</li>
+                  <li>• Subtask progress</li>
+                  <li>• Attachments count</li>
+                </ul>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
+                  Settings (⚙️)
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-2">Click the gear icon in the header to manage:</p>
+                <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <li>• <strong>Customers</strong> - Add customer names with custom colors</li>
+                  <li>• <strong>Assignees</strong> - Team members who can be assigned tasks</li>
+                  <li>• <strong>Categories</strong> - Task categories with colors (Meeting Follow-up, Email, etc.)</li>
+                </ul>
+              </section>
+            </div>
+          )}
+          
+          {activeTab === 'tasks' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
+                  Creating Tasks
+                </h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• Click the <span className="px-2 py-1 bg-indigo-500 text-white rounded text-sm font-medium">+</span> button in the header</p>
+                  <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘T</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+T</kbd> (Windows)</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Task Fields
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Title *</p>
+                    <p className="text-sm text-gray-500">The task name (required)</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Project *</p>
+                    <p className="text-sm text-gray-500">Which project this belongs to</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Start Date</p>
+                    <p className="text-sm text-gray-500">When to start working on it</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Due Date</p>
+                    <p className="text-sm text-gray-500">Deadline for completion</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Time Estimate</p>
+                    <p className="text-sm text-gray-500">How long it will take</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Effort Level</p>
+                    <p className="text-sm text-gray-500">Low / Medium / High effort</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Customer</p>
+                    <p className="text-sm text-gray-500">Client/customer for the task</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Assignee</p>
+                    <p className="text-sm text-gray-500">Who's responsible</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">Category</p>
+                    <p className="text-sm text-gray-500">Type of work</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200">🚩 Critical</p>
+                    <p className="text-sm text-gray-500">Flag as high priority</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
+                  Completing Tasks
+                </h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• Click the circle checkbox on the left of the card</p>
+                  <p>• Or drag the task to the "Done" column</p>
+                  <p>• Completed tasks show with a green checkmark</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  Dependencies (Blocking)
+                </h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• In the task editor, use "Blocked By" to select tasks that must be completed first</p>
+                  <p>• Blocked tasks show with 🔒 and an orange border</p>
+                  <p>• When the blocking task is completed, the blocked task becomes "ready to start"</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
+                  Recurring Tasks
+                </h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• Set a recurrence pattern: Daily, Weekly, Bi-weekly, Monthly</p>
+                  <p>• When completed, a new instance is automatically created</p>
+                  <p>• Recurring tasks show 🔁 on the card</p>
+                </div>
+              </section>
+            </div>
+          )}
+          
+          {activeTab === 'shortcuts' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Keyboard Shortcuts</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">New Task</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘T</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">New Project</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘P</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">Import Tasks</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘N</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">Quick Search</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘K</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">Close Modal</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Esc</kbd>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Quick Actions</h3>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <p>• <strong>Click task</strong> - Open task editor</p>
+                  <p>• <strong>Click checkbox</strong> - Mark complete/incomplete</p>
+                  <p>• <strong>Drag task</strong> - Move to different column</p>
+                  <p>• <strong>Hover task</strong> - See details popup</p>
+                </div>
+              </section>
+            </div>
+          )}
+        </div>
+        
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+          <p className="text-sm text-gray-500">Need more help? Contact support</p>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
+          >
+            Got it!
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Search Modal Component = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const inputRef = useRef(null)
   
@@ -2922,6 +3400,11 @@ export default function KanbanBoard() {
   })
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [helpModalOpen, setHelpModalOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('trackli_onboarding_complete')
+  })
+  const [onboardingStep, setOnboardingStep] = useState(0)
   const [userLists, setUserLists] = useState({ assignees: [], customers: [], categories: [] })
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
@@ -4665,6 +5148,16 @@ export default function KanbanBoard() {
               </button>
               
               <button
+                onClick={() => setHelpModalOpen(true)}
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title="Help Guide"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              
+              <button
                 onClick={signOut}
                 className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Sign Out"
@@ -5364,6 +5857,27 @@ export default function KanbanBoard() {
         userLists={userLists}
         onSave={saveUserLists}
       />
+      
+      <HelpModal
+        isOpen={helpModalOpen}
+        onClose={() => setHelpModalOpen(false)}
+      />
+      
+      {/* Onboarding Overlay */}
+      {showOnboarding && currentView === 'board' && (
+        <OnboardingOverlay
+          step={onboardingStep}
+          onNext={setOnboardingStep}
+          onSkip={() => {
+            setShowOnboarding(false)
+            localStorage.setItem('trackli_onboarding_complete', 'true')
+          }}
+          onComplete={() => {
+            setShowOnboarding(false)
+            localStorage.setItem('trackli_onboarding_complete', 'true')
+          }}
+        />
+      )}
       
       {/* Meeting Notes Import Modal */}
       <Modal 
