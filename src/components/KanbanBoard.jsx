@@ -2026,56 +2026,67 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
-            {/* Due Date with shortcuts */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
-              <div className="flex gap-2">
+            {/* Start Date & Due Date side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
-                {formData.due_date && (
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, due_date: '' })}
-                    className="px-3 py-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                    title="Clear date"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2 mt-2">
-                {DATE_SHORTCUTS.map(shortcut => (
-                  <button
-                    key={shortcut.label}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      formData.due_date === shortcut.getValue()
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
-                    }`}
-                  >
-                    {shortcut.label}
-                  </button>
-                ))}
               </div>
             </div>
             
-            {/* Priority Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <div>
-                <p className="font-medium text-gray-700 dark:text-gray-300">🚩 Critical Priority</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Flag if this needs immediate attention</p>
-              </div>
-              <CriticalToggle 
-                checked={formData.critical} 
-                onChange={(val) => setFormData({ ...formData, critical: val })}
-              />
+            {/* Date shortcuts */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Due:</span>
+              {DATE_SHORTCUTS.map(shortcut => (
+                <button
+                  key={shortcut.label}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                    formData.due_date === shortcut.getValue()
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                  }`}
+                >
+                  {shortcut.label}
+                </button>
+              ))}
+              {formData.due_date && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, due_date: '' })}
+                  className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
             </div>
+            
+            {/* Critical Priority - compact inline */}
+            <label className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <input
+                type="checkbox"
+                checked={formData.critical}
+                onChange={(e) => setFormData({ ...formData, critical: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🚩 Critical Priority</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">- needs immediate attention</span>
+            </label>
             
             {/* Description */}
             <div>
@@ -2093,50 +2104,34 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
             
-            {/* Recurrence Toggle */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">🔁</span>
-                  <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">Recurring Task</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Automatically recreates when completed</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, recurrence_type: formData.recurrence_type ? null : 'weekly' })}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${
-                    formData.recurrence_type ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
-                >
-                  <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    formData.recurrence_type ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
+            {/* Recurrence Toggle - compact like critical priority */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!formData.recurrence_type}
+                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.checked ? 'weekly' : null })}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🔁 Recurring Task</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">- recreates when completed</span>
+              </label>
               
               {/* Recurrence options - shown when toggle is on */}
               {formData.recurrence_type && (
-                <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repeat</label>
+                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
                   <select
                     value={formData.recurrence_type || ''}
                     onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                   >
                     {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
                       <option key={type.id} value={type.id}>{type.label}</option>
                     ))}
                   </select>
-                  {formData.recurrence_type && formData.due_date && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                      ✓ Next occurrence will be created when this task is completed
-                    </p>
-                  )}
                   {formData.recurrence_type && !formData.due_date && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                      ⚠️ Set a due date above to enable recurrence scheduling
+                      ⚠️ Set a due date to enable recurrence
                     </p>
                   )}
                 </div>
@@ -2294,18 +2289,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   ))}
                 </select>
               </div>
-            </div>
-            
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              />
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Leave blank if ready to start anytime</p>
             </div>
             
             {/* Assignee & Customer */}
@@ -4472,8 +4455,8 @@ export default function KanbanBoard() {
               </span>
             </div>
             
-            {/* Center: Logo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+            {/* Center: Logo - hidden on smaller screens to prevent overlap */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center gap-2">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
