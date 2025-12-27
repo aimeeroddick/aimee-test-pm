@@ -1489,7 +1489,7 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar View Component - Daily/Weekly/Monthly
-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) => {
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
@@ -1700,6 +1700,32 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
       case 'in_progress': return '✓ Done'
       default: return null
     }
+  }
+  
+  // Handle double-click on time slot to create new task
+  const handleDoubleClickSlot = (date, slotIndex) => {
+    if (!onCreateTask) return
+    
+    const dateStr = date.toISOString().split('T')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
+    const startTimeMinutes = slotIndex * 30
+    const startTime = formatTime(startTimeMinutes)
+    const endTime = formatTime(startTimeMinutes + 30) // Default 30 min
+    
+    const prefill = {
+      start_date: dateStr,
+      due_date: dateStr,
+      start_time: startTime,
+      end_time: endTime,
+      status: 'todo'
+    }
+    
+    // Auto-add to My Day if creating on today
+    if (dateStr === todayStr) {
+      prefill.my_day_date = todayStr
+    }
+    
+    onCreateTask(prefill)
   }
   
   // Handle drop on time slot (30-minute increments)
@@ -2103,9 +2129,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                       key={slotIndex}
                       className={`h-8 border-b relative transition-colors ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
-                      } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
+                      } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
                       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                       onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, slotIndex) }}
+                      onDoubleClick={() => handleDoubleClickSlot(currentDate, slotIndex)}
                     >
                       {slotTasks.map(task => {
                         const duration = task.time_estimate || 30
@@ -2234,9 +2261,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
                         key={slotIndex}
                         className={`h-6 border-b relative transition-colors ${
                           isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
-                        } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20`}
+                        } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
                         onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                         onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, slotIndex) }}
+                        onDoubleClick={() => handleDoubleClickSlot(date, slotIndex)}
                       >
                         {slotTasks.map(task => {
                           const duration = task.time_estimate || 30
@@ -7326,6 +7354,7 @@ export default function KanbanBoard() {
                 tasks={tasks}
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+                onCreateTask={(prefill) => { setEditingTask(prefill); setTaskModalOpen(true) }}
                 allTasks={tasks}
                 onUpdateTask={handleCalendarTaskUpdate}
               />
