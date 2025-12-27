@@ -1624,6 +1624,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     if (!draggedTask || !onUpdateTask) return
     
     const dateStr = date.toISOString().split('T')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
     const startTimeMinutes = hour * 60
     const startTime = formatTime(startTimeMinutes)
     
@@ -1632,11 +1633,18 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     const endTimeMinutes = startTimeMinutes + duration
     const endTime = formatTime(endTimeMinutes)
     
-    await onUpdateTask(draggedTask.id, {
+    const updates = {
       start_date: dateStr,
       start_time: startTime,
       end_time: endTime
-    })
+    }
+    
+    // Auto-add to My Day if dropping on today
+    if (dateStr === todayStr) {
+      updates.my_day_date = todayStr
+    }
+    
+    await onUpdateTask(draggedTask.id, updates)
     
     setDraggedTask(null)
   }
@@ -1763,26 +1771,122 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
     return `${monthNames[month]} ${year}`
   }
   
-  // Get unscheduled tasks (My Day + In Progress without start_time)
-  const getUnscheduledTasks = () => {
-    return tasks.filter(t => {
-      if (t.status === 'done') return false
-      // No start_time means not scheduled to a specific time
-      if (t.start_time) return false
-      // Include: In Progress, or in My Day, or has start_date today
-      const todayStr = new Date().toISOString().split('T')[0]
-      const isInProgress = t.status === 'in_progress'
-      const isMyDay = isInMyDay(t)
-      const hasTodayStart = t.start_date === todayStr
-      return isInProgress || isMyDay || hasTodayStart
+  // Get tasks that can be scheduled, organized by category
+  const getSchedulableTasks = () => {
+    const todayStr = new Date().toISOString().split('T')[0]
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const threeDaysFromNow = new Date(today)
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+    
+    // Filter out done tasks and already scheduled tasks (have start_time)
+    const unscheduled = tasks.filter(t => t.status !== 'done' && !t.start_time)
+    
+    const overdue = unscheduled.filter(t => {
+      if (!t.due_date) return false
+      const due = new Date(t.due_date)
+      due.setHours(0, 0, 0, 0)
+      return due < today
     })
+    
+    const dueToday = unscheduled.filter(t => t.due_date === todayStr)
+    
+    const dueSoon = unscheduled.filter(t => {
+      if (!t.due_date || t.due_date === todayStr) return false
+      const due = new Date(t.due_date)
+      due.setHours(0, 0, 0, 0)
+      return due > today && due <= threeDaysFromNow
+    })
+    
+    const inProgress = unscheduled.filter(t => 
+      t.status === 'in_progress' && 
+      !overdue.includes(t) && 
+      !dueToday.includes(t) && 
+      !dueSoon.includes(t)
+    )
+    
+    const myDay = unscheduled.filter(t => 
+      isInMyDay(t) && 
+      !overdue.includes(t) && 
+      !dueToday.includes(t) && 
+      !dueSoon.includes(t) &&
+      !inProgress.includes(t)
+    )
+    
+    const quickWins = unscheduled.filter(t => 
+      t.energy_level === 'low' &&
+      !overdue.includes(t) && 
+      !dueToday.includes(t) && 
+      !dueSoon.includes(t) &&
+      !inProgress.includes(t) &&
+      !myDay.includes(t)
+    )
+    
+    return { overdue, dueToday, dueSoon, inProgress, myDay, quickWins }
   }
   
   // Render Daily View
   const renderDailyView = () => {
     const dateStr = currentDate.toISOString().split('T')[0]
     const isToday = currentDate.toDateString() === new Date().toDateString()
-    const unscheduledTasks = getUnscheduledTasks()
+    const schedulable = getSchedulableTasks()
+    const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.quickWins.length
+    
+    // Reusable task card component for sidebar
+    const TaskCard = ({ task, highlight }) => (
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, task)}
+        onClick={() => onEditTask(task)}
+        className={`p-2.5 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+          highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+          highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
+          highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+          highlight === 'pink' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
+          highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
+          highlight === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+          'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          <div 
+            className="w-2 h-2 rounded-full mt-1 shrink-0"
+            style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+              {task.critical && '🚩 '}{task.title}
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+              {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
+              {task.due_date && <span>📅{formatDate(task.due_date)}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+    
+    // Section component
+    const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
+      if (tasks.length === 0) return null
+      return (
+        <div className="mb-4">
+          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+            <span>{icon}</span> {title}
+            <span className="text-gray-400">({tasks.length})</span>
+          </h4>
+          <div className="space-y-1.5">
+            {tasks.slice(0, 5).map(task => (
+              <TaskCard key={task.id} task={task} highlight={highlight} />
+            ))}
+            {tasks.length > 5 && (
+              <p className="text-[10px] text-gray-400 text-center">+{tasks.length - 5} more</p>
+            )}
+          </div>
+        </div>
+      )
+    }
     
     return (
       <div className="flex gap-6">
@@ -1842,51 +1946,26 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask }) =
           </div>
         </div>
         
-        {/* Unscheduled Tasks Sidebar */}
+        {/* Schedulable Tasks Sidebar */}
         <div className="w-72 shrink-0">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-              <span>📋</span> Unscheduled
-              <span className="text-xs font-normal text-gray-500">({unscheduledTasks.length})</span>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
+              <span>📅</span> Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Drag to calendar to schedule</p>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {unscheduledTasks.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">All tasks scheduled! 🎉</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Drag to calendar • {isToday ? 'Auto-adds to My Day' : ''}</p>
+            
+            <div className="max-h-[600px] overflow-y-auto pr-1">
+              {totalSchedulable === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">All caught up! 🎉</p>
               ) : (
-                unscheduledTasks.map(task => {
-                  const project = projects.find(p => p.id === task.project_id)
-                  return (
-                    <div
-                      key={task.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task)}
-                      onClick={() => onEditTask(task)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
-                        task.critical ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
-                        task.status === 'in_progress' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
-                        'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div 
-                          className="w-2 h-2 rounded-full mt-1.5 shrink-0"
-                          style={{ backgroundColor: COLUMN_COLORS[task.status] }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                            {task.critical && '🚩 '}{task.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {task.time_estimate && <span>⏱ {formatTimeEstimate(task.time_estimate)}</span>}
-                            {task.status === 'in_progress' && <span className="text-pink-600 dark:text-pink-400">In Progress</span>}
-                            {isInMyDay(task) && <span>☀️</span>}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
+                <>
+                  <Section title="Overdue" icon="🔴" tasks={schedulable.overdue} highlight="red" />
+                  <Section title="Due Today" icon="🟠" tasks={schedulable.dueToday} highlight="orange" />
+                  <Section title="Due Soon" icon="🟡" tasks={schedulable.dueSoon} highlight="yellow" />
+                  <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
+                  <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
+                  <Section title="Quick Wins" icon="⚡" tasks={schedulable.quickWins} highlight="green" />
+                </>
               )}
             </div>
           </div>
