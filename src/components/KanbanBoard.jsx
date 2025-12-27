@@ -52,14 +52,6 @@ const COLUMNS = [
 
 const DONE_DISPLAY_LIMIT = 5
 
-// Color palette for settings picker
-const COLOR_PALETTE = [
-  '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16', 
-  '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9',
-  '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF',
-  '#EC4899', '#F43F5E', '#78716C', '#6B7280', '#64748B'
-]
-
 // Customer colors for auto-assignment
 const CUSTOMER_COLORS = [
   { bg: '#EDE9FE', text: '#7C3AED', border: '#C4B5FD' },
@@ -430,12 +422,6 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'bottom',
     },
     {
-      target: 'settings',
-      title: 'Settings',
-      description: 'Customize your customers, assignees, and categories here. You can set colors for visual organization!',
-      position: 'bottom',
-    },
-    {
       target: 'help',
       title: 'Need Help?',
       description: 'Click the ? icon anytime to access the full help guide. You\'re all set! 🎉',
@@ -458,7 +444,6 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
           step === 3 ? 'top-20 right-32' :
-          step === 4 ? 'top-20 right-48' :
           'top-20 right-32'
         }`}
       >
@@ -712,19 +697,6 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   <li>• Assignee</li>
                   <li>• Subtask progress</li>
                   <li>• Attachments count</li>
-                </ul>
-              </section>
-              
-              <section>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
-                  Settings (⚙️)
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">Click the gear icon in the header to manage:</p>
-                <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <li>• <strong>Customers</strong> - Add customer names with custom colors</li>
-                  <li>• <strong>Assignees</strong> - Team members who can be assigned tasks</li>
-                  <li>• <strong>Categories</strong> - Task categories with colors (Meeting Follow-up, Email, etc.)</li>
                 </ul>
               </section>
             </div>
