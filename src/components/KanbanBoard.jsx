@@ -2861,19 +2861,21 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   })
   
   const notInMyDay = tasks.filter(t => !taskInMyDay(t) && t.status !== 'done')
-  const eligibleForRecommendation = notInMyDay.filter(t => 
+  
+  // For date-based recommendations (overdue, due today, due soon), include todo and in_progress
+  const dateBasedEligible = notInMyDay.filter(t => 
     (t.status === 'todo' || t.status === 'in_progress') && !isBlocked(t, allTasks)
   )
   
-  const overdueTasks = eligibleForRecommendation.filter(t => 
+  const overdueTasks = dateBasedEligible.filter(t => 
     getDueDateStatus(t.due_date, t.status) === 'overdue'
   )
   
-  const dueTodayTasks = eligibleForRecommendation.filter(t => 
+  const dueTodayTasks = dateBasedEligible.filter(t => 
     getDueDateStatus(t.due_date, t.status) === 'today' && !overdueTasks.includes(t)
   )
   
-  const dueSoonTasks = eligibleForRecommendation.filter(t => {
+  const dueSoonTasks = dateBasedEligible.filter(t => {
     if (!t.due_date || overdueTasks.includes(t) || dueTodayTasks.includes(t)) return false
     const dueDate = new Date(t.due_date)
     dueDate.setHours(0, 0, 0, 0)
@@ -2881,11 +2883,29 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     return diffDays > 0 && diffDays <= 3
   })
   
-  const quickWinTasks = eligibleForRecommendation.filter(t => 
+  // Helper to check if task is already in a date-based section
+  const isInDateSection = (t) => 
+    overdueTasks.includes(t) || dueTodayTasks.includes(t) || dueSoonTasks.includes(t)
+  
+  // Status-based sections (exclude tasks already shown in date sections)
+  const inProgressTasks = notInMyDay.filter(t => 
+    t.status === 'in_progress' && !isBlocked(t, allTasks) && !isInDateSection(t)
+  )
+  
+  const todoTasks = notInMyDay.filter(t => 
+    t.status === 'todo' && !isBlocked(t, allTasks) && !isInDateSection(t)
+  )
+  
+  const backlogTasks = notInMyDay.filter(t => 
+    t.status === 'backlog' && !isBlocked(t, allTasks)
+  )
+  
+  const quickWinTasks = notInMyDay.filter(t => 
     t.energy_level === 'low' && 
-    !overdueTasks.includes(t) && 
-    !dueTodayTasks.includes(t) && 
-    !dueSoonTasks.includes(t)
+    !isInDateSection(t) &&
+    !inProgressTasks.includes(t) &&
+    !todoTasks.includes(t) &&
+    !backlogTasks.includes(t)
   ).slice(0, 5)
   
   const totalMyDayTime = myDayActive.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
@@ -3239,7 +3259,31 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
               tasks={quickWinTasks}
             />
             
-            {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && (
+            <RecommendationSection
+              id="inProgress"
+              title="In Progress"
+              emoji="🔵"
+              color="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+              tasks={inProgressTasks}
+            />
+            
+            <RecommendationSection
+              id="todo"
+              title="To Do"
+              emoji="⚪"
+              color="bg-slate-50 dark:bg-slate-900/20 text-slate-700 dark:text-slate-400"
+              tasks={todoTasks}
+            />
+            
+            <RecommendationSection
+              id="backlog"
+              title="Backlog"
+              emoji="📋"
+              color="bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400"
+              tasks={backlogTasks}
+            />
+            
+            {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && inProgressTasks.length === 0 && todoTasks.length === 0 && backlogTasks.length === 0 && (
               <div className="text-center py-12 text-gray-400 dark:text-gray-500">
                 <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
