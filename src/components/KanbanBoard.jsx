@@ -174,6 +174,67 @@ const formatTimeEstimate = (minutes) => {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
+// Flexible time parser - accepts various formats like "230 pm", "2:30pm", "14:30", "9am", "9", etc.
+const parseFlexibleTime = (input) => {
+  if (!input) return ''
+  
+  // Clean the input
+  let str = input.toString().trim().toLowerCase()
+  
+  // If already in HH:MM format, return as-is
+  if (/^\d{1,2}:\d{2}$/.test(str)) {
+    const [h, m] = str.split(':').map(Number)
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    }
+  }
+  
+  // Check for AM/PM
+  const isPM = /pm|p\.m\.|p$/.test(str)
+  const isAM = /am|a\.m\.|a$/.test(str)
+  
+  // Remove AM/PM indicators and spaces
+  str = str.replace(/\s*(am|pm|a\.m\.|p\.m\.|a|p)\s*/gi, '').trim()
+  
+  let hours = 0
+  let minutes = 0
+  
+  if (str.includes(':')) {
+    // Format: "2:30" or "14:30"
+    const parts = str.split(':')
+    hours = parseInt(parts[0]) || 0
+    minutes = parseInt(parts[1]) || 0
+  } else if (str.length === 1 || str.length === 2) {
+    // Format: "9" or "14" - just hours
+    hours = parseInt(str) || 0
+    minutes = 0
+  } else if (str.length === 3) {
+    // Format: "230" -> 2:30 or "930" -> 9:30
+    hours = parseInt(str[0]) || 0
+    minutes = parseInt(str.slice(1)) || 0
+  } else if (str.length === 4) {
+    // Format: "0930" or "1430" -> 09:30 or 14:30
+    hours = parseInt(str.slice(0, 2)) || 0
+    minutes = parseInt(str.slice(2)) || 0
+  } else {
+    return '' // Can't parse
+  }
+  
+  // Apply AM/PM conversion
+  if (isPM && hours < 12) {
+    hours += 12
+  } else if (isAM && hours === 12) {
+    hours = 0
+  }
+  
+  // Validate
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return ''
+  }
+  
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
 // Natural language date parser
 const parseNaturalLanguageDate = (text) => {
   const today = new Date()
@@ -4362,50 +4423,58 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
                 <input
-                  type="time"
+                  type="text"
                   value={formData.start_time || ''}
-                  onChange={(e) => {
-                    const newStartTime = e.target.value
-                    const updates = { start_time: newStartTime }
-                    
-                    // If there's a time_estimate, recalculate end_time
-                    if (newStartTime && formData.time_estimate) {
-                      const [hours, mins] = newStartTime.split(':').map(Number)
-                      const startMinutes = hours * 60 + mins
-                      const endMinutes = startMinutes + parseInt(formData.time_estimate)
-                      const endHours = Math.floor(endMinutes / 60)
-                      const endMins = endMinutes % 60
-                      updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  onBlur={(e) => {
+                    const parsed = parseFlexibleTime(e.target.value)
+                    if (parsed || !e.target.value) {
+                      const updates = { start_time: parsed }
+                      
+                      // If there's a time_estimate, recalculate end_time
+                      if (parsed && formData.time_estimate) {
+                        const [hours, mins] = parsed.split(':').map(Number)
+                        const startMinutes = hours * 60 + mins
+                        const endMinutes = startMinutes + parseInt(formData.time_estimate)
+                        const endHours = Math.floor(endMinutes / 60)
+                        const endMins = endMinutes % 60
+                        updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                      }
+                      
+                      setFormData({ ...formData, ...updates })
                     }
-                    
-                    setFormData({ ...formData, ...updates })
                   }}
+                  placeholder="e.g. 9am, 230pm, 14:30"
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
                 <input
-                  type="time"
+                  type="text"
                   value={formData.end_time || ''}
-                  onChange={(e) => {
-                    const newEndTime = e.target.value
-                    const updates = { end_time: newEndTime }
-                    
-                    // If there's a start_time, recalculate time_estimate
-                    if (formData.start_time && newEndTime) {
-                      const [startH, startM] = formData.start_time.split(':').map(Number)
-                      const [endH, endM] = newEndTime.split(':').map(Number)
-                      const startMinutes = startH * 60 + startM
-                      const endMinutes = endH * 60 + endM
-                      const duration = endMinutes - startMinutes
-                      if (duration > 0) {
-                        updates.time_estimate = String(duration)
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  onBlur={(e) => {
+                    const parsed = parseFlexibleTime(e.target.value)
+                    if (parsed || !e.target.value) {
+                      const updates = { end_time: parsed }
+                      
+                      // If there's a start_time, recalculate time_estimate
+                      if (formData.start_time && parsed) {
+                        const [startH, startM] = formData.start_time.split(':').map(Number)
+                        const [endH, endM] = parsed.split(':').map(Number)
+                        const startMinutes = startH * 60 + startM
+                        const endMinutes = endH * 60 + endM
+                        const duration = endMinutes - startMinutes
+                        if (duration > 0) {
+                          updates.time_estimate = String(duration)
+                        }
                       }
+                      
+                      setFormData({ ...formData, ...updates })
                     }
-                    
-                    setFormData({ ...formData, ...updates })
                   }}
+                  placeholder="e.g. 10am, 430pm, 16:00"
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
               </div>
