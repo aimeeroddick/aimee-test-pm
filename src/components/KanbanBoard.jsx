@@ -5362,6 +5362,12 @@ export default function KanbanBoard() {
     }
     return false
   })
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768
+    }
+    return false
+  })
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [helpModalTab, setHelpModalTab] = useState('board')
@@ -5436,6 +5442,15 @@ export default function KanbanBoard() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  // Mobile detection effect
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -8149,8 +8164,8 @@ export default function KanbanBoard() {
         />
       )}
       
-      {/* Onboarding Overlay */}
-      {showOnboarding && currentView === 'board' && (
+      {/* Onboarding Overlay - disabled on mobile */}
+      {showOnboarding && currentView === 'board' && !isMobile && (
         <OnboardingOverlay
           step={onboardingStep}
           onNext={setOnboardingStep}
