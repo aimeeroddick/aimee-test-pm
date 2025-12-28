@@ -4025,6 +4025,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [pasteMessage, setPasteMessage] = useState('')
   const [subtasks, setSubtasks] = useState([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
+  const initializedRef = useRef(null) // Track which task we've initialized for
   const [viewingAttachment, setViewingAttachment] = useState(null)
   
   const handlePaste = async (e) => {
@@ -4055,7 +4056,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   }
   
   useEffect(() => {
-    if (task) {
+    // Only initialize if modal just opened or we're editing a different task
+    const taskKey = task?.id || (isOpen ? 'new' : null)
+    if (!isOpen || initializedRef.current === taskKey) return
+    initializedRef.current = taskKey
+    
+    if (task?.id) {
       const project = projects.find((p) => p.id === task.project_id)
       const isCustomAssignee = project && !project.members?.includes(task.assignee) && task.assignee
       const isCustomCustomer = project && !project.customers?.includes(task.customer) && task.customer
@@ -4088,11 +4094,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setCustomCustomer(isCustomCustomer ? task.customer : '')
       setSubtasks(task.subtasks || [])
     } else {
+      // New task - may have prefilled status
       setFormData({
         title: '',
         description: '',
-        project_id: projects[0]?.id || '',
-        status: 'backlog',
+        project_id: task?.project_id || projects[0]?.id || '',
+        status: task?.status || 'backlog',
         critical: false,
         start_date: '',
         start_time: '',
@@ -4120,7 +4127,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     setActiveTab('details')
     setUploadError('')
     setNewSubtaskTitle('')
-  }, [task, projects, isOpen])
+  }, [task?.id, isOpen])
+  
+  // Reset initialization tracking when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      initializedRef.current = null
+    }
+  }, [isOpen])
   
   const selectedProject = projects.find((p) => p.id === formData.project_id)
   
