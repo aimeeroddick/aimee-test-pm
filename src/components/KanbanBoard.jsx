@@ -2084,15 +2084,32 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const threeDaysFromNow = new Date(today)
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
     
-    // Filter out done tasks and already scheduled tasks (have start_time)
-    const unscheduled = tasks.filter(t => t.status !== 'done' && !t.start_time)
+    // Filter out done tasks
+    // Include tasks that either:
+    // 1. Don't have a start_time (never scheduled)
+    // 2. Have start_time but start_date is in the past and incomplete (needs rescheduling)
+    const schedulable = tasks.filter(t => {
+      if (t.status === 'done') return false
+      
+      // No start_time = definitely needs scheduling
+      if (!t.start_time) return true
+      
+      // Has start_time - only include if start_date is in the past (incomplete, needs rescheduling)
+      if (t.start_date) {
+        const startDate = new Date(t.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (startDate < today) return true // Past incomplete task - show it
+      }
+      
+      return false // Has start_time for today or future - already scheduled
+    })
     
     console.log('Calendar sidebar debug:', {
       totalTasks: tasks.length,
-      unscheduledCount: unscheduled.length,
+      schedulableCount: schedulable.length,
       todayStr,
       tasksWithMyDay: tasks.filter(t => t.my_day_date).map(t => ({ title: t.title, my_day_date: t.my_day_date, start_time: t.start_time, status: t.status })),
-      tasksWithStartTime: tasks.filter(t => t.start_time).map(t => ({ title: t.title, start_time: t.start_time }))
+      pastIncompleteTasks: schedulable.filter(t => t.start_time).map(t => ({ title: t.title, start_date: t.start_date, start_time: t.start_time }))
     })
     
     // Helper to check if task is in My Day
@@ -2108,10 +2125,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     // My Day gets priority - show all My Day tasks first
-    const myDay = unscheduled.filter(t => taskInMyDay(t))
+    const myDay = schedulable.filter(t => taskInMyDay(t))
     
     // Overdue (not in My Day)
-    const overdue = unscheduled.filter(t => {
+    const overdue = schedulable.filter(t => {
       if (myDay.includes(t)) return false
       if (!t.due_date) return false
       const due = new Date(t.due_date)
@@ -2120,13 +2137,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     })
     
     // Due Today (not in My Day or Overdue)
-    const dueToday = unscheduled.filter(t => {
+    const dueToday = schedulable.filter(t => {
       if (myDay.includes(t)) return false
       return t.due_date === todayStr
     })
     
     // Due Soon (not in above sections)
-    const dueSoon = unscheduled.filter(t => {
+    const dueSoon = schedulable.filter(t => {
       if (myDay.includes(t) || dueToday.includes(t)) return false
       if (!t.due_date || t.due_date === todayStr) return false
       const due = new Date(t.due_date)
@@ -2139,19 +2156,19 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       myDay.includes(t) || overdue.includes(t) || dueToday.includes(t) || dueSoon.includes(t)
     
     // In Progress (not already categorized)
-    const inProgress = unscheduled.filter(t => 
+    const inProgress = schedulable.filter(t => 
       t.status === 'in_progress' && !alreadyCategorized(t)
     )
     
     // To Do (not already categorized or in progress)
-    const todo = unscheduled.filter(t => 
+    const todo = schedulable.filter(t => 
       t.status === 'todo' && 
       !alreadyCategorized(t) &&
       !inProgress.includes(t)
     )
     
     // Backlog (not already categorized)
-    const backlog = unscheduled.filter(t => 
+    const backlog = schedulable.filter(t => 
       t.status === 'backlog' && 
       !alreadyCategorized(t) &&
       !inProgress.includes(t) &&
@@ -2159,7 +2176,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     )
     
     // Quick Wins - low effort tasks not already shown
-    const quickWins = unscheduled.filter(t => 
+    const quickWins = schedulable.filter(t => 
       t.energy_level === 'low' &&
       !alreadyCategorized(t) &&
       !inProgress.includes(t) &&
