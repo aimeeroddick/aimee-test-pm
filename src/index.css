@@ -243,14 +243,16 @@
   }
 }
 
-/* iOS Safari fix for fixed positioning */
+/* iOS Safari fix for fixed positioning - mobile only */
 @supports (-webkit-touch-callout: none) {
-  .animate-slideInFromLeft {
-    background-color: #ffffff !important;
-  }
-  
-  .dark .animate-slideInFromLeft {
-    background-color: #1f2937 !important;
+  @media (max-width: 639px) {
+    .animate-slideInFromLeft {
+      background-color: #ffffff !important;
+    }
+    
+    .dark .animate-slideInFromLeft {
+      background-color: #1f2937 !important;
+    }
   }
 }
 
