@@ -1489,10 +1489,9 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar View Component - Daily/Weekly/Monthly
-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask }) => {
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
-  const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [draggedTask, setDraggedTask] = useState(null)
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
@@ -5284,6 +5283,7 @@ export default function KanbanBoard() {
   
   // View state
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', 'calendar', or 'projects'
+  const [calendarViewMode, setCalendarViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [navMenuOpen, setNavMenuOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [focusTaskId, setFocusTaskId] = useState(null)
@@ -7650,6 +7650,8 @@ export default function KanbanBoard() {
                 onCreateTask={(prefill) => { setEditingTask(prefill); setTaskModalOpen(true) }}
                 allTasks={tasks}
                 onUpdateTask={handleCalendarTaskUpdate}
+                viewMode={calendarViewMode}
+                setViewMode={setCalendarViewMode}
               />
             </div>
           )}
