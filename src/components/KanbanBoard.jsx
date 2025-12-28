@@ -1260,6 +1260,29 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
               
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">5</span>
+                  Quick Actions
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Hover over any scheduled task to reveal action buttons:</p>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                    <span className="text-lg">▶</span>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Start task</p>
+                  </div>
+                  <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
+                    <span className="text-lg">✓</span>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Mark done</p>
+                  </div>
+                  <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                    <span className="text-lg">✕</span>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Remove from calendar</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-3">💡 Removing a task from calendar clears its scheduled time. If not done, it returns to the sidebar for rescheduling.</p>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">⚙️</span>
                   Workflow Automation
                 </h3>
