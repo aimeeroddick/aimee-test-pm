@@ -2104,14 +2104,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       return false // Has start_time for today or future - already scheduled
     })
     
-    console.log('Calendar sidebar debug:', {
-      totalTasks: tasks.length,
-      schedulableCount: schedulable.length,
-      todayStr,
-      tasksWithMyDay: tasks.filter(t => t.my_day_date).map(t => ({ title: t.title, my_day_date: t.my_day_date, start_time: t.start_time, status: t.status })),
-      pastIncompleteTasks: schedulable.filter(t => t.start_time).map(t => ({ title: t.title, start_date: t.start_date, start_time: t.start_time }))
-    })
-    
     // Helper to check if task is in My Day (matching main My Day logic)
     const taskInMyDay = (task) => {
       if (task.status === 'done') return false
@@ -3557,15 +3549,17 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const blocked = isBlocked(task, allTasks)
   const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
   const isDone = task.status === 'done'
+  const isInProgress = task.status === 'in_progress'
   const readyToStart = isReadyToStart(task)
   const category = CATEGORIES.find(c => c.id === task.category)
   const energyStyle = ENERGY_LEVELS[task.energy_level]
+  const inMyDay = isInMyDay(task)
   
   const accentColor = blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
   
@@ -3655,24 +3649,56 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       <div className="flex items-start gap-2">
         {/* Checkbox + Effort Column */}
         <div className="flex flex-col items-center gap-1">
-          {/* Checkbox */}
+          {/* Action Buttons */}
           {bulkSelectMode ? (
             <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
               className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500'}`}>
               {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
             </button>
-          ) : onQuickComplete && (
-            <button onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
-              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'}`}>
-              {isDone && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-            </button>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {/* Start button - show if not in progress and not done */}
+              {!isInProgress && !isDone && onQuickComplete && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'in_progress') }}
+                  className="w-5 h-5 rounded flex items-center justify-center text-[10px] bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-colors"
+                  title="Start working"
+                >
+                  ▶
+                </button>
+              )}
+              {/* Done button */}
+              {onQuickComplete && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
+                  className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                    isDone 
+                      ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400'
+                  }`}
+                  title={isDone ? 'Reopen task' : 'Mark done'}
+                >
+                  ✓
+                </button>
+              )}
+            </div>
           )}
           {/* Effort Indicator */}
           {energyStyle && (
             <span className="text-[10px] font-bold" style={{ color: energyStyle.text }} title={energyStyle.label}>{energyStyle.icon}</span>
           )}
-          {/* My Day Indicator */}
-          {isInMyDay(task) && (
+          {/* My Day Toggle */}
+          {onToggleMyDay && !isDone && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
+              className={`text-[10px] transition-opacity ${inMyDay ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}
+              title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
+            >
+              ☀️
+            </button>
+          )}
+          {/* My Day Indicator (when toggle not available) */}
+          {!onToggleMyDay && inMyDay && (
             <span className="text-[10px]" title="In My Day">☀️</span>
           )}
         </div>
@@ -3837,7 +3863,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
@@ -3907,6 +3933,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             bulkSelectMode={bulkSelectMode}
             isSelected={selectedTaskIds?.has(task.id)}
             onToggleSelect={onToggleSelect}
+            onToggleMyDay={onToggleMyDay}
             
           />
         ))}
@@ -7893,6 +7920,11 @@ export default function KanbanBoard() {
                     onAddTask={(status) => {
                       setEditingTask({ status })
                       setTaskModalOpen(true)
+                    }}
+                    onToggleMyDay={(taskId, addToMyDay) => {
+                      const todayStr = new Date().toISOString().split('T')[0]
+                      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                      handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
                     }}
                   />
                 ))}
