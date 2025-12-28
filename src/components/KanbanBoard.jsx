@@ -7086,9 +7086,10 @@ export default function KanbanBoard() {
                 {navMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-[999] bg-black/60 sm:bg-black/20 animate-fadeIn" onClick={() => setNavMenuOpen(false)} />
-                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale overflow-hidden">
-                      {/* Solid background wrapper - ensures opaque background on mobile */}
-                      <div className="h-full w-full py-2" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                    <div 
+                      className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale overflow-y-auto"
+                      style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}
+                    >
                       {/* Mobile header */}
                       <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
@@ -7186,7 +7187,6 @@ export default function KanbanBoard() {
                           <span className="font-medium">Sign Out</span>
                         </button>
                       </div>
-                      </div>{/* End solid background wrapper */}
                     </div>
                   </>
                 )}
