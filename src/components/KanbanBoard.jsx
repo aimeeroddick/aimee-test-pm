@@ -2739,11 +2739,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   }
   
   return (
-    <div className="max-w-full mx-auto px-6 py-8 overflow-x-auto">
+    <div className="max-w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
             {getHeaderTitle()}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -2751,7 +2751,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* View Mode Switcher */}
           <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <button
