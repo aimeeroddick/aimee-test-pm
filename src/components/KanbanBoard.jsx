@@ -7087,7 +7087,7 @@ export default function KanbanBoard() {
                   <>
                     <div className="fixed inset-0 z-[999] bg-black/60 sm:bg-black/20 animate-fadeIn" onClick={() => setNavMenuOpen(false)} />
                     <div 
-                      className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale overflow-y-auto"
+                      className="fixed sm:absolute top-0 sm:top-full left-0 h-screen sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale"
                       style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}
                     >
                       {/* Mobile header */}
