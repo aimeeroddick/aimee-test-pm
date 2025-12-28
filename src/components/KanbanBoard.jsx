@@ -2087,6 +2087,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     // Filter out done tasks and already scheduled tasks (have start_time)
     const unscheduled = tasks.filter(t => t.status !== 'done' && !t.start_time)
     
+    console.log('Calendar sidebar debug:', {
+      totalTasks: tasks.length,
+      unscheduledCount: unscheduled.length,
+      todayStr,
+      tasksWithMyDay: tasks.filter(t => t.my_day_date).map(t => ({ title: t.title, my_day_date: t.my_day_date, start_time: t.start_time, status: t.status })),
+      tasksWithStartTime: tasks.filter(t => t.start_time).map(t => ({ title: t.title, start_time: t.start_time }))
+    })
+    
     // Helper to check if task is in My Day
     const taskInMyDay = (task) => {
       if (task.status === 'done') return false
