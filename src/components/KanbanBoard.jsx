@@ -2677,6 +2677,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     return (
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Horizontal scroll wrapper for mobile */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
         {/* Fixed header */}
         <div className="grid grid-cols-[60px_repeat(7,1fr)] divide-x divide-gray-200 dark:divide-gray-700 border-b border-gray-200 dark:border-gray-700">
           <div className="h-12 bg-gray-50 dark:bg-gray-800" />
@@ -2778,6 +2781,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             })}
           </div>
         </div>
+          </div>{/* closes min-w-[700px] */}
+        </div>{/* closes overflow-x-auto */}
       </div>
     )
   }
