@@ -3020,15 +3020,38 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const myDayActive = myDayTasks.filter(t => t.status !== 'done')
   const myDayCompleted = myDayTasks.filter(t => t.status === 'done')
   
+  // Sort My Day tasks: start_date → start_time/end_time → status → created_at
   myDayActive.sort((a, b) => {
-    if (a.critical && !b.critical) return -1
-    if (!a.critical && b.critical) return 1
-    const aOverdue = getDueDateStatus(a.due_date, a.status) === 'overdue'
-    const bOverdue = getDueDateStatus(b.due_date, b.status) === 'overdue'
-    if (aOverdue && !bOverdue) return -1
-    if (!aOverdue && bOverdue) return 1
-    if (a.due_date && b.due_date) return new Date(a.due_date) - new Date(b.due_date)
-    return 0
+    // 1. Sort by start_date (earliest first, nulls last)
+    const aStartDate = a.start_date ? new Date(a.start_date) : null
+    const bStartDate = b.start_date ? new Date(b.start_date) : null
+    if (aStartDate && !bStartDate) return -1
+    if (!aStartDate && bStartDate) return 1
+    if (aStartDate && bStartDate) {
+      const startDateDiff = aStartDate - bStartDate
+      if (startDateDiff !== 0) return startDateDiff
+    }
+    
+    // 2. Sort by start_time/end_time (earliest first, nulls last)
+    const aTime = a.start_time || a.end_time
+    const bTime = b.start_time || b.end_time
+    if (aTime && !bTime) return -1
+    if (!aTime && bTime) return 1
+    if (aTime && bTime) {
+      const timeDiff = aTime.localeCompare(bTime)
+      if (timeDiff !== 0) return timeDiff
+    }
+    
+    // 3. Sort by status: in_progress > todo > backlog
+    const statusOrder = { 'in_progress': 0, 'todo': 1, 'backlog': 2 }
+    const aStatus = statusOrder[a.status] ?? 3
+    const bStatus = statusOrder[b.status] ?? 3
+    if (aStatus !== bStatus) return aStatus - bStatus
+    
+    // 4. Sort by created_at (earliest first)
+    const aCreated = new Date(a.created_at)
+    const bCreated = new Date(b.created_at)
+    return aCreated - bCreated
   })
   
   const notInMyDay = tasks.filter(t => !taskInMyDay(t) && t.status !== 'done')
