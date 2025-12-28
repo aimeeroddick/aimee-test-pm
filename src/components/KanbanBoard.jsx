@@ -467,7 +467,7 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
   if (!isOpen) return null
   
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -535,7 +535,7 @@ const AttachmentViewer = ({ isOpen, onClose, attachment, attachments, onNavigate
   }, [isOpen, currentIndex, attachments])
   
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[310] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       
       {/* Header */}
@@ -3949,7 +3949,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`flex-1 min-w-[280px] sm:min-w-[300px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
+      className={`flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
       }`}
       onDragOver={(e) => {
@@ -4257,7 +4257,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide>
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto">
           {[
             { id: 'details', label: 'Details' },
             { id: 'additional', label: 'Additional' },
@@ -4268,7 +4268,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all whitespace-nowrap min-w-fit ${
                 activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
@@ -7086,7 +7086,7 @@ export default function KanbanBoard() {
                 {navMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-[999] bg-black/60 sm:bg-black/20 animate-fadeIn" onClick={() => setNavMenuOpen(false)} />
-                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 bg-white dark:bg-gray-800 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale">
+                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
                       {/* Mobile header */}
                       <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
