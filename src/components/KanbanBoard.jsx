@@ -2041,6 +2041,17 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
   }
   
+  // Remove task from calendar (clear scheduled time)
+  const handleRemoveFromCalendar = async (e, task) => {
+    e.stopPropagation()
+    if (!onUpdateTask) return
+    
+    await onUpdateTask(task.id, { 
+      start_time: null, 
+      end_time: null 
+    })
+  }
+  
   // Get next status label for button
   const getNextStatusLabel = (status) => {
     switch (status) {
@@ -2620,6 +2631,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                                   {task.status === 'in_progress' ? '✓' : '▶'}
                                 </button>
                               )}
+                              {/* Remove from calendar button */}
+                              <button
+                                onClick={(e) => handleRemoveFromCalendar(e, task)}
+                                className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove from calendar"
+                              >
+                                ✕
+                              </button>
                             </div>
                             {heightSlots > 1 && task.start_time && (
                               <div className="text-[9px] opacity-70">{formatTimeDisplay(task.start_time)}{task.end_time && ` - ${formatTimeDisplay(task.end_time)}`}</div>
@@ -2769,6 +2788,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                                     {task.status === 'in_progress' ? '✓' : '▶'}
                                   </button>
                                 )}
+                                <button
+                                  onClick={(e) => handleRemoveFromCalendar(e, task)}
+                                  className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-red-500"
+                                  title="Remove from calendar"
+                                >
+                                  ✕
+                                </button>
                               </div>
                             </div>
                           )
