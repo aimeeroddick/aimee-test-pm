@@ -2112,15 +2112,23 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       pastIncompleteTasks: schedulable.filter(t => t.start_time).map(t => ({ title: t.title, start_date: t.start_date, start_time: t.start_time }))
     })
     
-    // Helper to check if task is in My Day
+    // Helper to check if task is in My Day (matching main My Day logic)
     const taskInMyDay = (task) => {
       if (task.status === 'done') return false
-      if (task.my_day_date === todayStr) return true
-      if (task.start_date) {
-        const startDate = new Date(task.start_date)
-        startDate.setHours(0, 0, 0, 0)
-        if (startDate <= today) return true
+      
+      // Check if task was dismissed (my_day_date set to a past date)
+      if (task.my_day_date) {
+        const myDayDate = new Date(task.my_day_date)
+        myDayDate.setHours(0, 0, 0, 0)
+        // If my_day_date < today, task was dismissed - NOT in My Day
+        if (myDayDate < today) return false
+        // If my_day_date = today, task was manually added - IS in My Day
+        if (myDayDate.getTime() === today.getTime()) return true
       }
+      
+      // Auto-included: start_date = today (not past dates)
+      if (task.start_date === todayStr) return true
+      
       return false
     }
     
