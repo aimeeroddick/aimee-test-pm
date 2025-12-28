@@ -1727,6 +1727,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [draggedTask, setDraggedTask] = useState(null)
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
+  const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
   const calendarScrollRef = useRef(null)
   
   // Generate consistent color for project based on ID
@@ -2426,12 +2427,32 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.todo.length + schedulable.backlog.length + schedulable.quickWins.length
     
     // Reusable task card component for sidebar
-    const TaskCard = ({ task, highlight }) => (
+    // Handle task tap for mobile scheduling
+    const handleTaskTap = (e, task) => {
+      // Check if on mobile (no drag support)
+      const isMobile = window.matchMedia('(max-width: 1024px)').matches
+      if (isMobile) {
+        e.stopPropagation()
+        // Toggle selection
+        if (selectedTaskForScheduling?.id === task.id) {
+          setSelectedTaskForScheduling(null)
+        } else {
+          setSelectedTaskForScheduling(task)
+        }
+      } else {
+        onEditTask(task)
+      }
+    }
+    
+    const TaskCard = ({ task, highlight }) => {
+      const isSelected = selectedTaskForScheduling?.id === task.id
+      return (
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, task)}
-        onClick={() => onEditTask(task)}
+        onClick={(e) => handleTaskTap(e, task)}
         className={`p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all hover:shadow-md select-none ${
+          isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 dark:border-indigo-700' :
           highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
           highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
           highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -2465,7 +2486,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </div>
         </div>
       </div>
-    )
+    )}
     
     // Section component
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
@@ -2490,6 +2511,23 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     return (
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+        {/* Mobile tap-to-schedule indicator */}
+        {selectedTaskForScheduling && (
+          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between animate-slide-up">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-lg">📌</span>
+              <span className="text-sm font-medium truncate">Tap a time slot to schedule: {selectedTaskForScheduling.title}</span>
+            </div>
+            <button
+              onClick={() => setSelectedTaskForScheduling(null)}
+              className="shrink-0 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         {/* Main Calendar */}
         <div className="flex-1 min-w-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Fixed header */}
@@ -2540,6 +2578,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                       } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
                       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                       onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, slotIndex) }}
+                      onClick={() => {
+                        if (selectedTaskForScheduling) {
+                          handleDropOnSlot(currentDate, slotIndex)
+                          setSelectedTaskForScheduling(null)
+                        }
+                      }}
                       onDoubleClick={() => handleDoubleClickSlot(currentDate, slotIndex)}
                     >
                       {slotTasks.map(task => {
