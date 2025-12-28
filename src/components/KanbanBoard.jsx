@@ -4365,7 +4365,22 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <input
                   type="time"
                   value={formData.start_time || ''}
-                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                  onChange={(e) => {
+                    const newStartTime = e.target.value
+                    const updates = { start_time: newStartTime }
+                    
+                    // If there's a time_estimate, recalculate end_time
+                    if (newStartTime && formData.time_estimate) {
+                      const [hours, mins] = newStartTime.split(':').map(Number)
+                      const startMinutes = hours * 60 + mins
+                      const endMinutes = startMinutes + parseInt(formData.time_estimate)
+                      const endHours = Math.floor(endMinutes / 60)
+                      const endMins = endMinutes % 60
+                      updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                    }
+                    
+                    setFormData({ ...formData, ...updates })
+                  }}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
               </div>
@@ -4374,7 +4389,24 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <input
                   type="time"
                   value={formData.end_time || ''}
-                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                  onChange={(e) => {
+                    const newEndTime = e.target.value
+                    const updates = { end_time: newEndTime }
+                    
+                    // If there's a start_time, recalculate time_estimate
+                    if (formData.start_time && newEndTime) {
+                      const [startH, startM] = formData.start_time.split(':').map(Number)
+                      const [endH, endM] = newEndTime.split(':').map(Number)
+                      const startMinutes = startH * 60 + startM
+                      const endMinutes = endH * 60 + endM
+                      const duration = endMinutes - startMinutes
+                      if (duration > 0) {
+                        updates.time_estimate = String(duration)
+                      }
+                    }
+                    
+                    setFormData({ ...formData, ...updates })
+                  }}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 />
               </div>
@@ -4584,7 +4616,22 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   min="0"
                   step="5"
                   value={formData.time_estimate}
-                  onChange={(e) => setFormData({ ...formData, time_estimate: e.target.value })}
+                  onChange={(e) => {
+                    const newEstimate = e.target.value
+                    const updates = { time_estimate: newEstimate }
+                    
+                    // If there's a start_time, recalculate end_time based on new duration
+                    if (formData.start_time && newEstimate) {
+                      const [hours, mins] = formData.start_time.split(':').map(Number)
+                      const startMinutes = hours * 60 + mins
+                      const endMinutes = startMinutes + parseInt(newEstimate)
+                      const endHours = Math.floor(endMinutes / 60)
+                      const endMins = endMinutes % 60
+                      updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                    }
+                    
+                    setFormData({ ...formData, ...updates })
+                  }}
                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   placeholder="Minutes (e.g., 30)"
                 />
