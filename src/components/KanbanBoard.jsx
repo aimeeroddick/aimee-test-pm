@@ -3639,6 +3639,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
 
 // Task Table View Component
 const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
+  const { user } = useAuth()
   const [sortField, setSortField] = useState('created_at')
   const [sortDirection, setSortDirection] = useState('desc')
   const [columnFilters, setColumnFilters] = useState({})
