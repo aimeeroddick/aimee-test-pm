@@ -3898,12 +3898,12 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
         try {
           if (!id || id === '*') {
             // Create new task
-            const { error } = await supabase.from('tasks').insert({ ...taskData, user_id: user.id })
+            const { error } = await supabase.from('tasks').insert(taskData)
             if (error) throw error
             created++
           } else {
             // Update existing task
-            const { error } = await supabase.from('tasks').update(taskData).eq('id', id).eq('user_id', user.id)
+            const { error } = await supabase.from('tasks').update(taskData).eq('id', id)
             if (error) throw error
             updated++
           }
