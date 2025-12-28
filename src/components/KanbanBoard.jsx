@@ -3877,6 +3877,25 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
         // Parse time estimate (remove 'm' suffix if present)
         const timeEstimateRaw = timeEstimateIndex >= 0 ? values[timeEstimateIndex] : ''
         const timeEstimate = timeEstimateRaw ? parseInt(timeEstimateRaw.replace(/m$/i, '')) || null : null
+        // Parse date from various formats to YYYY-MM-DD
+        const parseDate = (dateStr) => {
+          if (!dateStr) return null
+          // Already in YYYY-MM-DD format
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
+          // DD/MM/YYYY format (UK)
+          const ukMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+          if (ukMatch) {
+            const [, day, month, year] = ukMatch
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          }
+          // MM/DD/YYYY format (US)
+          const usMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+          if (usMatch) {
+            // Ambiguous - assume UK format was already handled, try as-is
+            return null
+          }
+          return null
+        }
         
         // Build task data
         const taskData = {
@@ -3884,8 +3903,8 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           project_id: project?.id || null,
           status,
           critical,
-          due_date: dueDateIndex >= 0 && values[dueDateIndex] ? values[dueDateIndex] : null,
-          start_date: startDateIndex >= 0 && values[startDateIndex] ? values[startDateIndex] : null,
+          due_date: parseDate(dueDateIndex >= 0 ? values[dueDateIndex] : null),
+          start_date: parseDate(startDateIndex >= 0 ? values[startDateIndex] : null),
           assignee: assigneeIndex >= 0 ? values[assigneeIndex] || null : null,
           customer: customerIndex >= 0 ? values[customerIndex] || null : null,
           category: category?.id || null,
