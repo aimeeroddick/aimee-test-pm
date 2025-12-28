@@ -836,6 +836,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
   const tabs = [
     { id: 'board', label: 'Board', icon: '📋' },
     { id: 'myday', label: 'My Day', icon: '☀️' },
+    { id: 'calendar', label: 'Calendar', icon: '📆' },
     { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
     { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
@@ -1096,9 +1097,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
-                  Recommendations
+                  Recommendations & All Tasks
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Below your My Day tasks, you'll see smart recommendations:</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">The sidebar shows all available tasks organized by urgency and status. Drag any task to My Day to add it:</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                     <span className="font-semibold text-red-600">🔴 Overdue</span>
@@ -1116,6 +1117,32 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                     <span className="font-semibold text-green-600">🟢 Quick Wins</span>
                     <p className="text-sm text-gray-500">Low effort tasks</p>
                   </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <span className="font-semibold text-blue-600">🔵 In Progress</span>
+                    <p className="text-sm text-gray-500">Currently being worked on</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-900/20 rounded-xl">
+                    <span className="font-semibold text-slate-600">⚪ To Do</span>
+                    <p className="text-sm text-gray-500">Ready to start</p>
+                  </div>
+                  <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl col-span-2">
+                    <span className="font-semibold text-gray-600">📋 Backlog</span>
+                    <p className="text-sm text-gray-500">Future work not yet prioritized</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">🎯</span>
+                  Focus Mode
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Click the "Focus Mode" button to enter a distraction-free view:</p>
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <p>• Shows one task at a time from your My Day list</p>
+                  <p>• Large, centered view for maximum focus</p>
+                  <p>• Quick actions to mark complete or skip to next task</p>
+                  <p>• Confetti celebration when you complete all My Day tasks! 🎉</p>
                 </div>
               </section>
               
@@ -1125,6 +1152,126 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   Daily Reset
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">Manually added tasks clear from My Day at midnight (or when completed), giving you a fresh start each day. Auto-included tasks based on start date will remain until their start date passes.</p>
+              </section>
+            </div>
+          )}
+          
+          {activeTab === 'calendar' && (
+            <div className="space-y-6">
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">📆</span>
+                  Calendar View
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘L</kbd>.</p>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
+                  View Modes
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                    <span className="text-2xl">📅</span>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mt-1">Daily</p>
+                    <p className="text-xs text-gray-500">Single day view</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                    <span className="text-2xl">📆</span>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mt-1">Weekly</p>
+                    <p className="text-xs text-gray-500">7-day overview</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
+                    <span className="text-2xl">🗓️</span>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mt-1">Monthly</p>
+                    <p className="text-xs text-gray-500">Full month grid</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Scheduling Tasks
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Drag & Drop:</p>
+                    <p className="text-sm text-gray-500">Drag tasks from the sidebar onto any time slot to schedule them. The task's start time and date will be automatically set.</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Resize Duration:</p>
+                    <p className="text-sm text-gray-500">Drag the bottom edge of a scheduled task to adjust its duration. Time estimate updates automatically.</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Double-Click:</p>
+                    <p className="text-sm text-gray-500">Double-click any empty time slot to create a new task at that time.</p>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
+                  Sidebar Task Sections
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">The sidebar organizes unscheduled tasks by priority:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>🔴</span><span>Overdue tasks</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🟠</span><span>Due Today</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🟡</span><span>Due Soon (3 days)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🔵</span><span>In Progress</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>☀️</span><span>My Day tasks</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>⚪</span><span>To Do</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>📋</span><span>Backlog</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>🟢</span><span>Quick Wins</span>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  Visual Indicators
+                </h3>
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <p>• <span className="text-red-500 font-medium">Red line</span> – Current time indicator</p>
+                  <p>• <span className="text-orange-500 font-medium">⚠️ Orange ring</span> – Task overlaps with another scheduled task</p>
+                  <p>• <span className="font-medium">Colored bars</span> – Tasks are color-coded by project</p>
+                  <p>• <span className="font-medium">30-min slots</span> – Calendar auto-scrolls to 6am on load</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">⚙️</span>
+                  Workflow Automation
+                </h3>
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                  <p className="text-gray-700 dark:text-gray-300">When you schedule a task:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <li>• Status automatically changes to "To Do" (if in Backlog)</li>
+                    <li>• Start date is set to the scheduled day</li>
+                    <li>• Start time is set to the slot time</li>
+                    <li>• Task appears in My Day if scheduled for today</li>
+                  </ul>
+                </div>
               </section>
             </div>
           )}
@@ -1308,7 +1455,29 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
           {activeTab === 'shortcuts' && (
             <div className="space-y-6">
               <section>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Keyboard Shortcuts</h3>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Navigation Shortcuts</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">☀️ My Day View</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘D</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">📋 Board View</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘B</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">📆 Calendar View</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘L</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">🔍 Quick Search</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘K</kbd>
+                  </div>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Action Shortcuts</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">New Task</span>
@@ -1323,8 +1492,8 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                     <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘N</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="text-gray-700 dark:text-gray-300">Quick Search</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘K</kbd>
+                    <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘/</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Close Modal</span>
@@ -1336,10 +1505,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Quick Actions</h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>• <strong>Click task</strong> - Open task editor</p>
-                  <p>• <strong>Click checkbox</strong> - Mark complete/incomplete</p>
-                  <p>• <strong>Drag task</strong> - Move to different column</p>
-                  <p>• <strong>Hover task</strong> - See details popup</p>
+                  <p>• <strong>Click task</strong> – Open task editor</p>
+                  <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
+                  <p>• <strong>Drag task</strong> – Move between columns or schedule on calendar</p>
+                  <p>• <strong>Hover task</strong> – See details popup (desktop only)</p>
+                  <p>• <strong>Double-click calendar</strong> – Create task at that time</p>
+                  <p>• <strong>Drag task edge</strong> – Resize duration on calendar</p>
                 </div>
               </section>
             </div>
