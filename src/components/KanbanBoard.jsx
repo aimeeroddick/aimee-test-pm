@@ -2637,35 +2637,37 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                                 {isOverlapping && <span title="Time conflict">⚠️ </span>}
                                 {task.critical && '🚩 '}{task.title}
                               </div>
-                              {/* Quick action buttons */}
-                              {/* Start button - only show if not started */}
-                              {(task.status === 'backlog' || task.status === 'todo') && (
+                              {/* Quick action buttons - grouped on right */}
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                {/* Start button - only show if not started */}
+                                {(task.status === 'backlog' || task.status === 'todo') && (
+                                  <button
+                                    onClick={(e) => handleStartTask(e, task)}
+                                    className="text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Start task"
+                                  >
+                                    ▶
+                                  </button>
+                                )}
+                                {/* Done button - show if not done */}
+                                {task.status !== 'done' && (
+                                  <button
+                                    onClick={(e) => handleMarkDone(e, task)}
+                                    className="text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-green-100 dark:hover:bg-green-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Mark as done"
+                                  >
+                                    ✓
+                                  </button>
+                                )}
+                                {/* Remove from calendar button */}
                                 <button
-                                  onClick={(e) => handleStartTask(e, task)}
-                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Start task"
+                                  onClick={(e) => handleRemoveFromCalendar(e, task)}
+                                  className="text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Remove from calendar"
                                 >
-                                  ▶
+                                  ✕
                                 </button>
-                              )}
-                              {/* Done button - show if not done */}
-                              {task.status !== 'done' && (
-                                <button
-                                  onClick={(e) => handleMarkDone(e, task)}
-                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-green-100 dark:hover:bg-green-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Mark as done"
-                                >
-                                  ✓
-                                </button>
-                              )}
-                              {/* Remove from calendar button */}
-                              <button
-                                onClick={(e) => handleRemoveFromCalendar(e, task)}
-                                className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Remove from calendar"
-                              >
-                                ✕
-                              </button>
+                              </div>
                             </div>
                             {heightSlots > 1 && task.start_time && (
                               <div className="text-[9px] opacity-70">{formatTimeDisplay(task.start_time)}{task.end_time && ` - ${formatTimeDisplay(task.end_time)}`}</div>
@@ -2806,33 +2808,36 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             >
                               <div className="flex items-center justify-between">
                                 <span className="truncate">{task.critical && '🚩'}{task.title}</span>
-                                {/* Start button - only show if not started */}
-                                {(task.status === 'backlog' || task.status === 'todo') && (
+                                {/* Quick action buttons - grouped on right */}
+                                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {/* Start button - only show if not started */}
+                                  {(task.status === 'backlog' || task.status === 'todo') && (
+                                    <button
+                                      onClick={(e) => handleStartTask(e, task)}
+                                      className="hover:text-blue-500"
+                                      title="Start task"
+                                    >
+                                      ▶
+                                    </button>
+                                  )}
+                                  {/* Done button - show if not done */}
+                                  {task.status !== 'done' && (
+                                    <button
+                                      onClick={(e) => handleMarkDone(e, task)}
+                                      className="hover:text-green-500"
+                                      title="Mark as done"
+                                    >
+                                      ✓
+                                    </button>
+                                  )}
                                   <button
-                                    onClick={(e) => handleStartTask(e, task)}
-                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-blue-500"
-                                    title="Start task"
+                                    onClick={(e) => handleRemoveFromCalendar(e, task)}
+                                    className="hover:text-red-500"
+                                    title="Remove from calendar"
                                   >
-                                    ▶
+                                    ✕
                                   </button>
-                                )}
-                                {/* Done button - show if not done */}
-                                {task.status !== 'done' && (
-                                  <button
-                                    onClick={(e) => handleMarkDone(e, task)}
-                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-green-500"
-                                    title="Mark as done"
-                                  >
-                                    ✓
-                                  </button>
-                                )}
-                                <button
-                                  onClick={(e) => handleRemoveFromCalendar(e, task)}
-                                  className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-red-500"
-                                  title="Remove from calendar"
-                                >
-                                  ✕
-                                </button>
+                                </div>
                               </div>
                             </div>
                           )
