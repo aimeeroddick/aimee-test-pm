@@ -1489,12 +1489,13 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar View Component - Daily/Weekly/Monthly
-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask }) => {
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [viewMode, setViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [draggedTask, setDraggedTask] = useState(null)
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
+  const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const calendarScrollRef = useRef(null)
   
   // Generate consistent color for project based on ID
@@ -1669,6 +1670,83 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   }
   
   const goToToday = () => setCurrentDate(new Date())
+  
+  // Context menu handlers
+  const handleContextMenu = (e, task) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ x: e.clientX, y: e.clientY, task })
+  }
+  
+  const closeContextMenu = () => setContextMenu(null)
+  
+  // Close context menu when clicking elsewhere
+  useEffect(() => {
+    if (contextMenu) {
+      const handleClick = () => closeContextMenu()
+      document.addEventListener('click', handleClick)
+      document.addEventListener('contextmenu', handleClick)
+      return () => {
+        document.removeEventListener('click', handleClick)
+        document.removeEventListener('contextmenu', handleClick)
+      }
+    }
+  }, [contextMenu])
+  
+  // Context menu actions
+  const handleMenuAction = async (action) => {
+    if (!contextMenu?.task) return
+    const task = contextMenu.task
+    closeContextMenu()
+    
+    switch (action) {
+      case 'edit':
+        onEditTask(task)
+        break
+      case 'delete':
+        if (onDeleteTask && confirm('Delete this task?')) {
+          onDeleteTask(task.id)
+        }
+        break
+      case 'duplicate':
+        if (onDuplicateTask) {
+          onDuplicateTask(task)
+        }
+        break
+      case 'start':
+        if (task.status !== 'in_progress') {
+          await onUpdateTask(task.id, { status: 'in_progress' })
+        }
+        break
+      case 'done':
+        await onUpdateTask(task.id, { status: 'done' })
+        break
+      case 'todo':
+        await onUpdateTask(task.id, { status: 'todo' })
+        break
+      case 'unschedule':
+        await onUpdateTask(task.id, { start_time: null, end_time: null })
+        break
+      case 'tomorrow':
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        await onUpdateTask(task.id, { 
+          start_date: tomorrow.toISOString().split('T')[0],
+          start_time: task.start_time,
+          end_time: task.end_time
+        })
+        break
+      case 'nextWeek':
+        const nextWeek = new Date()
+        nextWeek.setDate(nextWeek.getDate() + 7)
+        await onUpdateTask(task.id, { 
+          start_date: nextWeek.toISOString().split('T')[0],
+          start_time: task.start_time,
+          end_time: task.end_time
+        })
+        break
+    }
+  }
   
   // Get week start (Sunday) for current date
   const getWeekStart = (date) => {
@@ -2009,56 +2087,74 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     // Filter out done tasks and already scheduled tasks (have start_time)
     const unscheduled = tasks.filter(t => t.status !== 'done' && !t.start_time)
     
+    // Helper to check if task is in My Day
+    const taskInMyDay = (task) => {
+      if (task.status === 'done') return false
+      if (task.my_day_date === todayStr) return true
+      if (task.start_date) {
+        const startDate = new Date(task.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (startDate <= today) return true
+      }
+      return false
+    }
+    
+    // My Day gets priority - show all My Day tasks first
+    const myDay = unscheduled.filter(t => taskInMyDay(t))
+    
+    // Overdue (not in My Day)
     const overdue = unscheduled.filter(t => {
+      if (myDay.includes(t)) return false
       if (!t.due_date) return false
       const due = new Date(t.due_date)
       due.setHours(0, 0, 0, 0)
       return due < today
     })
     
-    const dueToday = unscheduled.filter(t => t.due_date === todayStr)
+    // Due Today (not in My Day or Overdue)
+    const dueToday = unscheduled.filter(t => {
+      if (myDay.includes(t)) return false
+      return t.due_date === todayStr
+    })
     
+    // Due Soon (not in above sections)
     const dueSoon = unscheduled.filter(t => {
+      if (myDay.includes(t) || dueToday.includes(t)) return false
       if (!t.due_date || t.due_date === todayStr) return false
       const due = new Date(t.due_date)
       due.setHours(0, 0, 0, 0)
       return due > today && due <= threeDaysFromNow
     })
     
-    // Helper to check if task is already in a priority section
-    const isInPrioritySection = (t) => 
-      overdue.includes(t) || dueToday.includes(t) || dueSoon.includes(t)
+    // Already categorized
+    const alreadyCategorized = (t) => 
+      myDay.includes(t) || overdue.includes(t) || dueToday.includes(t) || dueSoon.includes(t)
     
+    // In Progress (not already categorized)
     const inProgress = unscheduled.filter(t => 
-      t.status === 'in_progress' && !isInPrioritySection(t)
+      t.status === 'in_progress' && !alreadyCategorized(t)
     )
     
-    const myDay = unscheduled.filter(t => 
-      isInMyDay(t) && 
-      !isInPrioritySection(t) &&
+    // To Do (not already categorized or in progress)
+    const todo = unscheduled.filter(t => 
+      t.status === 'todo' && 
+      !alreadyCategorized(t) &&
       !inProgress.includes(t)
     )
     
-    const todo = unscheduled.filter(t => 
-      t.status === 'todo' && 
-      !isInPrioritySection(t) &&
-      !inProgress.includes(t) &&
-      !myDay.includes(t)
-    )
-    
+    // Backlog (not already categorized)
     const backlog = unscheduled.filter(t => 
       t.status === 'backlog' && 
-      !isInPrioritySection(t) &&
+      !alreadyCategorized(t) &&
       !inProgress.includes(t) &&
-      !myDay.includes(t) &&
       !todo.includes(t)
     )
     
+    // Quick Wins - low effort tasks not already shown
     const quickWins = unscheduled.filter(t => 
       t.energy_level === 'low' &&
-      !isInPrioritySection(t) &&
+      !alreadyCategorized(t) &&
       !inProgress.includes(t) &&
-      !myDay.includes(t) &&
       !todo.includes(t) &&
       !backlog.includes(t)
     )
