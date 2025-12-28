@@ -3640,9 +3640,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '3px', borderLeftColor: accentColor }}
     >
-      {/* Hover Popup Bubble */}
+      {/* Hover Popup Bubble - Hidden on mobile */}
       {hasExtraInfo && (
-        <div className={`absolute top-0 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
+        <div className={`hidden md:block absolute top-0 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
           task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
         }`}>
           {/* Category */}
@@ -4309,7 +4309,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Project & Status */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
                 <select
@@ -4340,7 +4340,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Customer & Energy Level - side by side */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
                 {!useCustomCustomer ? (
@@ -4397,7 +4397,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Start Date & Due Date side by side */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                 <input
@@ -4419,7 +4419,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Start Time & End Time side by side */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
                 <input
@@ -4676,7 +4676,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         {activeTab === 'additional' && (
           <div className="space-y-4">
             {/* Time Estimate & Assignee */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Estimate</label>
                 <input
@@ -4751,7 +4751,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Category & Source */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                 <select
@@ -7086,7 +7086,7 @@ export default function KanbanBoard() {
                 {navMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-[999] bg-black/60 sm:bg-black/20 animate-fadeIn" onClick={() => setNavMenuOpen(false)} />
-                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                    <div className="fixed sm:absolute top-0 sm:top-full left-0 h-full sm:h-auto w-72 sm:w-56 sm:mt-2 sm:rounded-xl shadow-2xl border-r sm:border border-gray-200 dark:border-gray-700 py-2 z-[1000] animate-slideInFromLeft sm:animate-fadeInScale bg-white dark:bg-gray-800" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff', WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' }}>
                       {/* Mobile header */}
                       <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
@@ -8175,7 +8175,7 @@ export default function KanbanBoard() {
               Paste your meeting notes below. We'll extract action items and create tasks automatically.
             </p>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Title</label>
                 <input

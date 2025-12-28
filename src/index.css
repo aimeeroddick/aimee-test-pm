@@ -228,6 +228,27 @@
   animation: slideInFromLeft 0.25s ease-out forwards;
 }
 
+/* Force solid background for mobile menu */
+@media (max-width: 639px) {
+  .animate-slideInFromLeft {
+    background-color: #ffffff !important;
+  }
+  
+  .dark .animate-slideInFromLeft {
+    background-color: #1f2937 !important;
+  }
+}
+
+/* Hide hover popups on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 0 !important;
+  }
+  .group:hover .group-hover\:visible {
+    visibility: hidden !important;
+  }
+}
+
 /* Improved focus states */
 .focus-ring:focus {
   outline: none;
