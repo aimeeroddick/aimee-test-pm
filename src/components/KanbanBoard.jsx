@@ -3719,8 +3719,9 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
   
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
+    const headers = ['ID', 'Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
     const rows = sortedTasks.map(t => [
+      t.id || '',
       t.title || '',
       projects.find(p => p.id === t.project_id)?.name || '',
       t.status || '',
@@ -3746,6 +3747,187 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     link.href = URL.createObjectURL(blob)
     link.download = `trackli-tasks-${new Date().toISOString().split('T')[0]}.csv`
     link.click()
+  }
+  
+  // Download blank CSV template
+  const downloadTemplate = () => {
+    const headers = ['ID', 'Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description']
+    // Add example row with * for new task
+    const exampleRow = ['*', 'Example Task', projects[0]?.name || 'Project Name', 'todo', 'No', '', '', '', '', '', '', '', '30m', 'Task description here']
+    
+    const csvContent = [headers, exampleRow].map(row => 
+      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+    ).join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'trackli-template.csv'
+    link.click()
+  }
+  
+  // Import CSV
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
+  const fileInputRef = useRef(null)
+  
+  const handleImportCSV = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setImporting(true)
+    setImportResult(null)
+    
+    try {
+      const text = await file.text()
+      const lines = text.split('\n').filter(line => line.trim())
+      
+      if (lines.length < 2) {
+        setImportResult({ error: 'CSV must have a header row and at least one data row' })
+        setImporting(false)
+        return
+      }
+      
+      // Parse header
+      const parseCSVLine = (line) => {
+        const result = []
+        let current = ''
+        let inQuotes = false
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i]
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"'
+              i++
+            } else {
+              inQuotes = !inQuotes
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim())
+            current = ''
+          } else {
+            current += char
+          }
+        }
+        result.push(current.trim())
+        return result
+      }
+      
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim())
+      const idIndex = headers.indexOf('id')
+      const titleIndex = headers.indexOf('title')
+      const projectIndex = headers.indexOf('project')
+      const statusIndex = headers.indexOf('status')
+      const criticalIndex = headers.indexOf('critical')
+      const dueDateIndex = headers.indexOf('due date')
+      const startDateIndex = headers.indexOf('start date')
+      const assigneeIndex = headers.indexOf('assignee')
+      const customerIndex = headers.indexOf('customer')
+      const categoryIndex = headers.indexOf('category')
+      const effortIndex = headers.indexOf('effort')
+      const sourceIndex = headers.indexOf('source')
+      const timeEstimateIndex = headers.indexOf('time estimate')
+      const descriptionIndex = headers.indexOf('description')
+      
+      if (titleIndex === -1) {
+        setImportResult({ error: 'CSV must have a Title column' })
+        setImporting(false)
+        return
+      }
+      
+      let created = 0
+      let updated = 0
+      let errors = []
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i])
+        if (values.length === 0 || values.every(v => !v)) continue // Skip empty rows
+        
+        const id = idIndex >= 0 ? values[idIndex] : ''
+        const title = titleIndex >= 0 ? values[titleIndex] : ''
+        
+        if (!title) {
+          errors.push(`Row ${i + 1}: Missing title`)
+          continue
+        }
+        
+        // Find project by name
+        const projectName = projectIndex >= 0 ? values[projectIndex] : ''
+        const project = projects.find(p => p.name.toLowerCase() === projectName.toLowerCase())
+        
+        // Find category by label
+        const categoryLabel = categoryIndex >= 0 ? values[categoryIndex] : ''
+        const category = CATEGORIES.find(c => c.label.toLowerCase() === categoryLabel.toLowerCase())
+        
+        // Find source by label
+        const sourceLabel = sourceIndex >= 0 ? values[sourceIndex] : ''
+        const source = SOURCES.find(s => s.label.toLowerCase() === sourceLabel.toLowerCase())
+        
+        // Parse status
+        const statusRaw = statusIndex >= 0 ? values[statusIndex]?.toLowerCase() : 'todo'
+        const statusMap = { 'backlog': 'backlog', 'to do': 'todo', 'todo': 'todo', 'in progress': 'in_progress', 'in_progress': 'in_progress', 'done': 'done' }
+        const status = statusMap[statusRaw] || 'todo'
+        
+        // Parse critical
+        const criticalRaw = criticalIndex >= 0 ? values[criticalIndex]?.toLowerCase() : ''
+        const critical = criticalRaw === 'yes' || criticalRaw === 'true' || criticalRaw === '1'
+        
+        // Parse time estimate (remove 'm' suffix if present)
+        const timeEstimateRaw = timeEstimateIndex >= 0 ? values[timeEstimateIndex] : ''
+        const timeEstimate = timeEstimateRaw ? parseInt(timeEstimateRaw.replace(/m$/i, '')) || null : null
+        
+        // Build task data
+        const taskData = {
+          title,
+          project_id: project?.id || null,
+          status,
+          critical,
+          due_date: dueDateIndex >= 0 && values[dueDateIndex] ? values[dueDateIndex] : null,
+          start_date: startDateIndex >= 0 && values[startDateIndex] ? values[startDateIndex] : null,
+          assignee: assigneeIndex >= 0 ? values[assigneeIndex] || null : null,
+          customer: customerIndex >= 0 ? values[customerIndex] || null : null,
+          category: category?.id || null,
+          energy_level: effortIndex >= 0 && values[effortIndex] ? values[effortIndex].toLowerCase() : null,
+          source: source?.id || null,
+          time_estimate: timeEstimate,
+          description: descriptionIndex >= 0 ? values[descriptionIndex] || null : null,
+        }
+        
+        try {
+          if (!id || id === '*') {
+            // Create new task
+            const { error } = await supabase.from('tasks').insert({ ...taskData, user_id: user.id })
+            if (error) throw error
+            created++
+          } else {
+            // Update existing task
+            const { error } = await supabase.from('tasks').update(taskData).eq('id', id).eq('user_id', user.id)
+            if (error) throw error
+            updated++
+          }
+        } catch (err) {
+          errors.push(`Row ${i + 1}: ${err.message}`)
+        }
+      }
+      
+      setImportResult({ created, updated, errors })
+      
+      // Refresh tasks
+      if (created > 0 || updated > 0) {
+        const { data } = await supabase.from('tasks').select('*, dependencies:task_dependencies!task_dependencies_task_id_fkey(depends_on_id)').eq('user_id', user.id).order('created_at', { ascending: false })
+        if (data) {
+          // This will trigger a re-render - we need to call the parent's refresh
+          window.location.reload() // Simple approach - reload to refresh all data
+        }
+      }
+    } catch (err) {
+      setImportResult({ error: `Failed to parse CSV: ${err.message}` })
+    }
+    
+    setImporting(false)
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
   
   // Column definitions
@@ -3847,8 +4029,79 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
             </svg>
             Export CSV
           </button>
+          <button
+            onClick={downloadTemplate}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+            title="Download blank CSV template with example row"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Template
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900/70 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            title="Import CSV to create or update tasks"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            {importing ? 'Importing...' : 'Import CSV'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImportCSV}
+            className="hidden"
+          />
         </div>
       </div>
+      
+      {/* Import Result Modal */}
+      {importResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setImportResult(null)} />
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+              {importResult.error ? 'Import Error' : 'Import Complete'}
+            </h3>
+            {importResult.error ? (
+              <p className="text-red-600 dark:text-red-400">{importResult.error}</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-green-600">{importResult.created}</span> tasks created
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-blue-600">{importResult.updated}</span> tasks updated
+                </p>
+                {importResult.errors?.length > 0 && (
+                  <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Errors:</p>
+                    <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+                      {importResult.errors.slice(0, 5).map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                      {importResult.errors.length > 5 && (
+                        <li>...and {importResult.errors.length - 5} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={() => setImportResult(null)}
+              className="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Table */}
       <div className="flex-1 overflow-auto">
