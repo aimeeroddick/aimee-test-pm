@@ -2489,9 +2489,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     return (
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Main Calendar */}
-        <div className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="flex-1 min-w-0 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Fixed header */}
           <div className="grid grid-cols-[60px_1fr] divide-x divide-gray-200 dark:divide-gray-700 border-b border-gray-200 dark:border-gray-700">
             <div className="h-12 bg-gray-50 dark:bg-gray-800" />
@@ -2597,7 +2597,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         </div>
         
         {/* Schedulable Tasks Sidebar */}
-        <div className="w-72 shrink-0">
+        <div className="w-full lg:w-72 lg:shrink-0 order-first lg:order-last">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
               <span>📅</span> Schedule Tasks
