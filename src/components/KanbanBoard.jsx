@@ -2597,7 +2597,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         </div>
         
         {/* Schedulable Tasks Sidebar */}
-        <div className="w-full lg:w-72 lg:shrink-0 order-first lg:order-last">
+        <div className="w-full lg:w-72 lg:shrink-0">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
               <span>📅</span> Schedule Tasks
