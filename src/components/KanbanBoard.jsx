@@ -2378,13 +2378,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">All caught up! 🎉</p>
               ) : (
                 <>
+                  <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
+                  <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
+                  <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
+                  <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
                   <Section title="Overdue" icon="🔴" tasks={schedulable.overdue} highlight="red" />
                   <Section title="Due Today" icon="🟠" tasks={schedulable.dueToday} highlight="orange" />
                   <Section title="Due Soon" icon="🟡" tasks={schedulable.dueSoon} highlight="yellow" />
-                  <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
-                  <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
-                  <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
-                  <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
                   <Section title="Quick Wins" icon="⚡" tasks={schedulable.quickWins} highlight="green" />
                 </>
               )}
