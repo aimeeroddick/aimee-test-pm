@@ -218,9 +218,11 @@
 @keyframes slideInFromLeft {
   from {
     transform: translateX(-100%);
+    background-color: inherit;
   }
   to {
     transform: translateX(0);
+    background-color: inherit;
   }
 }
 
@@ -230,6 +232,19 @@
 
 /* Force solid background for mobile menu */
 @media (max-width: 639px) {
+  .animate-slideInFromLeft {
+    background-color: #ffffff !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  
+  .dark .animate-slideInFromLeft {
+    background-color: #1f2937 !important;
+  }
+}
+
+/* iOS Safari fix for fixed positioning */
+@supports (-webkit-touch-callout: none) {
   .animate-slideInFromLeft {
     background-color: #ffffff !important;
   }
