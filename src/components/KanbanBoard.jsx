@@ -4590,7 +4590,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 onPaste={handlePaste}
                 rows={3}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300' : ''}`}
                 placeholder="Add more context... (paste images here!)"
               />
               {pasteMessage && activeTab === 'details' && (
@@ -4644,7 +4644,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         setFormData({ ...formData, customer: e.target.value })
                       }
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.customer ? 'border-l-4 border-l-amber-300' : ''}`}
                   >
                     <option value="">No customer</option>
                     {selectedProject?.customers?.map((cust) => (
@@ -4677,7 +4677,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <select
                   value={formData.energy_level}
                   onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.energy_level ? 'border-l-4 border-l-amber-300' : ''}`}
                 >
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
                     <option key={key} value={key}>{val.icon} {val.label}</option>
@@ -4694,7 +4694,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300' : ''}`}
                 />
               </div>
               <div>
@@ -4703,7 +4703,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300' : ''}`}
                 />
               </div>
             </div>
@@ -4990,7 +4990,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     
                     setFormData({ ...formData, ...updates })
                   }}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.time_estimate ? 'border-l-4 border-l-amber-300' : ''}`}
                   placeholder="Minutes (e.g., 30)"
                 />
                 {formData.time_estimate && (
@@ -5011,7 +5011,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         setFormData({ ...formData, assignee: e.target.value })
                       }
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.assignee ? 'border-l-4 border-l-amber-300' : ''}`}
                   >
                     <option value="">Unassigned</option>
                     {selectedProject?.members?.map((member) => (
