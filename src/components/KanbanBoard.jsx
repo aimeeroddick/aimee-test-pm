@@ -2052,6 +2052,22 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     })
   }
   
+  // Mark task as done directly
+  const handleMarkDone = async (e, task) => {
+    e.stopPropagation()
+    if (!onUpdateTask) return
+    
+    await onUpdateTask(task.id, { status: 'done' })
+  }
+  
+  // Start task (move to in_progress)
+  const handleStartTask = async (e, task) => {
+    e.stopPropagation()
+    if (!onUpdateTask) return
+    
+    await onUpdateTask(task.id, { status: 'in_progress' })
+  }
+  
   // Get next status label for button
   const getNextStatusLabel = (status) => {
     switch (status) {
@@ -2621,14 +2637,25 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                                 {isOverlapping && <span title="Time conflict">⚠️ </span>}
                                 {task.critical && '🚩 '}{task.title}
                               </div>
-                              {/* Quick status button */}
+                              {/* Quick action buttons */}
+                              {/* Start button - only show if not started */}
+                              {(task.status === 'backlog' || task.status === 'todo') && (
+                                <button
+                                  onClick={(e) => handleStartTask(e, task)}
+                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Start task"
+                                >
+                                  ▶
+                                </button>
+                              )}
+                              {/* Done button - show if not done */}
                               {task.status !== 'done' && (
                                 <button
-                                  onClick={(e) => handleAdvanceStatus(e, task)}
-                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-black/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title={getNextStatusLabel(task.status)}
+                                  onClick={(e) => handleMarkDone(e, task)}
+                                  className="shrink-0 text-[8px] px-1 py-0.5 rounded bg-white/50 dark:bg-black/20 hover:bg-green-100 dark:hover:bg-green-900/40 text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Mark as done"
                                 >
-                                  {task.status === 'in_progress' ? '✓' : '▶'}
+                                  ✓
                                 </button>
                               )}
                               {/* Remove from calendar button */}
@@ -2779,13 +2806,24 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             >
                               <div className="flex items-center justify-between">
                                 <span className="truncate">{task.critical && '🚩'}{task.title}</span>
+                                {/* Start button - only show if not started */}
+                                {(task.status === 'backlog' || task.status === 'todo') && (
+                                  <button
+                                    onClick={(e) => handleStartTask(e, task)}
+                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-blue-500"
+                                    title="Start task"
+                                  >
+                                    ▶
+                                  </button>
+                                )}
+                                {/* Done button - show if not done */}
                                 {task.status !== 'done' && (
                                   <button
-                                    onClick={(e) => handleAdvanceStatus(e, task)}
-                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5"
-                                    title={getNextStatusLabel(task.status)}
+                                    onClick={(e) => handleMarkDone(e, task)}
+                                    className="shrink-0 opacity-0 group-hover:opacity-100 ml-0.5 hover:text-green-500"
+                                    title="Mark as done"
                                   >
-                                    {task.status === 'in_progress' ? '✓' : '▶'}
+                                    ✓
                                   </button>
                                 )}
                                 <button
