@@ -4286,14 +4286,16 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] ${
+      className={`task-card relative bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] hover:-translate-y-0.5 hover:shadow-md ${
+        isDone ? 'opacity-60' : ''
+      } ${
         isSelected ? 'ring-2 ring-indigo-500 border-indigo-300' :
         blocked ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300' :
         task.critical ? 'border-red-200 dark:border-red-800 hover:border-red-300' :
         readyToStart ? 'border-green-200 dark:border-green-800 hover:border-green-300' :
         'border-gray-100 dark:border-gray-700 hover:border-gray-200'
       }`}
-      style={{ borderLeftWidth: '3px', borderLeftColor: accentColor }}
+      style={{ borderLeftWidth: '2px', borderLeftColor: accentColor }}
     >
       {/* Hover Popup Bubble - Hidden on mobile */}
       {hasExtraInfo && (
@@ -4625,14 +4627,13 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           {tasks.length}
         </span>
       </div>
-      <div className="flex items-center gap-3 mb-4 ml-6 text-xs text-gray-400 dark:text-gray-500">
-        <span>{column.subtitle}</span>
-        {totalMinutes > 0 && <span>• {formatTimeEstimate(totalMinutes)}</span>}
-        {criticalCount > 0 && <span className="text-red-500">• {criticalCount} critical</span>}
-        {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">• {readyCount} ready</span>}
+      <div className="flex items-center gap-2 mb-3 ml-6 text-xs text-gray-400 dark:text-gray-500">
+        {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
+        {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
+        {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
       </div>
       
-      <div className="space-y-3 overflow-visible">
+      <div className="space-y-2 overflow-visible">
         {displayTasks.map((task) => (
           <TaskCard
             key={task.id}
