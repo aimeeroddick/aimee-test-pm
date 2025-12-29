@@ -4189,7 +4189,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
       </div>
       <div className="flex items-center gap-2 mb-3 ml-6 text-xs text-gray-400 dark:text-gray-500">
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
-        {criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
+        {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
       </div>
       
