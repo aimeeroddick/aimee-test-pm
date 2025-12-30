@@ -4736,62 +4736,35 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       )}
       
       {/* Card Content */}
-      <div className="flex items-start gap-2">
-        {/* Checkbox + Effort Column */}
-        <div className="flex flex-col items-center gap-1">
-          {/* Action Buttons */}
-          {bulkSelectMode ? (
-            <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
-              className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500'}`}>
-              {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-            </button>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {/* Start button - show if not in progress and not done */}
-              {!isInProgress && !isDone && onQuickComplete && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'in_progress') }}
-                  className="w-5 h-5 rounded flex items-center justify-center text-[10px] bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-colors"
-                  title="Start working"
-                >
-                  ▶
-                </button>
-              )}
-              {/* Done button */}
-              {onQuickComplete && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
-                  className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
-                    isDone 
-                      ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400'
-                  }`}
-                  title={isDone ? 'Reopen task' : 'Mark done'}
-                >
-                  ✓
-                </button>
-              )}
-            </div>
-          )}
-          {/* Effort Indicator */}
-          {energyStyle && (
-            <span className="text-[10px] font-bold" style={{ color: energyStyle.text }} title={energyStyle.label}>{energyStyle.icon}</span>
-          )}
-          {/* My Day Toggle */}
-          {onToggleMyDay && !isDone && (
+      <div className="flex flex-col">
+        {/* My Day indicator at top - small sun in corner */}
+        {onToggleMyDay && !isDone && (
+          <div className="absolute top-1 left-1 z-10">
             <button
               onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
-              className={`text-[10px] transition-opacity ${inMyDay ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${inMyDay ? 'bg-amber-100 dark:bg-amber-900/50' : 'opacity-0 group-hover:opacity-50 hover:!opacity-100'}`}
               title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
             >
-              ☀️
+              <span className="text-[10px]">☀️</span>
             </button>
-          )}
-          {/* My Day Indicator (when toggle not available) */}
-          {!onToggleMyDay && inMyDay && (
+          </div>
+        )}
+        {/* My Day indicator when toggle not available */}
+        {!onToggleMyDay && inMyDay && (
+          <div className="absolute top-1 left-1">
             <span className="text-[10px]" title="In My Day">☀️</span>
-          )}
-        </div>
+          </div>
+        )}
+        
+        {/* Bulk select checkbox */}
+        {bulkSelectMode && (
+          <div className="absolute top-1 left-1 z-10">
+            <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
+              className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800'}`}>
+              {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+            </button>
+          </div>
+        )}
         
         <div className="flex-1 min-w-0">
           {/* Title Row */}
@@ -4877,6 +4850,39 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       {/* Quick Actions - floating bubble in top-right corner on hover (desktop only) */}
       <div className="hidden md:flex absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 z-10">
         <div className="flex items-center gap-0.5 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+          {/* Start button - show if not in progress and not done */}
+          {!isInProgress && !isDone && onQuickComplete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'in_progress') }}
+              className="p-1.5 text-gray-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/30 rounded transition-colors"
+              title="Start working"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </button>
+          )}
+          
+          {/* Done button */}
+          {onQuickComplete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
+              className={`p-1.5 rounded transition-colors ${
+                isDone 
+                  ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30' 
+                  : 'text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
+              }`}
+              title={isDone ? 'Reopen task' : 'Mark done'}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          )}
+          
+          {/* Divider */}
+          <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5" />
+          
           {/* Edit button */}
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(task) }}
@@ -4916,6 +4922,20 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </button>
+          )}
+          
+          {/* Effort Level indicator */}
+          {energyStyle && (
+            <>
+              <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5" />
+              <span 
+                className="px-1.5 py-0.5 text-[9px] font-bold rounded"
+                style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
+                title={energyStyle.label}
+              >
+                {energyStyle.icon}
+              </span>
+            </>
           )}
         </div>
       </div>
