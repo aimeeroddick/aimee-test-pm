@@ -2511,6 +2511,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         </div>
       </div>
     )
+  }
     
     // Section component
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
