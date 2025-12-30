@@ -188,12 +188,19 @@ const getNextRecurrenceDate = (originalStartDate, recurrenceType) => {
 }
 
 // Generate multiple future occurrence dates for recurring tasks
-const generateFutureOccurrences = (startDate, recurrenceType, count) => {
+// Generate future occurrence dates - either by count or until end date
+const generateFutureOccurrences = (startDate, recurrenceType, count, endDate = null) => {
   if (!startDate || !recurrenceType) return []
   
   const occurrences = []
   let currentDate = new Date(startDate)
   currentDate.setHours(0, 0, 0, 0)
+  
+  let endDateTime = null
+  if (endDate) {
+    endDateTime = new Date(endDate)
+    endDateTime.setHours(23, 59, 59, 999)
+  }
   
   const addInterval = (date) => {
     switch (recurrenceType) {
@@ -215,9 +222,20 @@ const generateFutureOccurrences = (startDate, recurrenceType, count) => {
     return date
   }
   
-  for (let i = 0; i < count; i++) {
+  const maxIterations = endDate ? 365 : count // Safety limit for end date mode
+  let iterations = 0
+  
+  while (iterations < maxIterations) {
     addInterval(currentDate)
+    
+    // If using end date, check if we've passed it
+    if (endDateTime && currentDate > endDateTime) break
+    
     occurrences.push(currentDate.toISOString().split('T')[0])
+    iterations++
+    
+    // If using count, stop when we reach it
+    if (!endDate && iterations >= count) break
   }
   
   return occurrences
@@ -4991,6 +5009,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     customer: '',
     notes: '',
     recurrence_type: null,
+    recurrence_count: 8,
+    recurrence_end_date: '',
   })
   const [selectedDependencies, setSelectedDependencies] = useState([])
   const [attachments, setAttachments] = useState([])
@@ -5067,6 +5087,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         customer: isCustomCustomer ? '' : (task.customer || ''),
         notes: task.notes || '',
         recurrence_type: task.recurrence_type || null,
+        recurrence_count: task.recurrence_count || 8,
+        recurrence_end_date: task.recurrence_end_date || '',
       })
       setAttachments(task.attachments || [])
       setSelectedDependencies(task.dependencies?.map(d => d.depends_on_id) || [])
@@ -5097,6 +5119,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         customer: '',
         notes: '',
         recurrence_type: null,
+        recurrence_count: 8,
+        recurrence_end_date: '',
       })
       setAttachments([])
       setSelectedDependencies([])
@@ -5470,26 +5494,63 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             
             {/* Recurrence options - shown when toggle is on */}
             {formData.recurrence_type && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Repeat</label>
-                <select
-                  value={formData.recurrence_type || ''}
-                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
-                >
-                  {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
-                    <option key={type.id} value={type.id}>{type.label}</option>
-                  ))}
-                </select>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Repeat</label>
+                  <select
+                    value={formData.recurrence_type || ''}
+                    onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
+                      <option key={type.id} value={type.id}>{type.label}</option>
+                    ))}
+                  </select>
+                </div>
                 
                 {!formData.start_date ? (
                   <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <span>⚠️</span> Set a Start Date above for recurrence to work
                   </p>
                 ) : (
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    📅 Will create {getOccurrenceCount(formData.recurrence_type)} future occurrences
-                  </p>
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Occurrences</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="52"
+                          value={formData.recurrence_count}
+                          onChange={(e) => setFormData({ ...formData, recurrence_count: parseInt(e.target.value) || 1, recurrence_end_date: '' })}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Or until date</label>
+                        <input
+                          type="text"
+                          value={formData.recurrence_end_date}
+                          onChange={(e) => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                          onBlur={(e) => {
+                            const val = e.target.value.trim()
+                            if (!val) return
+                            const parsed = parseNaturalLanguageDate(val)
+                            if (parsed.date) {
+                              setFormData({ ...formData, recurrence_end_date: parsed.date, recurrence_count: 0 })
+                            }
+                          }}
+                          placeholder="e.g. M+6"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      📅 {formData.recurrence_end_date 
+                        ? `Will create occurrences until ${formData.recurrence_end_date}` 
+                        : `Will create ${formData.recurrence_count} future occurrence${formData.recurrence_count !== 1 ? 's' : ''}`}
+                    </p>
+                  </>
                 )}
               </div>
             )}
@@ -7485,6 +7546,8 @@ export default function KanbanBoard() {
             customer: taskData.customer || null,
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
+            recurrence_count: taskData.recurrence_count || 8,
+            recurrence_end_date: taskData.recurrence_end_date || null,
             subtasks: taskData.subtasks || [],
             comments: taskData.comments || [],
           })
@@ -7533,6 +7596,8 @@ export default function KanbanBoard() {
             customer: taskData.customer || null,
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
+            recurrence_count: taskData.recurrence_count || 8,
+            recurrence_end_date: taskData.recurrence_end_date || null,
             subtasks: taskData.subtasks || [],
             comments: taskData.comments || [],
           })
@@ -7550,8 +7615,10 @@ export default function KanbanBoard() {
         
         // Create future occurrences for recurring tasks
         if (taskData.recurrence_type && taskData.start_date) {
-          const occurrenceCount = getOccurrenceCount(taskData.recurrence_type)
-          const futureStartDates = generateFutureOccurrences(taskData.start_date, taskData.recurrence_type, occurrenceCount)
+          // Use user's settings: either count or end date
+          const futureStartDates = taskData.recurrence_end_date
+            ? generateFutureOccurrences(taskData.start_date, taskData.recurrence_type, 0, taskData.recurrence_end_date)
+            : generateFutureOccurrences(taskData.start_date, taskData.recurrence_type, taskData.recurrence_count || 8)
           
           // Calculate due date offset if task has both start and due dates
           let dueDateOffset = null
