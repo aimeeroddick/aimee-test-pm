@@ -1751,8 +1751,12 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               <p>Start typing to search across all tasks</p>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">
-              <p>No tasks found matching "{searchQuery}"</p>
+            <div className="p-8 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🔍</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 font-medium">No results found</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try a different search term</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -3783,13 +3787,12 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
             }`}
           >
             {myDayActive.length === 0 && myDayCompleted.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[200px] text-gray-400 dark:text-gray-500">
-                <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <p className="text-sm">Drag tasks here to plan your day</p>
-                <p className="text-xs mt-1">Tasks with start dates ≤ today appear automatically</p>
-              </div>
+              <EmptyState
+                icon="☀️"
+                title="Your day is wide open"
+                description="Drag tasks here from the recommendations, or add tasks with today's start date to build your focus list."
+                variant="default"
+              />
             ) : (
               <div className="p-4 space-y-3">
                 {myDayActive.map(task => (
@@ -3881,13 +3884,12 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
             />
             
             {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && inProgressTasks.length === 0 && todoTasks.length === 0 && backlogTasks.length === 0 && (
-              <div className="text-center py-12 text-gray-400 dark:text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm">No recommendations</p>
-                <p className="text-xs mt-1">All eligible tasks are in My Day!</p>
-              </div>
+              <EmptyState
+                icon="🎉"
+                title="You're all caught up!"
+                description="No tasks need your attention right now. Enjoy the moment or create something new."
+                variant="celebrate"
+              />
             )}
           </div>
         </div>
@@ -4460,8 +4462,14 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {sortedTasks.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
-                  No tasks found
+                <td colSpan={columns.length} className="px-4 py-8">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mb-4">
+                      <span className="text-2xl">🔍</span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium">No tasks found</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your filters or search terms</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -4918,6 +4926,16 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
       </div>
       
       <div className="space-y-2 overflow-visible">
+        {displayTasks.length === 0 && !isDragOver && (
+          <div className="py-8 text-center">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-2 opacity-60">
+              <span className="text-lg">{column.id === 'done' ? '✅' : column.id === 'in_progress' ? '💭' : column.id === 'todo' ? '📋' : '📦'}</span>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              {column.id === 'done' ? 'Completed tasks appear here' : column.id === 'in_progress' ? 'Tasks you\'re working on' : column.id === 'todo' ? 'Ready to start' : 'Future tasks'}
+            </p>
+          </div>
+        )}
         {displayTasks.map((task) => (
           <TaskCard
             key={task.id}
@@ -9349,12 +9367,12 @@ export default function KanbanBoard() {
                     )
                   })}
                   {projects.filter(p => !p.archived).length === 0 && (
-                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                      <p>No active projects yet</p>
-                      <p className="text-sm mt-1">Create your first project to get started</p>
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">📁</span>
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 font-medium">No active projects yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Create your first project to organize your tasks</p>
                     </div>
                   )}
                 </div>
