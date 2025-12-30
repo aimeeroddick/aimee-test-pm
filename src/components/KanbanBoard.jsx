@@ -4821,6 +4821,65 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         </div>
       </div>
       
+      {/* Quick Actions Bar - appears on hover (desktop only) */}
+      <div className="hidden md:block absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+        <div className="mx-2 mb-2 p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 flex items-center gap-1">
+          {/* Edit button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(task) }}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded transition-colors"
+            title="Edit task"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit
+          </button>
+          
+          {/* Toggle Critical */}
+          {onToggleCritical && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleCritical(task.id, !task.critical) }}
+              className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                task.critical 
+                  ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
+              }`}
+              title={task.critical ? 'Remove critical flag' : 'Mark as critical'}
+            >
+              🚩 {task.critical ? 'Critical' : 'Flag'}
+            </button>
+          )}
+          
+          {/* Quick Due Date - only show if no due date set */}
+          {onSetDueDate && !task.due_date && (
+            <button
+              onClick={(e) => { 
+                e.stopPropagation()
+                const tomorrow = new Date()
+                tomorrow.setDate(tomorrow.getDate() + 1)
+                onSetDueDate(task.id, tomorrow.toISOString().split('T')[0])
+              }}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded transition-colors"
+              title="Set due tomorrow"
+            >
+              📅 Tomorrow
+            </button>
+          )}
+          
+          {/* Add to My Day - only show if not already in My Day and not done */}
+          {onToggleMyDay && !inMyDay && !isDone && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, true) }}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded transition-colors"
+              title="Add to My Day"
+            >
+              ☀️ My Day
+            </button>
+          )}
+        </div>
+      </div>
+      
       {/* Mobile Status Picker */}
       {onStatusChange && (
         <div className="sm:hidden mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
@@ -4924,7 +4983,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle, onToggleCritical }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
@@ -5006,6 +5065,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onToggleMyDay={onToggleMyDay}
             isDragging={draggedTask?.id === task.id}
             onUpdateTitle={onUpdateTitle}
+            onToggleCritical={onToggleCritical}
           />
         ))}
         
@@ -8166,6 +8226,23 @@ export default function KanbanBoard() {
     }
   }
   
+  // Toggle task critical flag (for quick actions)
+  const handleToggleCritical = async (taskId, critical) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ critical })
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, critical } : t))
+    } catch (err) {
+      console.error('Error toggling critical:', err)
+      setError(err.message)
+    }
+  }
+  
   // Calendar task update (for drag-drop scheduling)
   const handleCalendarTaskUpdate = async (taskId, updates) => {
     try {
@@ -9733,6 +9810,7 @@ export default function KanbanBoard() {
                     isMobileFullWidth={true}
                     draggedTask={draggedTask}
                     onUpdateTitle={handleUpdateTaskTitle}
+                    onToggleCritical={handleToggleCritical}
                   />
                 ) : (
                   COLUMNS.map((column) => (
@@ -9772,6 +9850,7 @@ export default function KanbanBoard() {
                       }}
                       draggedTask={draggedTask}
                       onUpdateTitle={handleUpdateTaskTitle}
+                      onToggleCritical={handleToggleCritical}
                     />
                   ))
                 )}
