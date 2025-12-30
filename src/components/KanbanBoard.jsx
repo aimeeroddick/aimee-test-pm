@@ -2522,6 +2522,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     // Reusable task card component for sidebar with hold-to-drag
     const TaskCard = ({ task, highlight }) => {
       const holdTimerRef = useRef(null)
+      const isHoldingRef = useRef(false)
       const [isHolding, setIsHolding] = useState(false)
       const [isDragging, setIsDragging] = useState(false)
       const didDragRef = useRef(false)
@@ -2529,24 +2530,31 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       const handleMouseDown = (e) => {
         if (e.target.closest('button')) return
         didDragRef.current = false
-        holdTimerRef.current = setTimeout(() => setIsHolding(true), 200)
+        holdTimerRef.current = setTimeout(() => {
+          isHoldingRef.current = true
+          setIsHolding(true)
+        }, 200)
       }
       
       const handleMouseUp = () => {
         if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
         setIsDragging(false)
-        setTimeout(() => { setIsHolding(false); didDragRef.current = false }, 100)
+        setTimeout(() => {
+          isHoldingRef.current = false
+          setIsHolding(false)
+          didDragRef.current = false
+        }, 100)
       }
       
       const handleCardDragStart = (e) => {
-        if (!isHolding) { e.preventDefault(); return }
+        if (!isHoldingRef.current) { e.preventDefault(); return }
         didDragRef.current = true
         setIsDragging(true)
         handleDragStart(e, task)
       }
       
       const handleClick = () => {
-        if (!didDragRef.current && !isHolding) onEditTask(task)
+        if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
       }
       
       return (
@@ -3398,6 +3406,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
     const holdTimerRef = useRef(null)
+    const isHoldingRef = useRef(false)
     const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
@@ -3409,6 +3418,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       
       didDragRef.current = false
       holdTimerRef.current = setTimeout(() => {
+        isHoldingRef.current = true
         setIsHolding(true)
       }, 200)
     }
@@ -3421,6 +3431,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       setIsDragging(false)
       // Small delay before resetting to allow drag to complete
       setTimeout(() => {
+        isHoldingRef.current = false
         setIsHolding(false)
         didDragRef.current = false
       }, 100)
@@ -3434,13 +3445,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     }
     
     const handleClick = () => {
-      if (!didDragRef.current && !isHolding) {
+      if (!didDragRef.current && !isHoldingRef.current) {
         onEditTask(task)
       }
     }
     
     const handleDragStart = (e) => {
-      if (!isHolding) {
+      if (!isHoldingRef.current) {
         e.preventDefault()
         return
       }
