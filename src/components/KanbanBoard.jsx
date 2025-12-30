@@ -5131,7 +5131,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         </div>
         
         {activeTab === 'details' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
@@ -5152,7 +5152,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 onPaste={handlePaste}
-                rows={3}
+                rows={2}
                 className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300' : ''}`}
                 placeholder="Add more context... (paste images here!)"
               />
@@ -5162,7 +5162,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Project & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
                 <select
@@ -5193,7 +5193,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Customer & Energy Level - side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
                 {!useCustomCustomer ? (
@@ -5250,7 +5250,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Start Date & Due Date side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Start Date
@@ -5306,7 +5306,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Start Time & End Time side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
                 <input
@@ -5368,11 +5368,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </div>
             
             {/* Critical & Recurring - compact toggles */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, critical: !formData.critical })}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   formData.critical
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 ring-2 ring-red-300 dark:ring-red-700'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -5384,7 +5384,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, recurrence_type: formData.recurrence_type ? null : 'weekly' })}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   formData.recurrence_type
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-300 dark:ring-blue-700'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
