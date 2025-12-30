@@ -5409,7 +5409,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 </select>
               </div>
             )}
-            </div>
           </div>
         )}
         
