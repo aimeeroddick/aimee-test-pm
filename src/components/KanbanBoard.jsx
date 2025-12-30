@@ -7704,6 +7704,10 @@ export default function KanbanBoard() {
       }
 
       await fetchData()
+      
+      // Show notification
+      const isNew = !projectData.id
+      showNotification(isNew ? "✓ Project created" : "✓ Project saved")
     } catch (err) {
       console.error('Error saving project:', err)
       setError(err.message)
@@ -8332,6 +8336,7 @@ export default function KanbanBoard() {
       if (error) throw error
       
       setTasks(tasks.map(t => t.id === taskId ? { ...t, critical } : t))
+      showNotification(critical ? "🚩 Marked as critical" : "✓ Critical flag removed")
     } catch (err) {
       console.error('Error toggling critical:', err)
       setError(err.message)
