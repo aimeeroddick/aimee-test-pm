@@ -503,7 +503,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
     { keys: ['⌘/Ctrl', 'D'], description: 'My Day view' },
     { keys: ['⌘/Ctrl', 'B'], description: 'Board view' },
     { keys: ['⌘/Ctrl', 'L'], description: 'Calendar view' },
-    { keys: ['⌘/Ctrl', 'T'], description: 'All Tasks view' },
+    { keys: ['⌘/Ctrl', 'A'], description: 'All Tasks view' },
     { keys: ['⌘/Ctrl', 'N'], description: 'Import notes' },
     { keys: ['Esc'], description: 'Close modal' },
     { keys: ['?'], description: 'Show this help' },
@@ -1427,7 +1427,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗃️</span>
                   All Tasks View
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘T</kbd>.</p>
+                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘A</kbd>.</p>
               </section>
               
               <section>
@@ -6900,8 +6900,8 @@ export default function KanbanBoard() {
         return
       }
       
-      // Cmd/Ctrl/Alt + T for All Tasks view
-      if (modifier && e.key === 't') {
+      // Cmd/Ctrl/Alt + A for All Tasks view
+      if (modifier && e.key === 'a') {
         e.preventDefault()
         setCurrentView('tasks')
         return
@@ -8686,7 +8686,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">🗃️</span>
                         <span className="font-medium">All Tasks</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘T</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘A</span>
                       </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
