@@ -5083,16 +5083,16 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto">
           {[
             { id: 'details', label: 'Details' },
-            { id: 'additional', label: 'Additional' },
+            { id: 'additional', label: 'More' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'dependencies', label: 'Dependencies' },
+            { id: 'dependencies', label: 'Deps' },
             { id: 'activity', label: 'Activity' },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all whitespace-nowrap min-w-fit ${
+              className={`py-2 px-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
@@ -5828,7 +5828,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <textarea
                   value={newCommentText}
                   onChange={(e) => setNewCommentText(e.target.value)}
@@ -5851,9 +5851,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     }
                   }}
                   disabled={!newCommentText.trim()}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium self-end"
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium sm:self-end"
                 >
-                  Add
+                  Add Comment
                 </button>
               </div>
             </div>
