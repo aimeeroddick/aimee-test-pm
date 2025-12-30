@@ -4737,25 +4737,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       
       {/* Card Content */}
       <div className="flex flex-col">
-        {/* My Day indicator at top - small sun in corner */}
-        {onToggleMyDay && !isDone && (
-          <div className="absolute top-1 left-1 z-10">
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
-              className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${inMyDay ? 'bg-amber-100 dark:bg-amber-900/50' : 'opacity-0 group-hover:opacity-50 hover:!opacity-100'}`}
-              title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
-            >
-              <span className="text-[10px]">☀️</span>
-            </button>
-          </div>
-        )}
-        {/* My Day indicator when toggle not available */}
-        {!onToggleMyDay && inMyDay && (
-          <div className="absolute top-1 left-1">
-            <span className="text-[10px]" title="In My Day">☀️</span>
-          </div>
-        )}
-        
         {/* Bulk select checkbox */}
         {bulkSelectMode && (
           <div className="absolute top-1 left-1 z-10">
@@ -4769,6 +4750,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         <div className="flex-1 min-w-0">
           {/* Title Row */}
           <div className="flex items-center gap-1">
+            {/* My Day sun at start of title */}
+            {inMyDay && !isDone && (
+              <span className="text-xs flex-shrink-0" title="In My Day">☀️</span>
+            )}
             {isOverdue && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-red-100 dark:bg-red-500/80 text-red-700 dark:text-white flex-shrink-0">OVERDUE</span>}
             {isDueToday && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-100 dark:bg-amber-500/80 text-amber-700 dark:text-white flex-shrink-0">TODAY</span>}
             {blocked && <span title="Blocked" className="text-xs flex-shrink-0">🔒</span>}
@@ -4818,6 +4803,15 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             {task.time_estimate && (
               <span className="flex items-center gap-0.5">
                 <span>⏱</span> {formatTimeEstimate(task.time_estimate)}
+              </span>
+            )}
+            {energyStyle && (
+              <span 
+                className="px-1.5 py-0.5 text-[9px] font-medium rounded-full"
+                style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
+                title={energyStyle.label}
+              >
+                {energyStyle.icon} {energyStyle.label}
               </span>
             )}
           </div>
@@ -4880,20 +4874,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </button>
           )}
           
-          {/* Divider */}
-          <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5" />
-          
-          {/* Edit button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(task) }}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded transition-colors"
-            title="Edit task"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-          
           {/* Toggle Critical */}
           {onToggleCritical && (
             <button
@@ -4922,20 +4902,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </button>
-          )}
-          
-          {/* Effort Level indicator */}
-          {energyStyle && (
-            <>
-              <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5" />
-              <span 
-                className="px-1.5 py-0.5 text-[9px] font-bold rounded"
-                style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
-                title={energyStyle.label}
-              >
-                {energyStyle.icon}
-              </span>
-            </>
           )}
         </div>
       </div>
