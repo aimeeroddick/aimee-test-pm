@@ -5184,9 +5184,10 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate, onShowConfirm }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate }) => {
   const fileInputRef = useRef(null)
   const [showSaveTemplateInput, setShowSaveTemplateInput] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [formData, setFormData] = useState({
     title: '',
@@ -6406,22 +6407,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         )}
         
         <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
-          {task && onShowConfirm && (
+          {task && (
             <button
               type="button"
-              onClick={() => {
-                onShowConfirm({
-                  title: 'Delete Task',
-                  message: `Delete "${task.title}"? This cannot be undone.`,
-                  confirmLabel: 'Delete',
-                  confirmStyle: 'danger',
-                  icon: '🗑️',
-                  onConfirm: () => {
-                    onDelete(task.id)
-                    onClose()
-                  }
-                })
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
               className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
             >
@@ -6500,6 +6489,41 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         attachments={attachments}
         onNavigate={setViewingAttachment}
       />
+      
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span className="text-xl">🗑️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delete Task</h3>
+            </div>
+            <p className="mb-6 text-gray-600 dark:text-gray-300">
+              Delete "{task?.title}"? This cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(task.id)
+                  setShowDeleteConfirm(false)
+                  onClose()
+                }}
+                className="px-4 py-2 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Modal>
   )
 }
@@ -9975,7 +9999,6 @@ export default function KanbanBoard() {
         templates={taskTemplates}
         onSaveTemplate={saveTaskTemplate}
         onDeleteTemplate={deleteTaskTemplate}
-        onShowConfirm={setConfirmDialog}
       />
       
       <ProjectModal
