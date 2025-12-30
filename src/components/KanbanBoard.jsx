@@ -1752,6 +1752,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
   const calendarScrollRef = useRef(null)
+  const isDraggingRef = useRef(false)
   
   // Generate consistent color for project based on ID
   const PROJECT_COLORS = [
@@ -2044,10 +2045,24 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   
   // Handle drag start
   const handleDragStart = (e, task) => {
-    console.log('Drag started:', task.title, task.id)
+    isDraggingRef.current = true
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', task.id)
+  }
+  
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedTask(null)
+    // Small delay to prevent click from firing after drag
+    setTimeout(() => { isDraggingRef.current = false }, 100)
+  }
+  
+  // Handle task click (only if not dragging)
+  const handleTaskClick = (task) => {
+    if (!isDraggingRef.current && !resizingTask) {
+      onEditTask(task)
+    }
   }
   
   // Quick status advancement: backlog → todo → in_progress → done
@@ -2312,8 +2327,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                   key={task.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
-                  onClick={(e) => { e.stopPropagation(); onEditTask(task) }}
-                  className={`text-xs px-2 py-1 rounded truncate cursor-pointer transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600 ${
+                  onDragEnd={handleDragEnd}
+                  onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                  className={`text-xs px-2 py-1 rounded truncate cursor-grab active:cursor-grabbing transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600 ${
                     task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                     task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                     isPast && !isToday ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
@@ -2489,7 +2505,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         } else {
           setSelectedTaskForScheduling(task)
         }
-      } else {
+      } else if (!isDraggingRef.current) {
         onEditTask(task)
       }
     }
@@ -2500,6 +2516,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, task)}
+        onDragEnd={handleDragEnd}
         onClick={(e) => handleTaskTap(e, task)}
         className={`p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all hover:shadow-md select-none ${
           isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 dark:border-indigo-700' :
@@ -2646,8 +2663,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             key={task.id}
                             draggable={!resizingTask}
                             onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
-                            onClick={() => !resizingTask && onEditTask(task)}
-                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
+                            onDragEnd={handleDragEnd}
+                            onClick={() => handleTaskClick(task)}
+                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                               `${projectColor.bg} ${projectColor.text}`
@@ -2820,8 +2838,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               key={task.id}
                               draggable
                               onDragStart={(e) => handleDragStart(e, task)}
-                              onClick={() => onEditTask(task)}
-                              className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-pointer shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
+                              onDragEnd={handleDragEnd}
+                              onClick={() => handleTaskClick(task)}
+                              className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                                 task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                                 task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                                 `${projectColor.bg} ${projectColor.text}`
@@ -3091,6 +3110,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
   const prevActiveCountRef = useRef(null)
+  const isDraggingRef = useRef(false)
   
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -3331,10 +3351,19 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       <div
         draggable={!isCompleted}
         onDragStart={(e) => {
+          isDraggingRef.current = true
+          e.dataTransfer.effectAllowed = 'move'
           e.dataTransfer.setData('taskId', task.id)
           onDragStart && onDragStart(e, task)
         }}
-        onClick={() => onEditTask(task)}
+        onDragEnd={() => {
+          setTimeout(() => { isDraggingRef.current = false }, 100)
+        }}
+        onClick={() => {
+          if (!isDraggingRef.current) {
+            onEditTask(task)
+          }
+        }}
         className={`group relative p-4 rounded-xl cursor-grab active:cursor-grabbing select-none transition-all duration-200 hover:shadow-md ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 

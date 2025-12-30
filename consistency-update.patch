@@ -1,0 +1,127 @@
+--- a/src/components/KanbanBoard.jsx
++++ b/src/components/KanbanBoard.jsx
+@@ -51,6 +51,13 @@
+   { id: 'done', title: 'Done', subtitle: 'Completed', color: COLUMN_COLORS.done },
+ ]
+ 
++// Get display title for a column (uses custom name if set)
++const getColumnTitle = (columnId, customColumnNames = {}) => {
++  const column = COLUMNS.find(c => c.id === columnId)
++  if (!column) return columnId
++  return customColumnNames[columnId] || column.title
++}
++
+ const DONE_DISPLAY_LIMIT = 5
+ const BACKLOG_DISPLAY_LIMIT = 10
+ 
+@@ -1533,7 +1540,7 @@
+ }
+ 
+ // Search Modal Component
+-const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
++const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks, customColumnNames }) => {
+   const [searchQuery, setSearchQuery] = useState('')
+   const inputRef = useRef(null)
+   
+@@ -1666,7 +1673,7 @@
+                         )}
+                       </div>
+                       <span className="text-xs px-2 py-1 bg-gray-100 rounded-lg text-gray-500 shrink-0">
+-                        {COLUMNS.find(c => c.id === task.status)?.title}
++                        {getColumnTitle(task.status, customColumnNames)}
+                       </span>
+                     </div>
+                   </button>
+@@ -1721,7 +1728,7 @@
+ }
+ 
+ // Calendar View Component - Daily/Weekly/Monthly
+-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode }) => {
++const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode, customColumnNames }) => {
+   const [currentDate, setCurrentDate] = useState(new Date())
+   const [selectedDate, setSelectedDate] = useState(null)
+   const [draggedTask, setDraggedTask] = useState(null)
+@@ -2886,7 +2893,7 @@
+                       <span className={`text-xs px-2 py-1 rounded-lg ${
+                         task.status === 'done' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                       }`}>
+-                        {COLUMNS.find(c => c.id === task.status)?.title}
++                        {getColumnTitle(task.status, customColumnNames)}
+                       </span>
+                     </div>
+                   </div>
+@@ -3471,7 +3478,7 @@
+ }
+ 
+ // Task Table View Component
+-const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
++const TaskTableView = ({ tasks, projects, onEditTask, allTasks, customColumnNames }) => {
+   const [sortField, setSortField] = useState('created_at')
+   const [sortDirection, setSortDirection] = useState('desc')
+   const [columnFilters, setColumnFilters] = useState({})
+@@ -3603,7 +3610,7 @@
+       case 'project':
+         return projects.find(p => p.id === task.project_id)?.name || '-'
+       case 'status':
+-        return { backlog: 'Backlog', todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[task.status] || task.status
++        return getColumnTitle(task.status, customColumnNames)
+       case 'critical':
+         return task.critical ? '🚨 Yes' : '-'
+       case 'due_date':
+@@ -4324,7 +4331,7 @@
+ }
+ 
+ // Task Modal Component
+-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading }) => {
++const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, customColumnNames }) => {
+   const fileInputRef = useRef(null)
+   const [formData, setFormData] = useState({
+     title: '',
+@@ -4607,7 +4614,7 @@
+                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                 >
+                   {COLUMNS.map((col) => (
+-                    <option key={col.id} value={col.id}>{col.title}</option>
++                    <option key={col.id} value={col.id}>{getColumnTitle(col.id, customColumnNames)}</option>
+                   ))}
+                 </select>
+               </div>
+@@ -5242,7 +5249,7 @@
+                         <div className="flex-1 min-w-0">
+                           <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{depTask.title}</p>
+                           <p className="text-xs text-gray-500 dark:text-gray-400">
+-                            {COLUMNS.find(c => c.id === depTask.status)?.title}
++                            {getColumnTitle(depTask.status, customColumnNames)}
+                             {depTask.assignee && ` • ${depTask.assignee}`}
+                           </p>
+                         </div>
+@@ -8051,6 +8058,7 @@
+                 onUpdateTask={handleCalendarTaskUpdate}
+                 viewMode={calendarViewMode}
+                 setViewMode={setCalendarViewMode}
++                customColumnNames={customColumnNames}
+               />
+             </div>
+           )}
+@@ -8062,6 +8070,7 @@
+                 projects={projects}
+                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+                 allTasks={tasks}
++                customColumnNames={customColumnNames}
+               />
+             </div>
+           )}
+@@ -8416,6 +8425,7 @@
+         onSave={handleSaveTask}
+         onDelete={handleDeleteTask}
+         loading={saving}
++        customColumnNames={customColumnNames}
+       />
+       
+       <ProjectModal
+@@ -8435,6 +8445,7 @@
+         projects={projects}
+         onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+         allTasks={tasks}
++        customColumnNames={customColumnNames}
+       />

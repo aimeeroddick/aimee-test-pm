@@ -1,0 +1,2 @@
+Please run: git checkout HEAD -- src/components/KanbanBoard.jsx
+Then copy the file from /mnt/user-data/outputs/KanbanBoard.jsx
