@@ -664,7 +664,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
 }
 
 // Admin Feedback Panel Component
-const ADMIN_EMAIL = 'aimee@spicymango.co.uk'
+const ADMIN_EMAIL = 'roddickaimee@gmail.com'
 
 const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
   const [feedback, setFeedback] = useState([])
@@ -9412,7 +9412,7 @@ export default function KanbanBoard() {
               </button>
               
               {/* Admin Feedback Button - only visible to admin */}
-              {user?.email === 'aimee@spicymango.co.uk' && (
+              {user?.email === ADMIN_EMAIL && (
                 <button
                   onClick={() => setAdminPanelOpen(true)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
