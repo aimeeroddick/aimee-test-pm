@@ -2687,10 +2687,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           onDragStart={handleCardDragStart}
           onDragEnd={handleMouseUp}
           onClick={handleClick}
-          className={`p-2.5 rounded-lg border transition-all select-none ${
+          className={`p-2.5 rounded-lg border transition-all duration-200 select-none ${
             isDragging ? 'opacity-40 scale-[0.98]' : 
             isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 
-            'cursor-pointer hover:shadow-md'
+            'cursor-pointer hover:shadow-md hover:-translate-y-0.5'
           } ${
             highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
             highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
@@ -3592,7 +3592,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         onDragStart={handleDragStart}
         onDragEnd={handleMouseUp}
         onClick={handleClick}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 ${
           isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
         } ${
           isCompleted 
@@ -4557,7 +4557,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] hover:-translate-y-0.5 hover:shadow-md ${
+      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 ${
         isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
         isOverdue ? 'bg-red-50 dark:bg-red-900/40' :
         isDueToday ? 'bg-amber-50 dark:bg-amber-900/40' :
