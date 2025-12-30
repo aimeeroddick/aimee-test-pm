@@ -7093,6 +7093,12 @@ export default function KanbanBoard() {
     setFilterValue('')
   }
 
+  // Tasks from non-archived projects (used for My Day, Calendar, etc.)
+  const activeTasks = tasks.filter(t => {
+    const taskProject = projects.find(p => p.id === t.project_id)
+    return !taskProject?.archived
+  })
+
   const readyToStartCount = tasks.filter((t) => {
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
     return isReadyToStart(t)
@@ -8043,11 +8049,11 @@ export default function KanbanBoard() {
           {currentView === 'myday' && (
             <div key="myday" className="animate-fadeIn">
               <MyDayDashboard
-                tasks={tasks}
-                projects={projects}
+                tasks={activeTasks}
+                projects={projects.filter(p => !p.archived)}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 onDragStart={handleDragStart}
-                allTasks={tasks}
+                allTasks={activeTasks}
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
                 onStartFocus={(taskId) => {
@@ -8061,11 +8067,11 @@ export default function KanbanBoard() {
           {currentView === 'calendar' && (
             <div key="calendar" className="animate-fadeIn">
               <CalendarView
-                tasks={tasks}
-                projects={projects}
+                tasks={activeTasks}
+                projects={projects.filter(p => !p.archived)}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 onCreateTask={(prefill) => { setEditingTask(prefill); setTaskModalOpen(true) }}
-                allTasks={tasks}
+                allTasks={activeTasks}
                 onUpdateTask={handleCalendarTaskUpdate}
                 viewMode={calendarViewMode}
                 setViewMode={setCalendarViewMode}
