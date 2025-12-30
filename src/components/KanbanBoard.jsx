@@ -494,17 +494,21 @@ const SkeletonColumn = () => (
 const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null
   
+  // Detect if user is on Mac
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const modifier = isMac ? '⌘⌃' : 'Ctrl+Alt'
+  
   const shortcuts = [
     { keys: ['Q'], description: 'Quick add task' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'T'], description: 'New task (full form)' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'P'], description: 'New project' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'S'], description: 'Search tasks' },
+    { keys: [modifier, 'T'], description: 'New task (full form)' },
+    { keys: [modifier, 'P'], description: 'New project' },
+    { keys: [modifier, 'S'], description: 'Search tasks' },
     { keys: ['/'], description: 'Quick search' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'D'], description: 'My Day view' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'B'], description: 'Board view' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'L'], description: 'Calendar view' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'A'], description: 'All Tasks view' },
-    { keys: ['⌘⌃ / Ctrl+Alt', 'N'], description: 'Import notes' },
+    { keys: [modifier, 'D'], description: 'My Day view' },
+    { keys: [modifier, 'B'], description: 'Board view' },
+    { keys: [modifier, 'L'], description: 'Calendar view' },
+    { keys: [modifier, 'A'], description: 'All Tasks view' },
+    { keys: [modifier, 'N'], description: 'Import notes' },
     { keys: ['Esc'], description: 'Close modal' },
     { keys: ['?'], description: 'Show this help' },
   ]
