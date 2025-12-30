@@ -461,6 +461,18 @@ const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
 
 // Confirm Modal Component - replaces browser confirm()
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel = 'Confirm', confirmStyle = 'danger', icon = '⚠️', loading = false }) => {
+  // Keyboard shortcuts: Enter to confirm, Escape to cancel
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'Enter' && !loading) onConfirm()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose, onConfirm, loading])
+  
   if (!isOpen) return null
   
   const confirmButtonStyles = {
@@ -633,6 +645,17 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
 
 // Modal Component
 const Modal = ({ isOpen, onClose, title, children, wide }) => {
+  // Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+  
   if (!isOpen) return null
   
   return (
@@ -5201,6 +5224,22 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [newCommentText, setNewCommentText] = useState('')
   const initializedRef = useRef(null) // Track which task we've initialized for
   const [viewingAttachment, setViewingAttachment] = useState(null)
+  
+  // Keyboard handler for delete confirmation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (showDeleteConfirm) {
+        if (e.key === 'Escape') setShowDeleteConfirm(false)
+        if (e.key === 'Enter') {
+          onDelete(task.id)
+          setShowDeleteConfirm(false)
+          onClose()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showDeleteConfirm, task, onDelete, onClose])
   
   // Apply a template to the form
   const applyTemplate = (template) => {
