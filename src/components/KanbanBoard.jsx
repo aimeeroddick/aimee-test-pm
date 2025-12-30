@@ -2489,7 +2489,32 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       !backlog.includes(t)
     )
     
-    return { overdue, dueToday, dueSoon, inProgress, myDay, todo, backlog, quickWins }
+    // Sort function to match board order (due date > created date)
+    const sortByBoardOrder = (arr) => arr.sort((a, b) => {
+      // Critical tasks first
+      if (a.critical && !b.critical) return -1
+      if (!a.critical && b.critical) return 1
+      // Then by due date (soonest first)
+      if (a.due_date && b.due_date) {
+        const diff = new Date(a.due_date) - new Date(b.due_date)
+        if (diff !== 0) return diff
+      }
+      if (a.due_date && !b.due_date) return -1
+      if (!a.due_date && b.due_date) return 1
+      // Then by created date (oldest first - first in, first out)
+      return new Date(a.created_at) - new Date(b.created_at)
+    })
+    
+    return { 
+      overdue: sortByBoardOrder(overdue), 
+      dueToday: sortByBoardOrder(dueToday), 
+      dueSoon: sortByBoardOrder(dueSoon), 
+      inProgress: sortByBoardOrder(inProgress), 
+      myDay: sortByBoardOrder(myDay), 
+      todo: sortByBoardOrder(todo), 
+      backlog: sortByBoardOrder(backlog), 
+      quickWins: sortByBoardOrder(quickWins) 
+    }
   }
   
   // Render Daily View
@@ -2499,58 +2524,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const schedulable = getSchedulableTasks()
     const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.todo.length + schedulable.backlog.length + schedulable.quickWins.length
     
-<<<<<<< HEAD
-    // Reusable task card component for sidebar
-    // Handle task tap for mobile scheduling
-    const handleTaskTap = (e, task) => {
-      // Check if on mobile (no drag support)
-      const isMobile = window.matchMedia('(max-width: 1024px)').matches
-      if (isMobile) {
-        e.stopPropagation()
-        // Toggle selection
-        if (selectedTaskForScheduling?.id === task.id) {
-          setSelectedTaskForScheduling(null)
-        } else {
-          setSelectedTaskForScheduling(task)
-        }
-      } else if (!isDraggingRef.current) {
-        onEditTask(task)
-      }
-    }
-    
-    const TaskCard = ({ task, highlight }) => {
-      const isSelected = selectedTaskForScheduling?.id === task.id
-      return (
-      <div
-        draggable
-        onDragStart={(e) => handleDragStart(e, task)}
-        onDragEnd={handleDragEnd}
-        onClick={(e) => handleTaskTap(e, task)}
-        className={`p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all hover:shadow-md select-none ${
-          isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 bg-indigo-100 dark:bg-indigo-900/50 border-indigo-300 dark:border-indigo-700' :
-          highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
-          highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
-          highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
-          highlight === 'pink' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
-          highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
-          highlight === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
-          highlight === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-          highlight === 'gray' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
-          'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-        }`}
-      >
-        <div className="flex items-start gap-2">
-          {/* Drag handle */}
-          <div className="text-gray-400 dark:text-gray-500 mt-0.5 shrink-0">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-            </svg>
-          </div>
-          <div 
-            className="w-2 h-2 rounded-full mt-1 shrink-0"
-            style={{ backgroundColor: COLUMN_COLORS[task.status] }}
-          />
-=======
     // Reusable task card component for sidebar with hold-to-drag
     const TaskCard = ({ task, highlight }) => {
       const holdTimerRef = useRef(null)
@@ -2611,7 +2584,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               className="w-2 h-2 rounded-full mt-1.5 shrink-0"
               style={{ backgroundColor: COLUMN_COLORS[task.status] }}
             />
->>>>>>> develop
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
               {task.critical && '🚩 '}{task.title}
@@ -2623,12 +2595,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-    )}
-=======
     )
   }
->>>>>>> develop
     
     // Section component
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
@@ -2718,16 +2686,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                       key={slotIndex}
                       className={`h-8 border-b relative transition-all duration-150 ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
-<<<<<<< HEAD
-                      } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
-                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                      onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, slotIndex) }}
-                      onClick={() => {
-                        if (selectedTaskForScheduling) {
-                          handleDropOnSlot(currentDate, slotIndex)
-                          setSelectedTaskForScheduling(null)
-                        }
-=======
                       } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} cursor-pointer`}
                       onDragOver={(e) => { 
                         e.preventDefault()
@@ -2739,7 +2697,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         e.preventDefault()
                         setHoverSlot(null)
                         handleDropOnSlot(currentDate, slotIndex) 
->>>>>>> develop
                       }}
                       onDoubleClick={() => handleDoubleClickSlot(currentDate, slotIndex)}
                     >
@@ -3501,10 +3458,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     
     return (
       <div
-<<<<<<< HEAD
-        onClick={() => onEditTask(task)}
-        className={`group relative p-4 rounded-xl cursor-pointer select-none transition-all duration-200 hover:shadow-md ${
-=======
         draggable={!isCompleted && isHolding}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -3515,7 +3468,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
           isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
         } ${
->>>>>>> develop
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
