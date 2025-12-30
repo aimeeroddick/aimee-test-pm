@@ -39,6 +39,36 @@
   opacity: 0.5;
 }
 
+/* Drop zone animation */
+@keyframes dropZonePulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.animate-dropZone {
+  animation: dropZonePulse 1.5s ease-in-out infinite;
+}
+
+/* Dragging source card */
+@keyframes dragSourcePulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.drag-source {
+  animation: dragSourcePulse 1s ease-in-out infinite;
+}
+
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;

@@ -4531,7 +4531,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const blocked = isBlocked(task, allTasks)
@@ -4557,11 +4557,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 ${
-        isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
-        isOverdue ? 'bg-red-50 dark:bg-red-900/40' :
-        isDueToday ? 'bg-amber-50 dark:bg-amber-900/40' :
-        'bg-white dark:bg-gray-800'
+      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
+        isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
+      } ${
+        !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
+        !isDragging && isOverdue ? 'bg-red-50 dark:bg-red-900/40' :
+        !isDragging && isDueToday ? 'bg-amber-50 dark:bg-amber-900/40' :
+        !isDragging ? 'bg-white dark:bg-gray-800' : ''
       } ${
         isSelected ? 'ring-2 ring-indigo-500 border-indigo-300' :
         isOverdue ? 'border-red-300 dark:border-red-500 hover:border-red-400 dark:hover:border-red-400' :
@@ -4862,7 +4864,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
@@ -4932,7 +4934,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             isSelected={selectedTaskIds?.has(task.id)}
             onToggleSelect={onToggleSelect}
             onToggleMyDay={onToggleMyDay}
-            
+            isDragging={draggedTask?.id === task.id}
           />
         ))}
         
@@ -4970,6 +4972,16 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           >
             Show less ↑
           </button>
+        )}
+        
+        {/* Drop Zone Placeholder */}
+        {draggedTask && draggedTask.status !== column.id && isDragOver && (
+          <div className="w-full py-4 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 animate-dropZone flex items-center justify-center gap-2 text-indigo-500 dark:text-indigo-400 text-sm font-medium">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+            Drop here
+          </div>
         )}
         
         {/* Add Task Button */}
@@ -9624,6 +9636,7 @@ export default function KanbanBoard() {
                       handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
                     }}
                     isMobileFullWidth={true}
+                    draggedTask={draggedTask}
                   />
                 ) : (
                   COLUMNS.map((column) => (
@@ -9661,6 +9674,7 @@ export default function KanbanBoard() {
                         const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]
                         handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
                       }}
+                      draggedTask={draggedTask}
                     />
                   ))
                 )}
