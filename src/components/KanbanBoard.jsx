@@ -4757,6 +4757,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               />
             ) : (
               <h4 
+                onClick={(e) => onUpdateTitle && e.stopPropagation()}
                 onDoubleClick={handleTitleDoubleClick}
                 className={`flex-1 text-xs font-medium line-clamp-2 leading-tight ${
                   isOverdue ? 'text-red-700 dark:text-red-200 group-hover:text-red-800 dark:group-hover:text-red-100' :
