@@ -2551,7 +2551,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       
       return (
         <div
-          draggable={isHolding}
+          draggable
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={() => holdTimerRef.current && clearTimeout(holdTimerRef.current)}
@@ -3453,7 +3453,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     
     return (
       <div
-        draggable={!isCompleted && isHolding}
+        draggable={!isCompleted}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
