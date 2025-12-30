@@ -2893,7 +2893,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                       <span className={`text-xs px-2 py-1 rounded-lg ${
                         task.status === 'done' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {COLUMNS.find(c => c.id === task.status)?.title}
+                        {getColumnTitle(task.status, customColumnNames)}
                       </span>
                     </div>
                   </div>
@@ -4338,7 +4338,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, customColumnNames }) => {
   const fileInputRef = useRef(null)
   const [formData, setFormData] = useState({
     title: '',
@@ -4621,7 +4621,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   {COLUMNS.map((col) => (
-                    <option key={col.id} value={col.id}>{col.title}</option>
+                    <option key={col.id} value={col.id}>{getColumnTitle(col.id, customColumnNames)}</option>
                   ))}
                 </select>
               </div>
@@ -5256,7 +5256,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{depTask.title}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {COLUMNS.find(c => c.id === depTask.status)?.title}
+                            {getColumnTitle(depTask.status, customColumnNames)}
                             {depTask.assignee && ` • ${depTask.assignee}`}
                           </p>
                         </div>
@@ -8075,6 +8075,7 @@ export default function KanbanBoard() {
                 onUpdateTask={handleCalendarTaskUpdate}
                 viewMode={calendarViewMode}
                 setViewMode={setCalendarViewMode}
+                customColumnNames={customColumnNames}
               />
             </div>
           )}
@@ -8440,6 +8441,7 @@ export default function KanbanBoard() {
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
         loading={saving}
+        customColumnNames={customColumnNames}
       />
       
       <ProjectModal
@@ -8459,6 +8461,7 @@ export default function KanbanBoard() {
         projects={projects}
         onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
         allTasks={tasks}
+        customColumnNames={customColumnNames}
       />
       
 
