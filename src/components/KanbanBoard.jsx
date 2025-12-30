@@ -470,7 +470,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
   }
   
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
       <div 
         className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6"
         onClick={(e) => e.stopPropagation()}
