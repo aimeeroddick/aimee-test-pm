@@ -3866,13 +3866,16 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
   
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['ID', 'Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
-    const rows = sortedTasks.map(t => [
-      t.id || '',
-      t.title || '',
-      projects.find(p => p.id === t.project_id)?.name || '',
-      t.status || '',
-      t.critical ? 'Yes' : 'No',
+    const headers = ['ID', 'Title', 'Project', 'Project Archived', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
+    const rows = sortedTasks.map(t => {
+      const taskProject = projects.find(p => p.id === t.project_id)
+      return [
+        t.id || '',
+        t.title || '',
+        taskProject?.name || '',
+        taskProject?.archived ? 'Yes' : 'No',
+        t.status || '',
+        t.critical ? 'Yes' : 'No',
       t.due_date || '',
       t.start_date || '',
       t.assignee || '',
@@ -3883,7 +3886,8 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
       t.time_estimate ? `${t.time_estimate}m` : '',
       (t.description || '').replace(/[\n\r,]/g, ' '),
       t.created_at ? new Date(t.created_at).toLocaleDateString() : ''
-    ])
+      ]
+    })
     
     const csvContent = [headers, ...rows].map(row => 
       row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
@@ -4348,18 +4352,22 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                 </td>
               </tr>
             ) : (
-              sortedTasks.map(task => (
+              sortedTasks.map(task => {
+                const taskProject = projects.find(p => p.id === task.project_id)
+                const isArchived = taskProject?.archived
+                return (
                 <tr
                   key={task.id}
                   onClick={() => onEditTask(task)}
-                  className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                  className={`cursor-pointer transition-colors ${isArchived ? 'bg-gray-100 dark:bg-gray-800/50 opacity-60' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
                 >
                   {columns.map(col => (
                     <td key={`${task.id}-${col.key}`} className="px-4 py-3 text-sm">
                       {col.key === 'title' ? (
                         <div className="flex items-center gap-2">
                           {task.critical && <span className="text-red-500">🚨</span>}
-                          <span className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[250px]">{task.title}</span>
+                          {isArchived && <span className="text-xs px-1.5 py-0.5 rounded bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300">Archived</span>}
+                          <span className={`font-medium truncate max-w-[250px] ${isArchived ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}>{task.title}</span>
                         </div>
                       ) : col.key === 'status' ? (
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -4377,7 +4385,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                     </td>
                   ))}
                 </tr>
-              ))
+              )})
             )}
           </tbody>
         </table>
@@ -7575,6 +7583,12 @@ export default function KanbanBoard() {
   }).length
 
   const filteredTasks = tasks.filter((t) => {
+    // Hide tasks from archived projects (unless viewing archived projects)
+    if (!showArchivedProjects && t.project_id) {
+      const taskProject = projects.find(p => p.id === t.project_id)
+      if (taskProject?.archived) return false
+    }
+    
     // Project filter
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
     
@@ -8515,11 +8529,11 @@ export default function KanbanBoard() {
           {currentView === 'myday' && (
             <div key="myday" className="animate-fadeIn">
               <MyDayDashboard
-                tasks={tasks}
+                tasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 onDragStart={handleDragStart}
-                allTasks={tasks}
+                allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
                 onStartFocus={(taskId) => {
@@ -8533,11 +8547,11 @@ export default function KanbanBoard() {
           {currentView === 'calendar' && (
             <div key="calendar" className="animate-fadeIn">
               <CalendarView
-                tasks={tasks}
+                tasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 onCreateTask={(prefill) => { setEditingTask(prefill); setTaskModalOpen(true) }}
-                allTasks={tasks}
+                allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onUpdateTask={handleCalendarTaskUpdate}
                 viewMode={calendarViewMode}
                 setViewMode={setCalendarViewMode}
