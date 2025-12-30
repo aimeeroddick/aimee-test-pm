@@ -6432,6 +6432,7 @@ export default function KanbanBoard() {
   const [editingProject, setEditingProject] = useState(null)
   const [focusTask, setFocusTask] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
+  const [deleteRecurringConfirm, setDeleteRecurringConfirm] = useState(null) // { taskId, title, parentId } for recurring delete confirmation
   
   // Simple filters
   const [filterCritical, setFilterCritical] = useState(false)
@@ -7631,28 +7632,76 @@ export default function KanbanBoard() {
     }
   }
 
-  const handleDeleteTask = async (taskId) => {
+  const handleDeleteTask = async (taskId, deleteAllRecurrences = false) => {
+    const task = tasks.find(t => t.id === taskId)
+    
+    // Check if this is a recurring task and we haven't confirmed yet
+    if (task && (task.recurrence_type || task.recurrence_parent_id) && !deleteAllRecurrences && !deleteRecurringConfirm) {
+      // Show confirmation dialog
+      setDeleteRecurringConfirm({
+        taskId,
+        title: task.title,
+        parentId: task.recurrence_parent_id || task.id
+      })
+      return
+    }
+    
     setSaving(true)
     try {
-      const { data: attachments } = await supabase
-        .from('attachments')
-        .select('file_path')
-        .eq('task_id', taskId)
-      
-      if (attachments?.length > 0) {
-        await supabase.storage.from('attachments').remove(attachments.map(a => a.file_path))
-      }
+      // If deleting all recurrences
+      if (deleteAllRecurrences && task) {
+        const parentId = task.recurrence_parent_id || task.id
+        
+        // Get all tasks in this recurrence series (including parent and all children)
+        const tasksToDelete = tasks.filter(t => 
+          t.id === parentId || t.recurrence_parent_id === parentId
+        )
+        
+        // Delete attachments for all tasks
+        for (const t of tasksToDelete) {
+          const { data: attachments } = await supabase
+            .from('attachments')
+            .select('file_path')
+            .eq('task_id', t.id)
+          
+          if (attachments?.length > 0) {
+            await supabase.storage.from('attachments').remove(attachments.map(a => a.file_path))
+          }
+        }
+        
+        // Delete all tasks in the series
+        const { error } = await supabase
+          .from('tasks')
+          .delete()
+          .or(`id.eq.${parentId},recurrence_parent_id.eq.${parentId}`)
+        
+        if (error) throw error
+        
+        await fetchData()
+        showNotification(`Deleted ${tasksToDelete.length} recurring tasks`)
+      } else {
+        // Just delete this single task
+        const { data: attachments } = await supabase
+          .from('attachments')
+          .select('file_path')
+          .eq('task_id', taskId)
+        
+        if (attachments?.length > 0) {
+          await supabase.storage.from('attachments').remove(attachments.map(a => a.file_path))
+        }
 
-      const { error } = await supabase.from('tasks').delete().eq('id', taskId)
-      if (error) throw error
-      
-      await fetchData()
-      showNotification('Task deleted')
+        const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+        if (error) throw error
+        
+        await fetchData()
+        showNotification('Task deleted')
+      }
     } catch (err) {
       console.error('Error deleting task:', err)
       setError(err.message)
     } finally {
       setSaving(false)
+      setDeleteRecurringConfirm(null)
     }
   }
   
@@ -9378,6 +9427,46 @@ export default function KanbanBoard() {
         onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
         initialTab={helpModalTab}
       />
+      
+      {/* Delete Recurring Task Confirmation */}
+      {deleteRecurringConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <span className="text-xl">🔁</span>
+              </div>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Delete Recurring Task</h3>
+            </div>
+            <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              "{deleteRecurringConfirm.title}" is part of a recurring series. What would you like to do?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => handleDeleteTask(deleteRecurringConfirm.taskId, false)}
+                disabled={saving}
+                className={`w-full py-3 px-4 rounded-xl font-medium transition-all ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}
+              >
+                Delete only this occurrence
+              </button>
+              <button
+                onClick={() => handleDeleteTask(deleteRecurringConfirm.taskId, true)}
+                disabled={saving}
+                className="w-full py-3 px-4 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition-all"
+              >
+                {saving ? 'Deleting...' : 'Delete all future occurrences'}
+              </button>
+              <button
+                onClick={() => setDeleteRecurringConfirm(null)}
+                disabled={saving}
+                className={`w-full py-3 px-4 rounded-xl font-medium transition-all ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Focus Mode */}
       {focusMode && focusTaskId && (
