@@ -1748,6 +1748,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
+  const [hoverSlot, setHoverSlot] = useState(null) // { date, slotIndex } for drop zone highlighting
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
@@ -2142,6 +2143,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     onCreateTask(prefill)
   }
   
+  // Clear hover state when drag ends
+  const handleDragEnd = () => {
+    setDraggedTask(null)
+    setHoverSlot(null)
+  }
+  
   // Handle drop on time slot (30-minute increments)
   const handleDropOnSlot = async (date, slotIndex) => {
     if (!draggedTask || !onUpdateTask) {
@@ -2492,6 +2499,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const schedulable = getSchedulableTasks()
     const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.todo.length + schedulable.backlog.length + schedulable.quickWins.length
     
+<<<<<<< HEAD
     // Reusable task card component for sidebar
     // Handle task tap for mobile scheduling
     const handleTaskTap = (e, task) => {
@@ -2542,6 +2550,68 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             className="w-2 h-2 rounded-full mt-1 shrink-0"
             style={{ backgroundColor: COLUMN_COLORS[task.status] }}
           />
+=======
+    // Reusable task card component for sidebar with hold-to-drag
+    const TaskCard = ({ task, highlight }) => {
+      const holdTimerRef = useRef(null)
+      const [isHolding, setIsHolding] = useState(false)
+      const [isDragging, setIsDragging] = useState(false)
+      const didDragRef = useRef(false)
+      
+      const handleMouseDown = (e) => {
+        if (e.target.closest('button')) return
+        didDragRef.current = false
+        holdTimerRef.current = setTimeout(() => setIsHolding(true), 200)
+      }
+      
+      const handleMouseUp = () => {
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
+        setIsDragging(false)
+        setTimeout(() => { setIsHolding(false); didDragRef.current = false }, 100)
+      }
+      
+      const handleCardDragStart = (e) => {
+        if (!isHolding) { e.preventDefault(); return }
+        didDragRef.current = true
+        setIsDragging(true)
+        handleDragStart(e, task)
+      }
+      
+      const handleClick = () => {
+        if (!didDragRef.current && !isHolding) onEditTask(task)
+      }
+      
+      return (
+        <div
+          draggable={isHolding}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={() => holdTimerRef.current && clearTimeout(holdTimerRef.current)}
+          onDragStart={handleCardDragStart}
+          onDragEnd={handleMouseUp}
+          onClick={handleClick}
+          className={`p-2.5 rounded-lg border transition-all select-none ${
+            isDragging ? 'opacity-40 scale-[0.98]' : 
+            isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 
+            'cursor-pointer hover:shadow-md'
+          } ${
+            highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+            highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
+            highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+            highlight === 'pink' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
+            highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
+            highlight === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+            highlight === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+            highlight === 'gray' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
+            'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            <div 
+              className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+              style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+            />
+>>>>>>> develop
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
               {task.critical && '🚩 '}{task.title}
@@ -2553,7 +2623,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </div>
         </div>
       </div>
+<<<<<<< HEAD
     )}
+=======
+    )
+  }
+>>>>>>> develop
     
     // Section component
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
@@ -2637,11 +2712,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 })()}
                 {timeSlots.map(({ slotIndex, isHour }) => {
                   const slotTasks = getTasksForSlot(currentDate, slotIndex)
+                  const isHoverTarget = hoverSlot && hoverSlot.date === dateStr && hoverSlot.slotIndex === slotIndex
                   return (
                     <div
                       key={slotIndex}
-                      className={`h-8 border-b relative transition-colors ${
+                      className={`h-8 border-b relative transition-all duration-150 ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
+<<<<<<< HEAD
                       } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
                       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
                       onDrop={(e) => { e.preventDefault(); handleDropOnSlot(currentDate, slotIndex) }}
@@ -2650,9 +2727,31 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                           handleDropOnSlot(currentDate, slotIndex)
                           setSelectedTaskForScheduling(null)
                         }
+=======
+                      } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} cursor-pointer`}
+                      onDragOver={(e) => { 
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                        setHoverSlot({ date: dateStr, slotIndex })
+                      }}
+                      onDragLeave={() => setHoverSlot(null)}
+                      onDrop={(e) => { 
+                        e.preventDefault()
+                        setHoverSlot(null)
+                        handleDropOnSlot(currentDate, slotIndex) 
+>>>>>>> develop
                       }}
                       onDoubleClick={() => handleDoubleClickSlot(currentDate, slotIndex)}
                     >
+                      {/* Drop preview */}
+                      {isHoverTarget && draggedTask && (
+                        <div 
+                          className="absolute inset-x-1 top-0 bg-indigo-200/50 dark:bg-indigo-700/30 border-2 border-dashed border-indigo-400 rounded text-[10px] text-indigo-600 dark:text-indigo-300 px-1 truncate pointer-events-none z-30"
+                          style={{ height: `${Math.ceil((draggedTask.time_estimate || 30) / 30) * 32 - 2}px` }}
+                        >
+                          {draggedTask.title}
+                        </div>
+                      )}
                       {slotTasks.map(task => {
                         const duration = task.time_estimate || 30
                         const heightSlots = Math.ceil(duration / 30)
@@ -3346,11 +3445,77 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
+    const holdTimerRef = useRef(null)
+    const [isHolding, setIsHolding] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const didDragRef = useRef(false)
+    
+    const handleMouseDown = (e) => {
+      if (isCompleted) return
+      // Don't start hold if clicking on a button
+      if (e.target.closest('button')) return
+      
+      didDragRef.current = false
+      holdTimerRef.current = setTimeout(() => {
+        setIsHolding(true)
+      }, 200)
+    }
+    
+    const handleMouseUp = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+      setIsDragging(false)
+      // Small delay before resetting to allow drag to complete
+      setTimeout(() => {
+        setIsHolding(false)
+        didDragRef.current = false
+      }, 100)
+    }
+    
+    const handleMouseLeave = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+    }
+    
+    const handleClick = () => {
+      if (!didDragRef.current && !isHolding) {
+        onEditTask(task)
+      }
+    }
+    
+    const handleDragStart = (e) => {
+      if (!isHolding) {
+        e.preventDefault()
+        return
+      }
+      didDragRef.current = true
+      setIsDragging(true)
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('taskId', task.id)
+      onDragStart && onDragStart(e, task)
+    }
     
     return (
       <div
+<<<<<<< HEAD
         onClick={() => onEditTask(task)}
         className={`group relative p-4 rounded-xl cursor-pointer select-none transition-all duration-200 hover:shadow-md ${
+=======
+        draggable={!isCompleted && isHolding}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={handleDragStart}
+        onDragEnd={handleMouseUp}
+        onClick={handleClick}
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
+          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+        } ${
+>>>>>>> develop
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
