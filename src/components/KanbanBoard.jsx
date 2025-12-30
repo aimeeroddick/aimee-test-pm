@@ -4902,6 +4902,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [pasteMessage, setPasteMessage] = useState('')
   const [subtasks, setSubtasks] = useState([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
+  const [comments, setComments] = useState([])
+  const [newCommentText, setNewCommentText] = useState('')
   const initializedRef = useRef(null) // Track which task we've initialized for
   const [viewingAttachment, setViewingAttachment] = useState(null)
   
@@ -4970,6 +4972,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setUseCustomCustomer(isCustomCustomer)
       setCustomCustomer(isCustomCustomer ? task.customer : '')
       setSubtasks(task.subtasks || [])
+      setComments(task.comments || [])
     } else {
       // New task - may have prefilled status
       setFormData({
@@ -4999,11 +5002,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setUseCustomCustomer(false)
       setCustomCustomer('')
       setSubtasks([])
+      setComments([])
     }
     setNewFiles([])
     setActiveTab('details')
     setUploadError('')
     setNewSubtaskTitle('')
+    setNewCommentText('')
   }, [task?.id, isOpen])
   
   // Reset initialization tracking when modal closes
@@ -5055,6 +5060,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       id: task?.id,
       dependencies: selectedDependencies,
       subtasks: subtasks,
+      comments: comments,
     }, newFiles, attachments)
     onClose()
   }
@@ -5080,6 +5086,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             { id: 'additional', label: 'Additional' },
             { id: 'subtasks', label: 'Subtasks' },
             { id: 'dependencies', label: 'Dependencies' },
+            { id: 'activity', label: 'Activity' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -5809,7 +5816,114 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100">
+        {activeTab === 'activity' && (
+          <div className="space-y-4">
+            {/* Add Comment */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-lg">💬</span>
+                <div>
+                  <h3 className="font-medium text-blue-800 dark:text-blue-300">Add a Comment</h3>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Notes and updates about this task</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <textarea
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder="Add a comment or note..."
+                  rows={2}
+                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newCommentText.trim()) {
+                      const newComment = {
+                        id: Date.now().toString(),
+                        text: newCommentText.trim(),
+                        created_at: new Date().toISOString(),
+                        type: 'comment'
+                      }
+                      setComments([newComment, ...comments])
+                      setNewCommentText('')
+                    }
+                  }}
+                  disabled={!newCommentText.trim()}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium self-end"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            
+            {/* Comments & Activity List */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <span>📋</span> Activity & Comments
+                {comments.length > 0 && (
+                  <span className="text-xs text-gray-400 dark:text-gray-500">({comments.length})</span>
+                )}
+              </h3>
+              
+              {comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                  <span className="text-3xl mb-2 block">📝</span>
+                  <p className="text-sm">No comments yet</p>
+                  <p className="text-xs">Add notes to track progress and context</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {comments.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`p-3 rounded-lg border ${
+                        item.type === 'comment' 
+                          ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700' 
+                          : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          {item.type === 'comment' ? (
+                            <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{item.text}</p>
+                          ) : (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="text-gray-400 dark:text-gray-500">{item.icon || '•'}</span> {item.text}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            {new Date(item.created_at).toLocaleString(undefined, { 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        {item.type === 'comment' && (
+                          <button
+                            type="button"
+                            onClick={() => setComments(comments.filter(c => c.id !== item.id))}
+                            className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                            title="Delete comment"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           {task && (
             <button
               type="button"
@@ -7255,6 +7369,7 @@ export default function KanbanBoard() {
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
             subtasks: taskData.subtasks || [],
+            comments: taskData.comments || [],
           })
           .eq('id', taskId)
         
@@ -7302,6 +7417,7 @@ export default function KanbanBoard() {
             notes: taskData.notes || null,
             recurrence_type: taskData.recurrence_type || null,
             subtasks: taskData.subtasks || [],
+            comments: taskData.comments || [],
           })
           .select()
           .single()
