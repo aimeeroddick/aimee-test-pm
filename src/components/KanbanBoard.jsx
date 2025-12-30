@@ -8250,7 +8250,7 @@ export default function KanbanBoard() {
                   <select
                     value={filterField}
                     onChange={(e) => { setFilterField(e.target.value); setFilterValue('') }}
-                    className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                   >
                     <option value="">Filter by...</option>
                     <option value="assignee">Assignee</option>
@@ -8269,7 +8269,7 @@ export default function KanbanBoard() {
                     <select
                       value={filterValue}
                       onChange={(e) => setFilterValue(e.target.value)}
-                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                     >
                       <option value="">Select value...</option>
                       <option value="__blank__">(Blank)</option>
