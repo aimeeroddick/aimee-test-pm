@@ -6228,6 +6228,15 @@ export default function KanbanBoard() {
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
   const [filterTimeValue, setFilterTimeValue] = useState('')
   
+  // Saved filter views
+  const [savedFilterViews, setSavedFilterViews] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('trackli_saved_views') || '[]')
+    } catch { return [] }
+  })
+  const [showSaveViewModal, setShowSaveViewModal] = useState(false)
+  const [newViewName, setNewViewName] = useState('')
+  
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
   const [meetingNotesData, setMeetingNotesData] = useState({
@@ -7587,9 +7596,59 @@ export default function KanbanBoard() {
     setFilterCritical(false)
     setFilterOverdue(false)
     setFilterBlocked(false)
+    setFilterActive(false)
+    setFilterBacklog(false)
+    setFilterDueToday(false)
+    setFilterMyDay(false)
     setSearchQuery('')
     setFilterField('')
     setFilterValue('')
+  }
+  
+  // Saved Filter Views functions
+  const saveCurrentView = (name) => {
+    const view = {
+      id: Date.now(),
+      name,
+      filters: {
+        selectedProjectId,
+        filterCritical,
+        filterOverdue,
+        filterBlocked,
+        filterActive,
+        filterBacklog,
+        filterDueToday,
+        filterMyDay,
+        searchQuery,
+        filterField,
+        filterValue
+      }
+    }
+    const updated = [...savedFilterViews, view]
+    setSavedFilterViews(updated)
+    localStorage.setItem('trackli_saved_views', JSON.stringify(updated))
+    setShowSaveViewModal(false)
+    setNewViewName('')
+  }
+  
+  const applyFilterView = (view) => {
+    setSelectedProjectId(view.filters.selectedProjectId || 'all')
+    setFilterCritical(view.filters.filterCritical || false)
+    setFilterOverdue(view.filters.filterOverdue || false)
+    setFilterBlocked(view.filters.filterBlocked || false)
+    setFilterActive(view.filters.filterActive || false)
+    setFilterBacklog(view.filters.filterBacklog || false)
+    setFilterDueToday(view.filters.filterDueToday || false)
+    setFilterMyDay(view.filters.filterMyDay || false)
+    setSearchQuery(view.filters.searchQuery || '')
+    setFilterField(view.filters.filterField || '')
+    setFilterValue(view.filters.filterValue || '')
+  }
+  
+  const deleteFilterView = (viewId) => {
+    const updated = savedFilterViews.filter(v => v.id !== viewId)
+    setSavedFilterViews(updated)
+    localStorage.setItem('trackli_saved_views', JSON.stringify(updated))
   }
 
   const readyToStartCount = tasks.filter((t) => {
@@ -8291,6 +8350,42 @@ export default function KanbanBoard() {
                   Clear
                 </button>
               )}
+              
+              {/* Saved Filter Views */}
+              <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-3 ml-1">
+                {savedFilterViews.length > 0 && (
+                  <div className="relative group">
+                    <select
+                      onChange={(e) => {
+                        const view = savedFilterViews.find(v => v.id === parseInt(e.target.value))
+                        if (view) applyFilterView(view)
+                        e.target.value = ''
+                      }}
+                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    >
+                      <option value="">📑 Saved Views</option>
+                      {savedFilterViews.map(view => (
+                        <option key={view.id} value={view.id}>{view.name}</option>
+                      ))}
+                    </select>
+                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                )}
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => setShowSaveViewModal(true)}
+                    className="flex items-center gap-1 px-2 py-1.5 text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                    title="Save current filters as a view"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    Save View
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -9340,6 +9435,68 @@ Or we can extract from:
             })()}
             
             <p className="mt-3 text-xs text-center text-gray-400">Try "tomorrow", "next friday", "in 2 weeks"</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Save Filter View Modal */}
+      {showSaveViewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowSaveViewModal(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Save Current View</h3>
+            <input
+              type="text"
+              value={newViewName}
+              onChange={(e) => setNewViewName(e.target.value)}
+              placeholder="View name (e.g., My Critical Tasks)"
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newViewName.trim()) {
+                  saveCurrentView(newViewName.trim())
+                }
+              }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowSaveViewModal(false)}
+                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => newViewName.trim() && saveCurrentView(newViewName.trim())}
+                disabled={!newViewName.trim()}
+                className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+            {savedFilterViews.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Existing views:</p>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {savedFilterViews.map(view => (
+                    <div key={view.id} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 dark:text-gray-300">{view.name}</span>
+                      <button
+                        onClick={() => deleteFilterView(view.id)}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Delete view"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
