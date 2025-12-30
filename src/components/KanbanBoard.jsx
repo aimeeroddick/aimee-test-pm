@@ -3166,11 +3166,69 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
+    const holdTimerRef = useRef(null)
+    const [isHolding, setIsHolding] = useState(false)
+    const didDragRef = useRef(false)
+    
+    const handleMouseDown = (e) => {
+      if (isCompleted) return
+      // Don't start hold if clicking on a button
+      if (e.target.closest('button')) return
+      
+      didDragRef.current = false
+      holdTimerRef.current = setTimeout(() => {
+        setIsHolding(true)
+      }, 200)
+    }
+    
+    const handleMouseUp = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+      // Small delay before resetting to allow drag to complete
+      setTimeout(() => {
+        setIsHolding(false)
+        didDragRef.current = false
+      }, 100)
+    }
+    
+    const handleMouseLeave = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+    }
+    
+    const handleClick = () => {
+      if (!didDragRef.current && !isHolding) {
+        onEditTask(task)
+      }
+    }
+    
+    const handleDragStart = (e) => {
+      if (!isHolding) {
+        e.preventDefault()
+        return
+      }
+      didDragRef.current = true
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('taskId', task.id)
+      onDragStart && onDragStart(e, task)
+    }
     
     return (
       <div
-        onClick={() => onEditTask(task)}
-        className={`group relative p-4 rounded-xl cursor-pointer select-none transition-all duration-200 hover:shadow-md ${
+        draggable={!isCompleted && isHolding}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onDragStart={handleDragStart}
+        onDragEnd={handleMouseUp}
+        onClick={handleClick}
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
+          isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+        } ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
@@ -3180,26 +3238,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                 : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
         }`}
       >
-        <div className="flex items-start gap-2">
-          {/* Drag handle - grab here to drag */}
-          {!isCompleted && (
-            <div
-              draggable
-              onDragStart={(e) => {
-                e.stopPropagation()
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('taskId', task.id)
-                onDragStart && onDragStart(e, task)
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="mt-1 p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400 transition-colors"
-              title="Drag to move"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-              </svg>
-            </div>
-          )}
+        <div className="flex items-start gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation()
