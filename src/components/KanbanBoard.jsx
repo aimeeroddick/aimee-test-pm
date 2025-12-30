@@ -4140,10 +4140,44 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, customColumnNames, onRenameColumn }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editedName, setEditedName] = useState('')
+  const editInputRef = useRef(null)
+  
+  const displayTitle = customColumnNames?.[column.id] || column.title
+  
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditingName && editInputRef.current) {
+      editInputRef.current.focus()
+      editInputRef.current.select()
+    }
+  }, [isEditingName])
+  
+  const startEditing = () => {
+    setEditedName(displayTitle)
+    setIsEditingName(true)
+  }
+  
+  const saveColumnName = () => {
+    const trimmedName = editedName.trim()
+    if (trimmedName && trimmedName !== displayTitle) {
+      onRenameColumn?.(column.id, trimmedName)
+    }
+    setIsEditingName(false)
+  }
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      saveColumnName()
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false)
+    }
+  }
   
   const totalMinutes = tasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   const criticalCount = tasks.filter(t => t.critical).length
@@ -4182,7 +4216,31 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
     >
       <div className="flex items-center gap-3 mb-1">
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
-        <h3 className="font-semibold text-gray-700 dark:text-gray-200">{column.title}</h3>
+        {isEditingName ? (
+          <input
+            ref={editInputRef}
+            type="text"
+            value={editedName}
+            onChange={(e) => setEditedName(e.target.value)}
+            onBlur={saveColumnName}
+            onKeyDown={handleKeyDown}
+            className="font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 px-2 py-0.5 rounded border border-indigo-300 dark:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-28"
+            maxLength={20}
+          />
+        ) : (
+          <div className="group/title flex items-center gap-1">
+            <h3 className="font-semibold text-gray-700 dark:text-gray-200">{displayTitle}</h3>
+            <button
+              onClick={startEditing}
+              className="p-1 rounded opacity-0 group-hover/title:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+              title="Rename column"
+            >
+              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+        )}
         <span className="ml-auto bg-white dark:bg-gray-700 px-2.5 py-0.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-300 shadow-sm">
           {tasks.length}
         </span>
@@ -5648,6 +5706,9 @@ export default function KanbanBoard() {
   
   // Daily Planning mode
   const [planningModeOpen, setPlanningModeOpen] = useState(false)
+  
+  // Custom column names
+  const [customColumnNames, setCustomColumnNames] = useState({})
 
   // Dark mode effect
   useEffect(() => {
@@ -5902,6 +5963,16 @@ export default function KanbanBoard() {
 
       setProjects(projectsWithRelations)
       setTasks(tasksWithRelations)
+      
+      // Load user settings (custom column names)
+      const { data: userSettings } = await supabase
+        .from('user_settings')
+        .select('column_names')
+        .single()
+      
+      if (userSettings?.column_names) {
+        setCustomColumnNames(userSettings.column_names)
+      }
       
       // Auto-move backlog tasks to todo if start date is today or past
       const today = new Date()
@@ -6611,6 +6682,31 @@ export default function KanbanBoard() {
   
   const deselectAllTasks = () => {
     setSelectedTaskIds(new Set())
+  }
+
+  // Save custom column name
+  const handleSaveColumnName = async (columnId, newName) => {
+    const updatedNames = { ...customColumnNames, [columnId]: newName }
+    setCustomColumnNames(updatedNames)
+    
+    try {
+      // Upsert user settings
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          column_names: updatedNames,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        })
+      
+      if (error) throw error
+    } catch (err) {
+      console.error('Error saving column name:', err)
+      // Revert on error
+      setCustomColumnNames(customColumnNames)
+    }
   }
 
   // Task CRUD
@@ -8292,6 +8388,8 @@ export default function KanbanBoard() {
                       const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]
                       handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
                     }}
+                    customColumnNames={customColumnNames}
+                    onRenameColumn={handleSaveColumnName}
                   />
                 ))}
               </div>
