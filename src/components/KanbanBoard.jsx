@@ -946,7 +946,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
 }
 
 // Help Modal Component
-const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
+const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
   
   // Reset to initialTab when modal opens
@@ -1629,15 +1629,15 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">New Task</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃T</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}T</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">New Project</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃P</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}P</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Import Tasks</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃N</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}N</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
@@ -6683,6 +6683,11 @@ const FocusMode = ({ task, project, allTasks, onComplete, onSkip, onExit, totalT
 // Main KanbanBoard Component
 export default function KanbanBoard() {
   const { user, signOut } = useAuth()
+  
+  // Detect OS for keyboard shortcut display
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const shortcutModifier = isMac ? '⌘⌃' : 'Ctrl+Alt+'
+  
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -8668,7 +8673,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">☀️</span>
                         <span className="font-medium">My Day</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃D</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}D</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('board'); setNavMenuOpen(false) }}
@@ -8676,7 +8681,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📋</span>
                         <span className="font-medium">Board</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃B</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}B</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('calendar'); setNavMenuOpen(false) }}
@@ -8684,7 +8689,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📆</span>
                         <span className="font-medium">Calendar</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃L</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}L</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('tasks'); setNavMenuOpen(false) }}
@@ -8692,7 +8697,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">🗃️</span>
                         <span className="font-medium">All Tasks</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃A</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}A</span>
                       </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
@@ -8817,7 +8822,7 @@ export default function KanbanBoard() {
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
                 className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                title="⌘⌃T (Mac) / Ctrl+Alt+T (Win)"
+                title={`${shortcutModifier}T`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -9824,6 +9829,7 @@ export default function KanbanBoard() {
         isOpen={helpModalOpen}
         onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
         initialTab={helpModalTab}
+        shortcutModifier={shortcutModifier}
       />
       
       {/* Delete Recurring Task Confirmation */}
