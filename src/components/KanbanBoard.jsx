@@ -3473,25 +3473,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         }`}
       >
         <div className="flex items-start gap-2">
-          {/* Drag handle - only this initiates drag */}
-          {!isCompleted && (
-            <div
-              draggable
-              onDragStart={(e) => {
-                e.stopPropagation()
-                e.dataTransfer.effectAllowed = 'move'
-                e.dataTransfer.setData('taskId', task.id)
-                onDragStart && onDragStart(e, task)
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="mt-1 p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 dark:text-gray-600 dark:hover:text-gray-500 transition-colors"
-              title="Drag to reorder"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-              </svg>
-            </div>
-          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
