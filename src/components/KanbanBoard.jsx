@@ -4539,8 +4539,38 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState(task.title)
+  const titleInputRef = useRef(null)
+  
+  // Inline title editing handlers
+  const handleTitleDoubleClick = (e) => {
+    if (bulkSelectMode || !onUpdateTitle) return
+    e.stopPropagation()
+    setIsEditingTitle(true)
+    setEditedTitle(task.title)
+    setTimeout(() => titleInputRef.current?.focus(), 0)
+  }
+  
+  const handleTitleSave = () => {
+    if (editedTitle.trim() && editedTitle !== task.title) {
+      onUpdateTitle(task.id, editedTitle.trim())
+    }
+    setIsEditingTitle(false)
+  }
+  
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleTitleSave()
+    } else if (e.key === 'Escape') {
+      setEditedTitle(task.title)
+      setIsEditingTitle(false)
+    }
+  }
+  
   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
   const blocked = isBlocked(task, allTasks)
   const recurrence = task.recurrence_type ? RECURRENCE_TYPES.find(r => r.id === task.recurrence_type) : null
@@ -4714,11 +4744,28 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             {blocked && <span title="Blocked" className="text-xs flex-shrink-0">🔒</span>}
             {task.critical && <span title="Critical" className="text-xs flex-shrink-0">🚩</span>}
             {recurrence && <span title={recurrence.label} className="text-xs flex-shrink-0">🔁</span>}
-            <h4 className={`flex-1 text-xs font-medium line-clamp-2 leading-tight ${
-              isOverdue ? 'text-red-700 dark:text-red-200 group-hover:text-red-800 dark:group-hover:text-red-100' :
-              isDueToday ? 'text-amber-700 dark:text-amber-200 group-hover:text-amber-800 dark:group-hover:text-amber-100' :
-              'text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
-            }`}>{task.title}</h4>
+            {isEditingTitle ? (
+              <input
+                ref={titleInputRef}
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onBlur={handleTitleSave}
+                onKeyDown={handleTitleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-1 text-xs font-medium bg-white dark:bg-gray-700 border border-indigo-400 rounded px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700 dark:text-gray-200"
+              />
+            ) : (
+              <h4 
+                onDoubleClick={handleTitleDoubleClick}
+                className={`flex-1 text-xs font-medium line-clamp-2 leading-tight ${
+                  isOverdue ? 'text-red-700 dark:text-red-200 group-hover:text-red-800 dark:group-hover:text-red-100' :
+                  isDueToday ? 'text-amber-700 dark:text-amber-200 group-hover:text-amber-800 dark:group-hover:text-amber-100' :
+                  'text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                } ${onUpdateTitle ? 'cursor-text' : ''}`}
+                title={onUpdateTitle ? 'Double-click to edit' : ''}
+              >{task.title}</h4>
+            )}
           </div>
           
           {/* Dates & Effort Row */}
@@ -4872,7 +4919,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
@@ -4953,6 +5000,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onToggleSelect={onToggleSelect}
             onToggleMyDay={onToggleMyDay}
             isDragging={draggedTask?.id === task.id}
+            onUpdateTitle={onUpdateTitle}
           />
         ))}
         
@@ -8089,6 +8137,23 @@ export default function KanbanBoard() {
     }
   }
   
+  // Update task title (for inline editing)
+  const handleUpdateTaskTitle = async (taskId, newTitle) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ title: newTitle })
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, title: newTitle } : t))
+    } catch (err) {
+      console.error('Error updating task title:', err)
+      setError(err.message)
+    }
+  }
+  
   // Calendar task update (for drag-drop scheduling)
   const handleCalendarTaskUpdate = async (taskId, updates) => {
     try {
@@ -9655,6 +9720,7 @@ export default function KanbanBoard() {
                     }}
                     isMobileFullWidth={true}
                     draggedTask={draggedTask}
+                    onUpdateTitle={handleUpdateTaskTitle}
                   />
                 ) : (
                   COLUMNS.map((column) => (
@@ -9693,6 +9759,7 @@ export default function KanbanBoard() {
                         handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
                       }}
                       draggedTask={draggedTask}
+                      onUpdateTitle={handleUpdateTaskTitle}
                     />
                   ))
                 )}
