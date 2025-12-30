@@ -33,6 +33,7 @@ const RECURRENCE_TYPES = [
   { id: null, label: 'No recurrence' },
   { id: 'daily', label: 'Daily' },
   { id: 'weekly', label: 'Weekly' },
+  { id: 'biweekly', label: 'Bi-weekly (every 2 weeks)' },
   { id: 'monthly', label: 'Monthly' },
 ]
 
@@ -142,22 +143,48 @@ const isInMyDay = (task) => {
   return false
 }
 
-const getNextRecurrenceDate = (currentDate, recurrenceType) => {
-  const date = new Date(currentDate)
-  switch (recurrenceType) {
-    case 'daily':
-      date.setDate(date.getDate() + 1)
-      break
-    case 'weekly':
-      date.setDate(date.getDate() + 7)
-      break
-    case 'monthly':
-      date.setMonth(date.getMonth() + 1)
-      break
-    default:
-      return null
+// Calculate next future occurrence based on original start date and recurrence pattern
+const getNextRecurrenceDate = (originalStartDate, recurrenceType) => {
+  if (!originalStartDate || !recurrenceType) return null
+  
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  let nextDate = new Date(originalStartDate)
+  nextDate.setHours(0, 0, 0, 0)
+  
+  // Get the interval in days/months
+  const addInterval = (date) => {
+    switch (recurrenceType) {
+      case 'daily':
+        date.setDate(date.getDate() + 1)
+        break
+      case 'weekly':
+        date.setDate(date.getDate() + 7)
+        break
+      case 'biweekly':
+        date.setDate(date.getDate() + 14)
+        break
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1)
+        break
+      default:
+        return null
+    }
+    return date
   }
-  return date.toISOString().split('T')[0]
+  
+  // Keep adding intervals until we find a future date
+  // (handles case where task is completed late)
+  let iterations = 0
+  const maxIterations = 365 // Safety limit
+  
+  while (nextDate <= today && iterations < maxIterations) {
+    addInterval(nextDate)
+    iterations++
+  }
+  
+  return nextDate.toISOString().split('T')[0]
 }
 
 const formatDate = (dateString) => {
@@ -5396,17 +5423,27 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             
             {/* Recurrence options - shown when toggle is on */}
             {formData.recurrence_type && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repeat</label>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Repeat</label>
                 <select
                   value={formData.recurrence_type || ''}
                   onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                 >
                   {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
                     <option key={type.id} value={type.id}>{type.label}</option>
                   ))}
                 </select>
+                
+                {!formData.start_date ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <span>⚠️</span> Set a Start Date above for recurrence to work
+                  </p>
+                ) : (
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    📅 Next occurrence: {getNextRecurrenceDate(formData.start_date, formData.recurrence_type)}
+                  </p>
+                )}
               </div>
             )}
           </div>
