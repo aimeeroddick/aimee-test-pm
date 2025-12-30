@@ -8233,7 +8233,7 @@ export default function KanbanBoard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-                <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
                   <input
                     type="checkbox"
                     checked={showArchivedProjects}
