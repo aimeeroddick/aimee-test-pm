@@ -2055,6 +2055,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   // Handle drag end
   const handleDragEnd = () => {
     setDraggedTask(null)
+    setHoverSlot(null) // Clear calendar drop zone highlighting
     // Small delay to prevent click from firing after drag
     setTimeout(() => { isDraggingRef.current = false }, 100)
   }
@@ -2141,12 +2142,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     onCreateTask(prefill)
-  }
-  
-  // Clear hover state when drag ends
-  const handleDragEnd = () => {
-    setDraggedTask(null)
-    setHoverSlot(null)
   }
   
   // Handle drop on time slot (30-minute increments)
