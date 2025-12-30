@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Browser rendering normalization */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure consistent color rendering */
+html {
+  color-scheme: light dark;
+}
+
+/* Boost font weights slightly for Chrome */
+@supports (-webkit-appearance: none) and (not (-moz-appearance: none)) {
+  body {
+    font-weight: 450;
+  }
+  .font-medium {
+    font-weight: 550;
+  }
+  .font-semibold {
+    font-weight: 650;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
