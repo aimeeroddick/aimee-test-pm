@@ -590,10 +590,10 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
   return (
     <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
         onClick={onClose}
       />
-      <div className={`relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:mx-4 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
+      <div className={`relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:mx-4 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-modalSlideUp ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 rounded-t-2xl z-10">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
@@ -4888,8 +4888,8 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[380px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
-        isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
+      className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[380px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
+        isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.01]' : ''
       }`}
       onDragOver={(e) => {
         e.preventDefault()
@@ -9398,7 +9398,7 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'progress' && (
-            <main className="max-w-4xl mx-auto px-6 py-8">
+            <main className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📊 Progress Dashboard</h2>
               
               {/* Stats Cards */}
@@ -9545,7 +9545,7 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'board' && (
-            <main className="w-full px-3 sm:px-6 py-4 sm:py-6">
+            <main className="w-full px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn">
               {/* Mobile Column Navigation */}
               {isMobile && (
                 <div className="flex items-center justify-between mb-4">
