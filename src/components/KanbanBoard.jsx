@@ -3460,16 +3460,16 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         onDragStart={handleDragStart}
         onDragEnd={handleMouseUp}
         onClick={handleClick}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
-          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 ${
+          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer hover:shadow-md'
         } ${
           isCompleted 
-            ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
+            ? 'bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 opacity-60' 
             : blocked 
-              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 shadow-sm' 
+              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-700' 
               : task.critical 
-                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 shadow-sm' 
-                : 'bg-white dark:bg-gray-800 shadow-sm hover:shadow-md'
+                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-700' 
+                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
         }`}
       >
         <div className="flex items-start gap-2">
