@@ -6493,7 +6493,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             disabled={loading}
             className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
           >
-            {loading ? 'Saving...' : task ? <><u>S</u>ave Changes</> : 'Create Task'}
+            {loading ? 'Saving...' : task ? <><u>S</u>ave Changes</> : <><u>S</u>ave Task</>}
           </button>
         </div>
       </form>
@@ -6719,7 +6719,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
             disabled={loading}
             className="px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-medium disabled:opacity-50"
           >
-            {loading ? 'Saving...' : project ? <><u>S</u>ave Changes</> : 'Create Project'}
+            {loading ? 'Saving...' : project ? <><u>S</u>ave Changes</> : <><u>S</u>ave Project</>}
           </button>
         </div>
       </form>
