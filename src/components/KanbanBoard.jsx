@@ -237,8 +237,37 @@ const parseFlexibleTime = (input) => {
 
 // Natural language date parser
 const parseNaturalLanguageDate = (text) => {
+  if (!text) return { date: null, cleanedText: '', matched: null }
+  
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  
+  // Check for shorthand format first: T, T+1, D+3, W+1, M+2, etc.
+  const shorthandMatch = text.trim().match(/^([TDWM])([+-]\d+)?$/i)
+  if (shorthandMatch) {
+    const type = shorthandMatch[1].toUpperCase()
+    const offset = shorthandMatch[2] ? parseInt(shorthandMatch[2]) : 0
+    const d = new Date(today)
+    
+    switch (type) {
+      case 'T': // Today + days
+      case 'D': // Days
+        d.setDate(d.getDate() + offset)
+        break
+      case 'W': // Weeks
+        d.setDate(d.getDate() + (offset * 7))
+        break
+      case 'M': // Months
+        d.setMonth(d.getMonth() + offset)
+        break
+    }
+    
+    return {
+      date: d.toISOString().split('T')[0],
+      cleanedText: '',
+      matched: text.trim()
+    }
+  }
   
   const patterns = [
     // Today/Tomorrow
@@ -5223,20 +5252,54 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Start Date & Due Date side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Start Date
+                  <span className="ml-2 text-xs text-gray-400 font-normal">T, T+1, W+1, M+1</span>
+                </label>
                 <input
-                  type="date"
+                  type="text"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim()
+                    if (!val) {
+                      setFormData({ ...formData, start_date: '' })
+                      return
+                    }
+                    // Try shorthand parsing first
+                    const parsed = parseNaturalLanguageDate(val)
+                    if (parsed.date) {
+                      setFormData({ ...formData, start_date: parsed.date })
+                    }
+                    // Otherwise keep as-is (might be a valid date already)
+                  }}
+                  placeholder="T, T+1, W+1, or date"
                   className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300' : ''}`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Due Date
+                  <span className="ml-2 text-xs text-gray-400 font-normal">T, T+1, W+1, M+1</span>
+                </label>
                 <input
-                  type="date"
+                  type="text"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim()
+                    if (!val) {
+                      setFormData({ ...formData, due_date: '' })
+                      return
+                    }
+                    // Try shorthand parsing first
+                    const parsed = parseNaturalLanguageDate(val)
+                    if (parsed.date) {
+                      setFormData({ ...formData, due_date: parsed.date })
+                    }
+                    // Otherwise keep as-is (might be a valid date already)
+                  }}
+                  placeholder="T, T+1, W+1, or date"
                   className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300' : ''}`}
                 />
               </div>
@@ -5304,78 +5367,48 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
-            {/* Date shortcuts */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Due:</span>
-              {DATE_SHORTCUTS.map(shortcut => (
-                <button
-                  key={shortcut.label}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, due_date: shortcut.getValue() })}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                    formData.due_date === shortcut.getValue()
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
-                  }`}
-                >
-                  {shortcut.label}
-                </button>
-              ))}
-              {formData.due_date && (
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, due_date: '' })}
-                  className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
+            {/* Critical & Recurring - compact toggles */}
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, critical: !formData.critical })}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                  formData.critical
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 ring-2 ring-red-300 dark:ring-red-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                🚩 Critical
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, recurrence_type: formData.recurrence_type ? null : 'weekly' })}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                  formData.recurrence_type
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-300 dark:ring-blue-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                🔁 Recurring
+              </button>
             </div>
             
-            {/* Critical Priority - compact inline */}
-            <label className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <input
-                type="checkbox"
-                checked={formData.critical}
-                onChange={(e) => setFormData({ ...formData, critical: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🚩 Critical Priority</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">- needs immediate attention</span>
-            </label>
-            
-            {/* Recurrence Toggle - compact like critical priority */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!formData.recurrence_type}
-                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.checked ? 'weekly' : null })}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">🔁 Recurring Task</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">- recreates when completed</span>
-              </label>
-              
-              {/* Recurrence options - shown when toggle is on */}
-              {formData.recurrence_type && (
-                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
-                  <select
-                    value={formData.recurrence_type || ''}
-                    onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
-                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
-                      <option key={type.id} value={type.id}>{type.label}</option>
-                    ))}
-                  </select>
-                  {formData.recurrence_type && !formData.due_date && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                      ⚠️ Set a due date to enable recurrence
-                    </p>
-                  )}
-                </div>
-              )}
+            {/* Recurrence options - shown when toggle is on */}
+            {formData.recurrence_type && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repeat</label>
+                <select
+                  value={formData.recurrence_type || ''}
+                  onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                >
+                  {RECURRENCE_TYPES.filter(t => t.id).map((type) => (
+                    <option key={type.id} value={type.id}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             </div>
           </div>
         )}
