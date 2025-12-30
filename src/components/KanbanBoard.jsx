@@ -187,6 +187,53 @@ const getNextRecurrenceDate = (originalStartDate, recurrenceType) => {
   return nextDate.toISOString().split('T')[0]
 }
 
+// Generate multiple future occurrence dates for recurring tasks
+const generateFutureOccurrences = (startDate, recurrenceType, count) => {
+  if (!startDate || !recurrenceType) return []
+  
+  const occurrences = []
+  let currentDate = new Date(startDate)
+  currentDate.setHours(0, 0, 0, 0)
+  
+  const addInterval = (date) => {
+    switch (recurrenceType) {
+      case 'daily':
+        date.setDate(date.getDate() + 1)
+        break
+      case 'weekly':
+        date.setDate(date.getDate() + 7)
+        break
+      case 'biweekly':
+        date.setDate(date.getDate() + 14)
+        break
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1)
+        break
+      default:
+        return null
+    }
+    return date
+  }
+  
+  for (let i = 0; i < count; i++) {
+    addInterval(currentDate)
+    occurrences.push(currentDate.toISOString().split('T')[0])
+  }
+  
+  return occurrences
+}
+
+// Get number of future occurrences to create based on recurrence type
+const getOccurrenceCount = (recurrenceType) => {
+  switch (recurrenceType) {
+    case 'daily': return 14    // 2 weeks ahead
+    case 'weekly': return 8    // 8 weeks ahead
+    case 'biweekly': return 6  // 12 weeks ahead
+    case 'monthly': return 6   // 6 months ahead
+    default: return 0
+  }
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
@@ -5441,7 +5488,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   </p>
                 ) : (
                   <p className="text-xs text-blue-600 dark:text-blue-400">
-                    📅 Next occurrence: {getNextRecurrenceDate(formData.start_date, formData.recurrence_type)}
+                    📅 Will create {getOccurrenceCount(formData.recurrence_type)} future occurrences
                   </p>
                 )}
               </div>
@@ -7499,6 +7546,58 @@ export default function KanbanBoard() {
             taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
           )
         }
+        
+        // Create future occurrences for recurring tasks
+        if (taskData.recurrence_type && taskData.start_date) {
+          const occurrenceCount = getOccurrenceCount(taskData.recurrence_type)
+          const futureStartDates = generateFutureOccurrences(taskData.start_date, taskData.recurrence_type, occurrenceCount)
+          
+          // Calculate due date offset if task has both start and due dates
+          let dueDateOffset = null
+          if (taskData.due_date && taskData.start_date) {
+            dueDateOffset = new Date(taskData.due_date) - new Date(taskData.start_date)
+          }
+          
+          const futureTasksToInsert = futureStartDates.map(futureStartDate => {
+            let futureDueDate = null
+            if (dueDateOffset !== null) {
+              const dueDate = new Date(futureStartDate)
+              dueDate.setTime(dueDate.getTime() + dueDateOffset)
+              futureDueDate = dueDate.toISOString().split('T')[0]
+            }
+            
+            return {
+              title: taskData.title,
+              description: taskData.description,
+              project_id: taskData.project_id,
+              status: 'backlog',
+              critical: taskData.critical,
+              start_date: futureStartDate,
+              start_time: taskData.start_time || null,
+              end_time: taskData.end_time || null,
+              due_date: futureDueDate,
+              assignee: taskData.assignee || null,
+              time_estimate: taskData.time_estimate,
+              energy_level: taskData.energy_level,
+              category: taskData.category,
+              source: taskData.source,
+              source_link: taskData.source_link || null,
+              customer: taskData.customer || null,
+              notes: taskData.notes || null,
+              recurrence_type: taskData.recurrence_type,
+              recurrence_parent_id: taskId,
+              subtasks: taskData.subtasks || [],
+            }
+          })
+          
+          if (futureTasksToInsert.length > 0) {
+            const { error: recurError } = await supabase
+              .from('tasks')
+              .insert(futureTasksToInsert)
+            
+            if (recurError) console.error('Error creating future occurrences:', recurError)
+          }
+        }
       }
 
       for (const file of newFiles) {
@@ -7622,43 +7721,8 @@ export default function KanbanBoard() {
     try {
       const task = tasks.find(t => t.id === taskId)
       
-      if (newStatus === 'done' && task?.recurrence_type && task?.start_date) {
-        const nextStartDate = getNextRecurrenceDate(task.start_date, task.recurrence_type)
-        let nextDueDate = null
-        
-        if (task.due_date && nextStartDate) {
-          const originalDiff = new Date(task.due_date) - new Date(task.start_date)
-          const nextDue = new Date(nextStartDate)
-          nextDue.setTime(nextDue.getTime() + originalDiff)
-          nextDueDate = nextDue.toISOString().split('T')[0]
-        }
-        
-        if (nextStartDate) {
-          const { error: recurError } = await supabase
-            .from('tasks')
-            .insert({
-              title: task.title,
-              description: task.description,
-              project_id: task.project_id,
-              status: 'todo',
-              critical: task.critical,
-              start_date: nextStartDate,
-              due_date: nextDueDate,
-              assignee: task.assignee,
-              time_estimate: task.time_estimate,
-              energy_level: task.energy_level,
-              category: task.category,
-              source: task.source,
-              source_link: task.source_link,
-              customer: task.customer,
-              notes: task.notes,
-              recurrence_type: task.recurrence_type,
-              recurrence_parent_id: task.recurrence_parent_id || task.id,
-            })
-          
-          if (recurError) console.error('Error creating recurring task:', recurError)
-        }
-      }
+      // Note: Future recurring occurrences are pre-created when the task is saved,
+      // so we don't need to create a new task here when marking done
       
       const { error } = await supabase
         .from('tasks')
