@@ -4430,7 +4430,11 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   const energyStyle = ENERGY_LEVELS[task.energy_level]
   const inMyDay = isInMyDay(task)
   
-  const accentColor = blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
+  // Due date urgency takes visual priority (only for non-done tasks)
+  const isOverdue = !isDone && dueDateStatus === 'overdue'
+  const isDueToday = !isDone && dueDateStatus === 'today'
+  
+  const accentColor = isOverdue ? '#DC2626' : isDueToday ? '#D97706' : blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
   
   const hasExtraInfo = task.description || task.assignee || category || 
     (task.subtasks?.length > 0) || (task.attachments?.length > 0)
@@ -4440,10 +4444,15 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative bg-white dark:bg-gray-800 rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] hover:-translate-y-0.5 hover:shadow-md ${
-        isDone ? 'opacity-60' : ''
+      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all group hover:z-[100] hover:-translate-y-0.5 hover:shadow-md ${
+        isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
+        isOverdue ? 'bg-red-50 dark:bg-red-950/40' :
+        isDueToday ? 'bg-amber-50 dark:bg-amber-950/40' :
+        'bg-white dark:bg-gray-800'
       } ${
         isSelected ? 'ring-2 ring-indigo-500 border-indigo-300' :
+        isOverdue ? 'border-red-200 dark:border-red-800 hover:border-red-300' :
+        isDueToday ? 'border-amber-200 dark:border-amber-800 hover:border-amber-300' :
         blocked ? 'border-orange-200 dark:border-orange-800 hover:border-orange-300' :
         task.critical ? 'border-red-200 dark:border-red-800 hover:border-red-300' :
         readyToStart ? 'border-green-200 dark:border-green-800 hover:border-green-300' :
@@ -4577,10 +4586,16 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         <div className="flex-1 min-w-0">
           {/* Title Row */}
           <div className="flex items-center gap-1">
+            {isOverdue && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 flex-shrink-0">OVERDUE</span>}
+            {isDueToday && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex-shrink-0">TODAY</span>}
             {blocked && <span title="Blocked" className="text-xs flex-shrink-0">🔒</span>}
             {task.critical && <span title="Critical" className="text-xs flex-shrink-0">🚩</span>}
             {recurrence && <span title={recurrence.label} className="text-xs flex-shrink-0">🔁</span>}
-            <h4 className="flex-1 text-xs font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 line-clamp-2 leading-tight">{task.title}</h4>
+            <h4 className={`flex-1 text-xs font-medium line-clamp-2 leading-tight ${
+              isOverdue ? 'text-red-700 dark:text-red-300 group-hover:text-red-800 dark:group-hover:text-red-200' :
+              isDueToday ? 'text-amber-700 dark:text-amber-300 group-hover:text-amber-800 dark:group-hover:text-amber-200' :
+              'text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+            }`}>{task.title}</h4>
           </div>
           
           {/* Dates & Effort Row */}

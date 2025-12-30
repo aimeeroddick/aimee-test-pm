@@ -1,0 +1,74 @@
+3869,3886c3869,3890
+<     const headers = ['ID', 'Title', 'Project', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
+<     const rows = sortedTasks.map(t => [
+<       t.id || '',
+<       t.title || '',
+<       projects.find(p => p.id === t.project_id)?.name || '',
+<       t.status || '',
+<       t.critical ? 'Yes' : 'No',
+<       t.due_date || '',
+<       t.start_date || '',
+<       t.assignee || '',
+<       t.customer || '',
+<       CATEGORIES.find(c => c.id === t.category)?.label || '',
+<       t.energy_level || '',
+<       SOURCES.find(s => s.id === t.source)?.label || '',
+<       t.time_estimate ? `${t.time_estimate}m` : '',
+<       (t.description || '').replace(/[\n\r,]/g, ' '),
+<       t.created_at ? new Date(t.created_at).toLocaleDateString() : ''
+<     ])
+---
+>     const headers = ['ID', 'Title', 'Project', 'Project Archived', 'Status', 'Critical', 'Due Date', 'Start Date', 'Assignee', 'Customer', 'Category', 'Effort', 'Source', 'Time Estimate', 'Description', 'Created']
+>     const rows = sortedTasks.map(t => {
+>       const taskProject = projects.find(p => p.id === t.project_id)
+>       return [
+>         t.id || '',
+>         t.title || '',
+>         taskProject?.name || '',
+>         taskProject?.archived ? 'Yes' : 'No',
+>         t.status || '',
+>         t.critical ? 'Yes' : 'No',
+>         t.due_date || '',
+>         t.start_date || '',
+>         t.assignee || '',
+>         t.customer || '',
+>         CATEGORIES.find(c => c.id === t.category)?.label || '',
+>         t.energy_level || '',
+>         SOURCES.find(s => s.id === t.source)?.label || '',
+>         t.time_estimate ? `${t.time_estimate}m` : '',
+>         (t.description || '').replace(/[\n\r,]/g, ' '),
+>         t.created_at ? new Date(t.created_at).toLocaleDateString() : ''
+>       ]
+>     })
+7576a7581,7591
+>   // Helper to check if a task's project is archived
+>   const isProjectArchived = (task) => {
+>     if (!task.project_id) return false
+>     const project = projects.find(p => p.id === task.project_id)
+>     return project?.archived === true
+>   }
+> 
+>   // Active tasks = all tasks excluding those from archived projects
+>   // Used by My Day and Calendar views
+>   const activeTasks = tasks.filter(t => !isProjectArchived(t))
+> 
+7577a7593,7595
+>     // Hide tasks from archived projects on Board view (unless showing archived)
+>     if (!showArchivedProjects && isProjectArchived(t)) return false
+>     
+8518c8536
+<                 tasks={tasks}
+---
+>                 tasks={activeTasks}
+8522c8540
+<                 allTasks={tasks}
+---
+>                 allTasks={activeTasks}
+8536c8554
+<                 tasks={tasks}
+---
+>                 tasks={activeTasks}
+8540c8558
+<                 allTasks={tasks}
+---
+>                 allTasks={activeTasks}
