@@ -496,15 +496,15 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
   
   const shortcuts = [
     { keys: ['Q'], description: 'Quick add task' },
-    { keys: ['⌘/Ctrl', 'T'], description: 'New task (full form)' },
-    { keys: ['⌘/Ctrl', 'P'], description: 'New project' },
-    { keys: ['⌘/Ctrl', 'S'], description: 'Search tasks' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'T'], description: 'New task (full form)' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'P'], description: 'New project' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'S'], description: 'Search tasks' },
     { keys: ['/'], description: 'Quick search' },
-    { keys: ['⌘/Ctrl', 'D'], description: 'My Day view' },
-    { keys: ['⌘/Ctrl', 'B'], description: 'Board view' },
-    { keys: ['⌘/Ctrl', 'L'], description: 'Calendar view' },
-    { keys: ['⌘/Ctrl', 'A'], description: 'All Tasks view' },
-    { keys: ['⌘/Ctrl', 'N'], description: 'Import notes' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'D'], description: 'My Day view' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'B'], description: 'Board view' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'L'], description: 'Calendar view' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'A'], description: 'All Tasks view' },
+    { keys: ['⌘⌃ / Ctrl+Alt', 'N'], description: 'Import notes' },
     { keys: ['Esc'], description: 'Close modal' },
     { keys: ['?'], description: 'Show this help' },
   ]
@@ -1427,7 +1427,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗃️</span>
                   All Tasks View
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘A</kbd>.</p>
+                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘⌃A</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+Alt+A</kbd> (Win).</p>
               </section>
               
               <section>
@@ -1477,7 +1477,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                 </h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
                   <p>• Click the <span className="px-2 py-1 bg-indigo-500 text-white rounded text-sm font-medium">+</span> button in the header</p>
-                  <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘T</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+T</kbd> (Windows)</p>
+                  <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘⌃T</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+Alt+T</kbd> (Win)</p>
                 </div>
               </section>
               
@@ -1625,19 +1625,19 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">New Task</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘T</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃T</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">New Project</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘P</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃P</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Import Tasks</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘N</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘⌃N</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘/</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">?</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Close Modal</span>
@@ -4539,7 +4539,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(task.title)
@@ -6823,7 +6823,9 @@ export default function KanbanBoard() {
       }
       
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
-      const modifier = isMac ? e.metaKey : (e.ctrlKey || e.altKey)
+      // On Mac: require Cmd+Ctrl to avoid browser shortcut conflicts (⌘T opens new tab, etc.)
+      // On Windows: require Ctrl+Alt
+      const modifier = isMac ? (e.metaKey && e.ctrlKey) : (e.ctrlKey && e.altKey)
       
       // Cmd/Ctrl/Alt + K or S for search
       if (modifier && (e.key === 'k' || e.key === 's')) {
@@ -8662,7 +8664,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">☀️</span>
                         <span className="font-medium">My Day</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘D</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃D</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('board'); setNavMenuOpen(false) }}
@@ -8670,7 +8672,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📋</span>
                         <span className="font-medium">Board</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘B</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃B</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('calendar'); setNavMenuOpen(false) }}
@@ -8678,7 +8680,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📆</span>
                         <span className="font-medium">Calendar</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘L</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃L</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('tasks'); setNavMenuOpen(false) }}
@@ -8686,7 +8688,7 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">🗃️</span>
                         <span className="font-medium">All Tasks</span>
-                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘A</span>
+                        <span className="ml-auto text-xs text-gray-400 hidden sm:inline">⌘⌃A</span>
                       </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
@@ -8811,7 +8813,7 @@ export default function KanbanBoard() {
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
                 className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                title="⌘T"
+                title="⌘⌃T (Mac) / Ctrl+Alt+T (Win)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
