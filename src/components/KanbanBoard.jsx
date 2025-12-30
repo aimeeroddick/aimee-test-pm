@@ -51,6 +51,13 @@ const COLUMNS = [
   { id: 'done', title: 'Done', subtitle: 'Completed', color: COLUMN_COLORS.done },
 ]
 
+// Get display title for a column (uses custom name if set)
+const getColumnTitle = (columnId, customColumnNames = {}) => {
+  const column = COLUMNS.find(c => c.id === columnId)
+  if (!column) return columnId
+  return customColumnNames[columnId] || column.title
+}
+
 const DONE_DISPLAY_LIMIT = 5
 const BACKLOG_DISPLAY_LIMIT = 10
 
@@ -1533,7 +1540,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board' }) => {
 }
 
 // Search Modal Component
-const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks }) => {
+const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks, customColumnNames }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const inputRef = useRef(null)
   
@@ -1666,7 +1673,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                         )}
                       </div>
                       <span className="text-xs px-2 py-1 bg-gray-100 rounded-lg text-gray-500 shrink-0">
-                        {COLUMNS.find(c => c.id === task.status)?.title}
+                        {getColumnTitle(task.status, customColumnNames)}
                       </span>
                     </div>
                   </button>
@@ -1721,7 +1728,7 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar View Component - Daily/Weekly/Monthly
-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode }) => {
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode, customColumnNames }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
@@ -7085,6 +7092,10 @@ export default function KanbanBoard() {
   }).length
 
   const filteredTasks = tasks.filter((t) => {
+    // Exclude tasks from archived projects (unless viewing that specific project)
+    const taskProject = projects.find(p => p.id === t.project_id)
+    if (taskProject?.archived && selectedProjectId !== t.project_id) return false
+    
     // Project filter
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
     
