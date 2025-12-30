@@ -5184,7 +5184,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate, onShowConfirm }) => {
   const fileInputRef = useRef(null)
   const [showSaveTemplateInput, setShowSaveTemplateInput] = useState(false)
   const [templateName, setTemplateName] = useState('')
@@ -6406,10 +6406,22 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         )}
         
         <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
-          {task && (
+          {task && onShowConfirm && (
             <button
               type="button"
-              onClick={() => { onDelete(task.id); onClose() }}
+              onClick={() => {
+                onShowConfirm({
+                  title: 'Delete Task',
+                  message: `Delete "${task.title}"? This cannot be undone.`,
+                  confirmLabel: 'Delete',
+                  confirmStyle: 'danger',
+                  icon: '🗑️',
+                  onConfirm: () => {
+                    onDelete(task.id)
+                    onClose()
+                  }
+                })
+              }}
               disabled={loading}
               className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
             >
@@ -9963,6 +9975,7 @@ export default function KanbanBoard() {
         templates={taskTemplates}
         onSaveTemplate={saveTaskTemplate}
         onDeleteTemplate={deleteTaskTemplate}
+        onShowConfirm={setConfirmDialog}
       />
       
       <ProjectModal
