@@ -3721,7 +3721,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
             {greetingEmoji} {greeting}
@@ -3746,7 +3746,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       </div>
       
       {myDayTasks.length > 0 && (
-        <div className="mb-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
+        <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Progress</span>
             <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -3768,7 +3768,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         </div>
       )}
       
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl">☀️</span>
@@ -4912,14 +4912,14 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         onDrop(e, column.id)
       }}
     >
-      <div className="flex items-center gap-3 mb-1">
+      <div className="flex items-center gap-3 mb-2">
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
         <h3 className="font-semibold text-gray-700 dark:text-gray-200">{column.title}</h3>
         <span className="ml-auto bg-white dark:bg-gray-700 px-2.5 py-0.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-300 shadow-sm">
           {tasks.length}
         </span>
       </div>
-      <div className="flex items-center gap-2 mb-3 ml-6 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-400">
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
         {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
@@ -8796,7 +8796,7 @@ export default function KanbanBoard() {
         {/* Filter Bar - only on board view */}
         {currentView === 'board' && (
           <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2.5 overflow-x-auto">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+            <div className="flex items-center gap-3 min-w-max">
               {/* Project dropdown */}
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -9306,8 +9306,8 @@ export default function KanbanBoard() {
               </div>
               
               {/* Active Projects */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Active Projects ({projects.filter(p => !p.archived).length})</h3>
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Active Projects ({projects.filter(p => !p.archived).length})</h3>
                 <div className="space-y-3">
                   {projects.filter(p => !p.archived).map(project => {
                     const projectTasks = tasks.filter(t => t.project_id === project.id)
@@ -9381,7 +9381,7 @@ export default function KanbanBoard() {
               {/* Archived Projects */}
               {projects.filter(p => p.archived).length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Archived ({projects.filter(p => p.archived).length})</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Archived ({projects.filter(p => p.archived).length})</h3>
                   <div className="space-y-3">
                     {projects.filter(p => p.archived).map(project => {
                       const projectTasks = tasks.filter(t => t.project_id === project.id)
@@ -9432,7 +9432,7 @@ export default function KanbanBoard() {
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📊 Progress Dashboard</h2>
               
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-2xl">🔥</span>
@@ -9464,7 +9464,7 @@ export default function KanbanBoard() {
               </div>
               
               {/* Weekly Activity Chart */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Last 7 Days</h3>
                 <div className="flex items-end justify-between gap-2 h-32">
                   {(() => {
@@ -9513,7 +9513,7 @@ export default function KanbanBoard() {
               </div>
               
               {/* Project Progress */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Project Progress</h3>
                 <div className="space-y-4">
                   {projects.filter(p => !p.archived).map(project => {
