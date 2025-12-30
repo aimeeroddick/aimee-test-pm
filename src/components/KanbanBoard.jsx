@@ -5225,7 +5225,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const initializedRef = useRef(null) // Track which task we've initialized for
   const [viewingAttachment, setViewingAttachment] = useState(null)
   
-  // Keyboard handler for delete confirmation
+  // Keyboard handler for delete confirmation and save shortcut
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showDeleteConfirm) {
@@ -5235,6 +5235,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           setShowDeleteConfirm(false)
           onClose()
         }
+      }
+      // Ctrl/Cmd + Enter to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !showDeleteConfirm) {
+        e.preventDefault()
+        document.querySelector('form')?.requestSubmit()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -6559,6 +6564,18 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
     setNewMember('')
     setNewCustomer('')
   }, [project, isOpen])
+  
+  // Ctrl/Cmd + Enter to save
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && isOpen) {
+        e.preventDefault()
+        document.querySelector('form')?.requestSubmit()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
   
   const addMember = () => {
     if (newMember.trim() && !formData.members.includes(newMember.trim())) {
