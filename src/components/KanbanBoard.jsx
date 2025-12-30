@@ -459,6 +459,50 @@ const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
   )
 }
 
+// Confirm Modal Component - replaces browser confirm()
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel = 'Confirm', confirmStyle = 'danger', icon = '⚠️', loading = false }) => {
+  if (!isOpen) return null
+  
+  const confirmButtonStyles = {
+    danger: 'bg-red-500 hover:bg-red-600 text-white',
+    warning: 'bg-amber-500 hover:bg-amber-600 text-white',
+    primary: 'bg-indigo-500 hover:bg-indigo-600 text-white',
+  }
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <span className="text-xl">{icon}</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+        </div>
+        <p className="mb-6 text-gray-600 dark:text-gray-300">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={`px-4 py-2 rounded-xl font-medium transition-colors ${confirmButtonStyles[confirmStyle]} disabled:opacity-50`}
+          >
+            {loading ? 'Please wait...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Loading Skeleton Components
 const SkeletonCard = () => (
   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 animate-pulse">
@@ -1873,7 +1917,7 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar View Component - Daily/Weekly/Monthly
-const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode }) => {
+const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode, onShowConfirm }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
   const [draggedTask, setDraggedTask] = useState(null)
@@ -2090,8 +2134,17 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         onEditTask(task)
         break
       case 'delete':
-        if (onDeleteTask && confirm('Delete this task?')) {
-          onDeleteTask(task.id)
+        if (onDeleteTask && onShowConfirm) {
+          onShowConfirm({
+            title: 'Delete Task',
+            message: `Delete "${task.title}"? This cannot be undone.`,
+            confirmLabel: 'Delete',
+            confirmStyle: 'danger',
+            icon: '🗑️',
+            onConfirm: () => {
+              onDeleteTask(task.id)
+            }
+          })
         }
         break
       case 'duplicate':
@@ -6440,7 +6493,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
 }
 
 // Project Modal Component
-const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading }) => {
+const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm }) => {
   const [formData, setFormData] = useState({ name: '', members: [], customers: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
@@ -6566,10 +6619,17 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm('Delete this project and all its tasks? This cannot be undone.')) {
-                    onDelete(project.id)
-                    onClose()
-                  }
+                  onShowConfirm({
+                    title: 'Delete Project',
+                    message: `Delete "${project.name}" and all its tasks? This cannot be undone.`,
+                    confirmLabel: 'Delete Project',
+                    confirmStyle: 'danger',
+                    icon: '🗑️',
+                    onConfirm: () => {
+                      onDelete(project.id)
+                      onClose()
+                    }
+                  })
                 }}
                 disabled={loading}
                 className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
@@ -6848,6 +6908,9 @@ export default function KanbanBoard() {
   
   // Toast for undo actions
   const [toast, setToast] = useState(null)
+  
+  // Confirm dialog state (replaces browser confirm())
+  const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, confirmLabel, confirmStyle, icon }
   
   // Bulk selection
   const [bulkSelectMode, setBulkSelectMode] = useState(false)
@@ -7701,29 +7764,38 @@ export default function KanbanBoard() {
   
   const handleBulkDelete = async () => {
     if (selectedTaskIds.size === 0) return
-    if (!confirm(`Delete ${selectedTaskIds.size} selected tasks?`)) return
     
-    setSaving(true)
-    try {
-      const ids = Array.from(selectedTaskIds)
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .in('id', ids)
-      
-      if (error) throw error
-      
-      setTasks(tasks.filter(t => !selectedTaskIds.has(t.id)))
-      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks deleted` })
-      setTimeout(() => setUndoToast(null), 3000)
-      setBulkSelectMode(false)
-      setSelectedTaskIds(new Set())
-    } catch (err) {
-      console.error('Error bulk deleting tasks:', err)
-      setError(err.message)
-    } finally {
-      setSaving(false)
-    }
+    setConfirmDialog({
+      title: 'Delete Tasks',
+      message: `Are you sure you want to delete ${selectedTaskIds.size} selected task${selectedTaskIds.size === 1 ? '' : 's'}? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      confirmStyle: 'danger',
+      icon: '🗑️',
+      onConfirm: async () => {
+        setSaving(true)
+        try {
+          const ids = Array.from(selectedTaskIds)
+          const { error } = await supabase
+            .from('tasks')
+            .delete()
+            .in('id', ids)
+          
+          if (error) throw error
+          
+          setTasks(tasks.filter(t => !selectedTaskIds.has(t.id)))
+          setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks deleted` })
+          setTimeout(() => setUndoToast(null), 3000)
+          setBulkSelectMode(false)
+          setSelectedTaskIds(new Set())
+          setConfirmDialog(null)
+        } catch (err) {
+          console.error('Error bulk deleting tasks:', err)
+          setError(err.message)
+        } finally {
+          setSaving(false)
+        }
+      }
+    })
   }
 
   const handleBulkMoveToProject = async (projectId) => {
@@ -9427,8 +9499,10 @@ export default function KanbanBoard() {
                 onCreateTask={(prefill) => { setEditingTask(prefill); setTaskModalOpen(true) }}
                 allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onUpdateTask={handleCalendarTaskUpdate}
+                onDeleteTask={handleDeleteTask}
                 viewMode={calendarViewMode}
                 setViewMode={setCalendarViewMode}
+                onShowConfirm={setConfirmDialog}
               />
             </div>
           )}
@@ -9559,9 +9633,17 @@ export default function KanbanBoard() {
                               </button>
                               <button
                                 onClick={() => {
-                                  if (confirm('Delete this project and all its tasks? This cannot be undone.')) {
-                                    handleDeleteProject(project.id)
-                                  }
+                                  setConfirmDialog({
+                                    title: 'Delete Project',
+                                    message: `Delete "${project.name}" and all its tasks? This cannot be undone.`,
+                                    confirmLabel: 'Delete Project',
+                                    confirmStyle: 'danger',
+                                    icon: '🗑️',
+                                    onConfirm: () => {
+                                      handleDeleteProject(project.id)
+                                      setConfirmDialog(null)
+                                    }
+                                  })
                                 }}
                                 className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                 title="Delete permanently"
@@ -9891,6 +9973,7 @@ export default function KanbanBoard() {
         onDelete={handleDeleteProject}
         onArchive={handleArchiveProject}
         loading={saving}
+        onShowConfirm={setConfirmDialog}
       />
       
       <SearchModal
@@ -9909,6 +9992,19 @@ export default function KanbanBoard() {
         onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
         initialTab={helpModalTab}
         shortcutModifier={shortcutModifier}
+      />
+      
+      {/* Generic Confirm Modal */}
+      <ConfirmModal
+        isOpen={!!confirmDialog}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={() => { confirmDialog?.onConfirm?.(); setConfirmDialog(null) }}
+        title={confirmDialog?.title || ''}
+        message={confirmDialog?.message || ''}
+        confirmLabel={confirmDialog?.confirmLabel}
+        confirmStyle={confirmDialog?.confirmStyle}
+        icon={confirmDialog?.icon}
+        loading={saving}
       />
       
       {/* Delete Recurring Task Confirmation */}
