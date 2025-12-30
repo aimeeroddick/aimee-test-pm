@@ -3168,6 +3168,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const blocked = isBlocked(task, allTasks)
     const holdTimerRef = useRef(null)
     const [isHolding, setIsHolding] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
     
     const handleMouseDown = (e) => {
@@ -3186,6 +3187,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         clearTimeout(holdTimerRef.current)
         holdTimerRef.current = null
       }
+      setIsDragging(false)
       // Small delay before resetting to allow drag to complete
       setTimeout(() => {
         setIsHolding(false)
@@ -3212,6 +3214,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         return
       }
       didDragRef.current = true
+      setIsDragging(true)
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('taskId', task.id)
       onDragStart && onDragStart(e, task)
@@ -3227,7 +3230,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         onDragEnd={handleMouseUp}
         onClick={handleClick}
         className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
-          isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
         } ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
