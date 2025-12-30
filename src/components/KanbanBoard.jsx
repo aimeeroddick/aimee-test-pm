@@ -3466,10 +3466,10 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
-              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800' 
+              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 shadow-sm' 
               : task.critical 
-                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800' 
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 shadow-sm' 
+                : 'bg-white dark:bg-gray-800 shadow-sm hover:shadow-md'
         }`}
       >
         <div className="flex items-start gap-2">
