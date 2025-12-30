@@ -2519,57 +2519,36 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const schedulable = getSchedulableTasks()
     const totalSchedulable = schedulable.overdue.length + schedulable.dueToday.length + schedulable.dueSoon.length + schedulable.inProgress.length + schedulable.myDay.length + schedulable.todo.length + schedulable.backlog.length + schedulable.quickWins.length
     
-    // Reusable task card component for sidebar with hold-to-drag
+    // Reusable task card component for sidebar
     const TaskCard = ({ task, highlight }) => {
-      const holdTimerRef = useRef(null)
-      const isHoldingRef = useRef(false)
-      const [isHolding, setIsHolding] = useState(false)
       const [isDragging, setIsDragging] = useState(false)
       const didDragRef = useRef(false)
       
-      const handleMouseDown = (e) => {
-        if (e.target.closest('button')) return
-        didDragRef.current = false
-        holdTimerRef.current = setTimeout(() => {
-          isHoldingRef.current = true
-          setIsHolding(true)
-        }, 200)
-      }
-      
-      const handleMouseUp = () => {
-        if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
-        setIsDragging(false)
-        setTimeout(() => {
-          isHoldingRef.current = false
-          setIsHolding(false)
-          didDragRef.current = false
-        }, 100)
-      }
-      
       const handleCardDragStart = (e) => {
-        if (!isHoldingRef.current) { e.preventDefault(); return }
         didDragRef.current = true
         setIsDragging(true)
         handleDragStart(e, task)
       }
       
+      const handleDragEnd = () => {
+        setIsDragging(false)
+        setTimeout(() => {
+          didDragRef.current = false
+        }, 100)
+      }
+      
       const handleClick = () => {
-        if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
+        if (!didDragRef.current) onEditTask(task)
       }
       
       return (
         <div
           draggable
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={() => holdTimerRef.current && clearTimeout(holdTimerRef.current)}
           onDragStart={handleCardDragStart}
-          onDragEnd={handleMouseUp}
+          onDragEnd={handleDragEnd}
           onClick={handleClick}
-          className={`p-2.5 rounded-lg border transition-all select-none ${
-            isDragging ? 'opacity-40 scale-[0.98]' : 
-            isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 
-            'cursor-pointer hover:shadow-md'
+          className={`p-2.5 rounded-lg border transition-all select-none cursor-grab active:cursor-grabbing ${
+            isDragging ? 'opacity-40 scale-[0.98]' : 'hover:shadow-md'
           } ${
             highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
             highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
@@ -3405,53 +3384,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
-    const holdTimerRef = useRef(null)
-    const isHoldingRef = useRef(false)
-    const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
     
-    const handleMouseDown = (e) => {
-      if (isCompleted) return
-      // Don't start hold if clicking on a button
-      if (e.target.closest('button')) return
-      
-      didDragRef.current = false
-      holdTimerRef.current = setTimeout(() => {
-        isHoldingRef.current = true
-        setIsHolding(true)
-      }, 200)
-    }
-    
-    const handleMouseUp = () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current)
-        holdTimerRef.current = null
-      }
-      setIsDragging(false)
-      // Small delay before resetting to allow drag to complete
-      setTimeout(() => {
-        isHoldingRef.current = false
-        setIsHolding(false)
-        didDragRef.current = false
-      }, 100)
-    }
-    
-    const handleMouseLeave = () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current)
-        holdTimerRef.current = null
-      }
-    }
-    
-    const handleClick = () => {
-      if (!didDragRef.current && !isHoldingRef.current) {
-        onEditTask(task)
-      }
-    }
-    
     const handleDragStart = (e) => {
-      if (!isHoldingRef.current) {
+      if (isCompleted) {
         e.preventDefault()
         return
       }
@@ -3462,17 +3399,27 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       onDragStart && onDragStart(e, task)
     }
     
+    const handleDragEnd = () => {
+      setIsDragging(false)
+      setTimeout(() => {
+        didDragRef.current = false
+      }, 100)
+    }
+    
+    const handleClick = () => {
+      if (!didDragRef.current) {
+        onEditTask(task)
+      }
+    }
+    
     return (
       <div
         draggable={!isCompleted}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
         onDragStart={handleDragStart}
-        onDragEnd={handleMouseUp}
+        onDragEnd={handleDragEnd}
         onClick={handleClick}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
-          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 cursor-grab active:cursor-grabbing hover:shadow-md ${
+          isDragging ? 'opacity-40 scale-[0.98]' : ''
         } ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
