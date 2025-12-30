@@ -14,7 +14,7 @@ const CATEGORIES = [
   { id: 'meeting_followup', label: 'Meeting Follow-up', color: '#8B5CF6' },
   { id: 'email', label: 'Email', color: '#3B82F6' },
   { id: 'deliverable', label: 'Deliverable', color: '#10B981' },
-  { id: 'admin', label: 'Admin', color: '#6B7280' },
+  { id: 'admin', label: 'Admin', color: '#4B5563' },
   { id: 'review', label: 'Review/Approval', color: '#F59E0B' },
   { id: 'call', label: 'Call/Meeting', color: '#EC4899' },
   { id: 'research', label: 'Research', color: '#14B8A6' },
@@ -4599,7 +4599,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           </div>
           
           {/* Dates & Effort Row */}
-          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-gray-500 dark:text-gray-400">
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-gray-600 dark:text-gray-400">
             {task.start_date && (
               <span className={`flex items-center gap-0.5 ${readyToStart ? 'text-green-600 dark:text-green-400' : ''}`}>
                 <span>▶</span> {formatDate(task.start_date)}
@@ -4640,7 +4640,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {/* Project at bottom */}
           {showProject && project && (
             <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">{project.name}</span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400">{project.name}</span>
             </div>
           )}
         </div>
@@ -4796,7 +4796,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           {tasks.length}
         </span>
       </div>
-      <div className="flex items-center gap-2 mb-3 ml-6 text-xs text-gray-400 dark:text-gray-500">
+      <div className="flex items-center gap-2 mb-3 ml-6 text-xs text-gray-500 dark:text-gray-400">
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
         {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
