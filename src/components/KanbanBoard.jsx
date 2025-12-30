@@ -5236,8 +5236,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           onClose()
         }
       }
-      // Ctrl/Cmd + Enter to save
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !showDeleteConfirm) {
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && !showDeleteConfirm) {
         e.preventDefault()
         document.querySelector('form')?.requestSubmit()
       }
@@ -6493,7 +6493,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             disabled={loading}
             className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
           >
-            {loading ? 'Saving...' : task ? 'Save Changes' : 'Create Task'}
+            {loading ? 'Saving...' : task ? <><u>S</u>ave Changes</> : 'Create Task'}
           </button>
         </div>
       </form>
@@ -6565,10 +6565,10 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
     setNewCustomer('')
   }, [project, isOpen])
   
-  // Ctrl/Cmd + Enter to save
+  // Ctrl/Cmd + S to save
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && isOpen) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && isOpen) {
         e.preventDefault()
         document.querySelector('form')?.requestSubmit()
       }
@@ -6719,7 +6719,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
             disabled={loading}
             className="px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-medium disabled:opacity-50"
           >
-            {loading ? 'Saving...' : project ? 'Save Changes' : 'Create Project'}
+            {loading ? 'Saving...' : project ? <><u>S</u>ave Changes</> : 'Create Project'}
           </button>
         </div>
       </form>
