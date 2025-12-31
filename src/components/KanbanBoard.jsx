@@ -957,6 +957,25 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
                         </span>
                       </div>
                       <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{item.message}</p>
+                      {item.images && item.images.length > 0 && (
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {item.images.map((imgUrl, idx) => (
+                            <a 
+                              key={idx} 
+                              href={imgUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <img 
+                                src={imgUrl} 
+                                alt={`Screenshot ${idx + 1}`}
+                                className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600 hover:opacity-80 transition-opacity"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
                         <span>{item.user_email}</span>
                         <span>•</span>
