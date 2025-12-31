@@ -45,33 +45,32 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: `Analyze this image of meeting notes and extract ONLY clear action items - tasks that have a specific person assigned to do something.
+              text: `Analyze this image of meeting notes and extract action items - tasks where someone is assigned to do something.
 
-IMPORTANT: Be very selective. Only extract items that are:
-- Clear action items with an owner/assignee (e.g., "Dave to send links", "Sarah will review")
-- Tasks someone needs to complete (not status updates, not discussion points, not general notes)
+Look for patterns like:
+- "[Name] to [action]" (e.g., "Dave to send links")
+- "[Name] will [action]" (e.g., "Sarah will review")
+- "[Name]: [action]" or "@[Name] [action]"
+- Action items with a person's name and a verb
 
 DO NOT extract:
-- Status updates (e.g., "VFS on track", "Project going well")
-- Discussion summaries (e.g., "Met with Dave to discuss projects")
-- General notes or observations
-- Items without a clear owner or action
+- Status updates without actions (e.g., "VFS on track", "Project going well")
+- Meeting summaries (e.g., "Met with Dave to discuss projects")
+- General notes or observations without a clear task
 
-For each genuine action item found, provide:
-- title: A clear, actionable task title
-- assignee: The person assigned (required - if no clear owner, don't extract it)
-- dueDate: Any due date mentioned (in YYYY-MM-DD format if possible), or empty string
+For each action item found, provide:
+- title: A clear, actionable task title (the action to be done)
+- assignee: The person assigned to do it
+- dueDate: Any due date mentioned (in YYYY-MM-DD format), or empty string if none
 - isCritical: true if marked urgent/important/critical, false otherwise
 
-Return ONLY a valid JSON array of tasks, no other text. Example format:
+Return ONLY a valid JSON array, no other text. Example:
 [
   {"title": "Send links to team", "assignee": "Dave", "dueDate": "2025-01-03", "isCritical": false},
   {"title": "Setup meeting time for next week", "assignee": "Aimee", "dueDate": "", "isCritical": false}
 ]
 
-If no clear action items are found, return an empty array: []
-
-Be strict - it's better to extract fewer genuine tasks than to include status updates or notes.`,
+If no action items are found, return: []`,
             },
           ],
         },
