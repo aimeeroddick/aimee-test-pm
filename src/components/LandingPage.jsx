@@ -33,9 +33,6 @@ export default function LandingPage() {
             <a href="#features" className="hidden sm:block text-gray-600 hover:text-gray-900 transition-colors">
               Features
             </a>
-            <a href="#pricing" className="hidden sm:block text-gray-600 hover:text-gray-900 transition-colors">
-              Pricing
-            </a>
             <Link
               to="/login"
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25"
@@ -412,96 +409,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              Pricing
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Simple, honest pricing
-            </h2>
-            <p className="text-lg text-gray-600">
-              No hidden fees. No feature paywalls. Start free, upgrade when you're ready.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            {/* Free Plan */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Free</h3>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-4xl font-bold text-gray-900">$0</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-              <p className="text-gray-500 mb-8 pb-8 border-b border-gray-100">
-                Perfect for personal use and trying Trackli out.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  'Up to 3 projects',
-                  'All views (Kanban, Calendar, List)',
-                  'My Day daily planning',
-                  'Subtasks and attachments',
-                  'Mobile responsive',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-gray-600">
-                    <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to="/login"
-                className="block w-full py-3 text-center border-2 border-gray-200 text-gray-700 rounded-xl hover:border-gray-300 transition-all font-semibold"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-indigo-500 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-semibold rounded-full">
-                Most Popular
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Pro</h3>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-4xl font-bold text-gray-900">$8</span>
-                <span className="text-gray-500">/month</span>
-              </div>
-              <p className="text-gray-500 mb-8 pb-8 border-b border-gray-100">
-                For power users and small teams who need more.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  'Unlimited projects',
-                  'Everything in Free',
-                  'Recurring tasks',
-                  'Custom templates',
-                  'CSV import/export',
-                  'Priority support',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-gray-600">
-                    <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to="/login"
-                className="block w-full py-3 text-center bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25"
-              >
-                Get Early Access
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Pricing Section - TODO: Add back when pricing is finalized */}
 
       {/* CTA Section */}
       <section className="py-20 px-6">
