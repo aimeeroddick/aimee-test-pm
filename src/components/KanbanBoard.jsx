@@ -419,6 +419,58 @@ const parseNaturalLanguageDate = (text) => {
     }
   }
   
+  // Parse numeric dates (DD/MM/YYYY or MM/DD/YYYY based on locale)
+  const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
+    (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') ||
+     new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+  
+  // Full date with year: DD/MM/YYYY or MM/DD/YYYY
+  let numericMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
+  if (numericMatch) {
+    let day, month
+    if (isUSLocale) {
+      month = parseInt(numericMatch[1]) - 1
+      day = parseInt(numericMatch[2])
+    } else {
+      day = parseInt(numericMatch[1])
+      month = parseInt(numericMatch[2]) - 1
+    }
+    const year = numericMatch[3].length === 2 ? 2000 + parseInt(numericMatch[3]) : parseInt(numericMatch[3])
+    const d = new Date(year, month, day)
+    if (!isNaN(d.getTime())) {
+      return {
+        date: d.toISOString().split('T')[0],
+        cleanedText: '',
+        matched: text.trim()
+      }
+    }
+  }
+  
+  // Short date without year: DD/MM or MM/DD
+  numericMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})$/)
+  if (numericMatch) {
+    let day, month
+    if (isUSLocale) {
+      month = parseInt(numericMatch[1]) - 1
+      day = parseInt(numericMatch[2])
+    } else {
+      day = parseInt(numericMatch[1])
+      month = parseInt(numericMatch[2]) - 1
+    }
+    const d = new Date(today.getFullYear(), month, day)
+    // If date is in the past, assume next year
+    if (d < today) {
+      d.setFullYear(d.getFullYear() + 1)
+    }
+    if (!isNaN(d.getTime())) {
+      return {
+        date: d.toISOString().split('T')[0],
+        cleanedText: '',
+        matched: text.trim()
+      }
+    }
+  }
+
   return { date: null, cleanedText: text, matched: null }
 }
 
