@@ -2684,9 +2684,16 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   }
   
   // Handle drop on time slot (30-minute increments)
-  const handleDropOnSlot = async (date, slotIndex) => {
-    if (!draggedTask || !onUpdateTask) {
-      console.log('Drop failed: no draggedTask or onUpdateTask', { draggedTask, onUpdateTask })
+  const handleDropOnSlot = async (date, slotIndex, e) => {
+    // Get task from state OR from dataTransfer (backup if dragEnd fires first)
+    let taskToSchedule = draggedTask
+    if (!taskToSchedule && e?.dataTransfer) {
+      const taskId = e.dataTransfer.getData('text/plain')
+      taskToSchedule = allTasks.find(t => t.id === taskId)
+    }
+    
+    if (!taskToSchedule || !onUpdateTask) {
+      console.log('Drop failed: no task or onUpdateTask', { taskToSchedule, onUpdateTask })
       return
     }
     
@@ -2696,12 +2703,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const startTime = formatTime(startTimeMinutes)
     
     // Calculate end time based on time_estimate
-    const duration = draggedTask.time_estimate || 30 // default 30 mins
+    const duration = taskToSchedule.time_estimate || 30 // default 30 mins
     const endTimeMinutes = startTimeMinutes + duration
     const endTime = formatTime(endTimeMinutes)
     
     console.log('Dropping task:', {
-      taskId: draggedTask.id,
+      taskId: taskToSchedule.id,
       dateStr,
       startTime,
       endTime,
@@ -2715,12 +2722,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     // Set due_date if it's blank
-    if (!draggedTask.due_date) {
+    if (!taskToSchedule.due_date) {
       updates.due_date = dateStr
     }
     
     // Move backlog tasks to todo when scheduled
-    if (draggedTask.status === 'backlog') {
+    if (taskToSchedule.status === 'backlog') {
       updates.status = 'todo'
     }
     
@@ -2729,7 +2736,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       updates.my_day_date = todayStr
     }
     
-    const taskId = draggedTask.id
+    const taskId = taskToSchedule.id
     setDraggedTask(null)
     
     try {
@@ -3238,7 +3245,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                       onDrop={(e) => { 
                         e.preventDefault()
                         setHoverSlot(null)
-                        handleDropOnSlot(currentDate, slotIndex) 
+                        handleDropOnSlot(currentDate, slotIndex, e) 
                       }}
                       onDoubleClick={() => handleDoubleClickSlot(currentDate, slotIndex)}
                     >
@@ -3424,7 +3431,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                           isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
                         } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
                         onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
-                        onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, slotIndex) }}
+                        onDrop={(e) => { e.preventDefault(); handleDropOnSlot(date, slotIndex, e) }}
                         onDoubleClick={() => handleDoubleClickSlot(date, slotIndex)}
                       >
                         {slotTasks.map(task => {
