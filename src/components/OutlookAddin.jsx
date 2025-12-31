@@ -1,4 +1,4 @@
-// Outlook Add-in for Trackli - v3
+// Outlook Add-in for Trackli - v3 - rebuilt Dec 31
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
