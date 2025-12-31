@@ -6958,26 +6958,26 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
     <Modal isOpen={isOpen} onClose={onClose} title={project ? 'Edit Project' : 'New Project'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Name *</label>
           <input
             type="text"
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             placeholder="Enter project name"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Team Members</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Members</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newMember}
               onChange={(e) => setNewMember(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add team member"
             />
             <button type="button" onClick={addMember} className="px-4 py-2.5 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors">
@@ -6999,14 +6999,14 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Customers/Clients</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customers/Clients</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newCustomer}
               onChange={(e) => setNewCustomer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomer())}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add customer/client"
             />
             <button type="button" onClick={addCustomer} className="px-4 py-2.5 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
