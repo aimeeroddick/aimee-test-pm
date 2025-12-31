@@ -8270,7 +8270,6 @@ export default function KanbanBoard() {
       
       if (projectError) {
         console.error('Project creation error:', projectError)
-        alert('Error creating welcome project: ' + projectError.message)
         throw projectError
       }
       
@@ -8430,7 +8429,6 @@ export default function KanbanBoard() {
       // Create welcome project for new users (no projects yet)
       if (projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
         console.log('New user detected - creating welcome project...')
-        alert('Creating welcome project for new user...')
         await createWelcomeProject()
         return // fetchData will be called again after welcome project creation
       }
