@@ -8256,18 +8256,25 @@ export default function KanbanBoard() {
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
       const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
       
+      console.log('Creating project...')
       // Create the Getting Started project
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
           name: '🚀 Getting Started with Trackli',
-          color: '#6366F1',
           description: 'Welcome! This project shows you around Trackli. Feel free to complete, edit, or delete these tasks.',
+          user_id: user.id,
         })
         .select()
         .single()
       
-      if (projectError) throw projectError
+      if (projectError) {
+        console.error('Project creation error:', projectError)
+        alert('Error creating welcome project: ' + projectError.message)
+        throw projectError
+      }
+      
+      console.log('Project created:', project)
       
       // Create sample tasks
       const sampleTasks = [
@@ -8423,6 +8430,7 @@ export default function KanbanBoard() {
       // Create welcome project for new users (no projects yet)
       if (projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
         console.log('New user detected - creating welcome project...')
+        alert('Creating welcome project for new user...')
         await createWelcomeProject()
         return // fetchData will be called again after welcome project creation
       }
