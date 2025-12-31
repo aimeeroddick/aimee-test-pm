@@ -226,11 +226,23 @@ export default function OutlookAddin() {
     await loadAllTasks()
   }
 
+  const [debugInfo, setDebugInfo] = useState('')
+
   const loadMyDayTasks = async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      console.log('Loading My Day tasks for:', today)
+      setDebugInfo(`Loading for: ${today}`)
       
+      // First try to get ALL tasks to see if query works at all
+      const { data: allData, error: allError } = await supabase
+        .from('tasks')
+        .select('id, title, my_day_date, due_date, status')
+        .limit(5)
+      
+      console.log('Test query - all tasks:', allData, 'Error:', allError)
+      setDebugInfo(prev => prev + `\nTest: ${allData?.length || 0} tasks, err: ${allError?.message || 'none'}`)
+      
+      // Now the actual My Day query
       const { data: tasksData, error: queryError } = await supabase
         .from('tasks')
         .select('*, projects(name, color)')
@@ -240,9 +252,10 @@ export default function OutlookAddin() {
         .order('due_date', { ascending: true })
       
       console.log('My Day tasks result:', tasksData, 'Error:', queryError)
+      setDebugInfo(prev => prev + `\nMy Day: ${tasksData?.length || 0} tasks`)
       
       if (queryError) {
-        console.error('My Day query error:', queryError)
+        setDebugInfo(prev => prev + `\nError: ${queryError.message}`)
         return
       }
       
@@ -251,13 +264,12 @@ export default function OutlookAddin() {
       }
     } catch (err) {
       console.error('loadMyDayTasks error:', err)
+      setDebugInfo(prev => prev + `\nCatch: ${err.message}`)
     }
   }
 
   const loadAllTasks = async () => {
     try {
-      console.log('Loading all tasks...')
-      
       const { data: tasksData, error: queryError } = await supabase
         .from('tasks')
         .select('*, projects(name, color)')
@@ -646,6 +658,13 @@ export default function OutlookAddin() {
               <h2 className="text-lg font-bold text-gray-800">My Day</h2>
               <p className="text-sm text-gray-500">{getTodayFormatted()}</p>
             </div>
+
+            {/* Debug info */}
+            {debugInfo && (
+              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs font-mono text-yellow-800 whitespace-pre-wrap">
+                {debugInfo}
+              </div>
+            )}
 
             {tasks.length === 0 ? (
               <div className="text-center py-8">
