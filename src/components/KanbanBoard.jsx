@@ -3273,7 +3273,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             draggable={!resizingTask}
                             onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
                             onDragEnd={handleDragEnd}
-                            onClick={() => handleTaskClick(task)}
+                            onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                            onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
                             className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
@@ -3448,7 +3449,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               draggable
                               onDragStart={(e) => handleDragStart(e, task)}
                               onDragEnd={handleDragEnd}
-                              onClick={() => handleTaskClick(task)}
+                              onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                              onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
                               className={`absolute left-0.5 right-0.5 px-1 rounded text-[9px] font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
                                 task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                                 task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
