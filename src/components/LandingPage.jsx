@@ -59,8 +59,8 @@ export default function LandingPage() {
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
             Task management that{' '}
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic">
-              just works
+            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              just <span className="italic">works</span>
             </span>
           </h1>
           
