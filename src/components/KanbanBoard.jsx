@@ -11058,7 +11058,7 @@ Or we can extract from:
       {/* Floating Feedback Button */}
       <button
         onClick={() => setFeedbackModalOpen(true)}
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-12 h-12 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all group"
+        className="fixed bottom-6 left-6 sm:left-auto sm:bottom-8 sm:right-8 w-12 h-12 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all group"
         title="Send Feedback"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
