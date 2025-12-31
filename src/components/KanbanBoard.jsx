@@ -10074,6 +10074,22 @@ export default function KanbanBoard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
+      {/* TEMPORARY TEST BANNER - Remove before production */}
+      <div className="bg-orange-500 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-3">
+        <span>🧪 Test Mode: </span>
+        <button
+          onClick={async () => {
+            if (!window.confirm('This will DELETE all your projects and tasks to test the welcome experience. Continue?')) return
+            await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+            await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+            window.location.reload()
+          }}
+          className="underline hover:no-underline font-bold"
+        >
+          Click here to test Welcome Flow
+        </button>
+      </div>
+      
       {/* Error Toast */}
       {error && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
