@@ -1,0 +1,182 @@
+4ef1c55 v2.2.1: Calendar sidebar task ordering to match board + version bump
+a1c877b Add X button to daily calendar view to remove tasks from calendar
+3b9f084 Fix syntax error - missing closing brace
+4a8c63b Calendar: hold-to-drag + drop zone highlighting shows where task will land
+6b37b1e Fade card when dragging - visual feedback that card is being moved
+8651dc8 Hold-to-drag: click and hold 200ms to drag, quick click opens task
+102df78 Add drag handle to My Day cards for reliable dragging
+6d7ffbf Add drag handle to My Day cards - grab the grip dots to drag
+f960b02 Fix drag/click conflict - improve grab reliability on My Day and Calendar
+c34ce85 Propagate custom column names to all views
+5923ed3 Fix: Exclude archived project tasks from My Day and Calendar views
+f0430d9 Add archived project indicators to All Tasks view
+2dd0794 Fix: Hide tasks from archived projects on Board, My Day, Calendar
+29eef91 Add column renaming feature
+f810dfa Merge UI polish: cleaner board appearance and visual hierarchy improvements
+2bb4134 Hide critical count in Done column - only relevant for active work
+469fd0d UI polish: subtle quick wins for cleaner board appearance
+0e022cf Fix: Parse UK date format DD/MM/YYYY to ISO format for CSV import
+c5e13c8 Fix: Remove user_id from CSV import - RLS handles this automatically
+6185beb Fix: Add useAuth to TaskTableView for CSV import
+d0b85b4 Add CSV import/export with task ID for mass updates
+b64044f Add Quick Actions section to Calendar help documentation
+df49a1d Group calendar task action buttons together on right side
+5e9907b Add separate Start and Done buttons on calendar tasks
+89d06ca Add remove from calendar button for scheduled tasks
+aee3103 Add red left border for required fields when empty
+2d512c5 Add subtle amber left border for recommended fields when empty
+8180eb2 Clean rebuild
+e1eb8d7 Add horizontal scroll to Weekly view on mobile
+980e9bf Add tap-to-schedule for mobile Daily view
+a752be8 Fix calendar Daily view on mobile - show calendar first
+9459470 WIP on main: e253365 Calendar mobile: stack layout vertically on mobile
+d810733 index on main: e253365 Calendar mobile: stack layout vertically on mobile
+e253365 Calendar mobile: stack layout vertically on mobile
+8db8050 Calendar mobile: responsive header and padding
+2db8e72 Fix My Day task sorting to match board order
+f16cc94 Fix My Day sorting: start_date > time > status > created_at
+3f8d26c Update help materials with all latest features
+1519587 v2.0.3: My Day enhancements & mobile/desktop fixes
+aaf3e68 Fix desktop menu styling - remove animation conflicts
+0a9d9d3 My Day: Add In Progress, To Do, Backlog sections to sidebar
+de5ed23 Disable onboarding tour on mobile devices
+43e56f5 v2.0.2: Mobile UI Fixes Release
+9b3525d v2.0.1: Add iOS Safari fixes for menu background
+99c14ca v2.0.1: Fix mobile menu height - use h-screen instead of h-full
+43c3031 v2.0.1: Fix menu - remove inner wrapper, use direct inline style
+526658d v2.0.1: Fix mobile menu transparency with inner wrapper
+9d0a04f v2.0.1: Mobile UI fixes (improved)
+817ebee v2.0.1: Mobile UI fixes
+289995b Flexible time input - accepts multiple formats
+563f202 Fix: Calendar view mode persists after saving task
+f3e6d84 Sync time_estimate with start_time/end_time in task modal
+a7b5515 Fix: form data no longer resets when switching modal tabs
+83b0826 Calendar sidebar: reorder sections - My Day first
+831ef55 Board: Add action buttons for status and My Day toggle
+cf1c7d5 Fix My Day section in calendar sidebar
+9bf3034 Calendar sidebar: include incomplete past tasks for rescheduling
+cea715d Add debug logging for calendar sidebar
+4585b33 Fix calendar sidebar: My Day tasks now show first
+ddfd1a5 Release v2.0.0 - Calendar Enhancement Release
+98b0a9e Calendar: Color-code tasks by project
+3bf5e33 Calendar: Current time indicator (red line)
+c8bb5a2 Calendar: Double-click time slot to create task
+b6de1f8 Fix formatTimeDisplay to handle legacy 12-hour format
+4ab4302 Calendar improvements: due date, drag UX, status workflow
+f74957a Fix time format: use 24-hour HH:MM for database storage
+78bc656 Improve drop logging
+56191ac Add drag start logging for debugging
+b62e315 Calendar: Fix drag-to-schedule, add all task sections, resize handles
+eda2eb3 Calendar: 30-minute slots + auto-scroll to 6am
+c60643a Calendar: Multi-section sidebar + auto My Day on today drop
+9cf90dc Calendar: Click day opens daily view, add Unscheduled sidebar
+45aec57 Calendar: Add Daily/Weekly/Monthly views with drag & drop scheduling
+9a41f26 Update help materials for v1.9.1
+9b7d527 Sort Done column by completion date (most recent first)
+e47829b Add My Day filter to board view
+c86f2f4 Add Recently Completed section on board
+35a9e87 Add toast notifications for task actions
+e16a684 Add confetti celebration and Add Task buttons
+c8191b4 Add Focus Mode for distraction-free task completion
+84294b1 Add confetti celebration + Add Task button per column
+f011a81 Allow removing auto-added tasks from My Day
+bdc1ce9 Improve drag UX: prevent text selection, add grab cursor
+c0afe0f Fix done tasks in My Day: stay visible struck-through, no sun indicator
+b30e322 Fix drag-and-drop: Add handleUpdateMyDayDate function and wire it up
+60b2d25 Add sun indicator to board task cards for My Day tasks
+ea6cbbe Redesign My Day with recommendations and drag-and-drop
+b1163e8 Revert "Redesign My Day with recommendations and drag-and-drop"
+0c09796 Redesign My Day with recommendations and drag-and-drop
+27046c9 Step 2: Add isInMyDay helper + sun indicator on board
+6ab7056 Step 1: Add my_day_date column for My Day redesign
+013c887 Add All Tasks table view with filtering, sorting, and CSV export
+652345a Add field filter dropdown
+5f19b64 Improve hover bubble - show blocking tasks and clarify subtasks
+557ad8d Fix Done column hover popup - open to the left
+79348cd Fix column alignment - stretch to fill full width
+9ca7fdb Add backlog column display limit (10 tasks)
+6c917fd Add task priority sorting within columns
+7bf0e71 Improve attachment viewer
+b3ab2f3 Add attachment viewer modal
+86d986d Fix syntax error - add missing closing brace for Modal component
+fff68cd Force redeploy
+ede965c Remove Settings from Help and Onboarding
+908c52f Remove global Settings - keep project-level only
+b8194ea Restore v1.6.0 - Help system (before settings changes)
+57bedcc Merge global + project settings in task dropdowns
+463ab3d Fix global settings persistence (CRITICAL)
+5ea3768 Consolidate KeyboardShortcutsModal into Help modal
+e4104b3 Remove temp file
+7672233 Fix SearchModal component declaration syntax error
+1edfed2 Make help button visible on all screen sizes
+066d657 Add Help system: Modal, PDF guide, and Onboarding
+ccec095 Update column colors to be more distinct
+063a591 Change effort indicator to stacked bars
+d3b1776 Move effort indicator under checkbox
+183358c Rename Energy to Effort with visual indicators
+0ec648c Fix: Use user-defined customer colors on cards
+4bc4590 Fix: Remove source from popup, add customer to card
+32fb69c Fix hover popup z-index - show above other columns
+97c3c0b Simplify summary bar - clickable filter stats
+fd16b81 Add underlines to keyboard shortcut letters (P, T)
+76242e3 Fix categories not loading - category+s = categorys not categories
+ce90d2b Add Settings for Customers, Assignees, Categories
+eaa0997 Force rebuild - fix userLists error
+fcdbd74 Clean minimal task cards with hover popup bubble
+ce4cfc7 Compact task cards - icons only, hover to expand
+6344b8d Simplify filter bar - quick toggles and search
+ce062b3 Reorder Details tab - Customer & Energy after Project/Status
+0cbddb3 UI/UX improvements - task card and modal reorganization
+7bcec9e Move Notes & Files into Additional tab
+8abeabe Fix bulk selection - properly pass props to TaskCard
+98fdc72 Fix header logo overlap - only show on xl screens (1280px+)
+d295cf3 Fix task modal layout and header overlap
+b43e179 Reorganize task modal tabs and add recurrence to main page
+655b7df Reorganize task modal - essential fields on first tab
+169a786 Improve Focus Queue with clear sections
+079b030 Fix My Day completed today count
+52b0a1f Fix task card layout on smaller screens
+7ea3116 Fix mobile menu z-index and backdrop opacity
+9d3ffed Fix mobile nav menu overlay issue
+bca7e84 Add to My Day feature and Energy Suggestions
+29b6456 Add Progress Dashboard view
+352a480 Phase 3: Natural Language Input and Smart Due Dates
+14c9476 Phase 2: Daily Planning Mode and Weekly Stats
+c3ea3ea Phase 1: Quick Add FAB, Completion Streaks, Today Widget
+231603a Add mobile status picker and photo capture
+e28bf47 Fix invalid xs breakpoint - use sm instead
+eb67d45 Mobile responsive design overhaul
+6aa767f Redesign header layout: menu left, logo center, buttons right, filters below
+566ee51 Restore New Project button to header
+1d4a84e Unified filter UI - single dropdown to add filters
+bbf3bdf Redesign navigation: click Trackli logo to switch views
+556b56f Replace ugly archived button with clean checkbox next to project dropdown
+4686c3a Add comprehensive bulk editing actions
+7047cf5 Add undo toast for task completion and archive/delete projects
+eb941f1 Add quick-complete checkbox to board task cards, only show recurrence icon when set
+f450633 Add subtasks with progress tracking and dark mode toggle
+d5e867c Add Calendar view and redesign My Day dashboard with progress ring, collapsible sections, and gradient cards
+eda566a Fix underlined letter spacing in buttons
+90bb281 Not
+938b0fb Restore meeting notes
+fbb1879 Add my day dashboard
+d897342 Add recurrence
+b2d8a09 Outlook fix
+6a96825 Outlook updates
+be395fa Outlook updates
+9535e99 Meeting notes
+abd538c Update display name
+e8b3df0 Fix toolbar label
+02ed68a Fix toolbar label
+72224d7 Update URLs
+75b6277 Rebrand to Trackli
+7ac8669 Fix office js loading
+a4a20f7 Add vercel routing config
+0140557 Add outlook add-in
+85f9fbd Add Outlook add in
+56e7543 Initial commit
+4ef1c55 v2.2.1: Calendar sidebar task ordering to match board + version bump
+a1c877b Add X button to daily calendar view to remove tasks from calendar
+3b9f084 Fix syntax error - missing closing brace
+4a8c63b Calendar: hold-to-drag + drop zone highlighting shows where task will land
+6b37b1e Fade card when dragging - visual feedback that card is being moved

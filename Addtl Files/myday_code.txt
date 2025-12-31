@@ -1,0 +1,13 @@
+    return false
+  }
+  
+  const myDayTasks = tasks.filter(t => taskInMyDay(t))
+  const myDayActive = myDayTasks.filter(t => t.status !== 'done')
+  const myDayCompleted = myDayTasks.filter(t => t.status === 'done')
+  
+  // Sort My Day tasks to match board order:
+  // - Tasks WITH start_date: sorted by date > time
+  // - Tasks WITHOUT start_date: sorted by status > created_at
+  myDayActive.sort((a, b) => {
+    const aHasDate = !!a.start_date
+    const bHasDate = !!b.start_date

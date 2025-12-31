@@ -1,0 +1,32 @@
+  const getSchedulableTasks = () => {
+    const todayStr = new Date().toISOString().split('T')[0]
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const threeDaysFromNow = new Date(today)
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+    
+    // Filter out done tasks
+    // Include tasks that either:
+    // 1. Don't have a start_time (never scheduled)
+    // 2. Have start_time but start_date is in the past and incomplete (needs rescheduling)
+    const schedulable = tasks.filter(t => {
+      if (t.status === 'done') return false
+      
+      // No start_time = definitely needs scheduling
+      if (!t.start_time) return true
+      
+      // Has start_time - only include if start_date is in the past (incomplete, needs rescheduling)
+      if (t.start_date) {
+        const startDate = new Date(t.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (startDate < today) return true // Past incomplete task - show it
+      }
+      
+      return false // Has start_time for today or future - already scheduled
+    })
+    
+    // Helper to check if task is in My Day (matching main My Day logic)
+    const taskInMyDay = (task) => {
+      if (task.status === 'done') return false
+      

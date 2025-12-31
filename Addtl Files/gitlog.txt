@@ -1,0 +1,30 @@
+4ef1c55 v2.2.1: Calendar sidebar task ordering to match board + version bump
+a1c877b Add X button to daily calendar view to remove tasks from calendar
+3b9f084 Fix syntax error - missing closing brace
+4a8c63b Calendar: hold-to-drag + drop zone highlighting shows where task will land
+6b37b1e Fade card when dragging - visual feedback that card is being moved
+8651dc8 Hold-to-drag: click and hold 200ms to drag, quick click opens task
+102df78 Add drag handle to My Day cards for reliable dragging
+6d7ffbf Add drag handle to My Day cards - grab the grip dots to drag
+f960b02 Fix drag/click conflict - improve grab reliability on My Day and Calendar
+c34ce85 Propagate custom column names to all views
+5923ed3 Fix: Exclude archived project tasks from My Day and Calendar views
+f0430d9 Add archived project indicators to All Tasks view
+2dd0794 Fix: Hide tasks from archived projects on Board, My Day, Calendar
+29eef91 Add column renaming feature
+f810dfa Merge UI polish: cleaner board appearance and visual hierarchy improvements
+2bb4134 Hide critical count in Done column - only relevant for active work
+469fd0d UI polish: subtle quick wins for cleaner board appearance
+0e022cf Fix: Parse UK date format DD/MM/YYYY to ISO format for CSV import
+c5e13c8 Fix: Remove user_id from CSV import - RLS handles this automatically
+6185beb Fix: Add useAuth to TaskTableView for CSV import
+d0b85b4 Add CSV import/export with task ID for mass updates
+b64044f Add Quick Actions section to Calendar help documentation
+df49a1d Group calendar task action buttons together on right side
+5e9907b Add separate Start and Done buttons on calendar tasks
+89d06ca Add remove from calendar button for scheduled tasks
+aee3103 Add red left border for required fields when empty
+2d512c5 Add subtle amber left border for recommended fields when empty
+8180eb2 Clean rebuild
+e1eb8d7 Add horizontal scroll to Weekly view on mobile
+980e9bf Add tap-to-schedule for mobile Daily view

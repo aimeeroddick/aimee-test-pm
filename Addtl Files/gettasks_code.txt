@@ -1,0 +1,24 @@
+  const getTasksForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0]
+    // Show tasks with either start_date or due_date on this day
+    return tasks.filter(t => t.start_date === dateStr || t.due_date === dateStr)
+  }
+  
+  // Get tasks for a specific 30-minute slot on a date
+  const getTasksForSlot = (date, slotIndex) => {
+    const dateStr = date.toISOString().split('T')[0]
+    const slotStart = slotIndex * 30
+    const slotEnd = slotStart + 30
+    
+    return tasks.filter(t => {
+      if (t.start_date !== dateStr) return false
+      const startTime = t.start_time ? parseTimeToMinutes(t.start_time) : null
+      if (startTime === null) return false
+      return startTime >= slotStart && startTime < slotEnd
+    })
+  }
+  
+  // Handle drag start
+  const handleDragStart = (e, task) => {
+    isDraggingRef.current = true
+    setDraggedTask(task)

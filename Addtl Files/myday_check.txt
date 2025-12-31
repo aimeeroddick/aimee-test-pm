@@ -1,0 +1,26 @@
+3231:  const myDayTasks = tasks.filter(t => taskInMyDay(t))
+3232:  const myDayActive = myDayTasks.filter(t => t.status !== 'done')
+3233:  const myDayCompleted = myDayTasks.filter(t => t.status === 'done')
+3322:  const progressPercent = myDayTasks.length > 0 
+3323:    ? Math.round((myDayCompleted.length / myDayTasks.length) * 100) 
+3631:      {myDayTasks.length > 0 && (
+3636:              {myDayCompleted.length} of {myDayTasks.length} tasks ({progressPercent}%)
+6376:        const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
+6377:        if (myDayTasks.length > 0) {
+6378:          setFocusTaskId(myDayTasks[0].id)
+6400:          const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done' && t.id !== focusTaskId)
+6401:          if (myDayTasks.length > 0) {
+6402:            setFocusTaskId(myDayTasks[0].id)
+6411:        const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
+6412:        const currentIndex = myDayTasks.findIndex(t => t.id === focusTaskId)
+6413:        const nextIndex = (currentIndex + 1) % myDayTasks.length
+6414:        if (myDayTasks[nextIndex]) {
+6415:          setFocusTaskId(myDayTasks[nextIndex].id)
+8954:            const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done' && t.id !== focusTaskId)
+8955:            if (myDayTasks.length > 0) {
+8956:              setFocusTaskId(myDayTasks[0].id)
+8963:            const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
+8964:            const currentIndex = myDayTasks.findIndex(t => t.id === focusTaskId)
+8965:            const nextIndex = (currentIndex + 1) % myDayTasks.length
+8966:            if (myDayTasks[nextIndex]) {
+8967:              setFocusTaskId(myDayTasks[nextIndex].id)

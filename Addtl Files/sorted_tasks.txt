@@ -1,0 +1,5 @@
+3856:  const sortedTasks = [...filteredTasks].sort((a, b) => {
+3888:    const rows = sortedTasks.map(t => [
+4178:            {sortedTasks.length} {sortedTasks.length === 1 ? 'task' : 'tasks'}
+4362:            {sortedTasks.length === 0 ? (
+4369:              sortedTasks.map(task => (

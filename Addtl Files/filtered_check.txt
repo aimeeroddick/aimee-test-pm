@@ -1,0 +1,18 @@
+1585:  const filteredTasks = searchQuery.trim() 
+1632:          ) : filteredTasks.length === 0 ? (
+1638:              {filteredTasks.map(task => {
+1703:        {filteredTasks.length > 0 && (
+1705:            {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
+3816:  const filteredTasks = tasks.filter(task => {
+3838:  const sortedTasks = [...filteredTasks].sort((a, b) => {
+7195:    setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)))
+7577:  const filteredTasks = tasks.filter((t) => {
+7686:    const statusTasks = filteredTasks.filter((t) => t.status === status)
+7702:  const criticalCount = filteredTasks.filter((t) => t.critical && t.status !== 'done').length
+7703:  const overdueCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'overdue').length
+7704:  const dueTodayCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'today').length
+7705:  const blockedCount = filteredTasks.filter((t) => isBlocked(t, tasks) && t.status !== 'done').length
+7706:  const myDayCount = filteredTasks.filter((t) => isInMyDay(t)).length
+7707:  const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+8284:              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => ['todo', 'in_progress'].includes(t.status)).length}</span>
+8297:              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => t.status === 'backlog').length}</span>

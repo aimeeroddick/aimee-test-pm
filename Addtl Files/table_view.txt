@@ -1,0 +1,2 @@
+3805:const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
+8578:              <TaskTableView

@@ -1,0 +1,31 @@
+
+> aimee-test-pm@2.2.1 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 31 modules transformed.
+x Build failed in 463ms
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+/Users/aimeeroddick/Desktop/Trackli/src/components/KanbanBoard.jsx:2147:8: ERROR: The symbol "handleDragEnd" has already been declared
+file: /Users/aimeeroddick/Desktop/Trackli/src/components/KanbanBoard.jsx:2147:8
+
+The symbol "handleDragEnd" has already been declared
+2145|    
+2146|    // Clear hover state when drag ends
+2147|    const handleDragEnd = () => {
+   |          ^
+2148|      setDraggedTask(null)
+2149|      setHoverSlot(null)
+
+    at failureErrorWithLog (/Users/aimeeroddick/Desktop/Trackli/node_modules/esbuild/lib/main.js:1472:15)
+    at /Users/aimeeroddick/Desktop/Trackli/node_modules/esbuild/lib/main.js:755:50
+    at responseCallbacks.<computed> (/Users/aimeeroddick/Desktop/Trackli/node_modules/esbuild/lib/main.js:622:9)
+    at handleIncomingPacket (/Users/aimeeroddick/Desktop/Trackli/node_modules/esbuild/lib/main.js:677:12)
+    at Socket.readFromStdout (/Users/aimeeroddick/Desktop/Trackli/node_modules/esbuild/lib/main.js:600:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)

@@ -1,0 +1,15 @@
+5980:                {project.archived ? 'Unarchive' : 'Archive'}
+7017:    const action = project?.archived ? 'unarchive' : 'archive'
+7023:        .update({ archived: !project?.archived })
+7028:      setProjects(projects.map(p => p.id === projectId ? { ...p, archived: !p.archived } : p))
+8140:                    {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+8141:                      <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
+8481:                      {projects.filter(p => !p.archived).map(p => (
+8576:                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Active Projects ({projects.filter(p => !p.archived).length})</h3>
+8578:                  {projects.filter(p => !p.archived).map(project => {
+8635:                  {projects.filter(p => !p.archived).length === 0 && (
+8648:              {projects.filter(p => p.archived).length > 0 && (
+8650:                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Archived ({projects.filter(p => p.archived).length})</h3>
+8652:                    {projects.filter(p => p.archived).map(project => {
+8785:                  {projects.filter(p => !p.archived).map(project => {
+9284:                      {projects.filter(p => !p.archived).map(p => (
