@@ -54,7 +54,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8 animate-fadeIn">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Now in beta — Join the waitlist
+            Now in beta — Try it free
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
@@ -510,28 +510,14 @@ export default function LandingPage() {
             Ready to get things done?
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Join the waitlist for early access. Be among the first to experience task management that actually works.
+            Start organizing your work today. Free to use, no credit card required.
           </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              alert("Thanks! We'll be in touch soon.")
-            }}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+          <Link
+            to="/login"
+            className="inline-block px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
           >
-            <input
-              type="email"
-              placeholder="Enter your email"
-              required
-              className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25 whitespace-nowrap"
-            >
-              Join Waitlist
-            </button>
-          </form>
+            Get Started Free
+          </Link>
         </div>
       </section>
 
