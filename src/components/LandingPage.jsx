@@ -50,6 +50,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
+      <main>
       <section className="pt-32 pb-20 px-6 relative overflow-hidden">
         {/* Background gradient blob */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/40 via-purple-200/40 to-pink-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
@@ -126,7 +127,7 @@ export default function LandingPage() {
                 {/* Main content */}
                 <div className="flex-1 p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Website Redesign</h3>
+                    <div className="text-lg font-semibold text-gray-900">Website Redesign</div>
                   </div>
                   
                   {/* Kanban columns */}
@@ -275,9 +276,9 @@ export default function LandingPage() {
               <p className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
                 Daily Focus
               </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                 My Day: Your daily command center
-              </h3>
+              </h2>
               <p className="text-lg text-gray-600 mb-6">
                 Start each day with a clear view of what matters. Drag tasks from any project into today's focus, track your progress, and actually finish what you start.
               </p>
@@ -331,7 +332,7 @@ export default function LandingPage() {
                           </svg>
                         )}
                       </div>
-                      <span className={task.done ? 'text-gray-400 line-through' : 'text-gray-700'}>
+                      <span className={task.done ? 'text-gray-500 line-through' : 'text-gray-700'}>
                         {task.title}
                       </span>
                     </div>
@@ -353,9 +354,9 @@ export default function LandingPage() {
               <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
                 Visual Workflow
               </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                 Kanban boards that scale with you
-              </h3>
+              </h2>
               <p className="text-lg text-gray-600 mb-6">
                 Intuitive drag-and-drop boards that work for solo projects and team collaboration alike. No artificial limits, no surprise paywalls.
               </p>
@@ -383,9 +384,9 @@ export default function LandingPage() {
               <p className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">
                 Time Awareness
               </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                 Calendar integration that makes sense
-              </h3>
+              </h2>
               <p className="text-lg text-gray-600 mb-6">
                 See your tasks alongside your schedule. No more double-booking yourself or missing deadlines buried in a backlog.
               </p>
@@ -434,6 +435,8 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-gray-200">
