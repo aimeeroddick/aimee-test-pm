@@ -14,9 +14,9 @@
   <DisplayName DefaultValue="Trackli"/>
   <Description DefaultValue="Create tasks from emails and meetings in Trackli"/>
   
-  <IconUrl DefaultValue="https://trackli.vercel.app/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://trackli.vercel.app/icon-128.png"/>
-  <SupportUrl DefaultValue="https://trackli.vercel.app"/>
+  <IconUrl DefaultValue="https://gettrackli.com/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://gettrackli.com/icon-128.png"/>
+  <SupportUrl DefaultValue="https://gettrackli.com"/>
   
   <Hosts>
     <Host Name="Mailbox"/>
@@ -31,7 +31,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://trackli.vercel.app/outlook-addin"/>
+        <SourceLocation DefaultValue="https://gettrackli.com/outlook-addin"/>
         <RequestedHeight>450</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -249,15 +249,15 @@
     
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://trackli.vercel.app/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://trackli.vercel.app/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://trackli.vercel.app/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://gettrackli.com/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://gettrackli.com/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://gettrackli.com/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Email" DefaultValue="https://trackli.vercel.app/outlook-addin?mode=email"/>
-        <bt:Url id="Taskpane.FollowUps" DefaultValue="https://trackli.vercel.app/outlook-addin?mode=followups"/>
-        <bt:Url id="Taskpane.Agenda" DefaultValue="https://trackli.vercel.app/outlook-addin?mode=agenda"/>
-        <bt:Url id="Taskpane.Notes" DefaultValue="https://trackli.vercel.app/outlook-addin?mode=notes"/>
+        <bt:Url id="Taskpane.Email" DefaultValue="https://gettrackli.com/outlook-addin?mode=email"/>
+        <bt:Url id="Taskpane.FollowUps" DefaultValue="https://gettrackli.com/outlook-addin?mode=followups"/>
+        <bt:Url id="Taskpane.Agenda" DefaultValue="https://gettrackli.com/outlook-addin?mode=agenda"/>
+        <bt:Url id="Taskpane.Notes" DefaultValue="https://gettrackli.com/outlook-addin?mode=notes"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Trackli"/>
