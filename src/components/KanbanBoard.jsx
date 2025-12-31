@@ -1010,7 +1010,7 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
             </svg>
           </button>
         </div>
-        <div className="p-4 sm:p-6">{children}</div>
+        <div className="p-4 sm:p-6 overflow-x-hidden">{children}</div>
       </div>
     </div>
   )
@@ -10641,15 +10641,17 @@ export default function KanbanBoard() {
                 />
               </div>
               
-              <div>
+              <div className="overflow-hidden">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting Date</label>
-                <input
-                  type="date"
-                  value={meetingNotesData.date}
-                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  style={{ maxWidth: '100%' }}
-                />
+                <div className="overflow-hidden">
+                  <input
+                    type="date"
+                    value={meetingNotesData.date}
+                    onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    style={{ maxWidth: '100%', minWidth: 0, WebkitAppearance: 'none', boxSizing: 'border-box', width: '100%' }}
+                  />
+                </div>
               </div>
               
               <div>
