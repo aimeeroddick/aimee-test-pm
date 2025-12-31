@@ -7968,7 +7968,8 @@ export default function KanbanBoard() {
     } catch { return [] }
   })
   const [showTemplatesModal, setShowTemplatesModal] = useState(false)
-  
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+    
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
   const [meetingNotesData, setMeetingNotesData] = useState({
@@ -8248,6 +8249,111 @@ export default function KanbanBoard() {
     setViewTourStep(0)
   }
   
+  // Create welcome project for new users
+  const createWelcomeProject = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+      const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+      
+      // Create the Getting Started project
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: '🚀 Getting Started with Trackli',
+          user_id: user.id,
+        })
+        .select()
+        .single()
+      
+      if (projectError) {
+        console.error('Project creation error:', projectError)
+        throw projectError
+      }
+      
+      // Create sample tasks
+      const sampleTasks = [
+        {
+          title: '👋 Welcome! Click me to see task details',
+          description: 'This is the task editor. Here you can:\n\n• Set due dates and start dates\n• Add time estimates\n• Assign to team members\n• Add subtasks\n• Attach files\n• Set up recurring schedules\n\nTry editing this task, then mark it complete!',
+          status: 'todo',
+          project_id: project.id,
+          my_day_date: today,
+          energy_level: 'low',
+          time_estimate: 5,
+        },
+        {
+          title: '☀️ Check out My Day view',
+          description: 'My Day is your daily focus list. Tasks appear here if:\n\n• Their start date is today or earlier\n• You manually add them via the ☀️ icon\n\nTry switching to My Day view in the menu!',
+          status: 'todo',
+          project_id: project.id,
+          start_date: today,
+          energy_level: 'medium',
+          time_estimate: 10,
+        },
+        {
+          title: '📅 Explore the Calendar view',
+          description: 'The Calendar view lets you:\n\n• See tasks on their due dates\n• Drag tasks to reschedule them\n• Switch between daily, weekly, and monthly views\n\nThis task is due tomorrow!',
+          status: 'todo',
+          project_id: project.id,
+          due_date: tomorrow,
+          energy_level: 'medium',
+          time_estimate: 15,
+        },
+        {
+          title: '📝 Try the Notes feature for meetings',
+          description: 'Click the Notes button in the header to:\n\n• Paste meeting notes\n• Use voice-to-text (speak your notes!)\n• AI extracts action items automatically\n\nPerfect for turning meetings into tasks!',
+          status: 'todo',
+          project_id: project.id,
+          energy_level: 'high',
+          time_estimate: 20,
+        },
+        {
+          title: '⌨️ Learn keyboard shortcuts',
+          description: 'Speed up your workflow with shortcuts:\n\n• ⌘/Ctrl + ⌃ + T — New task\n• ⌘/Ctrl + S — Save\n• Escape — Close modal\n• ? — Help menu\n\nClick the ? icon anytime for more!',
+          status: 'backlog',
+          project_id: project.id,
+          due_date: nextWeek,
+          energy_level: 'low',
+          time_estimate: 10,
+        },
+        {
+          title: '✅ Complete this task to see the celebration!',
+          description: 'When you complete all your My Day tasks, you get a confetti celebration! 🎉\n\nTry completing this task by clicking the circle on the left.',
+          status: 'todo',
+          project_id: project.id,
+          my_day_date: today,
+          energy_level: 'low',
+          time_estimate: 1,
+        },
+      ]
+      
+      const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .insert(sampleTasks)
+        .select()
+      
+      if (tasksError) throw tasksError
+      
+      // Add subtasks to the first task to demonstrate the feature
+      const welcomeTask = tasks.find(t => t.title.includes('Welcome!'))
+      if (welcomeTask) {
+        await supabase.from('subtasks').insert([
+          { task_id: welcomeTask.id, title: 'Read this task description', completed: false, position: 0 },
+          { task_id: welcomeTask.id, title: 'Check out the different views (My Day, Calendar, etc.)', completed: false, position: 1 },
+          { task_id: welcomeTask.id, title: 'Complete a task to see it move to Done', completed: false, position: 2 },
+        ])
+      }
+      
+      // Refresh data to show the new project and tasks
+      setShowWelcomeModal(true)
+      await fetchData()
+      
+    } catch (err) {
+      console.error('Error creating welcome project:', err)
+    }
+  }
+
   // Fetch data on mount
   useEffect(() => {
     fetchData()
@@ -8315,6 +8421,22 @@ export default function KanbanBoard() {
 
       setProjects(projectsWithRelations)
       setTasks(tasksWithRelations)
+      
+      // Create welcome project for NEW users only (first time ever)
+      // Check user metadata to see if they've already been welcomed
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
+      
+      if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
+        await createWelcomeProject()
+        
+        // Mark user as welcomed so this never happens again
+        await supabase.auth.updateUser({
+          data: { has_been_welcomed: true }
+        })
+        
+        return // fetchData will be called again after welcome project creation
+      }
       
       // Auto-move backlog tasks to todo if start date is today or past
       const today = new Date()
@@ -11251,6 +11373,52 @@ export default function KanbanBoard() {
       
 
       
+      {/* Welcome Modal for New Users */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-lg rounded-2xl shadow-2xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <span className="text-3xl">🚀</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Trackli!</h2>
+              <p className="text-gray-600 dark:text-gray-400">We've created a starter project with sample tasks to help you learn the app.</p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+                <span className="text-xl">👆</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Click on any task</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Each task has tips on features to explore</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                <span className="text-xl">☀️</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Your daily focus list - some tasks are already there!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
+                <span className="text-xl">✅</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Complete tasks to see them move</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Complete all My Day tasks for a celebration!</p>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowWelcomeModal(false)}
+              className="w-full py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+            >
+              Let's Go! 🎉
+            </button>
+          </div>
+        </div>
+      )}
+
       <HelpModal
         isOpen={helpModalOpen}
         onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
