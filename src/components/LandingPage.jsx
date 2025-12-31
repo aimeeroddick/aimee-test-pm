@@ -201,7 +201,7 @@ export default function LandingPage() {
               {
                 icon: '🎯',
                 title: 'Too simple, then too complex',
-                problem: "Trello's great until you need more. Asana's powerful but takes weeks to learn.",
+                problem: "Simple tools leave you wanting more. Powerful ones take weeks to learn.",
                 solution: 'Trackli gives you depth without the steep curve.',
               },
               {
