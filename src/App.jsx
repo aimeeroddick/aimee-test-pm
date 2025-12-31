@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import KanbanBoard from './components/KanbanBoard'
@@ -27,19 +28,22 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/outlook-addin" element={<OutlookAddin />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <KanbanBoard />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/outlook-addin" element={<OutlookAddin />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <KanbanBoard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Analytics />
+    </>
   )
 }
 
