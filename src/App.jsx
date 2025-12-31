@@ -6,6 +6,8 @@ import Login from './components/Login'
 import LandingPage from './components/LandingPage'
 import KanbanBoard from './components/KanbanBoard'
 import OutlookAddin from './components/OutlookAddin'
+import PrivacyPolicy from './components/PrivacyPolicy'
+import Terms from './components/Terms'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -84,6 +86,10 @@ function App() {
         
         {/* Outlook add-in (doesn't need auth redirect logic) */}
         <Route path="/outlook-addin" element={<OutlookAddin />} />
+        
+        {/* Legal pages (public, no auth needed) */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
         
         {/* Root redirect based on auth status */}
         <Route path="/" element={<RootRedirect />} />

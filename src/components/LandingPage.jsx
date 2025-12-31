@@ -449,9 +449,8 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="flex gap-8">
-            <a href="#" className="text-gray-500 hover:text-gray-700 transition-colors">Privacy</a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 transition-colors">Terms</a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+            <Link to="/privacy" className="text-gray-500 hover:text-gray-700 transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-gray-500 hover:text-gray-700 transition-colors">Terms</Link>
           </div>
           <p className="text-gray-400 text-sm">© 2025 Trackli. All rights reserved.</p>
         </div>
