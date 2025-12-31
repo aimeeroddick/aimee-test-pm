@@ -10465,7 +10465,7 @@ export default function KanbanBoard() {
       <TaskModal
         isOpen={taskModalOpen}
         onClose={() => { setTaskModalOpen(false); setEditingTask(null) }}
-        task={editingTask}
+        task={editingTask?.id ? tasks.find(t => t.id === editingTask.id) || editingTask : editingTask}
         projects={projects}
         allTasks={tasks}
         onSave={handleSaveTask}
