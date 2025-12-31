@@ -1,13 +1,26 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import LandingPage from './components/LandingPage'
-import KanbanBoard from './components/KanbanBoard'
-import OutlookAddin from './components/OutlookAddin'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
+
+// Lazy load heavy components
+const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
+const OutlookAddin = lazy(() => import('./components/OutlookAddin'))
+
+// Loading spinner for lazy components
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-gray-500">Loading...</p>
+    </div>
+  </div>
+)
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -79,13 +92,22 @@ function App() {
           path="/app"
           element={
             <ProtectedRoute>
-              <KanbanBoard />
+              <Suspense fallback={<LoadingSpinner />}>
+                <KanbanBoard />
+              </Suspense>
             </ProtectedRoute>
           }
         />
         
         {/* Outlook add-in (doesn't need auth redirect logic) */}
-        <Route path="/outlook-addin" element={<OutlookAddin />} />
+        <Route 
+          path="/outlook-addin" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <OutlookAddin />
+            </Suspense>
+          } 
+        />
         
         {/* Legal pages (public, no auth needed) */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
