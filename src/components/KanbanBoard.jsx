@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import confetti from 'canvas-confetti'
@@ -4489,9 +4489,10 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     return false
   }
   
-  const myDayTasks = tasks.filter(t => taskInMyDay(t))
-  const myDayActive = myDayTasks.filter(t => t.status !== 'done')
-  const myDayCompleted = myDayTasks.filter(t => t.status === 'done')
+  // Memoize My Day task filtering for performance
+  const myDayTasks = useMemo(() => tasks.filter(t => taskInMyDay(t)), [tasks])
+  const myDayActive = useMemo(() => myDayTasks.filter(t => t.status !== 'done'), [myDayTasks])
+  const myDayCompleted = useMemo(() => myDayTasks.filter(t => t.status === 'done'), [myDayTasks])
   
   // Sort My Day tasks to match board order:
   // - Tasks WITH start_date: sorted by date > time
@@ -5137,30 +5138,32 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     }
   }
   
-  // Filter tasks
-  const filteredTasks = tasks.filter(task => {
-    for (const [field, value] of Object.entries(columnFilters)) {
-      if (!value) continue
-      
-      let taskValue
-      if (field === 'project') {
-        taskValue = projects.find(p => p.id === task.project_id)?.name || ''
-      } else if (field === 'category') {
-        taskValue = CATEGORIES.find(c => c.id === task.category)?.label || ''
-      } else if (field === 'source') {
-        taskValue = SOURCES.find(s => s.id === task.source)?.label || ''
-      } else {
-        taskValue = task[field] || ''
+  // Filter tasks (memoized for performance)
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      for (const [field, value] of Object.entries(columnFilters)) {
+        if (!value) continue
+        
+        let taskValue
+        if (field === 'project') {
+          taskValue = projects.find(p => p.id === task.project_id)?.name || ''
+        } else if (field === 'category') {
+          taskValue = CATEGORIES.find(c => c.id === task.category)?.label || ''
+        } else if (field === 'source') {
+          taskValue = SOURCES.find(s => s.id === task.source)?.label || ''
+        } else {
+          taskValue = task[field] || ''
+        }
+        
+        if (value === '__blank__' && taskValue) return false
+        if (value !== '__blank__' && String(taskValue).toLowerCase() !== String(value).toLowerCase()) return false
       }
-      
-      if (value === '__blank__' && taskValue) return false
-      if (value !== '__blank__' && String(taskValue).toLowerCase() !== String(value).toLowerCase()) return false
-    }
-    return true
-  })
+      return true
+    })
+  }, [tasks, columnFilters, projects])
   
-  // Sort tasks
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
+  // Sort tasks (memoized for performance)
+  const sortedTasks = useMemo(() => [...filteredTasks].sort((a, b) => {
     let aVal, bVal
     
     if (sortField === 'project') {
@@ -5187,7 +5190,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
     if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
     return 0
-  })
+  }), [filteredTasks, sortField, sortDirection, projects])
   
   // Export to CSV
   const exportToCSV = () => {
