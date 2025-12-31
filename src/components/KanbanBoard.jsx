@@ -255,7 +255,7 @@ const getOccurrenceCount = (recurrenceType) => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
 const formatTimeEstimate = (minutes) => {
@@ -3443,7 +3443,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   // Get header title based on view mode
   const getHeaderTitle = () => {
     if (viewMode === 'daily') {
-      return currentDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      return currentDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     } else if (viewMode === 'weekly') {
       const weekDates = getWeekDates()
       const startDate = weekDates[0]
@@ -4255,7 +4255,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       {selectedDate && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <h3 className="font-semibold text-gray-800 mb-4">
-            Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </h3>
           {selectedTasks.length === 0 ? (
             <p className="text-gray-500 text-sm">No tasks due on this date</p>
@@ -10889,7 +10889,7 @@ export default function KanbanBoard() {
                       date.setDate(date.getDate() - i)
                       date.setHours(0, 0, 0, 0)
                       const dateStr = date.toDateString()
-                      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+                      const dayName = date.toLocaleDateString(undefined, { weekday: 'short' })
                       const count = tasks.filter(t => 
                         t.status === 'done' && 
                         t.completed_at && 
