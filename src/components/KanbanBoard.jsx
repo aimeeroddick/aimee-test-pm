@@ -9936,7 +9936,7 @@ export default function KanbanBoard() {
                   <div className="flex items-center gap-2">
                     <select
                       onChange={(e) => e.target.value && handleBulkStatusChange(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Status...</option>
@@ -9947,7 +9947,7 @@ export default function KanbanBoard() {
                     </select>
                     <select
                       onChange={(e) => e.target.value && handleBulkMoveToProject(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Project...</option>
@@ -9957,7 +9957,7 @@ export default function KanbanBoard() {
                     </select>
                     <select
                       onChange={(e) => handleBulkAssign(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Assign...</option>
