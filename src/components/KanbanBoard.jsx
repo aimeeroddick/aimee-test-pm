@@ -8251,13 +8251,11 @@ export default function KanbanBoard() {
   
   // Create welcome project for new users
   const createWelcomeProject = async () => {
-    console.log('createWelcomeProject called')
     try {
       const today = new Date().toISOString().split('T')[0]
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
       const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
       
-      console.log('Creating project...')
       // Create the Getting Started project
       const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -8272,8 +8270,6 @@ export default function KanbanBoard() {
         console.error('Project creation error:', projectError)
         throw projectError
       }
-      
-      console.log('Project created:', project)
       
       // Create sample tasks
       const sampleTasks = [
@@ -8350,7 +8346,6 @@ export default function KanbanBoard() {
       }
       
       // Refresh data to show the new project and tasks
-      console.log('Welcome project created successfully, refreshing data...')
       setShowWelcomeModal(true)
       await fetchData()
       
@@ -8427,10 +8422,19 @@ export default function KanbanBoard() {
       setProjects(projectsWithRelations)
       setTasks(tasksWithRelations)
       
-      // Create welcome project for new users (no projects yet)
-      if (projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
-        console.log('New user detected - creating welcome project...')
+      // Create welcome project for NEW users only (first time ever)
+      // Check user metadata to see if they've already been welcomed
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
+      
+      if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
         await createWelcomeProject()
+        
+        // Mark user as welcomed so this never happens again
+        await supabase.auth.updateUser({
+          data: { has_been_welcomed: true }
+        })
+        
         return // fetchData will be called again after welcome project creation
       }
       
@@ -10081,22 +10085,6 @@ export default function KanbanBoard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
-      {/* TEMPORARY TEST BANNER - Remove before production */}
-      <div className="bg-orange-500 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-3">
-        <span>🧪 Test Mode: </span>
-        <button
-          onClick={async () => {
-            if (!window.confirm('This will DELETE all your projects and tasks to test the welcome experience. Continue?')) return
-            await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-            await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-            window.location.reload()
-          }}
-          className="underline hover:no-underline font-bold"
-        >
-          Click here to test Welcome Flow
-        </button>
-      </div>
-      
       {/* Error Toast */}
       {error && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
@@ -10253,21 +10241,6 @@ export default function KanbanBoard() {
                       >
                         <span className="text-lg">📊</span>
                         <span className="font-medium">Progress</span>
-                      </button>
-                      
-                      {/* TEMPORARY: Test welcome project - remove before production */}
-                      <button
-                        onClick={async () => {
-                          if (!window.confirm('This will DELETE all your projects and tasks to test the welcome experience. Continue?')) return
-                          setNavMenuOpen(false)
-                          await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-                          await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-                          window.location.reload()
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                      >
-                        <span className="text-lg">🧪</span>
-                        <span className="font-medium">Test Welcome Flow</span>
                       </button>
                       
                       {/* Mobile-only options */}
