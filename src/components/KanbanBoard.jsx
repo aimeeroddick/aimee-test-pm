@@ -519,8 +519,10 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
 const FeedbackModal = ({ isOpen, onClose, user }) => {
   const [type, setType] = useState('suggestion')
   const [message, setMessage] = useState('')
+  const [images, setImages] = useState([]) // Array of { base64, preview }
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState(null)
   
   useEffect(() => {
     if (!isOpen) {
@@ -528,7 +530,9 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
       setTimeout(() => {
         setType('suggestion')
         setMessage('')
+        setImages([])
         setSubmitted(false)
+        setError(null)
       }, 300)
     }
   }, [isOpen])
@@ -543,17 +547,124 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
     }
   }, [isOpen, onClose])
   
+  // Handle paste for images
+  useEffect(() => {
+    const handlePaste = (e) => {
+      if (!isOpen) return
+      
+      const items = e.clipboardData?.items
+      if (!items) return
+      
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) processImageFile(file)
+          break
+        }
+      }
+    }
+    
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [isOpen, images])
+  
+  const processImageFile = (file) => {
+    if (images.length >= 3) {
+      setError('Maximum 3 images allowed')
+      return
+    }
+    
+    const img = new Image()
+    const reader = new FileReader()
+    
+    reader.onload = (event) => {
+      img.onload = () => {
+        // Max dimensions
+        const maxWidth = 1500
+        const maxHeight = 1500
+        let { width, height } = img
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        const base64 = compressedDataUrl.split(',')[1]
+        
+        setImages(prev => [...prev, { base64, preview: compressedDataUrl }])
+        setError(null)
+      }
+      
+      img.onerror = () => setError('Failed to load image')
+      img.src = event.target.result
+    }
+    
+    reader.onerror = () => setError('Failed to read image')
+    reader.readAsDataURL(file)
+  }
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (file) processImageFile(file)
+    e.target.value = '' // Reset input
+  }
+  
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+  }
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!message.trim()) return
     
     setSubmitting(true)
+    setError(null)
     try {
+      // Upload images to Supabase Storage if any
+      const imageUrls = []
+      for (const image of images) {
+        const fileName = `feedback/${user?.id || 'anonymous'}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+        
+        // Convert base64 to blob
+        const byteCharacters = atob(image.base64)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: 'image/jpeg' })
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(fileName, blob)
+        
+        if (uploadError) {
+          console.error('Upload error:', uploadError)
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('attachments')
+            .getPublicUrl(fileName)
+          if (urlData?.publicUrl) {
+            imageUrls.push(urlData.publicUrl)
+          }
+        }
+      }
+      
       const { error } = await supabase.from('feedback').insert({
         user_id: user?.id,
         user_email: user?.email,
         type,
         message: message.trim(),
+        images: imageUrls.length > 0 ? imageUrls : null,
         page: window.location.pathname,
       })
       
@@ -562,7 +673,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
       setTimeout(() => onClose(), 2000)
     } catch (err) {
       console.error('Error submitting feedback:', err)
-      alert('Failed to submit feedback. Please try again.')
+      setError('Failed to submit feedback. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -637,6 +748,52 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                   className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                   required
                 />
+              </div>
+              
+              {/* Image Upload Section */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Screenshots (optional)</label>
+                
+                {/* Display uploaded images */}
+                {images.length > 0 && (
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    {images.map((img, index) => (
+                      <div key={index} className="relative">
+                        <img 
+                          src={img.preview} 
+                          alt={`Screenshot ${index + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {images.length < 3 && (
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Add image or paste from clipboard</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+                
+                {error && (
+                  <p className="text-sm text-red-500 mt-2">{error}</p>
+                )}
               </div>
               
               <div className="flex gap-3">
@@ -800,6 +957,25 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
                         </span>
                       </div>
                       <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{item.message}</p>
+                      {item.images && item.images.length > 0 && (
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {item.images.map((imgUrl, idx) => (
+                            <a 
+                              key={idx} 
+                              href={imgUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <img 
+                                src={imgUrl} 
+                                alt={`Screenshot ${idx + 1}`}
+                                className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600 hover:opacity-80 transition-opacity"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
                         <span>{item.user_email}</span>
                         <span>•</span>
