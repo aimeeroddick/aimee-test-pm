@@ -515,6 +515,339 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
   )
 }
 
+// Feedback Modal Component
+const FeedbackModal = ({ isOpen, onClose, user }) => {
+  const [type, setType] = useState('suggestion')
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset form when closed
+      setTimeout(() => {
+        setType('suggestion')
+        setMessage('')
+        setSubmitted(false)
+      }, 300)
+    }
+  }, [isOpen])
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!message.trim()) return
+    
+    setSubmitting(true)
+    try {
+      const { error } = await supabase.from('feedback').insert({
+        user_id: user?.id,
+        user_email: user?.email,
+        type,
+        message: message.trim(),
+        page: window.location.pathname,
+      })
+      
+      if (error) throw error
+      setSubmitted(true)
+      setTimeout(() => onClose(), 2000)
+    } catch (err) {
+      console.error('Error submitting feedback:', err)
+      alert('Failed to submit feedback. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+  
+  if (!isOpen) return null
+  
+  const feedbackTypes = [
+    { id: 'bug', label: '🐛 Bug', desc: 'Something isn\'t working' },
+    { id: 'suggestion', label: '💡 Suggestion', desc: 'Ideas for improvement' },
+    { id: 'question', label: '❓ Question', desc: 'Need help with something' },
+    { id: 'other', label: '💬 Other', desc: 'General feedback' },
+  ]
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[300] p-4" onClick={onClose}>
+      <div 
+        className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-modalSlideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {submitted ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">✓</span>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Thanks for your feedback!</h3>
+            <p className="text-gray-600 dark:text-gray-400">We really appreciate you taking the time to help us improve.</p>
+          </div>
+        ) : (
+          <>
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Send Feedback</h3>
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Help us make Trackli better!</p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {feedbackTypes.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setType(t.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        type === t.id
+                          ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-white text-sm">{t.label}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{t.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Tell us what's on your mind..."
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !message.trim()}
+                  className="flex-1 px-4 py-2.5 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Sending...' : 'Send Feedback'}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Admin Feedback Panel Component
+const ADMIN_EMAIL = 'roddickaimee@gmail.com'
+
+const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
+  const [feedback, setFeedback] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all') // all, new, read, resolved
+  
+  const isAdmin = userEmail === ADMIN_EMAIL
+  
+  useEffect(() => {
+    if (isOpen && isAdmin) {
+      loadFeedback()
+    }
+  }, [isOpen, isAdmin])
+  
+  const loadFeedback = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setFeedback(data || [])
+    } catch (err) {
+      console.error('Error loading feedback:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  const updateStatus = async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .update({ status })
+        .eq('id', id)
+      
+      if (error) throw error
+      setFeedback(prev => prev.map(f => f.id === id ? { ...f, status } : f))
+    } catch (err) {
+      console.error('Error updating feedback:', err)
+    }
+  }
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+  
+  if (!isOpen || !isAdmin) return null
+  
+  const filteredFeedback = filter === 'all' ? feedback : feedback.filter(f => f.status === filter)
+  
+  const typeIcons = {
+    bug: '🐛',
+    suggestion: '💡',
+    question: '❓',
+    other: '💬'
+  }
+  
+  const statusColors = {
+    new: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    read: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+  }
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[300] p-4" onClick={onClose}>
+      <div 
+        className="w-full max-w-3xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-modalSlideUp flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Feedback Admin</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{feedback.length} total submissions</p>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="flex gap-2 mt-4">
+            {['all', 'new', 'read', 'resolved'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  filter === f
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {f !== 'all' && (
+                  <span className="ml-1 opacity-70">
+                    ({feedback.filter(fb => f === 'all' || fb.status === f).length})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading feedback...</div>
+          ) : filteredFeedback.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <span className="text-4xl mb-2 block">📫</span>
+              No feedback yet
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredFeedback.map(item => (
+                <div key={item.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">{typeIcons[item.type] || '💬'}</span>
+                        <span className="font-medium text-gray-900 dark:text-white capitalize">{item.type}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[item.status]}`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{item.message}</p>
+                      <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        <span>{item.user_email}</span>
+                        <span>•</span>
+                        <span>{new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}</span>
+                        {item.page && (
+                          <>
+                            <span>•</span>
+                            <span>{item.page}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {item.status !== 'read' && (
+                        <button
+                          onClick={() => updateStatus(item.id, 'read')}
+                          className="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
+                          title="Mark as read"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                      )}
+                      {item.status !== 'resolved' && (
+                        <button
+                          onClick={() => updateStatus(item.id, 'resolved')}
+                          className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                          title="Mark as resolved"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Loading Skeleton Components
 const SkeletonCard = () => (
   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 animate-pulse">
@@ -4865,6 +5198,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       </div>
       
       {/* Quick Actions - floating bubble in top-right corner on hover (desktop only) */}
+      {!isDragging && (
       <div className="hidden md:flex absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 z-10">
         <div className="flex items-center gap-0.5 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
           {/* Start button - show if not in progress and not done */}
@@ -4928,6 +5262,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           )}
         </div>
       </div>
+      )}
       
       {/* Mobile Status Picker */}
       {onStatusChange && (
@@ -6908,6 +7243,8 @@ export default function KanbanBoard() {
   const [mobileColumnIndex, setMobileColumnIndex] = useState(1) // Default to To Do column
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [helpModalTab, setHelpModalTab] = useState('board')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
@@ -8743,35 +9080,29 @@ export default function KanbanBoard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-        {/* Skeleton Header */}
-        <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
-          <div className="max-w-full mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" />
-                <div>
-                  <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse" />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          {/* Animated Logo */}
+          <div className="relative mb-6">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl shadow-indigo-500/30 animate-pulse">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
             </div>
+            {/* Pulse ring */}
+            <div className="absolute inset-0 w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-ping opacity-20" />
           </div>
-        </header>
-        
-        {/* Skeleton Board */}
-        <main className="max-w-full mx-auto px-6 py-6">
-          <div className="flex gap-6 overflow-x-auto pb-6">
-            <SkeletonColumn />
-            <SkeletonColumn />
-            <SkeletonColumn />
-            <SkeletonColumn />
-          </div>
-        </main>
+          
+          {/* Brand name */}
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            Trackli
+          </h1>
+          
+          {/* Loading text */}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Loading your tasks...
+          </p>
+        </div>
       </div>
     )
   }
@@ -9075,6 +9406,19 @@ export default function KanbanBoard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
+              
+              {/* Admin Feedback Button - only visible to admin */}
+              {user?.email === ADMIN_EMAIL && (
+                <button
+                  onClick={() => setAdminPanelOpen(true)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                  title="View Feedback"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                </button>
+              )}
               
               <button
                 onClick={signOut}
@@ -10710,6 +11054,31 @@ Or we can extract from:
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </button>
+      
+      {/* Floating Feedback Button */}
+      <button
+        onClick={() => setFeedbackModalOpen(true)}
+        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-12 h-12 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all group"
+        title="Send Feedback"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </button>
+      
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        user={user}
+      />
+      
+      {/* Admin Feedback Panel */}
+      <AdminFeedbackPanel
+        isOpen={adminPanelOpen}
+        onClose={() => setAdminPanelOpen(false)}
+        userEmail={user?.email}
+      />
     </div>
   )
 }
