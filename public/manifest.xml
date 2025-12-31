@@ -8,11 +8,11 @@
   
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
   
-  <Version>5.0.0.0</Version>
+  <Version>6.0.0.0</Version>
   <ProviderName>Trackli</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Trackli"/>
-  <Description DefaultValue="View and create tasks in Trackli"/>
+  <Description DefaultValue="View and manage tasks in Trackli"/>
   
   <IconUrl DefaultValue="https://gettrackli.com/icon-64.png"/>
   <HighResolutionIconUrl DefaultValue="https://gettrackli.com/icon-128.png"/>
@@ -61,7 +61,7 @@
               <Group id="msgReadGroup">
                 <Label resid="GroupLabel"/>
                 
-                <!-- My Day Button (standalone) -->
+                <!-- My Day Button -->
                 <Control xsi:type="Button" id="msgMyDayBtn">
                   <Label resid="MenuItem.MyDay"/>
                   <Supertip>
@@ -78,50 +78,38 @@
                   </Action>
                 </Control>
                 
-                <!-- Create Task Menu -->
-                <Control xsi:type="Menu" id="msgCreateMenu">
-                  <Label resid="MenuButton.Label"/>
+                <!-- Create New Task Button -->
+                <Control xsi:type="Button" id="msgCreateBtn">
+                  <Label resid="MenuItem.Create"/>
                   <Supertip>
-                    <Title resid="MenuButton.Label"/>
-                    <Description resid="MenuButton.Tooltip"/>
+                    <Title resid="MenuItem.Create"/>
+                    <Description resid="MenuItem.Create.Tip"/>
                   </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16"/>
                     <bt:Image size="32" resid="Icon.32x32"/>
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
-                  <Items>
-                    <Item id="menuItem1">
-                      <Label resid="MenuItem.Email"/>
-                      <Supertip>
-                        <Title resid="MenuItem.Email"/>
-                        <Description resid="MenuItem.Email.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.Email"/>
-                      </Action>
-                    </Item>
-                    <Item id="menuItem2">
-                      <Label resid="MenuItem.FollowUps"/>
-                      <Supertip>
-                        <Title resid="MenuItem.FollowUps"/>
-                        <Description resid="MenuItem.FollowUps.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.FollowUps"/>
-                      </Action>
-                    </Item>
-                  </Items>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Create"/>
+                  </Action>
+                </Control>
+                
+                <!-- Update Task Button -->
+                <Control xsi:type="Button" id="msgUpdateBtn">
+                  <Label resid="MenuItem.Update"/>
+                  <Supertip>
+                    <Title resid="MenuItem.Update"/>
+                    <Description resid="MenuItem.Update.Tip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Update"/>
+                  </Action>
                 </Control>
               </Group>
             </OfficeTab>
@@ -149,49 +137,36 @@
                   </Action>
                 </Control>
                 
-                <Control xsi:type="Menu" id="apptCreateMenu">
-                  <Label resid="MenuButton.Label"/>
+                <Control xsi:type="Button" id="apptCreateBtn">
+                  <Label resid="MenuItem.Create"/>
                   <Supertip>
-                    <Title resid="MenuButton.Label"/>
-                    <Description resid="MenuButton.Tooltip"/>
+                    <Title resid="MenuItem.Create"/>
+                    <Description resid="MenuItem.Create.Tip"/>
                   </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16"/>
                     <bt:Image size="32" resid="Icon.32x32"/>
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
-                  <Items>
-                    <Item id="apptMenuItem1">
-                      <Label resid="MenuItem.Agenda"/>
-                      <Supertip>
-                        <Title resid="MenuItem.Agenda"/>
-                        <Description resid="MenuItem.Agenda.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.Agenda"/>
-                      </Action>
-                    </Item>
-                    <Item id="apptMenuItem2">
-                      <Label resid="MenuItem.Notes"/>
-                      <Supertip>
-                        <Title resid="MenuItem.Notes"/>
-                        <Description resid="MenuItem.Notes.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.Notes"/>
-                      </Action>
-                    </Item>
-                  </Items>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Create"/>
+                  </Action>
+                </Control>
+                
+                <Control xsi:type="Button" id="apptUpdateBtn">
+                  <Label resid="MenuItem.Update"/>
+                  <Supertip>
+                    <Title resid="MenuItem.Update"/>
+                    <Description resid="MenuItem.Update.Tip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Update"/>
+                  </Action>
                 </Control>
               </Group>
             </OfficeTab>
@@ -219,49 +194,36 @@
                   </Action>
                 </Control>
                 
-                <Control xsi:type="Menu" id="apptComposeCreateMenu">
-                  <Label resid="MenuButton.Label"/>
+                <Control xsi:type="Button" id="apptComposeCreateBtn">
+                  <Label resid="MenuItem.Create"/>
                   <Supertip>
-                    <Title resid="MenuButton.Label"/>
-                    <Description resid="MenuButton.Tooltip"/>
+                    <Title resid="MenuItem.Create"/>
+                    <Description resid="MenuItem.Create.Tip"/>
                   </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16"/>
                     <bt:Image size="32" resid="Icon.32x32"/>
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
-                  <Items>
-                    <Item id="apptComposeMenuItem1">
-                      <Label resid="MenuItem.Agenda"/>
-                      <Supertip>
-                        <Title resid="MenuItem.Agenda"/>
-                        <Description resid="MenuItem.Agenda.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.Agenda"/>
-                      </Action>
-                    </Item>
-                    <Item id="apptComposeMenuItem2">
-                      <Label resid="MenuItem.Notes"/>
-                      <Supertip>
-                        <Title resid="MenuItem.Notes"/>
-                        <Description resid="MenuItem.Notes.Tip"/>
-                      </Supertip>
-                      <Icon>
-                        <bt:Image size="16" resid="Icon.16x16"/>
-                        <bt:Image size="32" resid="Icon.32x32"/>
-                        <bt:Image size="80" resid="Icon.80x80"/>
-                      </Icon>
-                      <Action xsi:type="ShowTaskpane">
-                        <SourceLocation resid="Taskpane.Notes"/>
-                      </Action>
-                    </Item>
-                  </Items>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Create"/>
+                  </Action>
+                </Control>
+                
+                <Control xsi:type="Button" id="apptComposeUpdateBtn">
+                  <Label resid="MenuItem.Update"/>
+                  <Supertip>
+                    <Title resid="MenuItem.Update"/>
+                    <Description resid="MenuItem.Update.Tip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="Taskpane.Update"/>
+                  </Action>
                 </Control>
               </Group>
             </OfficeTab>
@@ -278,27 +240,19 @@
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Taskpane.MyDay" DefaultValue="https://gettrackli.com/outlook-addin?mode=myday"/>
-        <bt:Url id="Taskpane.Email" DefaultValue="https://gettrackli.com/outlook-addin?mode=email"/>
-        <bt:Url id="Taskpane.FollowUps" DefaultValue="https://gettrackli.com/outlook-addin?mode=followups"/>
-        <bt:Url id="Taskpane.Agenda" DefaultValue="https://gettrackli.com/outlook-addin?mode=agenda"/>
-        <bt:Url id="Taskpane.Notes" DefaultValue="https://gettrackli.com/outlook-addin?mode=notes"/>
+        <bt:Url id="Taskpane.Create" DefaultValue="https://gettrackli.com/outlook-addin?mode=create"/>
+        <bt:Url id="Taskpane.Update" DefaultValue="https://gettrackli.com/outlook-addin?mode=update"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Trackli"/>
-        <bt:String id="MenuButton.Label" DefaultValue="Create Task"/>
         <bt:String id="MenuItem.MyDay" DefaultValue="My Day"/>
-        <bt:String id="MenuItem.Email" DefaultValue="Create task from email"/>
-        <bt:String id="MenuItem.FollowUps" DefaultValue="Create tasks from follow-ups"/>
-        <bt:String id="MenuItem.Agenda" DefaultValue="Create task to send agenda"/>
-        <bt:String id="MenuItem.Notes" DefaultValue="Create task to send notes"/>
+        <bt:String id="MenuItem.Create" DefaultValue="Create Task"/>
+        <bt:String id="MenuItem.Update" DefaultValue="Update Task"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="MenuButton.Tooltip" DefaultValue="Create tasks in Trackli"/>
         <bt:String id="MenuItem.MyDay.Tip" DefaultValue="View your My Day tasks and tasks due today"/>
-        <bt:String id="MenuItem.Email.Tip" DefaultValue="Create a task from this email's subject and content"/>
-        <bt:String id="MenuItem.FollowUps.Tip" DefaultValue="Extract follow-up items from the email and create tasks"/>
-        <bt:String id="MenuItem.Agenda.Tip" DefaultValue="Create a reminder to send the meeting agenda"/>
-        <bt:String id="MenuItem.Notes.Tip" DefaultValue="Create a reminder to send meeting notes and follow-ups"/>
+        <bt:String id="MenuItem.Create.Tip" DefaultValue="Create a new task and attach this email or meeting"/>
+        <bt:String id="MenuItem.Update.Tip" DefaultValue="Add a note to an existing task and attach this email or meeting"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
