@@ -14,9 +14,9 @@
   <DisplayName DefaultValue="Trackli"/>
   <Description DefaultValue="View and manage tasks in Trackli"/>
   
-  <IconUrl DefaultValue="https://gettrackli.com/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://gettrackli.com/icon-128.png"/>
-  <SupportUrl DefaultValue="https://gettrackli.com"/>
+  <IconUrl DefaultValue="https://www.gettrackli.com/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://www.gettrackli.com/icon-128.png"/>
+  <SupportUrl DefaultValue="https://www.gettrackli.com"/>
   
   <Hosts>
     <Host Name="Mailbox"/>
@@ -31,7 +31,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://gettrackli.com/outlook-addin"/>
+        <SourceLocation DefaultValue="https://www.gettrackli.com/outlook-addin"/>
         <RequestedHeight>500</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -234,14 +234,14 @@
     
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://gettrackli.com/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://gettrackli.com/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://gettrackli.com/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://www.gettrackli.com/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://www.gettrackli.com/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://www.gettrackli.com/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.MyDay" DefaultValue="https://gettrackli.com/outlook-addin?mode=myday"/>
-        <bt:Url id="Taskpane.Create" DefaultValue="https://gettrackli.com/outlook-addin?mode=create"/>
-        <bt:Url id="Taskpane.Update" DefaultValue="https://gettrackli.com/outlook-addin?mode=update"/>
+        <bt:Url id="Taskpane.MyDay" DefaultValue="https://www.gettrackli.com/outlook-addin?mode=myday"/>
+        <bt:Url id="Taskpane.Create" DefaultValue="https://www.gettrackli.com/outlook-addin?mode=create"/>
+        <bt:Url id="Taskpane.Update" DefaultValue="https://www.gettrackli.com/outlook-addin?mode=update"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Trackli"/>
