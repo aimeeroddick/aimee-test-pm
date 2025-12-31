@@ -5297,17 +5297,25 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           if (!dateStr) return null
           // Already in YYYY-MM-DD format
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
-          // DD/MM/YYYY format (UK)
-          const ukMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-          if (ukMatch) {
-            const [, day, month, year] = ukMatch
-            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-          }
-          // MM/DD/YYYY format (US)
-          const usMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-          if (usMatch) {
-            // Ambiguous - assume UK format was already handled, try as-is
-            return null
+          
+          // Detect locale for date parsing
+          const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
+            (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') ||
+             new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+          
+          const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+          if (match) {
+            let day, month
+            if (isUSLocale) {
+              // US: MM/DD/YYYY
+              month = match[1].padStart(2, '0')
+              day = match[2].padStart(2, '0')
+            } else {
+              // UK/EU: DD/MM/YYYY
+              day = match[1].padStart(2, '0')
+              month = match[2].padStart(2, '0')
+            }
+            return `${match[3]}-${month}-${day}`
           }
           return null
         }
@@ -8436,6 +8444,11 @@ export default function KanbanBoard() {
     const cleaned = dateStr.trim().toLowerCase()
     const today = new Date()
     
+    // Detect if user's locale uses MM/DD (US) or DD/MM (most other countries)
+    const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
+      (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') || // Jan 2 shows as 1/2 in US
+       new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+    
     if (cleaned === 'today' || cleaned === 'eod') {
       return today.toISOString().split('T')[0]
     }
@@ -8456,19 +8469,35 @@ export default function KanbanBoard() {
       return today.toISOString().split('T')[0]
     }
     
+    // Parse numeric dates based on locale
     let match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)
     if (match) {
-      const day = parseInt(match[1])
-      const month = parseInt(match[2]) - 1
+      let day, month
+      if (isUSLocale) {
+        // US: MM/DD/YYYY
+        month = parseInt(match[1]) - 1
+        day = parseInt(match[2])
+      } else {
+        // UK/EU: DD/MM/YYYY
+        day = parseInt(match[1])
+        month = parseInt(match[2]) - 1
+      }
       const year = match[3].length === 2 ? 2000 + parseInt(match[3]) : parseInt(match[3])
       const date = new Date(year, month, day)
       if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
     }
     
+    // Short date without year
     match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})(?!\d)/)
     if (match) {
-      const day = parseInt(match[1])
-      const month = parseInt(match[2]) - 1
+      let day, month
+      if (isUSLocale) {
+        month = parseInt(match[1]) - 1
+        day = parseInt(match[2])
+      } else {
+        day = parseInt(match[1])
+        month = parseInt(match[2]) - 1
+      }
       const date = new Date(today.getFullYear(), month, day)
       if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
     }
