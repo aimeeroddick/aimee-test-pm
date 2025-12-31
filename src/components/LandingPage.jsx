@@ -55,19 +55,19 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/40 via-purple-200/40 to-pink-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8 animate-fadeIn">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             Now in beta — Try it free
           </div>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Task management that{' '}
             <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               just <span className="italic">works</span>
             </span>
           </h1>
           
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
             Tired of tools that are either too simple or overwhelmingly complex? 
             Trackli is the sweet spot: powerful enough for real work, simple enough to actually use.
           </p>
@@ -89,7 +89,7 @@ export default function LandingPage() {
         </div>
 
         {/* App Preview */}
-        <div className="max-w-5xl mx-auto mt-16 animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+        <div className="max-w-5xl mx-auto mt-16">
           <div className="bg-gray-100 rounded-2xl p-4 sm:p-6 shadow-2xl">
             <div className="bg-white rounded-xl overflow-hidden shadow-lg">
               {/* Window chrome */}
