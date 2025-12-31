@@ -258,6 +258,16 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
+// Detect if user's locale uses MM/DD (US) or DD/MM (most other countries)
+// Uses January 15 as test - if first number is 1, it's month-first (US)
+// If first number is 15, it's day-first (UK/EU)
+const isUSDateFormat = () => {
+  const testDate = new Date(2000, 0, 15) // January 15, 2000
+  const formatted = testDate.toLocaleDateString()
+  const firstNum = parseInt(formatted.split(/[\/\-\.]/)[0])
+  return firstNum === 1 // Month (1) comes first = US format
+}
+
 const formatTimeEstimate = (minutes) => {
   if (!minutes) return ''
   if (minutes < 60) return `${minutes}m`
@@ -420,9 +430,7 @@ const parseNaturalLanguageDate = (text) => {
   }
   
   // Parse numeric dates (DD/MM/YYYY or MM/DD/YYYY based on locale)
-  const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
-    (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') ||
-     new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+  const isUSLocale = isUSDateFormat()
   
   // Full date with year: DD/MM/YYYY or MM/DD/YYYY
   let numericMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
@@ -5351,9 +5359,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
           
           // Detect locale for date parsing
-          const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
-            (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') ||
-             new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+          const isUSLocale = isUSDateFormat()
           
           const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
           if (match) {
@@ -8497,9 +8503,7 @@ export default function KanbanBoard() {
     const today = new Date()
     
     // Detect if user's locale uses MM/DD (US) or DD/MM (most other countries)
-    const isUSLocale = new Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('en-US') ||
-      (new Date(2000, 0, 2).toLocaleDateString().startsWith('1/') || // Jan 2 shows as 1/2 in US
-       new Date(2000, 0, 2).toLocaleDateString().startsWith('01/'))
+    const isUSLocale = isUSDateFormat()
     
     if (cleaned === 'today' || cleaned === 'eod') {
       return today.toISOString().split('T')[0]
