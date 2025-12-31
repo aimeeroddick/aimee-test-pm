@@ -175,12 +175,21 @@ export default function OutlookAddin() {
   useEffect(() => {
     const init = async () => {
       setLoading(true)
+      console.log('OutlookAddin: Initializing...')
       
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (session?.user) {
-        setUser(session.user)
-        await loadData()
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        console.log('Session check:', session?.user?.email, 'Error:', sessionError)
+        
+        if (session?.user) {
+          setUser(session.user)
+          console.log('User authenticated, loading data...')
+          await loadData()
+        } else {
+          console.log('No session found')
+        }
+      } catch (err) {
+        console.error('Init error:', err)
       }
       
       setLoading(false)
@@ -188,6 +197,15 @@ export default function OutlookAddin() {
     
     init()
   }, [])
+
+  // Reload data when tab changes to ensure fresh data
+  useEffect(() => {
+    if (user && activeTab === TAB.MYDAY) {
+      loadMyDayTasks()
+    } else if (user && activeTab === TAB.UPDATE) {
+      loadAllTasks()
+    }
+  }, [activeTab, user])
 
   const loadData = async () => {
     // Load projects
@@ -209,31 +227,56 @@ export default function OutlookAddin() {
   }
 
   const loadMyDayTasks = async () => {
-    const today = new Date().toISOString().split('T')[0]
-    
-    const { data: tasksData } = await supabase
-      .from('tasks')
-      .select('*, projects(name, color)')
-      .or(`my_day_date.eq.${today},due_date.eq.${today}`)
-      .neq('status', 'done')
-      .order('critical', { ascending: false })
-      .order('due_date', { ascending: true })
-    
-    if (tasksData) {
-      setTasks(tasksData)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      console.log('Loading My Day tasks for:', today)
+      
+      const { data: tasksData, error: queryError } = await supabase
+        .from('tasks')
+        .select('*, projects(name, color)')
+        .or(`my_day_date.eq.${today},due_date.eq.${today}`)
+        .neq('status', 'done')
+        .order('critical', { ascending: false })
+        .order('due_date', { ascending: true })
+      
+      console.log('My Day tasks result:', tasksData, 'Error:', queryError)
+      
+      if (queryError) {
+        console.error('My Day query error:', queryError)
+        return
+      }
+      
+      if (tasksData) {
+        setTasks(tasksData)
+      }
+    } catch (err) {
+      console.error('loadMyDayTasks error:', err)
     }
   }
 
   const loadAllTasks = async () => {
-    const { data: tasksData } = await supabase
-      .from('tasks')
-      .select('*, projects(name, color)')
-      .neq('status', 'done')
-      .order('updated_at', { ascending: false })
-      .limit(100)
-    
-    if (tasksData) {
-      setAllTasks(tasksData)
+    try {
+      console.log('Loading all tasks...')
+      
+      const { data: tasksData, error: queryError } = await supabase
+        .from('tasks')
+        .select('*, projects(name, color)')
+        .neq('status', 'done')
+        .order('updated_at', { ascending: false })
+        .limit(100)
+      
+      console.log('All tasks result:', tasksData?.length, 'Error:', queryError)
+      
+      if (queryError) {
+        console.error('All tasks query error:', queryError)
+        return
+      }
+      
+      if (tasksData) {
+        setAllTasks(tasksData)
+      }
+    } catch (err) {
+      console.error('loadAllTasks error:', err)
     }
   }
 
