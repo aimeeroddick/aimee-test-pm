@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
+import LandingPage from './components/LandingPage'
 import KanbanBoard from './components/KanbanBoard'
 import OutlookAddin from './components/OutlookAddin'
 
@@ -21,7 +22,29 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/welcome" replace />
+  }
+
+  return children
+}
+
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If user is logged in, redirect to app
+  if (user) {
+    return <Navigate to="/app" replace />
   }
 
   return children
@@ -31,22 +54,64 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/outlook-addin" element={<OutlookAddin />} />
+        {/* Public routes */}
+        <Route 
+          path="/welcome" 
+          element={
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } 
+        />
+        
+        {/* Protected app route */}
         <Route
-          path="/"
+          path="/app"
           element={
             <ProtectedRoute>
               <KanbanBoard />
             </ProtectedRoute>
           }
         />
+        
+        {/* Outlook add-in (doesn't need auth redirect logic) */}
+        <Route path="/outlook-addin" element={<OutlookAddin />} />
+        
+        {/* Root redirect based on auth status */}
+        <Route path="/" element={<RootRedirect />} />
+        
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Analytics />
       <SpeedInsights />
     </>
   )
+}
+
+function RootRedirect() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return user ? <Navigate to="/app" replace /> : <Navigate to="/welcome" replace />
 }
 
 export default App
