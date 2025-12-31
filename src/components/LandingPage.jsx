@@ -35,6 +35,12 @@ export default function LandingPage() {
             </a>
             <Link
               to="/login"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/login"
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25"
             >
               Get Started
