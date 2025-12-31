@@ -8103,32 +8103,59 @@ export default function KanbanBoard() {
     
     console.log('File selected:', file.name, file.type, file.size)
     
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Image must be smaller than 10MB')
-      return
+    // Use canvas to compress/resize large images
+    const img = new Image()
+    const reader = new FileReader()
+    
+    reader.onload = (event) => {
+      img.onload = () => {
+        // Max dimensions for the image
+        const maxWidth = 2000
+        const maxHeight = 2000
+        let { width, height } = img
+        
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        
+        // Create canvas and draw resized image
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        
+        // Convert to base64 with compression (0.8 quality)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        const base64 = compressedDataUrl.split(',')[1]
+        
+        console.log('Compressed image size:', Math.round(base64.length * 0.75 / 1024), 'KB')
+        
+        setUploadedImage({
+          base64,
+          mediaType: 'image/jpeg',
+          preview: compressedDataUrl,
+          name: file.name || 'photo.jpg',
+        })
+        setError(null)
+      }
+      
+      img.onerror = () => {
+        console.error('Failed to load image')
+        setError('Failed to load image')
+      }
+      
+      img.src = event.target.result
     }
     
-    const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1]
-      // Determine media type - default to jpeg if unknown
-      let mediaType = file.type
-      if (!mediaType || mediaType === 'image/heic' || mediaType === 'image/heif') {
-        mediaType = 'image/jpeg'
-      }
-      setUploadedImage({
-        base64,
-        mediaType,
-        preview: reader.result,
-        name: file.name || 'photo.jpg',
-      })
-      setError(null)
-    }
     reader.onerror = () => {
       console.error('FileReader error:', reader.error)
       setError('Failed to read image file')
     }
+    
     reader.readAsDataURL(file)
   }
   
@@ -10702,6 +10729,11 @@ export default function KanbanBoard() {
       >
         {!showExtractedTasks ? (
           <div className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Paste notes or upload a photo of your notes. We'll extract action items automatically.
             </p>
@@ -10733,7 +10765,7 @@ export default function KanbanBoard() {
                   </p>
                 </div>
               ) : (
-                <label className="flex flex-col items-center gap-3 cursor-pointer">
+                <div className="flex flex-col items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                     <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -10748,9 +10780,9 @@ export default function KanbanBoard() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="hidden"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400"
                   />
-                </label>
+                </div>
               )}
             </div>
             
