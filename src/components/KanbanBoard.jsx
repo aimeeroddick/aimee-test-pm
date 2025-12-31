@@ -7934,33 +7934,20 @@ export default function KanbanBoard() {
     setSavingProfile(false)
   }
   
-  // Handle password change
-  const handleChangePassword = async () => {
-    setPasswordError('')
-    setPasswordSuccess(false)
-    
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match')
-      return
-    }
-    
-    setSavingPassword(true)
+  // Handle password reset email
+  const handleSendPasswordReset = async () => {
+    setSendingPasswordReset(true)
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: window.location.origin
+      })
       if (error) throw error
-      setNewPassword('')
-      setConfirmPassword('')
-      setPasswordSuccess(true)
-      setTimeout(() => setPasswordSuccess(false), 3000)
+      setPasswordResetSent(true)
     } catch (err) {
-      console.error('Error changing password:', err)
-      setPasswordError(err.message || 'Failed to change password')
+      console.error('Error sending password reset:', err)
+      setError('Failed to send password reset email')
     }
-    setSavingPassword(false)
+    setSendingPasswordReset(false)
   }
   
   // Handle preference changes
@@ -8037,11 +8024,8 @@ export default function KanbanBoard() {
   const [editingDisplayName, setEditingDisplayName] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   // Settings - Password
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [savingPassword, setSavingPassword] = useState(false)
-  const [passwordError, setPasswordError] = useState('')
-  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [sendingPasswordReset, setSendingPasswordReset] = useState(false)
+  const [passwordResetSent, setPasswordResetSent] = useState(false)
   // Settings - Preferences
   const [defaultView, setDefaultView] = useState(() => localStorage.getItem('trackli-default-view') || 'board')
   const [weekStartsOn, setWeekStartsOn] = useState(() => localStorage.getItem('trackli-week-start') || '0')
@@ -12342,17 +12326,17 @@ Or we can extract from:
       {settingsModalOpen && (
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); } }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setPasswordResetSent(false); } }}
         >
           <div 
             className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); } }}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setPasswordResetSent(false); } }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit">
               <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
               <button
-                onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); }}
+                onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setPasswordResetSent(false); }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12425,41 +12409,28 @@ Or we can extract from:
               {/* Change Password - Only for email accounts */}
               {user?.app_metadata?.provider !== 'google' && (
                 <div>
-                  <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Change Password</h3>
-                  <div className={`p-4 rounded-xl space-y-3 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div>
-                      <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>New Password</label>
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        className={`w-full px-3 py-2 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-                      />
-                    </div>
-                    <div>
-                      <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Confirm Password</label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        className={`w-full px-3 py-2 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
-                      />
-                    </div>
-                    {passwordError && (
-                      <p className="text-red-500 text-sm">{passwordError}</p>
+                  <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Password</h3>
+                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    {passwordResetSent ? (
+                      <div className="text-center">
+                        <p className="text-green-500 text-sm mb-2">✓ Password reset email sent!</p>
+                        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Check your inbox for a link to reset your password.</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Change Password</div>
+                          <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>We'll send a reset link to your email</div>
+                        </div>
+                        <button
+                          onClick={handleSendPasswordReset}
+                          disabled={sendingPasswordReset}
+                          className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                        >
+                          {sendingPasswordReset ? 'Sending...' : 'Send Link'}
+                        </button>
+                      </div>
                     )}
-                    {passwordSuccess && (
-                      <p className="text-green-500 text-sm">✓ Password changed successfully</p>
-                    )}
-                    <button
-                      onClick={handleChangePassword}
-                      disabled={!newPassword || !confirmPassword || savingPassword}
-                      className="w-full px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {savingPassword ? 'Changing...' : 'Change Password'}
-                    </button>
                   </div>
                 </div>
               )}
