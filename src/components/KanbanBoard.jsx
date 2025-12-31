@@ -10629,7 +10629,7 @@ export default function KanbanBoard() {
               Paste your meeting notes below. We'll extract action items and create tasks automatically.
             </p>
             
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-hidden">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting Title</label>
                 <input
@@ -10641,28 +10641,28 @@ export default function KanbanBoard() {
                 />
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting Date</label>
-                  <input
-                    type="date"
-                    value={meetingNotesData.date}
-                    onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
-                    className="w-full max-w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all box-border"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project</label>
-                  <select
-                    value={meetingNotesData.projectId}
-                    onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
-                    className="w-full max-w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all box-border"
-                  >
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting Date</label>
+                <input
+                  type="date"
+                  value={meetingNotesData.date}
+                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  style={{ maxWidth: '100%' }}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project</label>
+                <select
+                  value={meetingNotesData.projectId}
+                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                >
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             
