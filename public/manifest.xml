@@ -8,11 +8,11 @@
   
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
   
-  <Version>3.0.0.0</Version>
+  <Version>4.0.0.0</Version>
   <ProviderName>Trackli</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Trackli"/>
-  <Description DefaultValue="Create tasks from emails and meetings in Trackli"/>
+  <Description DefaultValue="View and create tasks in Trackli"/>
   
   <IconUrl DefaultValue="https://gettrackli.com/icon-64.png"/>
   <HighResolutionIconUrl DefaultValue="https://gettrackli.com/icon-128.png"/>
@@ -32,7 +32,7 @@
     <Form xsi:type="ItemRead">
       <DesktopSettings>
         <SourceLocation DefaultValue="https://gettrackli.com/outlook-addin"/>
-        <RequestedHeight>450</RequestedHeight>
+        <RequestedHeight>500</RequestedHeight>
       </DesktopSettings>
     </Form>
   </FormSettings>
@@ -72,6 +72,21 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Items>
+                    <Item id="menuItemMyDay">
+                      <Label resid="MenuItem.MyDay"/>
+                      <Supertip>
+                        <Title resid="MenuItem.MyDay"/>
+                        <Description resid="MenuItem.MyDay.Tip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ShowTaskpane">
+                        <SourceLocation resid="Taskpane.MyDay"/>
+                      </Action>
+                    </Item>
                     <Item id="menuItem1">
                       <Label resid="MenuItem.Email"/>
                       <Supertip>
@@ -155,6 +170,21 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Items>
+                    <Item id="apptMenuItemMyDay">
+                      <Label resid="MenuItem.MyDay"/>
+                      <Supertip>
+                        <Title resid="MenuItem.MyDay"/>
+                        <Description resid="MenuItem.MyDay.Tip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ShowTaskpane">
+                        <SourceLocation resid="Taskpane.MyDay"/>
+                      </Action>
+                    </Item>
                     <Item id="apptMenuItem1">
                       <Label resid="MenuItem.Agenda"/>
                       <Supertip>
@@ -208,6 +238,21 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Items>
+                    <Item id="apptComposeMenuItemMyDay">
+                      <Label resid="MenuItem.MyDay"/>
+                      <Supertip>
+                        <Title resid="MenuItem.MyDay"/>
+                        <Description resid="MenuItem.MyDay.Tip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16x16"/>
+                        <bt:Image size="32" resid="Icon.32x32"/>
+                        <bt:Image size="80" resid="Icon.80x80"/>
+                      </Icon>
+                      <Action xsi:type="ShowTaskpane">
+                        <SourceLocation resid="Taskpane.MyDay"/>
+                      </Action>
+                    </Item>
                     <Item id="apptComposeMenuItem1">
                       <Label resid="MenuItem.Agenda"/>
                       <Supertip>
@@ -254,6 +299,7 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://gettrackli.com/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
+        <bt:Url id="Taskpane.MyDay" DefaultValue="https://gettrackli.com/outlook-addin?mode=myday"/>
         <bt:Url id="Taskpane.Email" DefaultValue="https://gettrackli.com/outlook-addin?mode=email"/>
         <bt:Url id="Taskpane.FollowUps" DefaultValue="https://gettrackli.com/outlook-addin?mode=followups"/>
         <bt:Url id="Taskpane.Agenda" DefaultValue="https://gettrackli.com/outlook-addin?mode=agenda"/>
@@ -261,14 +307,16 @@
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Trackli"/>
-        <bt:String id="MenuButton.Label" DefaultValue="Create Task"/>
+        <bt:String id="MenuButton.Label" DefaultValue="Trackli"/>
+        <bt:String id="MenuItem.MyDay" DefaultValue="View My Day"/>
         <bt:String id="MenuItem.Email" DefaultValue="Create task from email"/>
         <bt:String id="MenuItem.FollowUps" DefaultValue="Create tasks from follow-ups"/>
         <bt:String id="MenuItem.Agenda" DefaultValue="Create task to send agenda"/>
         <bt:String id="MenuItem.Notes" DefaultValue="Create task to send notes"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="MenuButton.Tooltip" DefaultValue="Create tasks in Trackli"/>
+        <bt:String id="MenuButton.Tooltip" DefaultValue="View tasks and create new ones in Trackli"/>
+        <bt:String id="MenuItem.MyDay.Tip" DefaultValue="View your My Day tasks and tasks due today"/>
         <bt:String id="MenuItem.Email.Tip" DefaultValue="Create a task from this email's subject and content"/>
         <bt:String id="MenuItem.FollowUps.Tip" DefaultValue="Extract follow-up items from the email and create tasks"/>
         <bt:String id="MenuItem.Agenda.Tip" DefaultValue="Create a reminder to send the meeting agenda"/>
