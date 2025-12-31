@@ -1532,6 +1532,198 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   )
 }
 
+// Animated SVG Components for Tours
+const DragToMyDayAnimation = () => (
+  <svg viewBox="0 0 280 120" className="w-full h-32 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+    <defs>
+      <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2"/>
+      </filter>
+    </defs>
+    
+    {/* Sidebar area */}
+    <rect x="10" y="10" width="80" height="100" rx="8" fill="#F3F4F6" className="dark:fill-gray-600" />
+    <text x="50" y="28" textAnchor="middle" fontSize="9" fill="#9CA3AF">Tasks</text>
+    
+    {/* Static cards in sidebar */}
+    <rect x="18" y="38" width="64" height="20" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    <rect x="18" y="62" width="64" height="20" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    
+    {/* My Day area */}
+    <rect x="110" y="10" width="160" height="100" rx="8" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2" strokeDasharray="4" />
+    <text x="190" y="28" textAnchor="middle" fontSize="10" fill="#D97706" fontWeight="bold">☀️ My Day</text>
+    
+    {/* Task already in My Day */}
+    <rect x="120" y="38" width="140" height="24" rx="6" fill="#FDE68A" />
+    <circle cx="132" cy="50" r="6" fill="#10B981" />
+    <rect x="144" y="46" width="60" height="8" rx="2" fill="#92400E" opacity="0.3" />
+    
+    {/* Animated dragging card */}
+    <g filter="url(#shadow)">
+      <rect x="18" y="38" width="64" height="20" rx="4" fill="url(#cardGradient)">
+        <animate attributeName="x" values="18;120;120" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="y" values="38;70;70" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="width" values="64;140;140" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="height" values="20;24;24" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+      </rect>
+      <rect x="24" y="44" width="40" height="6" rx="2" fill="white" opacity="0.8">
+        <animate attributeName="x" values="24;132;132" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="y" values="44;78;78" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="width" values="40;80;80" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+      </rect>
+    </g>
+    
+    {/* Arrow indicator */}
+    <path d="M95 55 L105 55 L100 60 Z" fill="#6366F1">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />
+    </path>
+  </svg>
+)
+
+const DragToCalendarAnimation = () => (
+  <svg viewBox="0 0 280 140" className="w-full h-36 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+    <defs>
+      <linearGradient id="calCardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+      <filter id="calShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2"/>
+      </filter>
+    </defs>
+    
+    {/* Sidebar */}
+    <rect x="10" y="10" width="70" height="120" rx="6" fill="#F3F4F6" className="dark:fill-gray-600" />
+    <text x="45" y="26" textAnchor="middle" fontSize="8" fill="#9CA3AF">Tasks</text>
+    <rect x="16" y="34" width="58" height="18" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    <rect x="16" y="56" width="58" height="18" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    
+    {/* Calendar grid */}
+    <rect x="90" y="10" width="180" height="120" rx="6" fill="white" className="dark:fill-gray-800" stroke="#E5E7EB" />
+    
+    {/* Time labels */}
+    <text x="100" y="40" fontSize="8" fill="#9CA3AF">9:00</text>
+    <text x="100" y="70" fontSize="8" fill="#9CA3AF">10:00</text>
+    <text x="100" y="100" fontSize="8" fill="#9CA3AF">11:00</text>
+    
+    {/* Time slot lines */}
+    <line x1="125" y1="32" x2="260" y2="32" stroke="#E5E7EB" strokeWidth="1" />
+    <line x1="125" y1="62" x2="260" y2="62" stroke="#E5E7EB" strokeWidth="1" />
+    <line x1="125" y1="92" x2="260" y2="92" stroke="#E5E7EB" strokeWidth="1" />
+    <line x1="125" y1="122" x2="260" y2="122" stroke="#E5E7EB" strokeWidth="1" />
+    
+    {/* Existing scheduled task */}
+    <rect x="130" y="36" width="120" height="22" rx="4" fill="#10B981" opacity="0.8" />
+    <rect x="136" y="43" width="50" height="6" rx="2" fill="white" opacity="0.7" />
+    
+    {/* Animated dragging card */}
+    <g filter="url(#calShadow)">
+      <rect x="16" y="34" width="58" height="18" rx="4" fill="url(#calCardGradient)">
+        <animate attributeName="x" values="16;130;130" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="y" values="34;66;66" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="width" values="58;120;120" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="height" values="18;22;22" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+      </rect>
+      <rect x="22" y="40" width="30" height="5" rx="2" fill="white" opacity="0.8">
+        <animate attributeName="x" values="22;136;136" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="y" values="40;73;73" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+        <animate attributeName="width" values="30;50;50" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+      </rect>
+    </g>
+    
+    {/* Current time indicator */}
+    <line x1="125" y1="85" x2="260" y2="85" stroke="#EF4444" strokeWidth="2" />
+    <circle cx="125" cy="85" r="4" fill="#EF4444" />
+  </svg>
+)
+
+const ResizeTaskAnimation = () => (
+  <svg viewBox="0 0 200 100" className="w-full h-28 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+    <defs>
+      <linearGradient id="resizeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+    </defs>
+    
+    {/* Time labels */}
+    <text x="15" y="25" fontSize="9" fill="#9CA3AF">9:00</text>
+    <text x="15" y="55" fontSize="9" fill="#9CA3AF">10:00</text>
+    <text x="15" y="85" fontSize="9" fill="#9CA3AF">11:00</text>
+    
+    {/* Grid lines */}
+    <line x1="45" y1="18" x2="190" y2="18" stroke="#E5E7EB" strokeWidth="1" />
+    <line x1="45" y1="48" x2="190" y2="48" stroke="#E5E7EB" strokeWidth="1" />
+    <line x1="45" y1="78" x2="190" y2="78" stroke="#E5E7EB" strokeWidth="1" />
+    
+    {/* Animated resizable task */}
+    <rect x="50" y="22" width="130" rx="4" fill="url(#resizeGradient)">
+      <animate attributeName="height" values="22;52;22" dur="3s" repeatCount="indefinite" />
+    </rect>
+    <rect x="56" y="28" width="60" height="6" rx="2" fill="white" opacity="0.8" />
+    
+    {/* Resize handle indicator */}
+    <g>
+      <rect x="105" width="20" height="6" rx="3" fill="white" opacity="0.9">
+        <animate attributeName="y" values="40;70;40" dur="3s" repeatCount="indefinite" />
+      </rect>
+      {/* Cursor icon */}
+      <path d="M115 0 L115 8 M111 4 L119 4" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round">
+        <animate attributeName="transform" values="translate(0,48);translate(0,78);translate(0,48)" dur="3s" repeatCount="indefinite" />
+      </path>
+    </g>
+  </svg>
+)
+
+const ProgressBarAnimation = () => (
+  <svg viewBox="0 0 240 80" className="w-full h-24 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+    {/* Container */}
+    <rect x="20" y="20" width="200" height="40" rx="8" fill="#FEF3C7" />
+    
+    {/* Label */}
+    <text x="30" y="38" fontSize="10" fill="#92400E" fontWeight="bold">Today's Progress</text>
+    
+    {/* Progress bar background */}
+    <rect x="30" y="45" width="180" height="8" rx="4" fill="#FDE68A" />
+    
+    {/* Animated progress fill */}
+    <rect x="30" y="45" height="8" rx="4" fill="url(#progressGradient)">
+      <animate attributeName="width" values="0;180;180;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.4;0.9;1" />
+    </rect>
+    
+    {/* Percentage text */}
+    <text x="120" y="38" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="bold">
+      <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.4;0.9;1" />
+      100% ✓
+    </text>
+    
+    {/* Confetti dots */}
+    <circle cx="60" cy="15" r="3" fill="#F59E0B">
+      <animate attributeName="opacity" values="0;0;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.4;0.5;0.7" />
+      <animate attributeName="cy" values="15;5;5" dur="4s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+    </circle>
+    <circle cx="120" cy="12" r="3" fill="#EC4899">
+      <animate attributeName="opacity" values="0;0;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;0.55;0.75" />
+      <animate attributeName="cy" values="12;2;2" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;1" />
+    </circle>
+    <circle cx="180" cy="14" r="3" fill="#6366F1">
+      <animate attributeName="opacity" values="0;0;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.42;0.52;0.72" />
+      <animate attributeName="cy" values="14;4;4" dur="4s" repeatCount="indefinite" keyTimes="0;0.42;1" />
+    </circle>
+    
+    <defs>
+      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#10B981" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+    </defs>
+  </svg>
+)
+
 // View-Specific Tour Component
 const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   const tourContent = {
@@ -1542,14 +1734,16 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         icon: '🎯',
       },
       {
-        title: 'How Tasks Appear Here',
-        description: 'Tasks show up automatically if their start date is today or earlier. You can also drag tasks from the sidebar to add them manually.',
+        title: 'Drag Tasks to My Day',
+        description: 'Tasks with today\'s start date appear automatically. Drag any task from the sidebar to add it manually!',
         icon: '📥',
+        animation: 'dragToMyDay',
       },
       {
         title: 'Track Your Progress',
-        description: 'Watch your progress bar fill up as you complete tasks. Finish everything for a confetti celebration! 🎉',
+        description: 'Watch your progress bar fill up as you complete tasks. Finish everything for a confetti celebration!',
         icon: '📊',
+        animation: 'progressBar',
       },
     ],
     calendar: [
@@ -1559,14 +1753,16 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         icon: '🗓️',
       },
       {
-        title: 'Schedule Tasks',
-        description: 'Drag tasks from the sidebar onto any time slot. Drag the bottom edge of scheduled tasks to adjust duration.',
+        title: 'Drag to Schedule',
+        description: 'Drag tasks from the sidebar onto any time slot to schedule them. The task\'s start time updates automatically.',
         icon: '✨',
+        animation: 'dragToCalendar',
       },
       {
-        title: 'Visual Indicators',
-        description: 'The red line shows current time. Orange rings warn of overlapping tasks. Tasks are color-coded by project.',
+        title: 'Resize to Adjust Duration',
+        description: 'Drag the bottom edge of any scheduled task to change how long it takes. Time estimate updates automatically!',
         icon: '🎨',
+        animation: 'resizeTask',
       },
     ],
     tasks: [
@@ -1607,6 +1803,14 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     ],
   }
 
+  // Animation component mapping
+  const animations = {
+    dragToMyDay: DragToMyDayAnimation,
+    dragToCalendar: DragToCalendarAnimation,
+    resizeTask: ResizeTaskAnimation,
+    progressBar: ProgressBarAnimation,
+  }
+
   const steps = tourContent[view] || []
   const currentStep = steps[step]
   if (!currentStep) return null
@@ -1627,9 +1831,19 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
           
           {/* Content */}
           <div className="p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
               {currentStep.description}
             </p>
+            
+            {/* Animation if available */}
+            {currentStep.animation && animations[currentStep.animation] && (
+              <div className="mb-6">
+                {(() => {
+                  const AnimationComponent = animations[currentStep.animation]
+                  return <AnimationComponent />
+                })()}
+              </div>
+            )}
             
             {/* Progress dots */}
             <div className="flex items-center justify-center gap-2 mb-6">
