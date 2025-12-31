@@ -2685,15 +2685,19 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   
   // Handle drop on time slot (30-minute increments)
   const handleDropOnSlot = async (date, slotIndex, e) => {
+    console.log('handleDropOnSlot called', { date, slotIndex, hasEvent: !!e, draggedTask })
+    
     // Get task from state OR from dataTransfer (backup if dragEnd fires first)
     let taskToSchedule = draggedTask
     if (!taskToSchedule && e?.dataTransfer) {
       const taskId = e.dataTransfer.getData('text/plain')
+      console.log('Fallback to dataTransfer, taskId:', taskId)
       taskToSchedule = allTasks.find(t => t.id === taskId)
+      console.log('Found task from allTasks:', taskToSchedule?.title)
     }
     
     if (!taskToSchedule || !onUpdateTask) {
-      console.log('Drop failed: no task or onUpdateTask', { taskToSchedule, onUpdateTask })
+      console.log('Drop failed: no task or onUpdateTask', { taskToSchedule, hasOnUpdateTask: !!onUpdateTask, allTasksLength: allTasks?.length })
       return
     }
     
