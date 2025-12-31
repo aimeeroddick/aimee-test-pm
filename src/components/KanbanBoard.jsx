@@ -10616,6 +10616,9 @@ export default function KanbanBoard() {
           setMeetingNotesModalOpen(false)
           stopListening()
           setVoiceTranscript('')
+          setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: projects[0]?.id || '' })
+          setExtractedTasks([])
+          setShowExtractedTasks(false)
         }} 
         title="Import Tasks"
         wide
