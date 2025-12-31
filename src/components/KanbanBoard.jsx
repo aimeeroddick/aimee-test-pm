@@ -4418,7 +4418,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate }) => {
+const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref }) => {
   const [dragOverMyDay, setDragOverMyDay] = useState(false)
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
@@ -4594,7 +4594,8 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       prevActiveCountRef.current > 0 && 
       myDayActive.length === 0 && 
       myDayCompleted.length > 0 && 
-      !confettiShown
+      !confettiShown &&
+      showConfettiPref !== false
     ) {
       // Fire confetti! (lazy loaded)
       setConfettiShown(true)
@@ -4628,7 +4629,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     
     // Update previous count
     prevActiveCountRef.current = myDayActive.length
-  }, [myDayActive.length, myDayCompleted.length, confettiShown])
+  }, [myDayActive.length, myDayCompleted.length, confettiShown, showConfettiPref])
   
   const handleDragOver = (e) => {
     e.preventDefault()
@@ -7916,8 +7917,98 @@ export default function KanbanBoard() {
     }
   }
   
+  // Handle saving display name
+  const handleSaveDisplayName = async () => {
+    setSavingProfile(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { display_name: displayName }
+      })
+      if (error) throw error
+      setEditingDisplayName(false)
+      showNotification('Display name saved')
+    } catch (err) {
+      console.error('Error saving display name:', err)
+      setError('Failed to save display name')
+    }
+    setSavingProfile(false)
+  }
+  
+  // Handle password change
+  const handleChangePassword = async () => {
+    setPasswordError('')
+    setPasswordSuccess(false)
+    
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+    
+    setSavingPassword(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+      setNewPassword('')
+      setConfirmPassword('')
+      setPasswordSuccess(true)
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch (err) {
+      console.error('Error changing password:', err)
+      setPasswordError(err.message || 'Failed to change password')
+    }
+    setSavingPassword(false)
+  }
+  
+  // Handle preference changes
+  const handlePreferenceChange = (key, value) => {
+    localStorage.setItem(key, value)
+    if (key === 'trackli-default-view') setDefaultView(value)
+    if (key === 'trackli-week-start') setWeekStartsOn(value)
+    if (key === 'trackli-show-confetti') setShowConfetti(value === 'true')
+  }
+  
+  // Handle clearing old completed tasks
+  const handleClearCompletedTasks = async () => {
+    setClearingTasks(true)
+    try {
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(clearTasksAge))
+      
+      const { data: tasksToDelete, error: fetchError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'done')
+        .lt('updated_at', cutoffDate.toISOString())
+      
+      if (fetchError) throw fetchError
+      
+      if (tasksToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('tasks')
+          .delete()
+          .in('id', tasksToDelete.map(t => t.id))
+        
+        if (deleteError) throw deleteError
+        
+        setTasks(prev => prev.filter(t => !tasksToDelete.find(d => d.id === t.id)))
+        showNotification(`Cleared ${tasksToDelete.length} completed task${tasksToDelete.length === 1 ? '' : 's'}`)
+      } else {
+        showNotification('No completed tasks older than ' + clearTasksAge + ' days')
+      }
+    } catch (err) {
+      console.error('Error clearing tasks:', err)
+      setError('Failed to clear completed tasks')
+    }
+    setClearingTasks(false)
+  }
+  
   // View state
-  const [currentView, setCurrentView] = useState('board') // 'board', 'myday', 'calendar', or 'projects'
+  const [currentView, setCurrentView] = useState(() => localStorage.getItem('trackli-default-view') || 'board') // 'board', 'myday', 'calendar', or 'projects'
   const [calendarViewMode, setCalendarViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [navMenuOpen, setNavMenuOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
@@ -7941,6 +8032,23 @@ export default function KanbanBoard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  // Settings - Profile
+  const [displayName, setDisplayName] = useState('')
+  const [editingDisplayName, setEditingDisplayName] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  // Settings - Password
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  // Settings - Preferences
+  const [defaultView, setDefaultView] = useState(() => localStorage.getItem('trackli-default-view') || 'board')
+  const [weekStartsOn, setWeekStartsOn] = useState(() => localStorage.getItem('trackli-week-start') || '0')
+  const [showConfetti, setShowConfetti] = useState(() => localStorage.getItem('trackli-show-confetti') !== 'false')
+  // Settings - Data
+  const [clearingTasks, setClearingTasks] = useState(false)
+  const [clearTasksAge, setClearTasksAge] = useState('30')
   const [helpModalTab, setHelpModalTab] = useState('board')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
@@ -10921,6 +11029,7 @@ export default function KanbanBoard() {
                 allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
+                showConfettiPref={showConfetti}
               />
             </div>
           )}
@@ -12233,17 +12342,17 @@ Or we can extract from:
       {settingsModalOpen && (
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); } }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); } }}
         >
           <div 
-            className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); } }}
+            className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); } }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit">
               <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
               <button
-                onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12253,38 +12362,180 @@ Or we can extract from:
             </div>
             
             <div className="p-6 space-y-6">
-              {/* Account Section */}
+              {/* Profile Section */}
               <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Account</h3>
-                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Profile</h3>
+                <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                      {user?.email?.charAt(0).toUpperCase()}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                      {(displayName || user?.user_metadata?.display_name || user?.email)?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user?.email}</div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <div className="flex-1">
+                      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{user?.email}</div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                         {user?.app_metadata?.provider === 'google' ? 'Google Account' : 'Email Account'}
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Display Name */}
+                  <div>
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display Name</label>
+                    {editingDisplayName ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          placeholder="Enter display name"
+                          className={`flex-1 px-3 py-2 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleSaveDisplayName}
+                          disabled={savingProfile}
+                          className="px-3 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                        >
+                          {savingProfile ? '...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => { setEditingDisplayName(false); setDisplayName(user?.user_metadata?.display_name || ''); }}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className={`${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {user?.user_metadata?.display_name || <span className="text-gray-400 italic">Not set</span>}
+                        </span>
+                        <button
+                          onClick={() => { setDisplayName(user?.user_metadata?.display_name || ''); setEditingDisplayName(true); }}
+                          className="text-indigo-500 hover:text-indigo-600 text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
-              {/* Appearance Section */}
-              <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Appearance</h3>
-                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
-                      <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Dark Mode</span>
+              {/* Change Password - Only for email accounts */}
+              {user?.app_metadata?.provider !== 'google' && (
+                <div>
+                  <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Change Password</h3>
+                  <div className={`p-4 rounded-xl space-y-3 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>New Password</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className={`w-full px-3 py-2 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                      />
                     </div>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Confirm Password</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className={`w-full px-3 py-2 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                      />
+                    </div>
+                    {passwordError && (
+                      <p className="text-red-500 text-sm">{passwordError}</p>
+                    )}
+                    {passwordSuccess && (
+                      <p className="text-green-500 text-sm">✓ Password changed successfully</p>
+                    )}
                     <button
-                      onClick={() => setDarkMode(!darkMode)}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${darkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                      onClick={handleChangePassword}
+                      disabled={!newPassword || !confirmPassword || savingPassword}
+                      className="w-full px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                      {savingPassword ? 'Changing...' : 'Change Password'}
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Preferences Section */}
+              <div>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Preferences</h3>
+                <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  {/* Default View */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Default view on login</span>
+                    <select
+                      value={defaultView}
+                      onChange={(e) => handlePreferenceChange('trackli-default-view', e.target.value)}
+                      className={`px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="board">Board</option>
+                      <option value="myday">My Day</option>
+                      <option value="calendar">Calendar</option>
+                      <option value="tasks">All Tasks</option>
+                      <option value="projects">Projects</option>
+                    </select>
+                  </div>
+                  
+                  {/* Week Starts On */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Week starts on</span>
+                    <select
+                      value={weekStartsOn}
+                      onChange={(e) => handlePreferenceChange('trackli-week-start', e.target.value)}
+                      className={`px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="0">Sunday</option>
+                      <option value="1">Monday</option>
+                    </select>
+                  </div>
+                  
+                  {/* Show Confetti */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Show confetti on completion</span>
+                    <button
+                      onClick={() => handlePreferenceChange('trackli-show-confetti', showConfetti ? 'false' : 'true')}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${showConfetti ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showConfetti ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Data Section */}
+              <div>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Data</h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Clear completed tasks</div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remove done tasks older than:</div>
+                    </div>
+                    <select
+                      value={clearTasksAge}
+                      onChange={(e) => setClearTasksAge(e.target.value)}
+                      className={`px-2 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="7">7 days</option>
+                      <option value="14">14 days</option>
+                      <option value="30">30 days</option>
+                      <option value="60">60 days</option>
+                      <option value="90">90 days</option>
+                    </select>
+                    <button
+                      onClick={handleClearCompletedTasks}
+                      disabled={clearingTasks}
+                      className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                    >
+                      {clearingTasks ? '...' : 'Clear'}
                     </button>
                   </div>
                 </div>
