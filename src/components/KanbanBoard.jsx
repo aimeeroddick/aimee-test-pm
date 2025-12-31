@@ -9080,35 +9080,29 @@ export default function KanbanBoard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-        {/* Skeleton Header */}
-        <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
-          <div className="max-w-full mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" />
-                <div>
-                  <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-1 animate-pulse" />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          {/* Animated Logo */}
+          <div className="relative mb-6">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl shadow-indigo-500/30 animate-pulse">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
             </div>
+            {/* Pulse ring */}
+            <div className="absolute inset-0 w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-ping opacity-20" />
           </div>
-        </header>
-        
-        {/* Skeleton Board */}
-        <main className="max-w-full mx-auto px-6 py-6">
-          <div className="flex gap-6 overflow-x-auto pb-6">
-            <SkeletonColumn />
-            <SkeletonColumn />
-            <SkeletonColumn />
-            <SkeletonColumn />
-          </div>
-        </main>
+          
+          {/* Brand name */}
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            Trackli
+          </h1>
+          
+          {/* Loading text */}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            Loading your tasks...
+          </p>
+        </div>
       </div>
     )
   }
