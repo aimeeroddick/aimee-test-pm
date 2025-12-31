@@ -8250,6 +8250,7 @@ export default function KanbanBoard() {
   
   // Create welcome project for new users
   const createWelcomeProject = async () => {
+    console.log('createWelcomeProject called')
     try {
       const today = new Date().toISOString().split('T')[0]
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
@@ -8343,6 +8344,7 @@ export default function KanbanBoard() {
       }
       
       // Refresh data to show the new project and tasks
+      console.log('Welcome project created successfully, refreshing data...')
       await fetchData()
       
     } catch (err) {
@@ -8420,6 +8422,7 @@ export default function KanbanBoard() {
       
       // Create welcome project for new users (no projects yet)
       if (projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
+        console.log('New user detected - creating welcome project...')
         await createWelcomeProject()
         return // fetchData will be called again after welcome project creation
       }
