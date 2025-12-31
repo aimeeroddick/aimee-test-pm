@@ -11339,10 +11339,12 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'board' && (
-            <main className="w-full px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn">
-              {/* Mobile Column Navigation */}
-              {isMobile && (
-                <div className="flex items-center justify-between mb-4">
+            <main className="flex-1 px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn">
+              {/* Inset board container */}
+              <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 shadow-inner p-3 sm:p-4">
+                {/* Mobile Column Navigation */}
+                {isMobile && (
+                  <div className="flex items-center justify-between mb-4">
                   <button
                     onClick={() => setMobileColumnIndex(Math.max(0, mobileColumnIndex - 1))}
                     disabled={mobileColumnIndex === 0}
@@ -11473,6 +11475,7 @@ export default function KanbanBoard() {
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
                 onUndoComplete={(taskId) => handleUpdateTaskStatus(taskId, 'todo')}
               />
+              </div>
             </main>
           )}
         </>
