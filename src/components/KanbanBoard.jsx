@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import confetti from 'canvas-confetti'
+// Lazy load confetti - only needed when completing tasks
+const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
 // Constants
 const ENERGY_LEVELS = {
@@ -4595,32 +4596,34 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       myDayCompleted.length > 0 && 
       !confettiShown
     ) {
-      // Fire confetti!
-      const duration = 3000
-      const end = Date.now() + duration
-      
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.8 },
-          colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
-        })
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.8 },
-          colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
-        })
-        
-        if (Date.now() < end) {
-          requestAnimationFrame(frame)
-        }
-      }
-      frame()
+      // Fire confetti! (lazy loaded)
       setConfettiShown(true)
+      loadConfetti().then(confetti => {
+        const duration = 3000
+        const end = Date.now() + duration
+        
+        const frame = () => {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.8 },
+            colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+          })
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.8 },
+            colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+          })
+          
+          if (Date.now() < end) {
+            requestAnimationFrame(frame)
+          }
+        }
+        frame()
+      })
     }
     
     // Update previous count
