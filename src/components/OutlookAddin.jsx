@@ -63,11 +63,11 @@ export default function OutlookAddin() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlMode = params.get('mode')
-    if (urlMode === MODE.MYDAY) {
+    if (urlMode === 'myday') {
       setActiveTab(TAB.MYDAY)
-    } else if (urlMode === MODE.CREATE) {
+    } else if (urlMode === 'email' || urlMode === 'followups' || urlMode === 'agenda' || urlMode === 'notes' || urlMode === 'create') {
       setActiveTab(TAB.CREATE)
-    } else if (urlMode === MODE.UPDATE) {
+    } else if (urlMode === 'update') {
       setActiveTab(TAB.UPDATE)
     }
   }, [])

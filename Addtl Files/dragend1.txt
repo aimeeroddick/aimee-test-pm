@@ -1,0 +1,24 @@
+  
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedTask(null)
+    // Small delay to prevent click from firing after drag
+    setTimeout(() => { isDraggingRef.current = false }, 100)
+  }
+  
+  // Handle task click (only if not dragging)
+  const handleTaskClick = (task) => {
+    if (!isDraggingRef.current && !resizingTask) {
+      onEditTask(task)
+  
+  // Clear hover state when drag ends
+  const handleDragEnd = () => {
+    setDraggedTask(null)
+    setHoverSlot(null)
+  }
+  
+  // Handle drop on time slot (30-minute increments)
+  const handleDropOnSlot = async (date, slotIndex) => {
+    if (!draggedTask || !onUpdateTask) {
+      console.log('Drop failed: no draggedTask or onUpdateTask', { draggedTask, onUpdateTask })
+      return

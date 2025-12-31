@@ -1,0 +1,15 @@
+2282:      const dayTasks = getTasksForDate(date)
+2287:      const overdueTasks = dayTasks.filter(t => t.status !== 'done' && isPast && !isToday)
+2288:      const criticalTasks = dayTasks.filter(t => t.critical && t.status !== 'done')
+2289:      const completedTasks = dayTasks.filter(t => t.status === 'done')
+2290:      const pendingTasks = dayTasks.filter(t => t.status !== 'done')
+2314:            {dayTasks.length > 0 && (
+2320:                {dayTasks.length}
+2325:            {dayTasks.slice(0, 3).map(task => {
+2346:            {dayTasks.length > 3 && (
+2348:                +{dayTasks.length - 3} more
+3292:  const dueTodayTasks = dateBasedEligible.filter(t => 
+3297:    if (!t.due_date || overdueTasks.includes(t) || dueTodayTasks.includes(t)) return false
+3306:    overdueTasks.includes(t) || dueTodayTasks.includes(t) || dueSoonTasks.includes(t)
+3736:              tasks={dueTodayTasks}
+3779:            {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && inProgressTasks.length === 0 && todoTasks.length === 0 && backlogTasks.length === 0 && (

@@ -1,0 +1,184 @@
+diff --git a/src/components/KanbanBoard.jsx b/src/components/KanbanBoard.jsx
+index d468d1c..5e8c29c 100644
+--- a/src/components/KanbanBoard.jsx
++++ b/src/components/KanbanBoard.jsx
+@@ -3460,38 +3460,19 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
+         onDragStart={handleDragStart}
+         onDragEnd={handleMouseUp}
+         onClick={handleClick}
+-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-md ${
+-          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
++        className={`group relative p-4 rounded-xl select-none transition-all duration-200 ${
++          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer hover:shadow-md'
+         } ${
+           isCompleted 
+-            ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
++            ? 'bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 opacity-60' 
+             : blocked 
+-              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800' 
++              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-700' 
+               : task.critical 
+-                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800' 
+-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
++                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-700' 
++                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+         }`}
+       >
+         <div className="flex items-start gap-2">
+-          {/* Drag handle - only this initiates drag */}
+-          {!isCompleted && (
+-            <div
+-              draggable
+-              onDragStart={(e) => {
+-                e.stopPropagation()
+-                e.dataTransfer.effectAllowed = 'move'
+-                e.dataTransfer.setData('taskId', task.id)
+-                onDragStart && onDragStart(e, task)
+-              }}
+-              onClick={(e) => e.stopPropagation()}
+-              className="mt-1 p-1 -ml-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 dark:text-gray-600 dark:hover:text-gray-500 transition-colors"
+-              title="Drag to reorder"
+-            >
+-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+-                <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+-              </svg>
+-            </div>
+-          )}
+           <button
+             onClick={(e) => {
+               e.stopPropagation()
+@@ -4749,7 +4730,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
+ }
+ 
+ // Column Component
+-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay }) => {
++const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth }) => {
+   const [isDragOver, setIsDragOver] = useState(false)
+   const [showAllDone, setShowAllDone] = useState(false)
+   const [showAllBacklog, setShowAllBacklog] = useState(false)
+@@ -4775,7 +4756,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver,
+   
+   return (
+     <div
+-      className={`flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[380px] bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
++      className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[380px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all overflow-visible ${
+         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900' : ''
+       }`}
+       onDragOver={(e) => {
+@@ -6193,6 +6174,7 @@ export default function KanbanBoard() {
+     }
+     return false
+   })
++  const [mobileColumnIndex, setMobileColumnIndex] = useState(1) // Default to To Do column
+   const [searchModalOpen, setSearchModalOpen] = useState(false)
+   const [helpModalOpen, setHelpModalOpen] = useState(false)
+   const [helpModalTab, setHelpModalTab] = useState('board')
+@@ -8966,12 +8948,54 @@ export default function KanbanBoard() {
+           
+           {currentView === 'board' && (
+             <main className="w-full px-3 sm:px-6 py-4 sm:py-6">
+-              <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6">
+-                {COLUMNS.map((column) => (
++              {/* Mobile Column Navigation */}
++              {isMobile && (
++                <div className="flex items-center justify-between mb-4">
++                  <button
++                    onClick={() => setMobileColumnIndex(Math.max(0, mobileColumnIndex - 1))}
++                    disabled={mobileColumnIndex === 0}
++                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
++                  >
++                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
++                    </svg>
++                  </button>
++                  <div className="flex gap-1">
++                    {COLUMNS.map((col, idx) => (
++                      <button
++                        key={col.id}
++                        onClick={() => setMobileColumnIndex(idx)}
++                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
++                          idx === mobileColumnIndex
++                            ? 'bg-gray-800 dark:bg-white text-white dark:text-gray-800'
++                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
++                        }`}
++                      >
++                        <span className="hidden xs:inline">{col.title}</span>
++                        <span className="xs:hidden">{col.title.charAt(0)}</span>
++                        <span className="ml-1 opacity-60">({getTasksByStatus(col.id).length})</span>
++                      </button>
++                    ))}
++                  </div>
++                  <button
++                    onClick={() => setMobileColumnIndex(Math.min(COLUMNS.length - 1, mobileColumnIndex + 1))}
++                    disabled={mobileColumnIndex === COLUMNS.length - 1}
++                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
++                  >
++                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
++                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
++                    </svg>
++                  </button>
++                </div>
++              )}
++              
++              {/* Desktop: All columns | Mobile: Single column */}
++              <div className={`${isMobile ? '' : 'flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6'}`}>
++                {isMobile ? (
+                   <Column
+-                    key={column.id}
+-                    column={column}
+-                    tasks={getTasksByStatus(column.id)}
++                    key={COLUMNS[mobileColumnIndex].id}
++                    column={COLUMNS[mobileColumnIndex]}
++                    tasks={getTasksByStatus(COLUMNS[mobileColumnIndex].id)}
+                     projects={projects}
+                     onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
+                     onDragStart={handleDragStart}
+@@ -9002,8 +9026,47 @@ export default function KanbanBoard() {
+                       const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                       handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
+                     }}
++                    isMobileFullWidth={true}
+                   />
+-                ))}
++                ) : (
++                  COLUMNS.map((column) => (
++                    <Column
++                      key={column.id}
++                      column={column}
++                      tasks={getTasksByStatus(column.id)}
++                      projects={projects}
++                      onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
++                      onDragStart={handleDragStart}
++                      onDragOver={handleDragOver}
++                      onDrop={handleDrop}
++                      showProject={selectedProjectId === 'all'}
++                      allTasks={tasks}
++                      onQuickComplete={handleUpdateTaskStatus}
++                      onStatusChange={handleUpdateTaskStatus}
++                      onSetDueDate={handleSetDueDate}
++                      bulkSelectMode={bulkSelectMode}
++                      selectedTaskIds={selectedTaskIds}
++                      onToggleSelect={(taskId) => {
++                        const newSet = new Set(selectedTaskIds)
++                        if (newSet.has(taskId)) {
++                          newSet.delete(taskId)
++                        } else {
++                          newSet.add(taskId)
++                        }
++                        setSelectedTaskIds(newSet)
++                      }}
++                      onAddTask={(status) => {
++                        setEditingTask({ status })
++                        setTaskModalOpen(true)
++                      }}
++                      onToggleMyDay={(taskId, addToMyDay) => {
++                        const todayStr = new Date().toISOString().split('T')[0]
++                        const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]
++                        handleUpdateMyDayDate(taskId, addToMyDay ? todayStr : yesterdayStr)
++                      }}
++                    />
++                  ))
++                )}
+               </div>
+               
+               {/* Recently Completed Section */}

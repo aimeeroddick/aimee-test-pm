@@ -1,0 +1,46 @@
+  }).length
+
+  const filteredTasks = tasks.filter((t) => {
+    // Project filter
+    if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
+    
+    // Quick toggle filters
+    if (filterCritical && !t.critical) return false
+    if (filterOverdue && getDueDateStatus(t.due_date, t.status) !== 'overdue') return false
+    if (filterBlocked && !isBlocked(t, tasks)) return false
+    if (filterActive && !['todo', 'in_progress'].includes(t.status)) return false
+    if (filterBacklog && t.status !== 'backlog') return false
+    if (filterDueToday && getDueDateStatus(t.due_date, t.status) !== 'today') return false
+    if (filterMyDay && !isInMyDay(t)) return false
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const matchesTitle = t.title?.toLowerCase().includes(query)
+      const matchesDescription = t.description?.toLowerCase().includes(query)
+      const matchesCustomer = t.customer?.toLowerCase().includes(query)
+      const matchesAssignee = t.assignee?.toLowerCase().includes(query)
+      const matchesProject = projects.find(p => p.id === t.project_id)?.name?.toLowerCase().includes(query)
+      if (!matchesTitle && !matchesDescription && !matchesCustomer && !matchesAssignee && !matchesProject) return false
+    }
+    
+    // Field filter
+    if (filterField && filterValue !== '') {
+      if (filterValue === '__blank__') {
+        // Filter for blank/empty values
+        if (filterField === 'assignee' && t.assignee) return false
+        if (filterField === 'customer' && t.customer) return false
+        if (filterField === 'category' && t.category) return false
+        if (filterField === 'energy_level' && t.energy_level) return false
+        if (filterField === 'source' && t.source) return false
+        if (filterField === 'due_date' && t.due_date) return false
+      } else {
+        // Filter for specific value
+        if (filterField === 'assignee' && t.assignee !== filterValue) return false
+        if (filterField === 'customer' && t.customer !== filterValue) return false
+        if (filterField === 'category' && t.category !== filterValue) return false
+        if (filterField === 'energy_level' && t.energy_level !== filterValue) return false
+        if (filterField === 'source' && t.source !== filterValue) return false
+        if (filterField === 'due_date') {
+          if (filterValue === 'has_date' && !t.due_date) return false
+        }

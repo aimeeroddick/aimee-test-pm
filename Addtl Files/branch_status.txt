@@ -1,0 +1,7 @@
+4ef1c55 v2.2.1: Calendar sidebar task ordering to match board + version bump
+a1c877b Add X button to daily calendar view to remove tasks from calendar
+3b9f084 Fix syntax error - missing closing brace
+---LOCAL MAIN---
+4ef1c55 v2.2.1: Calendar sidebar task ordering to match board + version bump
+a1c877b Add X button to daily calendar view to remove tasks from calendar
+3b9f084 Fix syntax error - missing closing brace
