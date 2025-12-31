@@ -1704,7 +1704,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
               
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
                   Hover Popup
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">Hover over any task card to see additional details:</p>
@@ -1834,21 +1834,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                 </div>
               </section>
               
-              <section>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">🎯</span>
-                  Focus Mode
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Click the "Focus Mode" button to enter a distraction-free view:</p>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                  <p>• Shows one task at a time from your My Day list</p>
-                  <p>• Large, centered view for maximum focus</p>
-                  <p>• Quick actions to mark complete or skip to next task</p>
-                  <p>• Confetti celebration when you complete all My Day tasks! 🎉</p>
-                </div>
-              </section>
-              
-              <section>
+<section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
                   Daily Reset
@@ -3892,7 +3878,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate, onStartFocus }) => {
+const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate }) => {
   const [dragOverMyDay, setDragOverMyDay] = useState(false)
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
@@ -4334,18 +4320,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </p>
         </div>
         
-        {myDayActive.length > 0 && (
-          <button
-            onClick={() => onStartFocus(myDayActive[0].id)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all hover:-translate-y-0.5"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Focus Mode
-          </button>
-        )}
+        
       </div>
       
       {myDayTasks.length > 0 && (
@@ -7254,142 +7229,6 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
 }
 
 
-// Focus Mode Component
-const FocusMode = ({ task, project, allTasks, onComplete, onSkip, onExit, totalTasks, completedTasks }) => {
-  if (!task) return null
-  
-  const blocked = isBlocked(task, allTasks)
-  const dueDateStatus = getDueDateStatus(task.due_date, task.status)
-  const energyStyle = ENERGY_LEVELS[task.energy_level]
-  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-  
-  return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-500 rounded-full blur-3xl" />
-      </div>
-      
-      {/* Exit button */}
-      <button
-        onClick={onExit}
-        className="absolute top-6 right-6 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      
-      {/* Progress indicator */}
-      <div className="absolute top-6 left-6 text-white/80">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">{completedTasks} of {totalTasks} tasks</span>
-          <div className="w-32 h-2 bg-white/20 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-sm">{progress}%</span>
-        </div>
-      </div>
-      
-      {/* Main content */}
-      <div className="relative max-w-2xl w-full">
-        {/* Task card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-          {/* Meta info */}
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
-            {project && (
-              <span className="px-3 py-1 bg-white/20 rounded-full text-white/90 text-sm font-medium">
-                {project.name}
-              </span>
-            )}
-            {task.critical && (
-              <span className="px-3 py-1 bg-red-500/30 rounded-full text-red-200 text-sm font-medium">
-                Critical
-              </span>
-            )}
-            {blocked && (
-              <span className="px-3 py-1 bg-orange-500/30 rounded-full text-orange-200 text-sm font-medium">
-                Blocked
-              </span>
-            )}
-            {energyStyle && (
-              <span className="px-3 py-1 bg-white/20 rounded-full text-white/90 text-sm font-medium">
-                {energyStyle.icon} {energyStyle.label}
-              </span>
-            )}
-          </div>
-          
-          {/* Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-            {task.title}
-          </h1>
-          
-          {/* Description */}
-          {task.description && (
-            <p className="text-white/70 text-lg mb-6 leading-relaxed">
-              {task.description}
-            </p>
-          )}
-          
-          {/* Due date and time estimate */}
-          <div className="flex items-center gap-6 mb-8 text-white/60">
-            {task.due_date && (
-              <div className={`flex items-center gap-2 ${dueDateStatus === 'overdue' ? 'text-red-300' : dueDateStatus === 'today' ? 'text-amber-300' : ''}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{formatDate(task.due_date)}</span>
-              </div>
-            )}
-            {task.time_estimate && (
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{task.time_estimate < 60 ? `${task.time_estimate} min` : `${Math.round(task.time_estimate / 60)}h`}</span>
-              </div>
-            )}
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onComplete}
-              className="flex-1 py-4 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-              Complete Task
-            </button>
-            
-            <button
-              onClick={onSkip}
-              className="py-4 px-6 bg-white/10 hover:bg-white/20 text-white font-medium rounded-2xl transition-all flex items-center gap-2"
-            >
-              Skip
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        {/* Keyboard hints */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-white/40 text-sm">
-          <span><kbd className="px-2 py-1 bg-white/10 rounded">Enter</kbd> to complete</span>
-          <span><kbd className="px-2 py-1 bg-white/10 rounded">Tab</kbd> to skip</span>
-          <span><kbd className="px-2 py-1 bg-white/10 rounded">Esc</kbd> to exit</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // Main KanbanBoard Component
 export default function KanbanBoard() {
   const { user, signOut } = useAuth()
@@ -7416,8 +7255,6 @@ export default function KanbanBoard() {
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', 'calendar', or 'projects'
   const [calendarViewMode, setCalendarViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
   const [navMenuOpen, setNavMenuOpen] = useState(false)
-  const [focusMode, setFocusMode] = useState(false)
-  const [focusTaskId, setFocusTaskId] = useState(null)
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('trackli-dark-mode') === 'true'
@@ -7731,66 +7568,13 @@ export default function KanbanBoard() {
         setSelectedTaskIds(new Set())
         return
       }
-      
-      // Escape to exit focus mode
-      if (e.key === 'Escape' && focusMode) {
-        setFocusMode(false)
-        setFocusTaskId(null)
-        return
-      }
-      
-      // Cmd/Ctrl/Alt + F for Focus mode
-      if (modifier && e.key === 'f') {
-        e.preventDefault()
-        // Get first active My Day task
-        const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
-        if (myDayTasks.length > 0) {
-          setFocusTaskId(myDayTasks[0].id)
-          setFocusMode(true)
-        }
-        return
-      }
     }
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [projects, meetingNotesData, focusMode, tasks])
+  }, [projects, meetingNotesData, tasks])
   
-  // Focus mode keyboard handling
-  useEffect(() => {
-    if (!focusMode) return
-    
-    const handleFocusKeyDown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        // Complete current task
-        if (focusTaskId) {
-          handleUpdateTaskStatus(focusTaskId, 'done')
-          // Move to next task
-          const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done' && t.id !== focusTaskId)
-          if (myDayTasks.length > 0) {
-            setFocusTaskId(myDayTasks[0].id)
-          } else {
-            setFocusMode(false)
-            setFocusTaskId(null)
-          }
-        }
-      } else if (e.key === 'Tab' || e.key === 'ArrowRight') {
-        e.preventDefault()
-        // Skip to next task
-        const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
-        const currentIndex = myDayTasks.findIndex(t => t.id === focusTaskId)
-        const nextIndex = (currentIndex + 1) % myDayTasks.length
-        if (myDayTasks[nextIndex]) {
-          setFocusTaskId(myDayTasks[nextIndex].id)
-        }
-      }
-    }
-    
-    window.addEventListener('keydown', handleFocusKeyDown)
-    return () => window.removeEventListener('keydown', handleFocusKeyDown)
-  }, [focusMode, focusTaskId, tasks])
-
+  
   // Fetch data on mount
   useEffect(() => {
     fetchData()
@@ -10274,10 +10058,6 @@ export default function KanbanBoard() {
                 allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
-                onStartFocus={(taskId) => {
-                  setFocusTaskId(taskId)
-                  setFocusMode(true)
-                }}
               />
             </div>
           )}
@@ -10839,38 +10619,6 @@ export default function KanbanBoard() {
         </div>
       )}
       
-      {/* Focus Mode */}
-      {focusMode && focusTaskId && (
-        <FocusMode
-          task={tasks.find(t => t.id === focusTaskId)}
-          project={projects.find(p => p.id === tasks.find(t => t.id === focusTaskId)?.project_id)}
-          allTasks={tasks}
-          onComplete={() => {
-            handleUpdateTaskStatus(focusTaskId, 'done')
-            const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done' && t.id !== focusTaskId)
-            if (myDayTasks.length > 0) {
-              setFocusTaskId(myDayTasks[0].id)
-            } else {
-              setFocusMode(false)
-              setFocusTaskId(null)
-            }
-          }}
-          onSkip={() => {
-            const myDayTasks = tasks.filter(t => isInMyDay(t) && t.status !== 'done')
-            const currentIndex = myDayTasks.findIndex(t => t.id === focusTaskId)
-            const nextIndex = (currentIndex + 1) % myDayTasks.length
-            if (myDayTasks[nextIndex]) {
-              setFocusTaskId(myDayTasks[nextIndex].id)
-            }
-          }}
-          onExit={() => {
-            setFocusMode(false)
-            setFocusTaskId(null)
-          }}
-          totalTasks={tasks.filter(t => isInMyDay(t)).length}
-          completedTasks={tasks.filter(t => isInMyDay(t) && t.status === 'done').length}
-        />
-      )}
       
       {/* Onboarding Overlay - disabled on mobile */}
       {showOnboarding && currentView === 'board' && !isMobile && (
