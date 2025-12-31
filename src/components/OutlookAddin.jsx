@@ -13,6 +13,7 @@ const CATEGORIES = [
 
 // Modes from URL parameter
 const MODE = {
+  MYDAY: 'myday',
   EMAIL: 'email',
   FOLLOWUPS: 'followups',
   AGENDA: 'agenda',
@@ -81,7 +82,11 @@ export default function OutlookAddin() {
     const urlMode = params.get('mode')
     if (urlMode && Object.values(MODE).includes(urlMode)) {
       setMode(urlMode)
-      setActiveTab(TAB.CREATE) // Switch to create tab if mode specified
+      if (urlMode === MODE.MYDAY) {
+        setActiveTab(TAB.MYDAY)
+      } else {
+        setActiveTab(TAB.CREATE)
+      }
     }
   }, [])
 
