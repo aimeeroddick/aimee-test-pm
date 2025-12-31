@@ -7968,7 +7968,8 @@ export default function KanbanBoard() {
     } catch { return [] }
   })
   const [showTemplatesModal, setShowTemplatesModal] = useState(false)
-  
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+    
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
   const [meetingNotesData, setMeetingNotesData] = useState({
@@ -8350,6 +8351,7 @@ export default function KanbanBoard() {
       
       // Refresh data to show the new project and tasks
       console.log('Welcome project created successfully, refreshing data...')
+      setShowWelcomeModal(true)
       await fetchData()
       
     } catch (err) {
@@ -11398,6 +11400,52 @@ export default function KanbanBoard() {
       
 
       
+      {/* Welcome Modal for New Users */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-lg rounded-2xl shadow-2xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <span className="text-3xl">🚀</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Trackli!</h2>
+              <p className="text-gray-600 dark:text-gray-400">We've created a starter project with sample tasks to help you learn the app.</p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+                <span className="text-xl">👆</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Click on any task</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Each task has tips on features to explore</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                <span className="text-xl">☀️</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Your daily focus list - some tasks are already there!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
+                <span className="text-xl">✅</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Complete tasks to see them move</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Complete all My Day tasks for a celebration!</p>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowWelcomeModal(false)}
+              className="w-full py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+            >
+              Let's Go! 🎉
+            </button>
+          </div>
+        </div>
+      )}
+
       <HelpModal
         isOpen={helpModalOpen}
         onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
