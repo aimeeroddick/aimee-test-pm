@@ -1405,6 +1405,9 @@ const AttachmentViewer = ({ isOpen, onClose, attachment, attachments, onNavigate
 }
 
 const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const shortcut = isMac ? '⌘⌃T' : 'Ctrl+Alt+T'
+  
   const steps = [
     {
       target: 'summary-bar',
@@ -1433,7 +1436,13 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'add-task',
       title: 'Create Tasks',
-      description: 'Click here or press ⌘T to create a new task. Attach files, set dependencies, and configure recurring schedules.',
+      description: `Click + Task or press ${shortcut} to create. Set dates, effort level, assignee, customer, category, attachments, subtasks, dependencies, and recurring schedules.`,
+      position: 'bottom',
+    },
+    {
+      target: 'notes',
+      title: 'Meeting Notes → Tasks',
+      description: 'Click Notes to quickly capture meeting notes - type, paste, or even speak! AI extracts action items as tasks automatically.',
       position: 'bottom',
     },
     {
@@ -1459,8 +1468,9 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
           step === 3 ? 'top-24 left-8' :
-          step === 4 ? 'top-20 right-32' :
-          'top-20 right-32'
+          step === 4 ? 'top-20 right-48' :
+          step === 5 ? 'top-20 right-32' :
+          'top-20 right-24'
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
@@ -1566,9 +1576,9 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         icon: '📋',
       },
       {
-        title: 'Export Your Data',
-        description: 'Click "Export CSV" to download your tasks for reporting or backup. Only visible/filtered tasks are included.',
-        icon: '📤',
+        title: 'Import & Export CSV',
+        description: 'Export tasks for reporting, or import to bulk create/edit. Use * in the ID column to create new tasks, or include existing IDs to update them.',
+        icon: '📥',
       },
     ],
     projects: [
