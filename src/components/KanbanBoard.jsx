@@ -7895,6 +7895,27 @@ export default function KanbanBoard() {
     setTimeout(() => setNotification(null), 3000)
   }
   
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return
+    
+    setDeleting(true)
+    try {
+      // Delete all user data
+      await supabase.from('tasks').delete().eq('user_id', user.id)
+      await supabase.from('projects').delete().eq('user_id', user.id)
+      await supabase.from('feedback').delete().eq('user_id', user.id)
+      await supabase.from('task_templates').delete().eq('user_id', user.id)
+      
+      // Sign out (account deletion from auth would need admin API)
+      await signOut()
+    } catch (err) {
+      console.error('Error deleting account:', err)
+      setError('Failed to delete account')
+      setDeleting(false)
+    }
+  }
+  
   // View state
   const [currentView, setCurrentView] = useState('board') // 'board', 'myday', 'calendar', or 'projects'
   const [calendarViewMode, setCalendarViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
@@ -7916,6 +7937,10 @@ export default function KanbanBoard() {
   const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [helpModalTab, setHelpModalTab] = useState('board')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
@@ -10275,6 +10300,13 @@ export default function KanbanBoard() {
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
+                          onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <span className="text-lg">⚙️</span>
+                          <span className="font-medium">Settings</span>
+                        </button>
+                        <button
                           onClick={() => { signOut(); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
@@ -10401,6 +10433,17 @@ export default function KanbanBoard() {
                   </svg>
                 </button>
               )}
+              
+              <button
+                onClick={() => setSettingsModalOpen(true)}
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                title="Settings"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
               
               <button
                 onClick={signOut}
@@ -12185,6 +12228,124 @@ Or we can extract from:
         onClose={() => setAdminPanelOpen(false)}
         userEmail={user?.email}
       />
+      
+      {/* Settings Modal */}
+      {settingsModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); } }}
+        >
+          <div 
+            className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); } }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
+              <button
+                onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Account Section */}
+              <div>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Account</h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                      {user?.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user?.email}</div>
+                      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {user?.app_metadata?.provider === 'google' ? 'Google Account' : 'Email Account'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Appearance Section */}
+              <div>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Appearance</h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
+                      <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Dark Mode</span>
+                    </div>
+                    <button
+                      onClick={() => setDarkMode(!darkMode)}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${darkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Danger Zone */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 text-red-500">Danger Zone</h3>
+                <div className={`p-4 rounded-xl border-2 border-red-200 dark:border-red-800 ${darkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
+                  {!showDeleteConfirm ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Delete Account</div>
+                        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Permanently delete all your data</div>
+                      </div>
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                        ⚠️ This will permanently delete all your tasks, projects, and data. This cannot be undone.
+                      </div>
+                      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Type <span className="font-mono font-bold">DELETE</span> to confirm:
+                      </div>
+                      <input
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="Type DELETE"
+                        className={`w-full px-3 py-2 rounded-lg border ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-2 focus:ring-red-500 focus:border-transparent`}
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleDeleteAccount}
+                          disabled={deleteConfirmText !== 'DELETE' || deleting}
+                          className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deleting ? 'Deleting...' : 'Delete Everything'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
