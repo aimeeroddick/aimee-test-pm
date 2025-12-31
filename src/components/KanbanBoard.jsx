@@ -7321,6 +7321,7 @@ export default function KanbanBoard() {
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExtractedTasks, setShowExtractedTasks] = useState(false)
+  const [uploadedImage, setUploadedImage] = useState(null) // { base64, mediaType, preview }
   
   // Voice Input State
   const [isListening, setIsListening] = useState(false)
@@ -8043,17 +8044,85 @@ export default function KanbanBoard() {
     return actionItems
   }
   
-  const handleExtractTasks = () => {
-    if (!meetingNotesData.notes.trim()) return
+  const handleExtractTasks = async () => {
+    if (!meetingNotesData.notes.trim() && !uploadedImage) return
     
     setIsExtracting(true)
     
-    setTimeout(() => {
-      const extracted = extractActionItems(meetingNotesData.notes)
-      setExtractedTasks(extracted)
-      setShowExtractedTasks(true)
+    try {
+      // If we have an uploaded image, use AI vision to extract tasks
+      if (uploadedImage) {
+        const response = await fetch('/api/extract-from-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: uploadedImage.base64,
+            mediaType: uploadedImage.mediaType,
+          }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to extract tasks from image')
+        }
+        
+        const data = await response.json()
+        const extracted = data.tasks.map((task, idx) => ({
+          id: `img-${Date.now()}-${idx}`,
+          title: task.title,
+          assignee: task.assignee || '',
+          dueDate: task.dueDate || meetingNotesData.date,
+          critical: task.isCritical || false,
+          selected: true,
+        }))
+        
+        setExtractedTasks(extracted)
+        setShowExtractedTasks(true)
+      } else {
+        // Use local text extraction
+        setTimeout(() => {
+          const extracted = extractActionItems(meetingNotesData.notes)
+          setExtractedTasks(extracted)
+          setShowExtractedTasks(true)
+        }, 300)
+      }
+    } catch (error) {
+      console.error('Extraction error:', error)
+      setError(error.message)
+    } finally {
       setIsExtracting(false)
-    }, 300)
+    }
+  }
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      setError('Please upload a valid image (JPEG, PNG, GIF, or WebP)')
+      return
+    }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be smaller than 10MB')
+      return
+    }
+    
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1] // Remove data:image/xxx;base64, prefix
+      setUploadedImage({
+        base64,
+        mediaType: file.type,
+        preview: reader.result,
+        name: file.name,
+      })
+      setError(null)
+    }
+    reader.readAsDataURL(file)
   }
   
   const handleCreateExtractedTasks = async () => {
@@ -10619,6 +10688,7 @@ export default function KanbanBoard() {
           setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: projects[0]?.id || '' })
           setExtractedTasks([])
           setShowExtractedTasks(false)
+          setUploadedImage(null)
         }} 
         title="Import Meeting Notes"
         wide
@@ -10626,8 +10696,63 @@ export default function KanbanBoard() {
         {!showExtractedTasks ? (
           <div className="space-y-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Paste your meeting notes below. We'll extract action items and create tasks automatically.
+              Paste notes or upload a photo of your notes. We'll extract action items automatically.
             </p>
+            
+            {/* Image Upload Section */}
+            <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 transition-colors hover:border-indigo-300 dark:hover:border-indigo-600">
+              {uploadedImage ? (
+                <div className="space-y-3">
+                  <div className="relative">
+                    <img 
+                      src={uploadedImage.preview} 
+                      alt="Uploaded notes" 
+                      className="w-full max-h-48 object-contain rounded-lg bg-gray-100 dark:bg-gray-800"
+                    />
+                    <button
+                      onClick={() => setUploadedImage(null)}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {uploadedImage.name} ready for extraction
+                  </p>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center gap-3 cursor-pointer">
+                  <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Upload photo of notes</span>
+                    <p className="text-xs text-gray-400 mt-1">or take a photo on mobile</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <span className="text-xs text-gray-400 dark:text-gray-500">or paste text notes</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+            </div>
             
             <div className="space-y-3 overflow-hidden">
               <div>
@@ -10691,11 +10816,11 @@ Or we can extract from:
             
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                Tip: Follow-Up tables are extracted first, then we scan for action items
+                {uploadedImage ? 'AI will analyze your image for tasks' : 'Tip: Follow-Up tables are extracted first'}
               </p>
               <button
                 onClick={handleExtractTasks}
-                disabled={!meetingNotesData.notes.trim() || isExtracting}
+                disabled={(!meetingNotesData.notes.trim() && !uploadedImage) || isExtracting}
                 className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isExtracting ? (
