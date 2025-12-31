@@ -3372,6 +3372,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       days.push(
         <div
           key={day}
+          data-dropzone="calendar-date"
+          data-date={date}
           onClick={() => {
             // Switch to daily view for this date
             setCurrentDate(date)
@@ -3601,40 +3603,140 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     // Reusable task card component for sidebar with hold-to-drag
     const TaskCard = ({ task, highlight }) => {
-      const holdTimerRef = useRef(null)
-      const isHoldingRef = useRef(false)
-      const [isHolding, setIsHolding] = useState(false)
-      const [isDragging, setIsDragging] = useState(false)
-      const didDragRef = useRef(false)
-      
-      const handleMouseDown = (e) => {
-        if (e.target.closest('button')) return
+    const holdTimerRef = useRef(null)
+    const isHoldingRef = useRef(false)
+    const [isHolding, setIsHolding] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const didDragRef = useRef(false)
+    const touchStartPosRef = useRef(null)
+    const [isTouchDragging, setIsTouchDragging] = useState(false)
+    
+    const handleMouseDown = (e) => {
+    if (e.target.closest('button')) return
+    didDragRef.current = false
+    holdTimerRef.current = setTimeout(() => {
+      isHoldingRef.current = true
+        setIsHolding(true)
+      }, 200)
+    }
+    
+    const handleMouseUp = () => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
+    setIsDragging(false)
+    setTimeout(() => {
+    isHoldingRef.current = false
+      setIsHolding(false)
         didDragRef.current = false
-        holdTimerRef.current = setTimeout(() => {
-          isHoldingRef.current = true
-          setIsHolding(true)
+      }, 100)
+    }
+    
+    const handleCardDragStart = (e) => {
+    if (!isHoldingRef.current) { e.preventDefault(); return }
+    didDragRef.current = true
+      setIsDragging(true)
+      handleDragStart(e, task)
+    }
+    
+    const handleClick = () => {
+      if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
+    }
+    
+    // Touch event handlers for mobile drag and drop
+    const handleTouchStart = (e) => {
+    if (e.target.closest('button')) return
+    
+    const touch = e.touches[0]
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }
+    didDragRef.current = false
+    
+    holdTimerRef.current = setTimeout(() => {
+    isHoldingRef.current = true
+    setIsHolding(true)
+    if (navigator.vibrate) navigator.vibrate(50)
         }, 200)
       }
       
-      const handleMouseUp = () => {
-        if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
-        setIsDragging(false)
+      const handleTouchMove = (e) => {
+        if (!isHoldingRef.current) {
+          if (touchStartPosRef.current) {
+            const touch = e.touches[0]
+            const dx = Math.abs(touch.clientX - touchStartPosRef.current.x)
+            const dy = Math.abs(touch.clientY - touchStartPosRef.current.y)
+            if (dx > 10 || dy > 10) {
+              if (holdTimerRef.current) {
+                clearTimeout(holdTimerRef.current)
+                holdTimerRef.current = null
+              }
+            }
+          }
+          return
+        }
+        
+        e.preventDefault()
+        setIsTouchDragging(true)
+        didDragRef.current = true
+        setDraggedTask(task)
+        
+        const touch = e.touches[0]
+        
+        // Highlight drop zone if over it
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+        const dropSlot = elemBelow?.closest('[data-dropzone="calendar-slot"]')
+        const dropDate = elemBelow?.closest('[data-dropzone="calendar-date"]')
+        
+        // Clear all highlights
+        document.querySelectorAll('[data-dropzone="calendar-slot"], [data-dropzone="calendar-date"]').forEach(el => {
+          el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-100', 'dark:bg-indigo-900/40')
+        })
+        
+        if (dropSlot) {
+          dropSlot.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-100', 'dark:bg-indigo-900/40')
+        } else if (dropDate) {
+          dropDate.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-100', 'dark:bg-indigo-900/40')
+        }
+      }
+      
+      const handleTouchEnd = (e) => {
+        if (holdTimerRef.current) {
+          clearTimeout(holdTimerRef.current)
+          holdTimerRef.current = null
+        }
+        
+        // Clean up drop zone highlighting
+        document.querySelectorAll('[data-dropzone="calendar-slot"], [data-dropzone="calendar-date"]').forEach(el => {
+          el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-100', 'dark:bg-indigo-900/40')
+        })
+        
+        if (isTouchDragging && isHoldingRef.current) {
+          const touch = e.changedTouches[0]
+          const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+          const dropSlot = elemBelow?.closest('[data-dropzone="calendar-slot"]')
+          const dropDate = elemBelow?.closest('[data-dropzone="calendar-date"]')
+          
+          if (dropSlot) {
+            const slotDate = dropSlot.dataset.date
+            const slotIndex = parseInt(dropSlot.dataset.slotIndex, 10)
+            if (slotDate && !isNaN(slotIndex)) {
+              handleDropOnSlot(slotDate, slotIndex, null)
+            }
+          } else if (dropDate) {
+            const dateValue = dropDate.dataset.date
+            if (dateValue) {
+              handleDropOnDate(dateValue)
+            }
+          }
+        } else if (!didDragRef.current && !isHoldingRef.current) {
+          onEditTask(task)
+        }
+        
+        setIsTouchDragging(false)
+        setDraggedTask(null)
         setTimeout(() => {
           isHoldingRef.current = false
           setIsHolding(false)
           didDragRef.current = false
         }, 100)
-      }
-      
-      const handleCardDragStart = (e) => {
-        if (!isHoldingRef.current) { e.preventDefault(); return }
-        didDragRef.current = true
-        setIsDragging(true)
-        handleDragStart(e, task)
-      }
-      
-      const handleClick = () => {
-        if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
+        touchStartPosRef.current = null
       }
       
       return (
@@ -3646,9 +3748,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           onDragStart={handleCardDragStart}
           onDragEnd={handleMouseUp}
           onClick={handleClick}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className={`p-2.5 rounded-lg border transition-all duration-200 select-none ${
-            isDragging ? 'opacity-40 scale-[0.98]' : 
-            isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 
+            isDragging || isTouchDragging ? 'opacity-40 scale-[0.98]' : 
+            isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' :
             'cursor-pointer hover:shadow-md hover:-translate-y-0.5'
           } ${
             highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
@@ -3767,6 +3872,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                   return (
                     <div
                       key={slotIndex}
+                      data-dropzone="calendar-slot"
+                      data-date={currentDate}
+                      data-slot-index={slotIndex}
                       className={`h-8 border-b relative transition-all duration-150 ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
                       } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} cursor-pointer`}
@@ -3962,6 +4070,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                     return (
                       <div
                         key={slotIndex}
+                        data-dropzone="calendar-slot"
+                        data-date={date}
+                        data-slot-index={slotIndex}
                         className={`h-6 border-b relative transition-colors ${
                           isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
                         } hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 cursor-pointer`}
@@ -4492,6 +4603,8 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
+    const touchStartPosRef = useRef(null)
+    const [isTouchDragging, setIsTouchDragging] = useState(false)
     
     const handleMouseDown = (e) => {
       if (isCompleted) return
@@ -4544,6 +4657,93 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       onDragStart && onDragStart(e, task)
     }
     
+    // Touch event handlers for mobile drag and drop
+    const handleTouchStart = (e) => {
+      if (isCompleted) return
+      if (e.target.closest('button')) return
+      
+      const touch = e.touches[0]
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }
+      didDragRef.current = false
+      
+      holdTimerRef.current = setTimeout(() => {
+        isHoldingRef.current = true
+        setIsHolding(true)
+        // Vibrate on mobile to indicate drag ready
+        if (navigator.vibrate) navigator.vibrate(50)
+      }, 200)
+    }
+    
+    const handleTouchMove = (e) => {
+      if (!isHoldingRef.current) {
+        // Cancel hold if moved too much before hold completes
+        if (touchStartPosRef.current) {
+          const touch = e.touches[0]
+          const dx = Math.abs(touch.clientX - touchStartPosRef.current.x)
+          const dy = Math.abs(touch.clientY - touchStartPosRef.current.y)
+          if (dx > 10 || dy > 10) {
+            if (holdTimerRef.current) {
+              clearTimeout(holdTimerRef.current)
+              holdTimerRef.current = null
+            }
+          }
+        }
+        return
+      }
+      
+      e.preventDefault()
+      setIsTouchDragging(true)
+      didDragRef.current = true
+      
+      const touch = e.touches[0]
+      
+      // Highlight drop zone if over it
+      const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+      const dropZone = elemBelow?.closest('[data-dropzone="myday"]')
+      
+      document.querySelectorAll('[data-dropzone="myday"]').forEach(el => {
+        el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
+      })
+      
+      if (dropZone) {
+        dropZone.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
+      }
+    }
+    
+    const handleTouchEnd = (e) => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+      
+      // Clean up drop zone highlighting
+      document.querySelectorAll('[data-dropzone="myday"]').forEach(el => {
+        el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
+      })
+      
+      if (isTouchDragging && isHoldingRef.current) {
+        const touch = e.changedTouches[0]
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+        const dropZone = elemBelow?.closest('[data-dropzone="myday"]')
+        
+        if (dropZone) {
+          // Trigger the same action as regular drop
+          onUpdateMyDayDate(task.id, new Date().toISOString().split('T')[0])
+        }
+      } else if (!didDragRef.current && !isHoldingRef.current) {
+        // It was a tap, not a drag
+        onEditTask(task)
+      }
+      
+      setIsTouchDragging(false)
+      setTimeout(() => {
+        isHoldingRef.current = false
+        setIsHolding(false)
+        didDragRef.current = false
+      }, 100)
+      touchStartPosRef.current = null
+    }
+    
     return (
       <div
         draggable={!isCompleted}
@@ -4553,8 +4753,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         onDragStart={handleDragStart}
         onDragEnd={handleMouseUp}
         onClick={handleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 ${
-          isDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
+          isDragging || isTouchDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
         } ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
@@ -4723,6 +4926,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </div>
           
           <div
+            data-dropzone="myday"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDropOnMyDay}
