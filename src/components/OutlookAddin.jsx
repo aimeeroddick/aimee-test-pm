@@ -233,19 +233,10 @@ export default function OutlookAddin() {
       const today = new Date().toISOString().split('T')[0]
       setDebugInfo(`Loading for: ${today}`)
       
-      // First try to get ALL tasks to see if query works at all
-      const { data: allData, error: allError } = await supabase
-        .from('tasks')
-        .select('id, title, my_day_date, due_date, status')
-        .limit(5)
-      
-      console.log('Test query - all tasks:', allData, 'Error:', allError)
-      setDebugInfo(prev => prev + `\nTest: ${allData?.length || 0} tasks, err: ${allError?.message || 'none'}`)
-      
-      // Now the actual My Day query
+      // Query without color since it doesn't exist
       const { data: tasksData, error: queryError } = await supabase
         .from('tasks')
-        .select('*, projects(name, color)')
+        .select('*, projects(name)')
         .or(`my_day_date.eq.${today},due_date.eq.${today}`)
         .neq('status', 'done')
         .order('critical', { ascending: false })
@@ -272,7 +263,7 @@ export default function OutlookAddin() {
     try {
       const { data: tasksData, error: queryError } = await supabase
         .from('tasks')
-        .select('*, projects(name, color)')
+        .select('*, projects(name)')
         .neq('status', 'done')
         .order('updated_at', { ascending: false })
         .limit(100)
@@ -883,13 +874,7 @@ export default function OutlookAddin() {
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           {task.projects?.name && (
-                            <span 
-                              className="text-xs px-1.5 py-0.5 rounded-full"
-                              style={{ 
-                                backgroundColor: `${task.projects.color}20`,
-                                color: task.projects.color 
-                              }}
-                            >
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-600">
                               {task.projects.name}
                             </span>
                           )}
@@ -992,13 +977,7 @@ function TaskCard({ task, expanded, onToggleExpand, onToggleComplete, onToggleMy
           </p>
           <div className="flex items-center gap-2 mt-1">
             {task.projects?.name && (
-              <span 
-                className="text-xs px-1.5 py-0.5 rounded-full"
-                style={{ 
-                  backgroundColor: `${task.projects.color}20`,
-                  color: task.projects.color 
-                }}
-              >
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-600">
                 {task.projects.name}
               </span>
             )}
