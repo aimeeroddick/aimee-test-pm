@@ -226,14 +226,10 @@ export default function OutlookAddin() {
     await loadAllTasks()
   }
 
-  const [debugInfo, setDebugInfo] = useState('')
-
   const loadMyDayTasks = async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      setDebugInfo(`Loading for: ${today}`)
       
-      // Query without color since it doesn't exist
       const { data: tasksData, error: queryError } = await supabase
         .from('tasks')
         .select('*, projects(name)')
@@ -242,11 +238,8 @@ export default function OutlookAddin() {
         .order('critical', { ascending: false })
         .order('due_date', { ascending: true })
       
-      console.log('My Day tasks result:', tasksData, 'Error:', queryError)
-      setDebugInfo(prev => prev + `\nMy Day: ${tasksData?.length || 0} tasks`)
-      
       if (queryError) {
-        setDebugInfo(prev => prev + `\nError: ${queryError.message}`)
+        console.error('My Day query error:', queryError)
         return
       }
       
@@ -255,7 +248,6 @@ export default function OutlookAddin() {
       }
     } catch (err) {
       console.error('loadMyDayTasks error:', err)
-      setDebugInfo(prev => prev + `\nCatch: ${err.message}`)
     }
   }
 
@@ -649,13 +641,6 @@ export default function OutlookAddin() {
               <h2 className="text-lg font-bold text-gray-800">My Day</h2>
               <p className="text-sm text-gray-500">{getTodayFormatted()}</p>
             </div>
-
-            {/* Debug info */}
-            {debugInfo && (
-              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs font-mono text-yellow-800 whitespace-pre-wrap">
-                {debugInfo}
-              </div>
-            )}
 
             {tasks.length === 0 ? (
               <div className="text-center py-8">
