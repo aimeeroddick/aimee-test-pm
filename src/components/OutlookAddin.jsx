@@ -123,27 +123,60 @@ export default function OutlookAddin() {
     const itemId = item.itemId || ''
     
     if (isAppointment) {
-      const subject = item.subject || ''
-      const start = item.start
-      const end = item.end
-      
-      setItemData({
-        subject,
-        sender: '',
-        body: '',
-        start,
-        end,
-        isAppointment: true,
-        messageId: '',
-        itemId,
-      })
-      
-      // Pre-fill create form with meeting time
-      setFormData(prev => ({
-        ...prev,
-        title: subject,
-        due_date: start ? new Date(start).toISOString().split('T')[0] : '',
-      }))
+      // Check if we're in compose mode (subject is an object with getAsync)
+      if (typeof item.subject === 'object' && item.subject.getAsync) {
+        // Compose mode - use async methods
+        item.subject.getAsync((subjectResult) => {
+          const subject = subjectResult.status === Office.AsyncResultStatus.Succeeded ? subjectResult.value : ''
+          
+          item.start.getAsync((startResult) => {
+            const start = startResult.status === Office.AsyncResultStatus.Succeeded ? startResult.value : null
+            
+            item.end.getAsync((endResult) => {
+              const end = endResult.status === Office.AsyncResultStatus.Succeeded ? endResult.value : null
+              
+              setItemData({
+                subject,
+                sender: '',
+                body: '',
+                start,
+                end,
+                isAppointment: true,
+                messageId: '',
+                itemId,
+              })
+              
+              setFormData(prev => ({
+                ...prev,
+                title: subject,
+                due_date: start ? new Date(start).toISOString().split('T')[0] : '',
+              }))
+            })
+          })
+        })
+      } else {
+        // Read mode - direct property access
+        const subject = item.subject || ''
+        const start = item.start
+        const end = item.end
+        
+        setItemData({
+          subject,
+          sender: '',
+          body: '',
+          start,
+          end,
+          isAppointment: true,
+          messageId: '',
+          itemId,
+        })
+        
+        setFormData(prev => ({
+          ...prev,
+          title: subject,
+          due_date: start ? new Date(start).toISOString().split('T')[0] : '',
+        }))
+      }
     } else {
       const subject = item.subject || ''
       const sender = item.from?.displayName || item.from?.emailAddress || ''
