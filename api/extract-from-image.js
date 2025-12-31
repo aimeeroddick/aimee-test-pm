@@ -45,23 +45,33 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: `Analyze this image of notes/meeting notes and extract all action items, tasks, and to-dos.
+              text: `Analyze this image of meeting notes and extract ONLY clear action items - tasks that have a specific person assigned to do something.
 
-For each task found, provide:
+IMPORTANT: Be very selective. Only extract items that are:
+- Clear action items with an owner/assignee (e.g., "Dave to send links", "Sarah will review")
+- Tasks someone needs to complete (not status updates, not discussion points, not general notes)
+
+DO NOT extract:
+- Status updates (e.g., "VFS on track", "Project going well")
+- Discussion summaries (e.g., "Met with Dave to discuss projects")
+- General notes or observations
+- Items without a clear owner or action
+
+For each genuine action item found, provide:
 - title: A clear, actionable task title
-- assignee: The person assigned (if mentioned), or empty string
+- assignee: The person assigned (required - if no clear owner, don't extract it)
 - dueDate: Any due date mentioned (in YYYY-MM-DD format if possible), or empty string
 - isCritical: true if marked urgent/important/critical, false otherwise
 
 Return ONLY a valid JSON array of tasks, no other text. Example format:
 [
-  {"title": "Review proposal document", "assignee": "Sarah", "dueDate": "2025-01-05", "isCritical": false},
-  {"title": "Send update to client", "assignee": "", "dueDate": "", "isCritical": true}
+  {"title": "Send links to team", "assignee": "Dave", "dueDate": "2025-01-03", "isCritical": false},
+  {"title": "Setup meeting time for next week", "assignee": "Aimee", "dueDate": "", "isCritical": false}
 ]
 
-If no tasks are found, return an empty array: []
+If no clear action items are found, return an empty array: []
 
-Extract tasks from any format: handwritten notes, typed text, tables, bullet points, etc.`,
+Be strict - it's better to extract fewer genuine tasks than to include status updates or notes.`,
             },
           ],
         },
