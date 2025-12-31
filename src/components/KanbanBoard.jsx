@@ -8096,14 +8096,12 @@ export default function KanbanBoard() {
   
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
-    
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if (!validTypes.includes(file.type)) {
-      setError('Please upload a valid image (JPEG, PNG, GIF, or WebP)')
+    if (!file) {
+      console.log('No file selected')
       return
     }
+    
+    console.log('File selected:', file.name, file.type, file.size)
     
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
@@ -8113,14 +8111,23 @@ export default function KanbanBoard() {
     
     const reader = new FileReader()
     reader.onload = () => {
-      const base64 = reader.result.split(',')[1] // Remove data:image/xxx;base64, prefix
+      const base64 = reader.result.split(',')[1]
+      // Determine media type - default to jpeg if unknown
+      let mediaType = file.type
+      if (!mediaType || mediaType === 'image/heic' || mediaType === 'image/heif') {
+        mediaType = 'image/jpeg'
+      }
       setUploadedImage({
         base64,
-        mediaType: file.type,
+        mediaType,
         preview: reader.result,
-        name: file.name,
+        name: file.name || 'photo.jpg',
       })
       setError(null)
+    }
+    reader.onerror = () => {
+      console.error('FileReader error:', reader.error)
+      setError('Failed to read image file')
     }
     reader.readAsDataURL(file)
   }
