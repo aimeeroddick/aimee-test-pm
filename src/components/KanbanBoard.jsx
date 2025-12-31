@@ -1522,6 +1522,150 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   )
 }
 
+// View-Specific Tour Component
+const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
+  const tourContent = {
+    myday: [
+      {
+        title: '☀️ Welcome to My Day!',
+        description: 'This is your personal daily focus list. Plan what to work on today without cluttering your board view.',
+        icon: '🎯',
+      },
+      {
+        title: 'How Tasks Appear Here',
+        description: 'Tasks show up automatically if their start date is today or earlier. You can also drag tasks from the sidebar to add them manually.',
+        icon: '📥',
+      },
+      {
+        title: 'Track Your Progress',
+        description: 'Watch your progress bar fill up as you complete tasks. Finish everything for a confetti celebration! 🎉',
+        icon: '📊',
+      },
+    ],
+    calendar: [
+      {
+        title: '📆 Welcome to Calendar!',
+        description: 'Schedule your tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
+        icon: '🗓️',
+      },
+      {
+        title: 'Schedule Tasks',
+        description: 'Drag tasks from the sidebar onto any time slot. Drag the bottom edge of scheduled tasks to adjust duration.',
+        icon: '✨',
+      },
+      {
+        title: 'Visual Indicators',
+        description: 'The red line shows current time. Orange rings warn of overlapping tasks. Tasks are color-coded by project.',
+        icon: '🎨',
+      },
+    ],
+    tasks: [
+      {
+        title: '🗃️ All Tasks View',
+        description: 'See every task in a powerful table format. Click any column header to sort, or use the Filters button to narrow down results.',
+        icon: '📋',
+      },
+      {
+        title: 'Export Your Data',
+        description: 'Click "Export CSV" to download your tasks for reporting or backup. Only visible/filtered tasks are included.',
+        icon: '📤',
+      },
+    ],
+    projects: [
+      {
+        title: '📁 Projects View',
+        description: 'Organize your work into projects. Each project gets its own color that appears on task cards throughout the app.',
+        icon: '🏗️',
+      },
+      {
+        title: 'Manage Projects',
+        description: 'Create new projects, edit details, or archive completed ones. Archived projects hide their tasks from the main board.',
+        icon: '⚙️',
+      },
+    ],
+    progress: [
+      {
+        title: '📊 Progress View',
+        description: 'Track your productivity across all projects. See completion rates, task counts, and how you\'re doing over time.',
+        icon: '📈',
+      },
+      {
+        title: 'Completion Insights',
+        description: 'The charts show your completed vs. remaining tasks. Use this to identify bottlenecks and celebrate wins!',
+        icon: '🏆',
+      },
+    ],
+  }
+
+  const steps = tourContent[view] || []
+  const currentStep = steps[step]
+  if (!currentStep) return null
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onSkip} />
+      
+      {/* Tour card */}
+      <div className="relative z-[1001] max-w-md w-full animate-fadeIn">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
+            <div className="text-4xl mb-3">{currentStep.icon}</div>
+            <h3 className="text-xl font-bold">{currentStep.title}</h3>
+          </div>
+          
+          {/* Content */}
+          <div className="p-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              {currentStep.description}
+            </p>
+            
+            {/* Progress dots */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {steps.map((_, i) => (
+                <div 
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === step ? 'w-8 bg-indigo-500' : 
+                    i < step ? 'bg-indigo-300' : 'bg-gray-200 dark:bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={onSkip}
+                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                Skip
+              </button>
+              <div className="flex gap-2">
+                {step > 0 && (
+                  <button
+                    onClick={() => onNext(step - 1)}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
+                >
+                  {step < steps.length - 1 ? 'Next' : 'Got it!'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Help Modal Component
 const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -7278,6 +7422,14 @@ export default function KanbanBoard() {
   })
   const [onboardingStep, setOnboardingStep] = useState(0)
   
+  // View-specific tour state
+  const [activeViewTour, setActiveViewTour] = useState(null) // 'myday', 'calendar', 'tasks', 'projects', 'progress'
+  const [viewTourStep, setViewTourStep] = useState(0)
+  const [viewToursCompleted, setViewToursCompleted] = useState(() => {
+    const saved = localStorage.getItem('trackli_view_tours_completed')
+    return saved ? JSON.parse(saved) : {}
+  })
+  
   const [selectedProjectId, setSelectedProjectId] = useState('all')
   const [showArchivedProjects, setShowArchivedProjects] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
@@ -7574,6 +7726,33 @@ export default function KanbanBoard() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [projects, meetingNotesData, tasks])
   
+  
+  // Trigger view-specific tour when visiting a new view for the first time
+  useEffect(() => {
+    // Don't show view tours on mobile or if main onboarding is still showing
+    if (isMobile || showOnboarding) return
+    
+    // Only show tours for non-board views (board has its own onboarding)
+    const tourableViews = ['myday', 'calendar', 'tasks', 'projects', 'progress']
+    
+    if (tourableViews.includes(currentView) && !viewToursCompleted[currentView]) {
+      // Small delay to let the view render first
+      const timer = setTimeout(() => {
+        setActiveViewTour(currentView)
+        setViewTourStep(0)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [currentView, viewToursCompleted, isMobile, showOnboarding])
+  
+  // Handle completing a view tour
+  const handleViewTourComplete = (view) => {
+    const newCompleted = { ...viewToursCompleted, [view]: true }
+    setViewToursCompleted(newCompleted)
+    localStorage.setItem('trackli_view_tours_completed', JSON.stringify(newCompleted))
+    setActiveViewTour(null)
+    setViewTourStep(0)
+  }
   
   // Fetch data on mount
   useEffect(() => {
@@ -10633,6 +10812,17 @@ export default function KanbanBoard() {
             setShowOnboarding(false)
             localStorage.setItem('trackli_onboarding_complete', 'true')
           }}
+        />
+      )}
+      
+      {/* View-specific Tours */}
+      {activeViewTour && (
+        <ViewTour
+          view={activeViewTour}
+          step={viewTourStep}
+          onNext={setViewTourStep}
+          onSkip={() => handleViewTourComplete(activeViewTour)}
+          onComplete={() => handleViewTourComplete(activeViewTour)}
         />
       )}
       
