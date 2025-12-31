@@ -5910,7 +5910,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.title ? 'border-l-4 border-l-red-400' : ''}`}
+                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.title ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
                 placeholder="What needs to be done?"
               />
             </div>
@@ -5923,7 +5923,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 onPaste={handlePaste}
                 rows={2}
-                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300' : ''}`}
+                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 placeholder="Add more context... (paste images here!)"
               />
               {pasteMessage && activeTab === 'details' && (
@@ -5939,7 +5939,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   required
                   value={formData.project_id}
                   onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400' : ''}`}
+                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
                 >
                   <option value="">Select project</option>
                   {projects.map((p) => (
@@ -5977,7 +5977,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         setFormData({ ...formData, customer: e.target.value })
                       }
                     }}
-                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.customer ? 'border-l-4 border-l-amber-300' : ''}`}
+                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.customer ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   >
                     <option value="">No customer</option>
                     {selectedProject?.customers?.map((cust) => (
@@ -6010,7 +6010,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <select
                   value={formData.energy_level}
                   onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
-                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.energy_level ? 'border-l-4 border-l-amber-300' : ''}`}
+                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.energy_level ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 >
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
                     <option key={key} value={key}>{val.icon} {val.label}</option>
@@ -6044,7 +6044,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     // Otherwise keep as-is (might be a valid date already)
                   }}
                   placeholder="T, T+1, W+1, or date"
-                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300' : ''}`}
+                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 />
               </div>
               <div>
@@ -6070,7 +6070,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     // Otherwise keep as-is (might be a valid date already)
                   }}
                   placeholder="T, T+1, W+1, or date"
-                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300' : ''}`}
+                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 />
               </div>
             </div>
@@ -6373,7 +6373,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     
                     setFormData({ ...formData, ...updates })
                   }}
-                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.time_estimate ? 'border-l-4 border-l-amber-300' : ''}`}
+                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.time_estimate ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   placeholder="Minutes (e.g., 30)"
                 />
                 {formData.time_estimate && (
@@ -6394,7 +6394,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         setFormData({ ...formData, assignee: e.target.value })
                       }
                     }}
-                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.assignee ? 'border-l-4 border-l-amber-300' : ''}`}
+                    className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.assignee ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   >
                     <option value="">Unassigned</option>
                     {selectedProject?.members?.map((member) => (
@@ -6958,26 +6958,26 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
     <Modal isOpen={isOpen} onClose={onClose} title={project ? 'Edit Project' : 'New Project'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Name *</label>
           <input
             type="text"
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             placeholder="Enter project name"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Team Members</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Members</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newMember}
               onChange={(e) => setNewMember(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add team member"
             />
             <button type="button" onClick={addMember} className="px-4 py-2.5 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors">
@@ -6999,14 +6999,14 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Customers/Clients</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customers/Clients</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={newCustomer}
               onChange={(e) => setNewCustomer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomer())}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add customer/client"
             />
             <button type="button" onClick={addCustomer} className="px-4 py-2.5 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
@@ -9936,7 +9936,7 @@ export default function KanbanBoard() {
                   <div className="flex items-center gap-2">
                     <select
                       onChange={(e) => e.target.value && handleBulkStatusChange(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Status...</option>
@@ -9947,7 +9947,7 @@ export default function KanbanBoard() {
                     </select>
                     <select
                       onChange={(e) => e.target.value && handleBulkMoveToProject(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Project...</option>
@@ -9957,7 +9957,7 @@ export default function KanbanBoard() {
                     </select>
                     <select
                       onChange={(e) => handleBulkAssign(e.target.value)}
-                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
                       defaultValue=""
                     >
                       <option value="" disabled>Assign...</option>
@@ -10616,6 +10616,9 @@ export default function KanbanBoard() {
           setMeetingNotesModalOpen(false)
           stopListening()
           setVoiceTranscript('')
+          setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: projects[0]?.id || '' })
+          setExtractedTasks([])
+          setShowExtractedTasks(false)
         }} 
         title="Import Tasks"
         wide
