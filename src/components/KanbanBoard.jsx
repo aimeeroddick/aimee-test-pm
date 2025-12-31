@@ -10550,41 +10550,107 @@ export default function KanbanBoard() {
           </div>
         </div>
         
-        {/* Filter Bar - only on board view */}
+        {/* Unified Filter Bar - only on board view */}
         {currentView === 'board' && (
-          <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2.5 overflow-x-auto">
-            <div className="flex items-center gap-3 min-w-max">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 overflow-x-auto">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
               {/* Project dropdown */}
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                  >
-                    <option value="all">📁 All Projects</option>
-                    {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
-                      <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
-                    ))}
-                  </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                <label className="hidden sm:flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={showArchivedProjects}
-                    onChange={(e) => setShowArchivedProjects(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  Archived
-                </label>
+              <div className="relative">
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                >
+                  <option value="all">📁 All Projects</option>
+                  {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                    <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
+                  ))}
+                </select>
+                <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
               
-              {/* Field Filters - Multiple */}
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+              
+              {/* Quick Filters - compact pills */}
+              <div className="flex items-center gap-1.5">
+                {/* Critical */}
+                <button
+                  onClick={() => setFilterCritical(!filterCritical)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    filterCritical
+                      ? 'bg-red-500 text-white shadow-sm'
+                      : criticalCount > 0 
+                        ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                >
+                  <span>🚩</span>
+                  <span className="hidden sm:inline">Critical</span>
+                  {(filterCritical || criticalCount > 0) && (
+                    <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterCritical ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{criticalCount}</span>
+                  )}
+                </button>
+                
+                {/* Due Today */}
+                <button
+                  onClick={() => setFilterDueToday(!filterDueToday)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    filterDueToday
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : dueTodayCount > 0
+                        ? 'text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Due Today</span>
+                  <span className="sm:hidden">Today</span>
+                  {(filterDueToday || dueTodayCount > 0) && (
+                    <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterDueToday ? 'bg-white/20' : 'bg-orange-100 dark:bg-orange-900/50'}`}>{dueTodayCount}</span>
+                  )}
+                </button>
+                
+                {/* Overdue */}
+                <button
+                  onClick={() => setFilterOverdue(!filterOverdue)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    filterOverdue
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : overdueCount > 0
+                        ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                >
+                  <span>Overdue</span>
+                  {(filterOverdue || overdueCount > 0) && (
+                    <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterOverdue ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{overdueCount}</span>
+                  )}
+                </button>
+                
+                {/* My Day */}
+                <button
+                  onClick={() => setFilterMyDay(!filterMyDay)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    filterMyDay
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : myDayCount > 0
+                        ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                >
+                  <span>☀️</span>
+                  <span className="hidden sm:inline">My Day</span>
+                  {(filterMyDay || myDayCount > 0) && (
+                    <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterMyDay ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-900/50'}`}>{myDayCount}</span>
+                  )}
+                </button>
+              </div>
+              
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+              
+              {/* Field Filters */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                {/* Active filter chips */}
                 {Object.entries(fieldFilters).map(([field, value]) => {
                   const fieldLabels = { assignee: 'Assignee', customer: 'Customer', category: 'Category', energy_level: 'Effort', source: 'Source', due_date: 'Due Date' }
                   let displayValue = value
@@ -10597,7 +10663,7 @@ export default function KanbanBoard() {
                   return (
                     <span
                       key={field}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-medium"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium"
                     >
                       {fieldLabels[field]}: {displayValue}
                       <button
@@ -10608,7 +10674,7 @@ export default function KanbanBoard() {
                         }}
                         className="ml-0.5 hover:text-indigo-900 dark:hover:text-indigo-100"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -10621,7 +10687,7 @@ export default function KanbanBoard() {
                   <select
                     value={pendingFilterField}
                     onChange={(e) => setPendingFilterField(e.target.value)}
-                    className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                   >
                     <option value="">+ Filter</option>
                     {!fieldFilters.assignee && <option value="assignee">Assignee</option>}
@@ -10631,252 +10697,100 @@ export default function KanbanBoard() {
                     {!fieldFilters.source && <option value="source">Source</option>}
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
                   </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-                
-                {/* Value selector for pending filter */}
-                {pendingFilterField && (
-                  <div className="relative">
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
-                          setPendingFilterField('')
-                        }
-                      }}
-                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                    >
-                      <option value="">Select value...</option>
-                      <option value="__blank__">(Blank)</option>
-                      {pendingFilterField === 'assignee' && allAssignees.map(a => (
-                        <option key={a} value={a}>{a}</option>
-                      ))}
-                      {pendingFilterField === 'customer' && allCustomers.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                      {pendingFilterField === 'category' && CATEGORIES.map(c => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
-                      ))}
-                      {pendingFilterField === 'energy_level' && (
-                        <>
-                          <option value="high">High Effort</option>
-                          <option value="medium">Medium Effort</option>
-                          <option value="low">Low Effort</option>
-                        </>
-                      )}
-                      {pendingFilterField === 'source' && SOURCES.map(s => (
-                        <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
-                      ))}
-                      {pendingFilterField === 'due_date' && (
-                        <option value="has_date">Has Due Date</option>
-                      )}
-                    </select>
-                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                )}
               </div>
               
-              {/* Search Bar */}
-              <div className="relative flex-1 min-w-[150px] max-w-xs">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <div className="flex-1" />
+              
+              {/* Search */}
+              <div className="relative">
                 <input
                   type="text"
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tasks..."
-                  className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors placeholder-gray-400"
+                  className="w-32 sm:w-40 pl-7 pr-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent focus:bg-white dark:focus:bg-gray-700 transition-colors"
                 />
+                <svg className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 )}
               </div>
               
-              {/* Clear All Filters */}
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Clear
-                </button>
-              )}
-              
-              {/* Saved Filter Views */}
-              <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-3 ml-1">
-                {savedFilterViews.length > 0 && (
-                  <div className="relative group">
-                    <select
-                      onChange={(e) => {
-                        const view = savedFilterViews.find(v => v.id === parseInt(e.target.value))
-                        if (view) applyFilterView(view)
-                        e.target.value = ''
-                      }}
-                      className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                    >
-                      <option value="">📑 Saved Views</option>
-                      {savedFilterViews.map(view => (
-                        <option key={view.id} value={view.id}>{view.name}</option>
-                      ))}
-                    </select>
-                    <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                )}
+              {/* Clear All / Archived toggle */}
+              <div className="flex items-center gap-2">
                 {hasActiveFilters && (
                   <button
-                    onClick={() => setShowSaveViewModal(true)}
-                    className="flex items-center gap-1 px-2 py-1.5 text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
-                    title="Save current filters as a view"
+                    onClick={clearFilters}
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    Save View
+                    Clear
                   </button>
                 )}
+                <label className="hidden sm:flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={showArchivedProjects}
+                    onChange={(e) => setShowArchivedProjects(e.target.checked)}
+                    className="w-3 h-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Archived
+                </label>
               </div>
+              
+              {/* Saved Views */}
+              {savedFilterViews.length > 0 && (
+                <div className="relative border-l border-gray-200 dark:border-gray-700 pl-2">
+                  <select
+                    onChange={(e) => {
+                      const view = savedFilterViews.find(v => v.id === parseInt(e.target.value))
+                      if (view) applyFilterView(view)
+                      e.target.value = ''
+                    }}
+                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"
+                  >
+                    <option value="">📑 Views</option>
+                    {savedFilterViews.map(view => (
+                      <option key={view.id} value={view.id}>{view.name}</option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              )}
+              {hasActiveFilters && (
+                <button
+                  onClick={() => setShowSaveViewModal(true)}
+                  className="p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  title="Save current filters as a view"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         )}
       </header>
 
-      {/* Stats Bar - only show on board view */}
-      {currentView === 'board' && (
-        <div className="bg-white/60 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 sm:py-3 overflow-x-auto">
-          <div className="max-w-full mx-auto flex items-center gap-2 sm:gap-3 text-sm min-w-max">
-            {/* Active filter */}
-            <button
-              onClick={() => { setFilterActive(!filterActive); setFilterBacklog(false) }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterActive
-                  ? 'bg-indigo-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              <span>Active</span>
-              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => ['todo', 'in_progress'].includes(t.status)).length}</span>
-            </button>
-            
-            {/* Backlog filter */}
-            <button
-              onClick={() => { setFilterBacklog(!filterBacklog); setFilterActive(false) }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterBacklog
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              <span>Backlog</span>
-              <span className="px-1.5 py-0.5 text-xs rounded-full bg-white/20">{filteredTasks.filter(t => t.status === 'backlog').length}</span>
-            </button>
-            
-            <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-            
-            {/* Critical filter */}
-            <button
-              onClick={() => setFilterCritical(!filterCritical)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterCritical
-                  ? 'bg-red-500 text-white'
-                  : criticalCount > 0 
-                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-              }`}
-            >
-              <span>🚩 Critical</span>
-              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterCritical ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{criticalCount}</span>
-            </button>
-            
-            {/* Due Today filter */}
-            <button
-              onClick={() => setFilterDueToday(!filterDueToday)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterDueToday
-                  ? 'bg-orange-500 text-white'
-                  : dueTodayCount > 0
-                    ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/50'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-              }`}
-            >
-              <span>Due Today</span>
-              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterDueToday ? 'bg-white/20' : 'bg-orange-100 dark:bg-orange-900/50'}`}>{dueTodayCount}</span>
-            </button>
-            
-            {/* Overdue filter */}
-            <button
-              onClick={() => setFilterOverdue(!filterOverdue)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterOverdue
-                  ? 'bg-red-600 text-white'
-                  : overdueCount > 0
-                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-              }`}
-            >
-              <span>Overdue</span>
-              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterOverdue ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{overdueCount}</span>
-            </button>
-            
-            {/* My Day filter */}
-            <button
-              onClick={() => setFilterMyDay(!filterMyDay)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filterMyDay
-                  ? 'bg-amber-500 text-white'
-                  : myDayCount > 0
-                    ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-              }`}
-            >
-              <span>☀️ My Day</span>
-              <span className={`px-1.5 py-0.5 text-xs rounded-full ${filterMyDay ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-900/50'}`}>{myDayCount}</span>
-            </button>
-            
-            {/* Clear filters */}
-            {hasActiveFilters && (
-              <button
-                onClick={() => {
-                  setFilterActive(false)
-                  setFilterBacklog(false)
-                  setFilterCritical(false)
-                  setFilterDueToday(false)
-                  setFilterOverdue(false)
-                  setFilterBlocked(false)
-                  setFilterReadyToStart(false)
-                  setFilterMyDay(false)
-                  setSearchQuery('')
-                }}
-                className="flex items-center gap-1 px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Project Info - only show on board view */}
+            {/* Project Info - only show on board view */}
       {currentView === 'board' && selectedProjectId !== 'all' && (
         <div className="max-w-full mx-auto px-6 py-4">
           {projects.filter((p) => p.id === selectedProjectId).map((project) => (
