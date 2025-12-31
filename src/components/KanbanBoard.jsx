@@ -8262,7 +8262,6 @@ export default function KanbanBoard() {
         .from('projects')
         .insert({
           name: '🚀 Getting Started with Trackli',
-          description: 'Welcome! This project shows you around Trackli. Feel free to complete, edit, or delete these tasks.',
           user_id: user.id,
         })
         .select()
