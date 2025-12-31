@@ -10232,6 +10232,21 @@ export default function KanbanBoard() {
                         <span className="font-medium">Progress</span>
                       </button>
                       
+                      {/* TEMPORARY: Test welcome project - remove before production */}
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm('This will DELETE all your projects and tasks to test the welcome experience. Continue?')) return
+                          setNavMenuOpen(false)
+                          await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+                          await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+                          window.location.reload()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      >
+                        <span className="text-lg">🧪</span>
+                        <span className="font-medium">Test Welcome Flow</span>
+                      </button>
+                      
                       {/* Mobile-only options */}
                       <div className="sm:hidden">
                         <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
@@ -10263,24 +10278,6 @@ export default function KanbanBoard() {
                         >
                           <span className="text-lg">🚪</span>
                           <span className="font-medium">Sign Out</span>
-                        </button>
-                        
-                        {/* TEMPORARY: Test welcome project - remove before production */}
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm('This will DELETE all your projects and tasks to test the welcome experience. Continue?')) return
-                            setNavMenuOpen(false)
-                            // Delete all tasks first (foreign key constraint)
-                            await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-                            // Delete all projects
-                            await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-                            // Reload to trigger welcome project
-                            window.location.reload()
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 border-t border-gray-200 dark:border-gray-700"
-                        >
-                          <span className="text-lg">🧪</span>
-                          <span className="font-medium">Test Welcome Flow</span>
                         </button>
                       </div>
                     </div>
