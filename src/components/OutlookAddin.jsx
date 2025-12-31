@@ -1,35 +1,25 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-const CATEGORIES = [
-  { id: 'meeting_followup', label: 'Meeting Follow-up' },
-  { id: 'email', label: 'Email' },
-  { id: 'deliverable', label: 'Deliverable' },
-  { id: 'admin', label: 'Admin' },
-  { id: 'review', label: 'Review/Approval' },
-  { id: 'call', label: 'Call/Meeting' },
-  { id: 'research', label: 'Research' },
-]
-
 // Modes from URL parameter
 const MODE = {
   MYDAY: 'myday',
-  EMAIL: 'email',
-  FOLLOWUPS: 'followups',
-  AGENDA: 'agenda',
-  NOTES: 'notes',
+  CREATE: 'create',
+  UPDATE: 'update',
 }
 
-// Tabs
+// Tabs for navigation
 const TAB = {
   MYDAY: 'myday',
   CREATE: 'create',
+  UPDATE: 'update',
 }
 
 export default function OutlookAddin() {
   const [user, setUser] = useState(null)
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
+  const [allTasks, setAllTasks] = useState([]) // For update mode search
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -40,9 +30,6 @@ export default function OutlookAddin() {
   // Current tab
   const [activeTab, setActiveTab] = useState(TAB.MYDAY)
   
-  // Mode from URL (for create tab)
-  const [mode, setMode] = useState(MODE.EMAIL)
-  
   // Item data from Outlook
   const [itemData, setItemData] = useState({
     subject: '',
@@ -51,42 +38,37 @@ export default function OutlookAddin() {
     start: null,
     end: null,
     isAppointment: false,
+    messageId: '',
   })
   
-  // For follow-ups extraction
-  const [extractedTasks, setExtractedTasks] = useState([])
-  const [isExtracting, setIsExtracting] = useState(false)
-  const [hasExtracted, setHasExtracted] = useState(false)
-  
-  // Expanded task in My Day
-  const [expandedTaskId, setExpandedTaskId] = useState(null)
-  
+  // Create form
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     project_id: '',
     status: 'todo',
     critical: false,
-    start_date: '',
     due_date: '',
-    category: 'email',
-    source: 'email',
-    source_link: '',
-    customer: '',
-    notes: '',
   })
+  
+  // Update mode
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [noteText, setNoteText] = useState('')
+  
+  // Expanded task in My Day
+  const [expandedTaskId, setExpandedTaskId] = useState(null)
 
   // Get mode from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlMode = params.get('mode')
-    if (urlMode && Object.values(MODE).includes(urlMode)) {
-      setMode(urlMode)
-      if (urlMode === MODE.MYDAY) {
-        setActiveTab(TAB.MYDAY)
-      } else {
-        setActiveTab(TAB.CREATE)
-      }
+    if (urlMode === MODE.MYDAY) {
+      setActiveTab(TAB.MYDAY)
+    } else if (urlMode === MODE.CREATE) {
+      setActiveTab(TAB.CREATE)
+    } else if (urlMode === MODE.UPDATE) {
+      setActiveTab(TAB.UPDATE)
     }
   }, [])
 
@@ -149,33 +131,20 @@ export default function OutlookAddin() {
         start,
         end,
         isAppointment: true,
+        messageId: '',
       })
       
-      const meetingDate = start ? new Date(start) : new Date()
-      
-      if (mode === MODE.AGENDA) {
-        const agendaDue = new Date(meetingDate)
-        agendaDue.setDate(agendaDue.getDate() - 1)
-        setFormData(prev => ({
-          ...prev,
-          title: `Send Agenda: ${subject}`,
-          category: 'meeting_followup',
-          source: 'meeting',
-          due_date: agendaDue.toISOString().split('T')[0],
-        }))
-      } else if (mode === MODE.NOTES) {
-        setFormData(prev => ({
-          ...prev,
-          title: `Send Notes/Follow-ups: ${subject}`,
-          category: 'meeting_followup',
-          source: 'meeting',
-          due_date: meetingDate.toISOString().split('T')[0],
-        }))
-      }
+      // Pre-fill create form
+      setFormData(prev => ({
+        ...prev,
+        title: subject,
+        due_date: start ? new Date(start).toISOString().split('T')[0] : '',
+      }))
     } else {
       const subject = item.subject || ''
       const sender = item.from?.displayName || item.from?.emailAddress || ''
       const senderEmail = item.from?.emailAddress || ''
+      const messageId = item.internetMessageId || ''
       
       item.body.getAsync(Office.CoercionType.Text, (result) => {
         if (result.status === Office.AsyncResultStatus.Succeeded) {
@@ -188,46 +157,17 @@ export default function OutlookAddin() {
             start: null,
             end: null,
             isAppointment: false,
+            messageId,
           })
           
-          if (mode === MODE.EMAIL) {
-            const bodyPreview = bodyText.substring(0, 1000)
-            setFormData(prev => ({
-              ...prev,
-              title: subject,
-              category: 'email',
-              source: 'email',
-              notes: `From: ${sender} <${senderEmail}>\n\n${bodyPreview}${bodyText.length > 1000 ? '\n\n[Truncated...]' : ''}`
-            }))
-          } else if (mode === MODE.FOLLOWUPS) {
-            setFormData(prev => ({
-              ...prev,
-              category: 'meeting_followup',
-              source: 'meeting',
-            }))
-          } else if (mode === MODE.AGENDA) {
-            setFormData(prev => ({
-              ...prev,
-              title: `Send Agenda: ${subject}`,
-              category: 'meeting_followup',
-              source: 'email',
-              due_date: new Date().toISOString().split('T')[0],
-            }))
-          } else if (mode === MODE.NOTES) {
-            setFormData(prev => ({
-              ...prev,
-              title: `Send Notes/Follow-ups: ${subject}`,
-              category: 'meeting_followup',
-              source: 'email',
-              due_date: new Date().toISOString().split('T')[0],
-            }))
-          }
+          // Pre-fill create form
+          setFormData(prev => ({
+            ...prev,
+            title: subject,
+            description: `From: ${sender} <${senderEmail}>`,
+          }))
         }
       })
-      
-      if (item.internetMessageId) {
-        setFormData(prev => ({ ...prev, source_link: item.internetMessageId }))
-      }
     }
   }
 
@@ -257,33 +197,21 @@ export default function OutlookAddin() {
       .order('created_at', { ascending: false })
     
     if (projectsData && projectsData.length > 0) {
-      const projectsWithCustomers = await Promise.all(
-        projectsData.map(async (project) => {
-          const { data: customers } = await supabase
-            .from('project_customers')
-            .select('name')
-            .eq('project_id', project.id)
-          
-          return {
-            ...project,
-            customers: customers?.map(c => c.name) || [],
-          }
-        })
-      )
-      
-      setProjects(projectsWithCustomers)
-      setFormData(prev => ({ ...prev, project_id: projectsWithCustomers[0].id }))
+      setProjects(projectsData)
+      setFormData(prev => ({ ...prev, project_id: projectsData[0].id }))
     }
 
     // Load tasks for My Day
-    await loadTasks()
+    await loadMyDayTasks()
+    
+    // Load all active tasks for Update mode
+    await loadAllTasks()
   }
 
-  const loadTasks = async () => {
+  const loadMyDayTasks = async () => {
     const today = new Date().toISOString().split('T')[0]
     
-    // Get tasks that are in My Day OR due today
-    const { data: tasksData, error: tasksError } = await supabase
+    const { data: tasksData } = await supabase
       .from('tasks')
       .select('*, projects(name, color)')
       .or(`my_day_date.eq.${today},due_date.eq.${today}`)
@@ -291,8 +219,21 @@ export default function OutlookAddin() {
       .order('critical', { ascending: false })
       .order('due_date', { ascending: true })
     
-    if (!tasksError && tasksData) {
+    if (tasksData) {
       setTasks(tasksData)
+    }
+  }
+
+  const loadAllTasks = async () => {
+    const { data: tasksData } = await supabase
+      .from('tasks')
+      .select('*, projects(name, color)')
+      .neq('status', 'done')
+      .order('updated_at', { ascending: false })
+      .limit(100)
+    
+    if (tasksData) {
+      setAllTasks(tasksData)
     }
   }
 
@@ -321,12 +262,22 @@ export default function OutlookAddin() {
     setSaving(false)
   }
 
-  const handleSubmit = async (e) => {
+  // Create new task
+  const handleCreateTask = async (e) => {
     e.preventDefault()
     setSaving(true)
     setError(null)
     
     try {
+      // Build notes with email/meeting info
+      let notes = ''
+      if (itemData.isAppointment) {
+        notes = `Meeting: ${itemData.subject}\nDate: ${itemData.start ? new Date(itemData.start).toLocaleString() : 'N/A'}`
+      } else {
+        const bodyPreview = itemData.body?.substring(0, 500) || ''
+        notes = `Email from: ${itemData.sender}\nSubject: ${itemData.subject}\n\n${bodyPreview}${itemData.body?.length > 500 ? '...' : ''}`
+      }
+      
       const { error: insertError } = await supabase
         .from('tasks')
         .insert({
@@ -335,20 +286,65 @@ export default function OutlookAddin() {
           project_id: formData.project_id,
           status: formData.status,
           critical: formData.critical,
-          start_date: formData.start_date || null,
           due_date: formData.due_date || null,
-          category: formData.category,
-          source: formData.source || 'email',
-          source_link: formData.source_link || null,
-          customer: formData.customer || null,
-          notes: formData.notes || null,
+          source: itemData.isAppointment ? 'meeting' : 'email',
+          source_link: itemData.messageId || null,
+          notes: notes,
           energy_level: 'medium',
         })
       
       if (insertError) throw insertError
       
       setSuccess(true)
-      await loadTasks() // Refresh tasks
+      await loadMyDayTasks()
+      
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  
+  // Update existing task
+  const handleUpdateTask = async () => {
+    if (!selectedTask) return
+    
+    setSaving(true)
+    setError(null)
+    
+    try {
+      // Build the note entry
+      const timestamp = new Date().toLocaleString()
+      let newNote = `\n\n--- ${timestamp} ---\n`
+      
+      if (itemData.isAppointment) {
+        newNote += `📅 Meeting: ${itemData.subject}\n`
+      } else {
+        newNote += `📧 Email from: ${itemData.sender}\nSubject: ${itemData.subject}\n`
+      }
+      
+      if (noteText.trim()) {
+        newNote += `\n${noteText.trim()}`
+      }
+      
+      // Append to existing notes
+      const updatedNotes = (selectedTask.notes || '') + newNote
+      
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ 
+          notes: updatedNotes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedTask.id)
+      
+      if (updateError) throw updateError
+      
+      setSuccess(true)
+      setSelectedTask(null)
+      setNoteText('')
+      await loadMyDayTasks()
+      await loadAllTasks()
       
     } catch (err) {
       setError(err.message)
@@ -368,7 +364,6 @@ export default function OutlookAddin() {
     
     if (!error) {
       if (newStatus === 'done') {
-        // Remove from list with animation
         setTasks(prev => prev.filter(t => t.id !== task.id))
       } else {
         setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
@@ -388,267 +383,22 @@ export default function OutlookAddin() {
       .eq('id', task.id)
     
     if (!error) {
-      await loadTasks()
+      await loadMyDayTasks()
     }
   }
 
-  // Extract follow-ups from email body
-  const handleExtractFollowUps = () => {
-    if (!itemData.body) return
-    
-    setIsExtracting(true)
-    
-    setTimeout(() => {
-      const extracted = extractActionItems(itemData.body)
-      setExtractedTasks(extracted)
-      setHasExtracted(true)
-      setIsExtracting(false)
-    }, 300)
-  }
-  
-  // Action item extraction (same logic as main app)
-  const extractActionItems = (notesText) => {
-    const tableResult = extractFromFollowUpTable(notesText)
-    if (tableResult.length > 0) return tableResult
-    return extractFromPatterns(notesText.split('\n'))
-  }
-  
-  const extractFromFollowUpTable = (notesText) => {
-    const lines = notesText.split('\n')
-    const actionItems = []
-    
-    let headerRowIndex = -1
-    let columnIndices = { followUp: -1, owner: -1, dueDate: -1, status: -1 }
-    let delimiter = '|'
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase()
-      
-      if (line.includes('|') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
-        const cells = lines[i].split('|').map(c => c.trim().toLowerCase())
-        
-        for (let j = 0; j < cells.length; j++) {
-          const cell = cells[j]
-          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
-            columnIndices.followUp = j
-          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) {
-            columnIndices.owner = j
-          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when')) {
-            columnIndices.dueDate = j
-          } else if (cell.includes('status') || cell.includes('state')) {
-            columnIndices.status = j
-          }
-        }
-        
-        if (columnIndices.followUp !== -1) {
-          headerRowIndex = i
-          delimiter = '|'
-          break
-        }
-      }
-      
-      if (line.includes('\t') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
-        const cells = lines[i].split('\t').map(c => c.trim().toLowerCase())
-        
-        for (let j = 0; j < cells.length; j++) {
-          const cell = cells[j]
-          if (cell.includes('follow') || cell.includes('action') || cell.includes('task')) {
-            columnIndices.followUp = j
-          } else if (cell.includes('owner') || cell.includes('assignee')) {
-            columnIndices.owner = j
-          } else if (cell.includes('due') || cell.includes('date')) {
-            columnIndices.dueDate = j
-          } else if (cell.includes('status')) {
-            columnIndices.status = j
-          }
-        }
-        
-        if (columnIndices.followUp !== -1) {
-          headerRowIndex = i
-          delimiter = '\t'
-          break
-        }
-      }
-    }
-    
-    if (headerRowIndex === -1 || columnIndices.followUp === -1) return []
-    
-    let startRow = headerRowIndex + 1
-    if (startRow < lines.length && /^[\s|:-]+$/.test(lines[startRow].replace(/\t/g, ''))) {
-      startRow++
-    }
-    
-    for (let i = startRow; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line || (!line.includes(delimiter) && delimiter === '|')) {
-        if (actionItems.length > 0) break
-        continue
-      }
-      
-      const cells = delimiter === '|' 
-        ? line.split('|').map(c => c.trim())
-        : line.split('\t').map(c => c.trim())
-      
-      const followUp = cells[columnIndices.followUp] || ''
-      const owner = columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : ''
-      const dueDateStr = columnIndices.dueDate !== -1 ? (cells[columnIndices.dueDate] || '') : ''
-      const status = columnIndices.status !== -1 ? (cells[columnIndices.status] || '').toLowerCase() : ''
-      
-      if (!followUp || followUp.length < 3) continue
-      if (status.includes('done') || status.includes('complete') || status.includes('closed')) continue
-      
-      const isCritical = /urgent|asap|critical|important|high/i.test(followUp) ||
-                       /urgent|asap|critical|important|high/i.test(status)
-      
-      actionItems.push({
-        id: `extracted-table-${i}`,
-        title: followUp.charAt(0).toUpperCase() + followUp.slice(1),
-        assignee: owner,
-        dueDate: new Date().toISOString().split('T')[0],
-        selected: true,
-        critical: isCritical,
-      })
-    }
-    
-    return actionItems
-  }
-  
-  const extractFromPatterns = (lines) => {
-    const actionItems = []
-    const actionPatterns = [
-      /^[-*•]\s*\[?\s*\]?\s*(.+)/i,
-      /^(?:action|todo|task|to-do|to do)[:\s]+(.+)/i,
-      /^(\d+[.)]\s*.+)/i,
-      /(.+?)\s+(?:will|to|should|must|needs? to|has to)\s+(.+)/i,
-      /(?:@|assigned to:?)\s*(\w+)\s*[-:]\s*(.+)/i,
-      /^(?:ai|action item)[:\s]+(.+)/i,
-      /^follow[ -]?up[:\s]+(.+)/i,
-    ]
-    
-    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|circulate|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
-      
-      let matched = false
-      let taskTitle = ''
-      let assignee = ''
-      
-      for (const pattern of actionPatterns) {
-        const match = line.match(pattern)
-        if (match) {
-          if (pattern.toString().includes('will|to|should')) {
-            assignee = match[1]?.trim() || ''
-            taskTitle = `${assignee} ${match[2]?.trim() || ''}`.trim()
-          } else if (pattern.toString().includes('@|assigned')) {
-            assignee = match[1]?.trim() || ''
-            taskTitle = match[2]?.trim() || ''
-          } else {
-            taskTitle = match[1]?.trim() || ''
-          }
-          matched = true
-          break
-        }
-      }
-      
-      if (!matched && actionVerbs.test(line)) {
-        taskTitle = line
-        matched = true
-      }
-      
-      if (matched && taskTitle.length > 3) {
-        taskTitle = taskTitle
-          .replace(/^[-*•]\s*\[?\s*\]?\s*/, '')
-          .replace(/^\d+[.)]\s*/, '')
-          .replace(/^(?:action|todo|task|ai|action item|follow[ -]?up)[:\s]*/i, '')
-          .trim()
-        
-        if (taskTitle.length > 3) {
-          actionItems.push({
-            id: `extracted-${i}`,
-            title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
-            assignee: assignee,
-            dueDate: new Date().toISOString().split('T')[0],
-            selected: true,
-            critical: /urgent|asap|critical|important/i.test(taskTitle),
-          })
-        }
-      }
-    }
-    
-    return actionItems
-  }
-  
-  // Create extracted tasks
-  const handleCreateExtractedTasks = async () => {
-    const selectedTasks = extractedTasks.filter(t => t.selected)
-    if (selectedTasks.length === 0) return
-    
-    setSaving(true)
-    setError(null)
-    
-    try {
-      for (const task of selectedTasks) {
-        const { error: insertError } = await supabase
-          .from('tasks')
-          .insert({
-            title: task.title,
-            description: itemData.subject ? `From: ${itemData.subject}` : '',
-            project_id: formData.project_id,
-            status: 'todo',
-            critical: task.critical,
-            start_date: null,
-            due_date: task.dueDate || null,
-            assignee: task.assignee || null,
-            category: 'meeting_followup',
-            source: 'meeting',
-            source_link: formData.source_link || null,
-            customer: formData.customer || null,
-            notes: null,
-            energy_level: 'medium',
-          })
-        
-        if (insertError) throw insertError
-      }
-      
-      setSuccess(true)
-      await loadTasks()
-      
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-  
-  const updateExtractedTask = (taskId, field, value) => {
-    setExtractedTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, [field]: value } : t
-    ))
-  }
-  
-  const removeExtractedTask = (taskId) => {
-    setExtractedTasks(prev => prev.filter(t => t.id !== taskId))
-  }
-
-  const handleCreateAnother = () => {
+  const handleReset = () => {
     setSuccess(false)
-    setHasExtracted(false)
-    setExtractedTasks([])
+    setSelectedTask(null)
+    setNoteText('')
     setFormData(prev => ({
       ...prev,
-      title: '',
-      description: '',
+      title: itemData.subject || '',
+      description: itemData.sender ? `From: ${itemData.sender}` : '',
       critical: false,
-      start_date: '',
       due_date: '',
-      customer: '',
-      notes: '',
     }))
   }
-
-  const selectedProject = projects.find(p => p.id === formData.project_id)
   
   // Format date for display
   const formatDate = (dateStr) => {
@@ -672,6 +422,14 @@ export default function OutlookAddin() {
       month: 'long' 
     })
   }
+  
+  // Filter tasks for search
+  const filteredTasks = searchQuery.trim() 
+    ? allTasks.filter(t => 
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.projects?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allTasks.slice(0, 10) // Show recent 10 if no search
 
   // Loading state
   if (loading || !officeReady) {
@@ -698,7 +456,6 @@ export default function OutlookAddin() {
           <h1 className="text-xl font-bold text-gray-800">Trackli</h1>
           <p className="text-sm text-gray-500">Track. Manage. Deliver.</p>
         </div>
-        <p className="text-sm text-gray-500 mb-4 text-center">Sign in to view and create tasks</p>
         <div className="bg-white rounded-2xl shadow-lg p-6">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -739,9 +496,8 @@ export default function OutlookAddin() {
     )
   }
 
-  // Success state (for create tab)
-  if (success && activeTab === TAB.CREATE) {
-    const taskCount = mode === MODE.FOLLOWUPS ? extractedTasks.filter(t => t.selected).length : 1
+  // Success state
+  if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 p-4 flex items-center justify-center">
         <div className="text-center">
@@ -751,9 +507,11 @@ export default function OutlookAddin() {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">
-            {taskCount > 1 ? `${taskCount} Tasks Created!` : 'Task Created!'}
+            {activeTab === TAB.UPDATE ? 'Task Updated!' : 'Task Created!'}
           </h2>
-          <p className="text-sm text-gray-500 mb-6">Added to Trackli</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {activeTab === TAB.UPDATE ? 'Note added successfully' : 'Added to Trackli'}
+          </p>
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => { setActiveTab(TAB.MYDAY); setSuccess(false) }}
@@ -762,10 +520,10 @@ export default function OutlookAddin() {
               View My Day
             </button>
             <button
-              onClick={handleCreateAnother}
+              onClick={handleReset}
               className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium text-sm"
             >
-              Create Another
+              {activeTab === TAB.UPDATE ? 'Update Another' : 'Create Another'}
             </button>
           </div>
         </div>
@@ -782,50 +540,63 @@ export default function OutlookAddin() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 flex flex-col">
       {/* Header with tabs */}
-      <div className="bg-white border-b border-gray-200 px-4 pt-3 pb-0">
+      <div className="bg-white border-b border-gray-200 px-3 pt-3 pb-0">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
           </div>
-          <span className="font-bold text-gray-800">Trackli</span>
+          <span className="font-bold text-gray-800 text-sm">Trackli</span>
         </div>
         
         {/* Tab navigation */}
-        <div className="flex gap-1">
+        <div className="flex">
           <button
             onClick={() => setActiveTab(TAB.MYDAY)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+            className={`flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors ${
               activeTab === TAB.MYDAY
                 ? 'bg-gradient-to-br from-slate-50 to-indigo-50 text-indigo-600 border-t border-l border-r border-gray-200'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             My Day
           </button>
           <button
             onClick={() => setActiveTab(TAB.CREATE)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+            className={`flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors ${
               activeTab === TAB.CREATE
                 ? 'bg-gradient-to-br from-slate-50 to-indigo-50 text-indigo-600 border-t border-l border-r border-gray-200'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Create
+          </button>
+          <button
+            onClick={() => setActiveTab(TAB.UPDATE)}
+            className={`flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors ${
+              activeTab === TAB.UPDATE
+                ? 'bg-gradient-to-br from-slate-50 to-indigo-50 text-indigo-600 border-t border-l border-r border-gray-200'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Update
           </button>
         </div>
       </div>
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === TAB.MYDAY ? (
+        {activeTab === TAB.MYDAY && (
           /* My Day Tab */
           <div className="p-4">
             <div className="mb-4">
@@ -834,18 +605,17 @@ export default function OutlookAddin() {
             </div>
 
             {tasks.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
-                <p className="text-gray-500 mb-1">No tasks for today</p>
-                <p className="text-sm text-gray-400">Add tasks to My Day in Trackli</p>
+                <p className="text-gray-500 text-sm mb-1">No tasks for today</p>
+                <p className="text-xs text-gray-400">Add tasks to My Day in Trackli</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {/* My Day Tasks */}
                 {myDayTasks.length > 0 && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -868,7 +638,6 @@ export default function OutlookAddin() {
                   </div>
                 )}
 
-                {/* Due Today Tasks (not in My Day) */}
                 {dueTodayTasks.length > 0 && (
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -893,9 +662,8 @@ export default function OutlookAddin() {
               </div>
             )}
 
-            {/* Refresh button */}
             <button
-              onClick={loadTasks}
+              onClick={loadMyDayTasks}
               className="mt-4 w-full py-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center justify-center gap-1"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -904,222 +672,217 @@ export default function OutlookAddin() {
               Refresh
             </button>
           </div>
-        ) : (
+        )}
+        
+        {activeTab === TAB.CREATE && (
           /* Create Tab */
           <div className="p-4">
-            {/* Mode selector if not from URL */}
-            {!new URLSearchParams(window.location.search).get('mode') && (
-              <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Create task from...</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: MODE.EMAIL, label: 'Email', icon: '✉️' },
-                    { id: MODE.FOLLOWUPS, label: 'Follow-ups', icon: '📋' },
-                    { id: MODE.AGENDA, label: 'Send Agenda', icon: '📄' },
-                    { id: MODE.NOTES, label: 'Send Notes', icon: '📝' },
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMode(m.id)}
-                      className={`p-2 rounded-lg text-sm font-medium transition-all ${
-                        mode === m.id
-                          ? 'bg-indigo-100 text-indigo-700 ring-2 ring-indigo-500'
-                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                      }`}
-                    >
-                      {m.icon} {m.label}
-                    </button>
-                  ))}
+            {/* Email/Meeting context */}
+            {itemData.subject && (
+              <div className="mb-4 p-3 bg-white rounded-xl border border-gray-200">
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                  {itemData.isAppointment ? (
+                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Meeting</>
+                  ) : (
+                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email from {itemData.sender}</>
+                  )}
                 </div>
+                <p className="text-sm font-medium text-gray-800 truncate">{itemData.subject}</p>
               </div>
             )}
 
-            {/* Follow-ups extraction mode */}
-            {mode === MODE.FOLLOWUPS ? (
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateTask} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
               <div>
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                    {error}
-                  </div>
-                )}
-                
-                <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Add tasks to project</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  placeholder="What needs to be done?"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                <select
+                  value={formData.project_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, project_id: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                >
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
-                    value={formData.project_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, project_id: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    value={formData.status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                   >
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
+                    <option value="backlog">Backlog</option>
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.critical}
+                    onChange={(e) => setFormData(prev => ({ ...prev, critical: e.target.checked }))}
+                    className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">🚩 Critical Task</span>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={saving || !formData.title || !formData.project_id}
+                className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium text-sm disabled:opacity-50"
+              >
+                {saving ? 'Creating...' : 'Create Task'}
+              </button>
+            </form>
+          </div>
+        )}
+        
+        {activeTab === TAB.UPDATE && (
+          /* Update Tab */
+          <div className="p-4">
+            {/* Email/Meeting context */}
+            {itemData.subject && (
+              <div className="mb-4 p-3 bg-white rounded-xl border border-gray-200">
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                  {itemData.isAppointment ? (
+                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Meeting</>
+                  ) : (
+                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email from {itemData.sender}</>
+                  )}
+                </div>
+                <p className="text-sm font-medium text-gray-800 truncate">{itemData.subject}</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {!selectedTask ? (
+              /* Task search/selection */
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select a task to update</label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm mb-3"
+                />
                 
-                {!hasExtracted ? (
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Click below to scan for follow-up items.
-                    </p>
-                    <button
-                      onClick={handleExtractFollowUps}
-                      disabled={isExtracting || !itemData.body}
-                      className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {isExtracting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Scanning...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          Extract Follow-ups
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-xl p-4 shadow-sm">
-                    {extractedTasks.length === 0 ? (
-                      <div className="text-center py-6">
-                        <p className="text-gray-500 mb-2">No follow-up items found.</p>
-                        <p className="text-sm text-gray-400">Try an email with action items.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium text-gray-700 mb-3">
-                          Found {extractedTasks.length} follow-up{extractedTasks.length !== 1 ? 's' : ''}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {filteredTasks.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">No tasks found</p>
+                  ) : (
+                    filteredTasks.map(task => (
+                      <button
+                        key={task.id}
+                        onClick={() => setSelectedTask(task)}
+                        className="w-full p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors text-left"
+                      >
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {task.critical && <span className="text-red-500 mr-1">🚩</span>}
+                          {task.title}
                         </p>
-                        <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
-                          {extractedTasks.map((task) => (
-                            <div 
-                              key={task.id}
-                              className={`p-3 rounded-lg border ${
-                                task.selected ? 'border-indigo-200 bg-indigo-50/50' : 'border-gray-100 opacity-60'
-                              }`}
+                        <div className="flex items-center gap-2 mt-1">
+                          {task.projects?.name && (
+                            <span 
+                              className="text-xs px-1.5 py-0.5 rounded-full"
+                              style={{ 
+                                backgroundColor: `${task.projects.color}20`,
+                                color: task.projects.color 
+                              }}
                             >
-                              <div className="flex items-start gap-2">
-                                <input
-                                  type="checkbox"
-                                  checked={task.selected}
-                                  onChange={(e) => updateExtractedTask(task.id, 'selected', e.target.checked)}
-                                  className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <input
-                                    type="text"
-                                    value={task.title}
-                                    onChange={(e) => updateExtractedTask(task.id, 'title', e.target.value)}
-                                    className="w-full px-2 py-1 border border-gray-200 rounded text-sm"
-                                  />
-                                </div>
-                                <button
-                                  onClick={() => removeExtractedTask(task.id)}
-                                  className="p-1 text-gray-400 hover:text-red-500"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                              {task.projects.name}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400">{task.status.replace('_', ' ')}</span>
                         </div>
-                        
-                        <button
-                          onClick={handleCreateExtractedTasks}
-                          disabled={extractedTasks.filter(t => t.selected).length === 0 || saving}
-                          className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium text-sm disabled:opacity-50"
-                        >
-                          {saving ? 'Creating...' : `Create ${extractedTasks.filter(t => t.selected).length} Task(s)`}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             ) : (
-              /* Standard task form */
-              <div>
-                {error && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                    {error}
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                      placeholder="What needs to be done?"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-                    <select
-                      value={formData.project_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, project_id: e.target.value, customer: '' }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                    >
-                      {projects.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                      <input
-                        type="date"
-                        value={formData.due_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                      >
-                        <option value="backlog">Backlog</option>
-                        <option value="todo">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.critical}
-                        onChange={(e) => setFormData(prev => ({ ...prev, critical: e.target.checked }))}
-                        className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">🚩 Critical Task</span>
-                    </label>
-                  </div>
-
+              /* Add note to selected task */
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-gray-800">Adding note to:</p>
                   <button
-                    type="submit"
-                    disabled={saving || !formData.title || !formData.project_id}
-                    className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium text-sm disabled:opacity-50"
+                    onClick={() => setSelectedTask(null)}
+                    className="text-xs text-indigo-600 hover:text-indigo-700"
                   >
-                    {saving ? 'Creating...' : 'Create Task'}
+                    Change
                   </button>
-                </form>
+                </div>
+                
+                <div className="p-3 bg-indigo-50 rounded-lg mb-4">
+                  <p className="text-sm font-medium text-indigo-900">
+                    {selectedTask.critical && <span className="text-red-500 mr-1">🚩</span>}
+                    {selectedTask.title}
+                  </p>
+                  {selectedTask.projects?.name && (
+                    <span className="text-xs text-indigo-600">{selectedTask.projects.name}</span>
+                  )}
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Add a note (optional)</label>
+                  <textarea
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="Add any additional context..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm resize-none"
+                  />
+                </div>
+                
+                <p className="text-xs text-gray-500 mb-4">
+                  The {itemData.isAppointment ? 'meeting' : 'email'} details will be automatically attached.
+                </p>
+                
+                <button
+                  onClick={handleUpdateTask}
+                  disabled={saving}
+                  className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium text-sm disabled:opacity-50"
+                >
+                  {saving ? 'Updating...' : 'Update Task'}
+                </button>
               </div>
             )}
           </div>
@@ -1145,7 +908,6 @@ function TaskCard({ task, expanded, onToggleExpand, onToggleComplete, onToggleMy
         className="flex items-start gap-3 p-3 cursor-pointer"
         onClick={onToggleExpand}
       >
-        {/* Checkbox */}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleComplete(task) }}
           className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
@@ -1161,7 +923,6 @@ function TaskCard({ task, expanded, onToggleExpand, onToggleComplete, onToggleMy
           )}
         </button>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-medium ${task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-800'}`}>
             {task.critical && <span className="text-red-500 mr-1">🚩</span>}
@@ -1187,7 +948,6 @@ function TaskCard({ task, expanded, onToggleExpand, onToggleComplete, onToggleMy
           </div>
         </div>
 
-        {/* Expand indicator */}
         <svg 
           className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} 
           fill="none" 
@@ -1198,7 +958,6 @@ function TaskCard({ task, expanded, onToggleExpand, onToggleComplete, onToggleMy
         </svg>
       </div>
 
-      {/* Expanded content */}
       {expanded && (
         <div className="px-3 pb-3 pt-0 border-t border-gray-100">
           <div className="pt-2 space-y-2">
