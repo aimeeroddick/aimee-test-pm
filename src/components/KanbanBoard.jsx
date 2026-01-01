@@ -6325,7 +6325,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate, onShowConfirm }) => {
   const fileInputRef = useRef(null)
   const [showSaveTemplateInput, setShowSaveTemplateInput] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -7360,7 +7360,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         </a>
                         <button
                           type="button"
-                          onClick={() => removeExistingAttachment(attachment.id)}
+                          onClick={() => {
+                            if (onShowConfirm) {
+                              onShowConfirm({
+                                title: 'Remove Attachment',
+                                message: `Remove "${attachment.file_name || attachment.name}"? This cannot be undone.`,
+                                confirmLabel: 'Remove',
+                                confirmStyle: 'danger',
+                                icon: '🗑️',
+                                onConfirm: () => removeExistingAttachment(attachment.id)
+                              })
+                            } else {
+                              removeExistingAttachment(attachment.id)
+                            }
+                          }}
                           className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-500"
                           title="Delete"
                         >
@@ -8177,6 +8190,23 @@ export default function KanbanBoard() {
   
   // Toast for undo actions
   const [toast, setToast] = useState(null)
+  
+  // Enhanced error state with retry capability
+  const [errorToast, setErrorToast] = useState(null) // { message, retryAction, details }
+  
+  // Helper to show error with optional retry
+  const showError = (message, retryAction = null, details = null) => {
+    const userFriendlyMessage = message.includes('Failed to fetch') || message.includes('NetworkError')
+      ? 'Network error - please check your connection'
+      : message.includes('JWT') || message.includes('auth')
+      ? 'Session expired - please refresh the page'
+      : message.includes('duplicate') || message.includes('unique')
+      ? 'This item already exists'
+      : message.includes('permission') || message.includes('denied')
+      ? 'You don\'t have permission to do this'
+      : message
+    setErrorToast({ message: userFriendlyMessage, retryAction, details })
+  }
   
   // Confirm dialog state (replaces browser confirm())
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, onConfirm, confirmLabel, confirmStyle, icon }
@@ -9234,7 +9264,7 @@ export default function KanbanBoard() {
       setTimeout(() => setUndoToast(null), 3000)
     } catch (err) {
       console.error(`Error ${action}ing project:`, err)
-      setError(err.message)
+      showError(err.message || `Failed to ${action} project`, null, `Project ${action} failed`)
     } finally {
       setSaving(false)
     }
@@ -9584,7 +9614,11 @@ export default function KanbanBoard() {
       showNotification(isNew ? "✓ Task created" : "✓ Task saved")
     } catch (err) {
       console.error('Error saving task:', err)
-      setError(err.message)
+      showError(
+        err.message || 'Failed to save task',
+        () => handleSaveTask(taskData, newFiles, existingAttachments),
+        'Save failed'
+      )
     } finally {
       setSaving(false)
     }
@@ -9656,13 +9690,17 @@ export default function KanbanBoard() {
       }
     } catch (err) {
       console.error('Error deleting task:', err)
-      setError(err.message)
+      showError(
+        err.message || 'Failed to delete task',
+        () => handleDeleteTask(taskId, deleteAllRecurrences),
+        'Delete failed'
+      )
     } finally {
       setSaving(false)
       setDeleteRecurringConfirm(null)
     }
   }
-  
+
   // Quick Add - create task with just title and optional due date
   const handleQuickAdd = async (title, projectId, dueDate = null) => {
     if (!title.trim()) return
@@ -10208,19 +10246,30 @@ export default function KanbanBoard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
-      {/* Error Toast */}
-      {error && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
+      {/* Enhanced Error Toast with Retry */}
+      {errorToast && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4 shadow-lg animate-in slide-in-from-bottom-5">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800">Error</p>
-              <p className="text-sm text-red-600 mt-1">{error}</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{errorToast.details || 'Error'}</p>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{errorToast.message}</p>
+              {errorToast.retryAction && (
+                <button
+                  onClick={() => {
+                    setErrorToast(null)
+                    errorToast.retryAction()
+                  }}
+                  className="mt-2 px-3 py-1 bg-red-100 dark:bg-red-800/50 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Try Again
+                </button>
+              )}
             </div>
-            <button onClick={() => setError(null)} className="p-1 hover:bg-red-100 rounded-lg transition-colors">
-              <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={() => setErrorToast(null)} className="p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded-lg transition-colors">
+              <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -11023,7 +11072,17 @@ export default function KanbanBoard() {
                               </svg>
                             </button>
                             <button
-                              onClick={() => handleArchiveProject(project.id)}
+                              onClick={() => {
+                                const projectTasks = tasks.filter(t => t.project_id === project.id && t.status !== 'done')
+                                setConfirmDialog({
+                                  title: 'Archive Project',
+                                  message: `Archive "${project.name}"?${projectTasks.length > 0 ? ` This will hide ${projectTasks.length} active task${projectTasks.length === 1 ? '' : 's'} from the board.` : ''} You can unarchive it later.`,
+                                  confirmLabel: 'Archive',
+                                  confirmStyle: 'warning',
+                                  icon: '📦',
+                                  onConfirm: () => handleArchiveProject(project.id)
+                                })
+                              }}
                               className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
                               title="Archive project"
                             >
@@ -11408,6 +11467,7 @@ export default function KanbanBoard() {
         templates={taskTemplates}
         onSaveTemplate={saveTaskTemplate}
         onDeleteTemplate={deleteTaskTemplate}
+        onShowConfirm={setConfirmDialog}
       />
       
       <ProjectModal
