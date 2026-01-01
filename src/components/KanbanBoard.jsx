@@ -12428,15 +12428,15 @@ Or we can extract from:
                         <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Check your inbox for a link to reset your password.</p>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
                           <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Change Password</div>
                           <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>We'll send a reset link to your email</div>
                         </div>
                         <button
                           onClick={handleSendPasswordReset}
                           disabled={sendingPasswordReset}
-                          className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                          className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 shrink-0"
                         >
                           {sendingPasswordReset ? 'Sending...' : 'Send Link'}
                         </button>
@@ -12496,29 +12496,31 @@ Or we can extract from:
               <div>
                 <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Data</h3>
                 <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
                       <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Clear completed tasks</div>
                       <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remove done tasks older than:</div>
                     </div>
-                    <select
-                      value={clearTasksAge}
-                      onChange={(e) => setClearTasksAge(e.target.value)}
-                      className={`px-2 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                    >
-                      <option value="7">7 days</option>
-                      <option value="14">14 days</option>
-                      <option value="30">30 days</option>
-                      <option value="60">60 days</option>
-                      <option value="90">90 days</option>
-                    </select>
-                    <button
-                      onClick={handleClearCompletedTasks}
-                      disabled={clearingTasks}
-                      className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-                    >
-                      {clearingTasks ? '...' : 'Clear'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={clearTasksAge}
+                        onChange={(e) => setClearTasksAge(e.target.value)}
+                        className={`px-2 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      >
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                      </select>
+                      <button
+                        onClick={handleClearCompletedTasks}
+                        disabled={clearingTasks}
+                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        {clearingTasks ? '...' : 'Clear'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -12528,14 +12530,14 @@ Or we can extract from:
                 <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 text-red-500">Danger Zone</h3>
                 <div className={`p-4 rounded-xl border-2 border-red-200 dark:border-red-800 ${darkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
                   {!showDeleteConfirm ? (
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
                         <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Delete Account</div>
                         <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Permanently delete all your data</div>
                       </div>
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
+                        className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors shrink-0"
                       >
                         Delete
                       </button>
