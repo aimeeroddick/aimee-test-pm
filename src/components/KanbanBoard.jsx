@@ -12469,7 +12469,7 @@ Or we can extract from:
                     <select
                       value={defaultView}
                       onChange={(e) => handlePreferenceChange('trackli-default-view', e.target.value)}
-                      className={`px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="board">Board</option>
                       <option value="myday">My Day</option>
@@ -12485,7 +12485,7 @@ Or we can extract from:
                     <select
                       value={weekStartsOn}
                       onChange={(e) => handlePreferenceChange('trackli-week-start', e.target.value)}
-                      className={`px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="0">Sunday</option>
                       <option value="1">Monday</option>
