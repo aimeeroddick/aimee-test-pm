@@ -3671,6 +3671,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const didDragRef = useRef(false)
     const touchStartPosRef = useRef(null)
     const [isTouchDragging, setIsTouchDragging] = useState(false)
+    const [touchPos, setTouchPos] = useState({ x: 0, y: 0 })
     
     const handleMouseDown = (e) => {
     if (e.target.closest('button')) return
@@ -3741,6 +3742,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         setDraggedTask(task)
         
         const touch = e.touches[0]
+        setTouchPos({ x: touch.clientX, y: touch.clientY })
         
         // Highlight drop zone if over it
         const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
@@ -3803,6 +3805,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       }
       
       return (
+        <>
         <div
           draggable
           onMouseDown={handleMouseDown}
@@ -3846,6 +3849,18 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </div>
         </div>
       </div>
+      {/* Touch drag ghost */}
+      {isTouchDragging && (
+        <div
+          className="fixed pointer-events-none z-[9999] p-2.5 rounded-lg border bg-white dark:bg-gray-800 border-indigo-400 shadow-2xl opacity-90 max-w-[200px]"
+          style={{ left: touchPos.x - 100, top: touchPos.y - 30 }}
+        >
+          <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+            {task.critical && '🚩 '}{task.title}
+          </p>
+        </div>
+      )}
+      </>
     )
   }
     
@@ -4672,6 +4687,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const didDragRef = useRef(false)
     const touchStartPosRef = useRef(null)
     const [isTouchDragging, setIsTouchDragging] = useState(false)
+    const [touchPos, setTouchPos] = useState({ x: 0, y: 0 })
     
     const handleMouseDown = (e) => {
       if (isCompleted) return
@@ -4765,6 +4781,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       didDragRef.current = true
       
       const touch = e.touches[0]
+      setTouchPos({ x: touch.clientX, y: touch.clientY })
       
       // Highlight drop zone if over it
       const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
@@ -4814,6 +4831,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     }
     
     return (
+      <>
       <div
         draggable={!isCompleted}
         onMouseDown={handleMouseDown}
@@ -4914,6 +4932,18 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </div>
         </div>
       </div>
+      {/* Touch drag ghost */}
+      {isTouchDragging && (
+        <div
+          className="fixed pointer-events-none z-[9999] p-3 rounded-xl border bg-white dark:bg-gray-800 border-indigo-400 shadow-2xl opacity-90 max-w-[200px]"
+          style={{ left: touchPos.x - 100, top: touchPos.y - 30 }}
+        >
+          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+            {task.critical && '🚩 '}{task.title}
+          </p>
+        </div>
+      )}
+      </>
     )
   }
   
