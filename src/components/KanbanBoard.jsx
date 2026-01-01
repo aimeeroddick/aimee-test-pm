@@ -10381,29 +10381,66 @@ export default function KanbanBoard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          {/* Animated Logo */}
-          <div className="relative mb-6">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl shadow-indigo-500/30 animate-pulse">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+        {/* Skeleton Header */}
+        <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
+          <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="w-24 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             </div>
-            {/* Pulse ring */}
-            <div className="absolute inset-0 w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-ping opacity-20" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </header>
+        
+        {/* Skeleton Content */}
+        <main className="px-4 sm:px-6 py-4 sm:py-6">
+          {/* Skeleton Filter Bar */}
+          <div className="mb-4 flex items-center gap-2">
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
           </div>
           
-          {/* Brand name */}
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            Trackli
-          </h1>
+          {/* Skeleton Kanban Columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(col => (
+              <div key={col} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+                {/* Column header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse" />
+                  <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="w-6 h-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse ml-auto" />
+                </div>
+                {/* Skeleton cards */}
+                <div className="space-y-2">
+                  {[1, 2, 3].slice(0, col === 1 ? 3 : col === 4 ? 1 : 2).map(card => (
+                    <div key={card} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-100 dark:border-gray-600">
+                      <div className="w-full h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse mb-2" />
+                      <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
+                      <div className="flex gap-2 mt-3">
+                        <div className="w-16 h-5 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse" />
+                        <div className="w-12 h-5 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
           
-          {/* Loading text */}
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Loading your tasks...
-          </p>
-        </div>
+          {/* Loading indicator */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-700">
+            <svg className="w-4 h-4 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <span className="text-sm text-gray-600 dark:text-gray-300">Loading your tasks...</span>
+          </div>
+        </main>
       </div>
     )
   }
