@@ -6545,7 +6545,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   useEffect(() => {
     // Only initialize if modal just opened or we're editing a different task
-    const taskKey = task?.id || (isOpen ? 'new' : null)
+    // Include prefill data in key to ensure re-initialization when coming from Quick Add
+    const taskKey = task?.id ? `edit-${task.id}` : (isOpen ? `new-${task?.title || ''}-${task?.project_id || ''}` : null)
     if (!isOpen || initializedRef.current === taskKey) return
     initializedRef.current = taskKey
     
@@ -6622,7 +6623,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     setUploadError('')
     setNewSubtaskTitle('')
     setNewCommentText('')
-  }, [task?.id, isOpen])
+  }, [task?.id, task?.title, task?.project_id, isOpen])
   
   // Reset initialization tracking when modal closes
   useEffect(() => {
@@ -12326,14 +12327,18 @@ Or we can extract from:
                       onClick={() => {
                         // Pass the entered data to the full task modal
                         const parsed = parseNaturalLanguageDate(quickAddTitle)
-                        setEditingTask({
+                        const prefillData = {
                           title: parsed.cleanedText || quickAddTitle,
                           project_id: quickAddProject,
                           due_date: parsed.date || null
-                        })
+                        }
+                        // Close Quick Add first, then open Task Modal after a brief delay
                         setQuickAddOpen(false)
                         setQuickAddTitle('')
-                        setTaskModalOpen(true)
+                        setTimeout(() => {
+                          setEditingTask(prefillData)
+                          setTaskModalOpen(true)
+                        }, 100)
                       }}
                       className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors whitespace-nowrap"
                     >
