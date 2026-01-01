@@ -10488,6 +10488,13 @@ export default function KanbanBoard() {
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
+                          onClick={() => { setFeedbackModalOpen(true); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 sm:hidden"
+                        >
+                          <span className="text-lg">💬</span>
+                          <span className="font-medium">Send Feedback</span>
+                        </button>
+                        <button
                           onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
@@ -12320,16 +12327,16 @@ Or we can extract from:
         </svg>
       </button>
       
-      {/* Floating Feedback Button - icon-only on mobile, hide on All Tasks view on mobile */}
+      {/* Floating Feedback Button - desktop only */}
       <button
         onClick={() => setFeedbackModalOpen(true)}
-        className={`fixed bottom-20 right-6 sm:bottom-8 sm:right-8 p-2.5 sm:px-4 sm:py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all ${currentView === 'tasks' ? 'hidden sm:flex' : ''}`}
+        className="hidden sm:flex fixed bottom-8 right-8 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all"
         title="Send Feedback"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        <span className="hidden sm:inline text-sm font-medium">Feedback</span>
+        <span className="text-sm font-medium">Feedback</span>
       </button>
       
       {/* Feedback Modal */}
