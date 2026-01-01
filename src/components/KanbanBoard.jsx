@@ -8115,8 +8115,23 @@ export default function KanbanBoard() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [undoToast, setUndoToast] = useState(null) // { taskId, previousStatus, message }
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
+  
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
   
   // Show notification helper
   const showNotification = (message, type = 'success') => {
@@ -10451,6 +10466,18 @@ export default function KanbanBoard() {
   return (
     <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
+          <span className="inline-flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m-3.536-3.536a4 4 0 010-5.656m-7.072 7.072a9 9 0 010-12.728m3.536 3.536a4 4 0 010 5.656" />
+            </svg>
+            You're offline — changes won't sync until you reconnect
+          </span>
+        </div>
+      )}
+      
       {/* Enhanced Error Toast with Retry */}
       {errorToast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4 shadow-lg animate-in slide-in-from-bottom-5">
