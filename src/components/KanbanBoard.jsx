@@ -11376,12 +11376,12 @@ export default function KanbanBoard() {
           )}
           
           {currentView === 'projects' && (
-            <main key="projects" className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
+            <main key="projects" className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fadeIn">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Projects</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Projects</h2>
                 <button
                   onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium flex items-center gap-2 text-sm sm:text-base"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -11392,7 +11392,7 @@ export default function KanbanBoard() {
               
               {/* Active Projects */}
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Active Projects ({projects.filter(p => !p.archived).length})</h3>
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">Active Projects ({projects.filter(p => !p.archived).length})</h3>
                 <div className="space-y-3">
                   {projects.filter(p => !p.archived).map(project => {
                     const projectTasks = tasks.filter(t => t.project_id === project.id)
@@ -11401,14 +11401,27 @@ export default function KanbanBoard() {
                     
                     return (
                       <div key={project.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 dark:text-gray-100">{project.name}</h4>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {/* Mobile: Stack vertically, Desktop: Side by side */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between sm:justify-start gap-2">
+                              <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{project.name}</h4>
+                              {/* Mobile: Edit button inline with title */}
+                              <button
+                                onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
+                                className="sm:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                              </button>
+                            </div>
+                            {/* Stats row - wrap on mobile */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
                               <span>{projectTasks.length} tasks</span>
-                              <span>•</span>
+                              <span className="hidden sm:inline">•</span>
                               <span>{project.members?.length || 0} members</span>
-                              <span>•</span>
+                              <span className="hidden sm:inline">•</span>
                               <span>{project.customers?.length || 0} customers</span>
                             </div>
                             {/* Progress bar */}
@@ -11419,19 +11432,21 @@ export default function KanbanBoard() {
                                   style={{ width: `${progress}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-12">{progress}%</span>
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-10 text-right">{progress}%</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
+                          {/* Action buttons - full width on mobile */}
+                          <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-gray-700">
                             <button
                               onClick={() => { setSelectedProjectId(project.id); setCurrentView('board') }}
-                              className="px-3 py-1.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                              className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors font-medium touch-manipulation"
                             >
                               View Board
                             </button>
+                            {/* Desktop only: edit and archive buttons */}
                             <button
                               onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
-                              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                              className="hidden sm:block p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -11449,7 +11464,7 @@ export default function KanbanBoard() {
                                   onConfirm: () => handleArchiveProject(project.id)
                                 })
                               }}
-                              className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors touch-manipulation"
                               title="Archive project"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11476,25 +11491,25 @@ export default function KanbanBoard() {
               {/* Archived Projects */}
               {projects.filter(p => p.archived).length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Archived ({projects.filter(p => p.archived).length})</h3>
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">Archived ({projects.filter(p => p.archived).length})</h3>
                   <div className="space-y-3">
                     {projects.filter(p => p.archived).map(project => {
                       const projectTasks = tasks.filter(t => t.project_id === project.id)
                       
                       return (
                         <div key={project.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 p-4 opacity-75">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">📦</span>
-                                <h4 className="font-semibold text-gray-600 dark:text-gray-400">{project.name}</h4>
+                                <h4 className="font-semibold text-gray-600 dark:text-gray-400 truncate">{project.name}</h4>
                               </div>
-                              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">{projectTasks.length} tasks</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 ml-7">{projectTasks.length} tasks</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-700">
                               <button
                                 onClick={() => handleArchiveProject(project.id)}
-                                className="px-3 py-1.5 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                                className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors font-medium touch-manipulation"
                               >
                                 Unarchive
                               </button>
@@ -11512,7 +11527,7 @@ export default function KanbanBoard() {
                                     }
                                   })
                                 }}
-                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors touch-manipulation"
                                 title="Delete permanently"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
