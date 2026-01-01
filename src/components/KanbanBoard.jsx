@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 // Lazy load confetti - only needed when completing tasks
@@ -10723,11 +10724,11 @@ export default function KanbanBoard() {
               </button>
             </div>
             
-            {/* Mobile Filter Sheet */}
-            {mobileFiltersOpen && (
-              <div className="sm:hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setMobileFiltersOpen(false)} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, maxHeight: '70vh', overflowY: 'auto' }} className="bg-white dark:bg-gray-800 rounded-t-2xl p-4 animate-slideUp">
+            {/* Mobile Filter Sheet - Portal */}
+            {mobileFiltersOpen && createPortal(
+              <div className="sm:hidden fixed inset-0 z-[9999]">
+                <div className="fixed inset-0 bg-black/50" onClick={() => setMobileFiltersOpen(false)} />
+                <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Filters</h3>
                     <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
@@ -10851,7 +10852,7 @@ export default function KanbanBoard() {
                   </div>
                 </div>
               </div>
-            )}
+            , document.body)}
             
             {/* Desktop Filter Bar */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max overflow-x-auto">
