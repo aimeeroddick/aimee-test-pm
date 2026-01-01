@@ -8734,13 +8734,15 @@ export default function KanbanBoard() {
     
     try {
       // Fetch all data in parallel with bulk queries (fixes N+1 query problem)
-      const [projectsRes, tasksRes, membersRes, customersRes, attachmentsRes, dependenciesRes] = await Promise.all([
+      // Include user check in parallel to avoid sequential delay
+      const [projectsRes, tasksRes, membersRes, customersRes, attachmentsRes, dependenciesRes, userRes] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.from('tasks').select('*').order('created_at', { ascending: false }),
         supabase.from('project_members').select('project_id, name'),
         supabase.from('project_customers').select('project_id, name'),
         supabase.from('attachments').select('*'),
-        supabase.from('task_dependencies').select('task_id, depends_on_id')
+        supabase.from('task_dependencies').select('task_id, depends_on_id'),
+        supabase.auth.getUser()
       ])
       
       if (projectsRes.error) throw projectsRes.error
@@ -8796,7 +8798,7 @@ export default function KanbanBoard() {
       
       // Create welcome project for NEW users only (first time ever)
       // Check user metadata to see if they've already been welcomed
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      const currentUser = userRes.data?.user
       const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
       
       if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
@@ -8810,7 +8812,7 @@ export default function KanbanBoard() {
         return // fetchData will be called again after welcome project creation
       }
       
-      // Auto-move backlog tasks to todo if start date is today or past
+      // Auto-move backlog tasks to todo if start date is today or past (do this without blocking UI)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
@@ -8822,20 +8824,23 @@ export default function KanbanBoard() {
         return startDate <= today
       })
       
-      // Batch update tasks to move (instead of one at a time)
+      // Update local state immediately, then sync to DB in background
       if (tasksToMove.length > 0) {
         const taskIdsToMove = tasksToMove.map(t => t.id)
-        await supabase
-          .from('tasks')
-          .update({ status: 'todo' })
-          .in('id', taskIdsToMove)
         
-        // Update local state without refetching (we already have the relations)
+        // Update UI immediately
         setTasks(prev => prev.map(task => 
           taskIdsToMove.includes(task.id) 
             ? { ...task, status: 'todo' } 
             : task
         ))
+        
+        // Sync to DB in background (don't await)
+        supabase
+          .from('tasks')
+          .update({ status: 'todo' })
+          .in('id', taskIdsToMove)
+          .then(() => console.log('Auto-moved', taskIdsToMove.length, 'tasks to todo'))
       }
     } catch (err) {
       console.error('Error fetching data:', err)
