@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 // Lazy load confetti - only needed when completing tasks
@@ -6005,12 +6006,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               </span>
             )}
             {task.due_date && (
-              <span className={`flex items-center gap-0.5 font-medium ${
+                          <span className={`flex items-center gap-0.5 font-medium ${
                 dueDateStatus === 'overdue' ? 'text-red-600 dark:text-red-400' : 
                 dueDateStatus === 'today' ? 'text-orange-600 dark:text-orange-400' : 
                 dueDateStatus === 'soon' ? 'text-amber-600 dark:text-amber-400' : ''
               }`}>
-                <span>📅</span> {formatDate(task.due_date)}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                {formatDate(task.due_date)}
               </span>
             )}
             {task.time_estimate && (
@@ -8087,6 +8089,7 @@ export default function KanbanBoard() {
     return false
   })
   const [mobileColumnIndex, setMobileColumnIndex] = useState(1) // Default to To Do column
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
@@ -10671,8 +10674,188 @@ export default function KanbanBoard() {
         
         {/* Unified Filter Bar - only on board view */}
         {currentView === 'board' && (
-          <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2 overflow-x-auto">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-3 sm:px-6 py-2">
+            {/* Mobile Filter Bar */}
+            <div className="sm:hidden flex items-center gap-2">
+              {/* Project dropdown */}
+              <div className="relative flex-1">
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full appearance-none pl-3 pr-7 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="all">📁 All Projects</option>
+                  {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                    <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
+                  ))}
+                </select>
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              
+              {/* Filter button */}
+              <button
+                onClick={() => setMobileFiltersOpen(true)}
+                className={`relative p-2.5 rounded-xl border transition-all ${
+                  hasActiveFilters
+                    ? 'bg-indigo-500 border-indigo-500 text-white'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {Object.keys(fieldFilters).length + (filterCritical ? 1 : 0) + (filterDueToday ? 1 : 0) + (filterOverdue ? 1 : 0) + (filterMyDay ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+              
+              {/* Search button */}
+              <button
+                onClick={() => setSearchModalOpen(true)}
+                className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-300"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Mobile Filter Sheet - Portal */}
+            {mobileFiltersOpen && createPortal(
+              <div className="sm:hidden fixed inset-0 z-[9999]">
+                <div className="fixed inset-0 bg-black/50" onClick={() => setMobileFiltersOpen(false)} />
+                <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Filters</h3>
+                    <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Quick Filters */}
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Quick Filters</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setFilterCritical(!filterCritical)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+                          filterCritical ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        🚩 Critical ({criticalCount})
+                      </button>
+                      <button
+                        onClick={() => setFilterDueToday(!filterDueToday)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+                          filterDueToday ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        Today ({dueTodayCount})
+                      </button>
+                      <button
+                        onClick={() => setFilterOverdue(!filterOverdue)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+                          filterOverdue ? 'bg-red-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        Overdue ({overdueCount})
+                      </button>
+                      <button
+                        onClick={() => setFilterMyDay(!filterMyDay)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+                          filterMyDay ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        ☀️ My Day ({myDayCount})
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Field Filters */}
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Filter by Field</p>
+                    <div className="space-y-2">
+                      {/* Assignee */}
+                      <select
+                        value={fieldFilters.assignee || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, assignee: e.target.value } : (({ assignee, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Assignee: All</option>
+                        <option value="__blank__">Assignee: (Blank)</option>
+                        {[...new Set(tasks.map(t => t.assignee).filter(Boolean))].sort().map(a => (
+                          <option key={a} value={a}>{a}</option>
+                        ))}
+                      </select>
+                      
+                      {/* Customer */}
+                      <select
+                        value={fieldFilters.customer || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, customer: e.target.value } : (({ customer, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Customer: All</option>
+                        <option value="__blank__">Customer: (Blank)</option>
+                        {[...new Set(tasks.map(t => t.customer).filter(Boolean))].sort().map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      
+                      {/* Category */}
+                      <select
+                        value={fieldFilters.category || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, category: e.target.value } : (({ category, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Category: All</option>
+                        {CATEGORIES.map(c => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </select>
+                      
+                      {/* Effort */}
+                      <select
+                        value={fieldFilters.energy_level || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, energy_level: e.target.value } : (({ energy_level, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Effort: All</option>
+                        <option value="high">High Effort</option>
+                        <option value="medium">Medium Effort</option>
+                        <option value="low">Low Effort</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    {hasActiveFilters && (
+                      <button
+                        onClick={() => { clearFilters(); setMobileFiltersOpen(false); }}
+                        className="flex-1 p-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setMobileFiltersOpen(false)}
+                      className="flex-1 p-3 bg-indigo-500 text-white rounded-xl text-sm font-medium"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            , document.body)}
+            
+            {/* Desktop Filter Bar */}
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max overflow-x-auto">
               {/* Project dropdown */}
               <div className="relative">
                 <select
