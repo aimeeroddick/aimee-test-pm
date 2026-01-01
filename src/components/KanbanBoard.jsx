@@ -1241,7 +1241,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
           ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl sm:mx-4' 
           : 'rounded-t-2xl sm:rounded-2xl sm:mx-4 max-h-[95vh] sm:max-h-[90vh]'
       } ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <div className={`flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
+        <div className={`flex items-center justify-between p-4 pr-6 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             type="button"
@@ -6587,7 +6587,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     } else {
       // New task - may have prefilled status
       setFormData({
-        title: '',
+        title: task?.title || '',
         description: '',
         project_id: task?.project_id || projects[0]?.id || '',
         status: task?.status || 'backlog',
@@ -6595,7 +6595,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         start_date: '',
         start_time: '',
         end_time: '',
-        due_date: '',
+        due_date: task?.due_date || '',
         assignee: '',
         time_estimate: '',
         energy_level: 'medium',
@@ -6691,10 +6691,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   }
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
+    <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
         {/* Template selector for new tasks */}
-        {!task && templates.length > 0 && (
+        {!task?.id && templates.length > 0 && (
           <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">📋 Use template:</span>
@@ -7652,7 +7652,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         )}
         
         <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
-          {task && (
+          {task?.id && (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
@@ -7725,7 +7725,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             disabled={loading}
             className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 text-sm sm:text-base"
           >
-            {loading ? 'Saving...' : task ? 'Save' : 'Create'}
+            {loading ? 'Saving...' : task?.id ? 'Save' : 'Create'}
           </button>
         </div>
       </form>
