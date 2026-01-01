@@ -11023,7 +11023,17 @@ export default function KanbanBoard() {
                               </svg>
                             </button>
                             <button
-                              onClick={() => handleArchiveProject(project.id)}
+                              onClick={() => {
+                                const projectTasks = tasks.filter(t => t.project_id === project.id && t.status !== 'done')
+                                setConfirmDialog({
+                                  title: 'Archive Project',
+                                  message: `Archive "${project.name}"?${projectTasks.length > 0 ? ` This will hide ${projectTasks.length} active task${projectTasks.length === 1 ? '' : 's'} from the board.` : ''} You can unarchive it later.`,
+                                  confirmLabel: 'Archive',
+                                  confirmStyle: 'warning',
+                                  icon: '📦',
+                                  onConfirm: () => handleArchiveProject(project.id)
+                                })
+                              }}
                               className="p-2 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
                               title="Archive project"
                             >
