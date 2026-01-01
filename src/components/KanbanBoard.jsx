@@ -6856,7 +6856,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             { id: 'details', label: 'Details' },
             { id: 'additional', label: 'More' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'dependencies', label: 'Deps' },
+            { id: 'dependencies', label: 'Deps', labelFull: 'Dependencies' },
             { id: 'activity', label: 'Activity' },
           ].map((tab) => (
             <button
@@ -6867,7 +6867,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              {tab.label}
+              {tab.labelFull ? (
+                <>
+                  <span className="sm:hidden">{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.labelFull}</span>
+                </>
+              ) : tab.label}
             </button>
           ))}
         </div>
@@ -7585,68 +7590,98 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         
         {activeTab === 'dependencies' && (
           <div className="space-y-4">
-            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-lg">🔗</span>
-                <div>
-                  <h3 className="font-medium text-orange-800 dark:text-orange-300">Task Dependencies</h3>
-                  <p className="text-sm text-orange-600 dark:text-orange-400">This task will be blocked until selected tasks are completed</p>
-                </div>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Blocked by</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This task won't start until these are done</p>
               </div>
-              
-              {!formData.project_id ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic">Select a project first to add dependencies</p>
-              ) : availableDependencies.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic">No other tasks available to link as dependencies</p>
-              ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {availableDependencies.map((depTask) => {
-                    const isSelected = selectedDependencies.includes(depTask.id)
-                    return (
-                      <label
-                        key={depTask.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                          isSelected 
-                            ? 'border-orange-300 dark:border-orange-600 bg-orange-100 dark:bg-orange-900/40' 
-                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-orange-200 dark:hover:border-orange-700'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDependencies([...selectedDependencies, depTask.id])
-                            } else {
-                              setSelectedDependencies(selectedDependencies.filter(id => id !== depTask.id))
-                            }
-                          }}
-                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{depTask.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {COLUMNS.find(c => c.id === depTask.status)?.title}
-                            {depTask.assignee && ` • ${depTask.assignee}`}
-                          </p>
-                        </div>
-                        {depTask.critical && (
-                          <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 rounded-full">Critical</span>
-                        )}
-                      </label>
-                    )
-                  })}
-                </div>
-              )}
-              
               {selectedDependencies.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-orange-200 dark:border-orange-800">
-                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-                    ✓ {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected - task will be blocked until complete
-                  </p>
-                </div>
+                <span className="text-xs font-medium px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full">
+                  {selectedDependencies.length} selected
+                </span>
               )}
             </div>
+            
+            {!formData.project_id ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Select a project first</p>
+              </div>
+            ) : availableDependencies.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No other tasks to link</p>
+              </div>
+            ) : (
+              <div className="space-y-1 max-h-72 overflow-y-auto -mx-1 px-1">
+                {availableDependencies.map((depTask) => {
+                  const isSelected = selectedDependencies.includes(depTask.id)
+                  return (
+                    <label
+                      key={depTask.id}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'bg-indigo-50 dark:bg-indigo-900/30' 
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected 
+                          ? 'bg-indigo-500 border-indigo-500' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedDependencies([...selectedDependencies, depTask.id])
+                          } else {
+                            setSelectedDependencies(selectedDependencies.filter(id => id !== depTask.id))
+                          }
+                        }}
+                        className="sr-only"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm truncate ${
+                          isSelected 
+                            ? 'font-medium text-gray-900 dark:text-gray-100' 
+                            : 'text-gray-700 dark:text-gray-300'
+                        }`}>{depTask.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            depTask.status === 'done' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                            depTask.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
+                            depTask.status === 'todo' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
+                            'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                          }`}>
+                            {COLUMNS.find(c => c.id === depTask.status)?.title}
+                          </span>
+                          {depTask.critical && (
+                            <span className="text-xs text-red-500 dark:text-red-400">🚩</span>
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
         
