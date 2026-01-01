@@ -6280,14 +6280,14 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         onDrop(e, column.id)
       }}
     >
-      <div className="flex items-center gap-3 mb-2">
+      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-3 mb-2`}>
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
         <h3 className="font-semibold text-gray-700 dark:text-gray-200">{column.title}</h3>
         <span className="ml-auto bg-white dark:bg-gray-700 px-2.5 py-0.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-300 shadow-sm">
           {tasks.length}
         </span>
       </div>
-      <div className="flex items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-400">
+      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-400`}>
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
         {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
@@ -11385,45 +11385,58 @@ export default function KanbanBoard() {
             <main className="flex-1 px-3 sm:px-6 py-4 sm:py-6 animate-fadeIn">
               {/* Inset board container */}
               <div className="bg-gray-50/80 dark:bg-gray-900/50 rounded-2xl border border-gray-200/60 dark:border-gray-700/40 shadow-inner p-3 sm:p-4">
-                {/* Mobile Column Navigation */}
+                {/* Mobile Column Navigation - Swipe Style */}
                 {isMobile && (
-                  <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={() => setMobileColumnIndex(Math.max(0, mobileColumnIndex - 1))}
-                    disabled={mobileColumnIndex === 0}
-                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <div className="flex gap-1">
-                    {COLUMNS.map((col, idx) => (
+                  <div className="flex flex-col items-center mb-4">
+                    {/* Main navigation row */}
+                    <div className="flex items-center justify-between w-full">
                       <button
-                        key={col.id}
-                        onClick={() => setMobileColumnIndex(idx)}
-                        className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          idx === mobileColumnIndex
-                            ? 'bg-gray-800 dark:bg-white text-white dark:text-gray-800'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-                        }`}
+                        onClick={() => setMobileColumnIndex(Math.max(0, mobileColumnIndex - 1))}
+                        disabled={mobileColumnIndex === 0}
+                        className="p-2.5 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
                       >
-                        {col.title.split(' ')[0]}
-                        <span className="ml-1 opacity-60">({getTasksByStatus(col.id).length})</span>
+                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
                       </button>
-                    ))}
+                      
+                      {/* Current column display */}
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLUMNS[mobileColumnIndex].color }} />
+                          <span className="text-lg font-semibold text-gray-800 dark:text-white">
+                            {COLUMNS[mobileColumnIndex].title}
+                          </span>
+                          <span className="px-2 py-0.5 text-sm font-medium bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm">
+                            {getTasksByStatus(COLUMNS[mobileColumnIndex].id).length}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setMobileColumnIndex(Math.min(COLUMNS.length - 1, mobileColumnIndex + 1))}
+                        disabled={mobileColumnIndex === COLUMNS.length - 1}
+                        className="p-2.5 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Dot indicators */}
+                    <div className="flex items-center gap-2 mt-3">
+                      {COLUMNS.map((col, idx) => (
+                        <button
+                          key={col.id}
+                          onClick={() => setMobileColumnIndex(idx)}
+                          className={`transition-all duration-200 ${idx === mobileColumnIndex ? 'w-6 h-2 rounded-full' : 'w-2 h-2 rounded-full'}`}
+                          style={{ backgroundColor: idx === mobileColumnIndex ? col.color : '#D1D5DB' }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setMobileColumnIndex(Math.min(COLUMNS.length - 1, mobileColumnIndex + 1))}
-                    disabled={mobileColumnIndex === COLUMNS.length - 1}
-                    className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+                )}
               
               {/* Desktop: All columns | Mobile: Single column */}
               <div className={isMobile ? '' : 'flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6 justify-center'}>
