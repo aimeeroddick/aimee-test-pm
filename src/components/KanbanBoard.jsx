@@ -4962,7 +4962,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         <button
           onClick={() => setExpandedSection(isExpanded ? null : id)}
-          className={`w-full px-4 py-3 flex items-center justify-between ${color} transition-colors`}
+          className={`w-full px-3 sm:px-4 py-3 sm:py-3 flex items-center justify-between ${color} transition-colors touch-manipulation`}
         >
           <div className="flex items-center gap-2">
             <span>{emoji}</span>
@@ -4975,7 +4975,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         </button>
         
         {isExpanded && (
-          <div className="p-3 space-y-2 bg-white dark:bg-gray-900">
+          <div className="p-2 sm:p-3 space-y-2 bg-white dark:bg-gray-900">
             {tasks.map(task => (
               <TaskCard key={task.id} task={task} />
             ))}
@@ -4986,13 +4986,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   }
   
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-6 flex items-start justify-between">
+    <div className="max-w-6xl mx-auto px-4 sm:p-6 py-4">
+      <div className="mb-4 sm:mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 sm:gap-3">
             {greetingEmoji} {greeting}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
             {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
           </p>
         </div>
@@ -5001,10 +5001,10 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       </div>
       
       {myDayTasks.length > 0 && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Today's Progress</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Today's Progress</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               {myDayCompleted.length} of {myDayTasks.length} tasks ({progressPercent}%)
             </span>
           </div>
@@ -5015,7 +5015,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
             />
           </div>
           {totalMyDayTime > 0 && (
-            <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
               <span>~{Math.round(totalMyDayTime / 60)}h remaining</span>
               <span>~{Math.round(completedTime / 60)}h completed</span>
             </div>
@@ -5023,12 +5023,12 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         </div>
       )}
       
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xl">☀️</span>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400">({myDayActive.length} active)</span>
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <span className="text-lg sm:text-xl">☀️</span>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({myDayActive.length} active)</span>
           </div>
           
           <div
@@ -5036,7 +5036,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDropOnMyDay}
-            className={`min-h-[200px] rounded-xl border-2 border-dashed transition-all ${
+            className={`min-h-[150px] sm:min-h-[200px] rounded-xl border-2 border-dashed transition-all ${
               dragOverMyDay 
                 ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' 
                 : 'border-gray-200 dark:border-gray-700'
@@ -5050,16 +5050,16 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                 variant="default"
               />
             ) : (
-              <div className="p-4 space-y-3">
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                 {myDayActive.map(task => (
                   <TaskCard key={task.id} task={task} showRemove={true} />
                 ))}
                 
                 {myDayCompleted.length > 0 && (
                   <>
-                    <div className="flex items-center gap-2 pt-4 pb-2">
+                    <div className="flex items-center gap-2 pt-3 sm:pt-4 pb-2">
                       <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Completed today ({myDayCompleted.length})</span>
+                      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">Completed today ({myDayCompleted.length})</span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                     </div>
                     {myDayCompleted.map(task => (
@@ -5073,16 +5073,16 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         </div>
         
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xl">💡</span>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Recommendations</h2>
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <span className="text-lg sm:text-xl">💡</span>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Recommendations</h2>
           </div>
           
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
             Drag tasks to My Day to add them to your focus list
           </p>
           
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <RecommendationSection
               id="overdue"
               title="Overdue"
