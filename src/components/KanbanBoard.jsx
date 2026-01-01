@@ -5865,7 +5865,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
+      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
         isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
@@ -6020,7 +6020,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
             {energyStyle && (
               <span 
-                className="px-1.5 py-0.5 text-[9px] font-medium rounded-full"
+                className="hidden sm:inline-flex px-1.5 py-0.5 text-[9px] font-medium rounded-full"
                 style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
                 title={energyStyle.label}
               >
@@ -6029,9 +6029,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
           </div>
           
-          {/* Customer */}
+          {/* Customer - hidden on mobile */}
           {task.customer && (
-            <div className="mt-1.5">
+            <div className="hidden sm:block mt-1.5">
               <span 
                 className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full"
                 style={{
@@ -6045,9 +6045,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </div>
           )}
           
-          {/* Project at bottom */}
+          {/* Project at bottom - hidden on mobile */}
           {showProject && project && (
-            <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
+            <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
               <span className="text-[10px] text-gray-500 dark:text-gray-400">{project.name}</span>
             </div>
           )}
