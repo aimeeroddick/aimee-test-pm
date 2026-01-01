@@ -6051,6 +6051,44 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               <span className="text-[10px] text-gray-500 dark:text-gray-400">{project.name}</span>
             </div>
           )}
+          
+          {/* Mobile Quick Status Buttons */}
+          {onQuickComplete && (
+            <div className="sm:hidden flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              {task.status === 'backlog' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'todo') }}
+                  className="flex-1 py-1 text-[10px] font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded hover:bg-blue-100 transition-colors"
+                >
+                  → To Do
+                </button>
+              )}
+              {task.status === 'todo' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'in_progress') }}
+                  className="flex-1 py-1 text-[10px] font-medium text-pink-600 bg-pink-50 dark:bg-pink-900/30 dark:text-pink-400 rounded hover:bg-pink-100 transition-colors"
+                >
+                  ▶ Start
+                </button>
+              )}
+              {(task.status === 'backlog' || task.status === 'todo' || task.status === 'in_progress') && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'done') }}
+                  className="flex-1 py-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 rounded hover:bg-emerald-100 transition-colors"
+                >
+                  ✓ Done
+                </button>
+              )}
+              {task.status === 'done' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'todo') }}
+                  className="flex-1 py-1 text-[10px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 rounded hover:bg-amber-100 transition-colors"
+                >
+                  ↩ Reopen
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
