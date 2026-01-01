@@ -7585,12 +7585,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         
         {activeTab === 'dependencies' && (
           <div className="space-y-4">
-            <div className="p-3 sm:p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-              <div className="flex items-start gap-2 sm:gap-3 mb-3">
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
                 <span className="text-lg">🔗</span>
                 <div>
-                  <h3 className="font-medium text-orange-800 dark:text-orange-300 text-sm sm:text-base">Task Dependencies</h3>
-                  <p className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">This task will be blocked until selected tasks are completed</p>
+                  <h3 className="font-medium text-orange-800 dark:text-orange-300">Task Dependencies</h3>
+                  <p className="text-sm text-orange-600 dark:text-orange-400">This task will be blocked until selected tasks are completed</p>
                 </div>
               </div>
               
@@ -7605,7 +7605,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     return (
                       <label
                         key={depTask.id}
-                        className={`flex items-center gap-3 p-3 sm:p-3 rounded-lg border-2 cursor-pointer transition-all touch-manipulation ${
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                           isSelected 
                             ? 'border-orange-300 dark:border-orange-600 bg-orange-100 dark:bg-orange-900/40' 
                             : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-orange-200 dark:hover:border-orange-700'
@@ -7621,17 +7621,17 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                               setSelectedDependencies(selectedDependencies.filter(id => id !== depTask.id))
                             }
                           }}
-                          className="w-5 h-5 sm:w-4 sm:h-4 rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500 shrink-0"
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-2 sm:truncate">{depTask.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{depTask.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {COLUMNS.find(c => c.id === depTask.status)?.title}
                             {depTask.assignee && ` • ${depTask.assignee}`}
                           </p>
                         </div>
                         {depTask.critical && (
-                          <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 rounded-full shrink-0">Critical</span>
+                          <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 rounded-full">Critical</span>
                         )}
                       </label>
                     )
@@ -7640,8 +7640,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
               
               {selectedDependencies.length > 0 && (
-                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-orange-200 dark:border-orange-800">
-                  <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-400 font-medium">
+                <div className="mt-4 pt-4 border-t border-orange-200 dark:border-orange-800">
+                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
                     ✓ {selectedDependencies.length} dependenc{selectedDependencies.length === 1 ? 'y' : 'ies'} selected - task will be blocked until complete
                   </p>
                 </div>
