@@ -5865,7 +5865,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
+      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
         isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
@@ -6020,7 +6020,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
             {energyStyle && (
               <span 
-                className="px-1.5 py-0.5 text-[9px] font-medium rounded-full"
+                className="hidden sm:inline-flex px-1.5 py-0.5 text-[9px] font-medium rounded-full"
                 style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
                 title={energyStyle.label}
               >
@@ -6029,9 +6029,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
           </div>
           
-          {/* Customer */}
+          {/* Customer - hidden on mobile */}
           {task.customer && (
-            <div className="mt-1.5">
+            <div className="hidden sm:block mt-1.5">
               <span 
                 className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full"
                 style={{
@@ -6045,9 +6045,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </div>
           )}
           
-          {/* Project at bottom */}
+          {/* Project at bottom - hidden on mobile */}
           {showProject && project && (
-            <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
+            <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
               <span className="text-[10px] text-gray-500 dark:text-gray-400">{project.name}</span>
             </div>
           )}
@@ -6119,28 +6119,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           )}
         </div>
       </div>
-      )}
-      
-      {/* Mobile Status Picker */}
-      {onStatusChange && (
-        <div className="sm:hidden mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-          {showStatusPicker ? (
-            <div className="flex gap-1">
-              {COLUMNS.map(col => (
-                <button key={col.id} onClick={(e) => { e.stopPropagation(); if (col.id !== task.status) onStatusChange(task.id, col.id); setShowStatusPicker(false) }}
-                  className={`flex-1 py-1 rounded text-xs font-medium ${col.id === task.status ? 'bg-gray-200 dark:bg-gray-600' : 'bg-gray-100 dark:bg-gray-700'}`}
-                  style={col.id === task.status ? { backgroundColor: col.color + '30', color: col.color } : {}}>
-                  {col.id === 'backlog' ? '📥' : col.id === 'todo' ? '📋' : col.id === 'in_progress' ? '⏳' : '✅'}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <button onClick={(e) => { e.stopPropagation(); setShowStatusPicker(true) }} 
-              className="w-full py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300">
-              Move to...
-            </button>
-          )}
-        </div>
       )}
     </div>
   )
@@ -10488,6 +10466,13 @@ export default function KanbanBoard() {
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
+                          onClick={() => { setFeedbackModalOpen(true); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 sm:hidden"
+                        >
+                          <span className="text-lg">💬</span>
+                          <span className="font-medium">Send Feedback</span>
+                        </button>
+                        <button
                           onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
@@ -12320,16 +12305,16 @@ Or we can extract from:
         </svg>
       </button>
       
-      {/* Floating Feedback Button - icon-only on mobile, hide on All Tasks view on mobile */}
+      {/* Floating Feedback Button - desktop only */}
       <button
         onClick={() => setFeedbackModalOpen(true)}
-        className={`fixed bottom-20 right-6 sm:bottom-8 sm:right-8 p-2.5 sm:px-4 sm:py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all ${currentView === 'tasks' ? 'hidden sm:flex' : ''}`}
+        className="hidden sm:flex fixed bottom-8 right-8 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all"
         title="Send Feedback"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        <span className="hidden sm:inline text-sm font-medium">Feedback</span>
+        <span className="text-sm font-medium">Feedback</span>
       </button>
       
       {/* Feedback Modal */}
