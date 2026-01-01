@@ -1216,7 +1216,7 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
 }
 
 // Modal Component
-const Modal = ({ isOpen, onClose, title, children, wide }) => {
+const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => {
   // Escape key to close
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1227,17 +1227,21 @@ const Modal = ({ isOpen, onClose, title, children, wide }) => {
       return () => window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])
-  
+
   if (!isOpen) return null
-  
+
   return (
     <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
         onClick={onClose}
       />
-      <div className={`relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:mx-4 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-modalSlideUp ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 rounded-t-2xl z-10">
+      <div className={`relative bg-white dark:bg-gray-900 shadow-2xl w-full overflow-y-auto animate-modalSlideUp ${
+        fullScreenMobile 
+          ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl sm:mx-4' 
+          : 'rounded-t-2xl sm:rounded-2xl sm:mx-4 max-h-[95vh] sm:max-h-[90vh]'
+      } ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
+        <div className={`flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             onClick={onClose}
@@ -6686,7 +6690,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   }
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide>
+    <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
         {/* Template selector for new tasks */}
         {!task && templates.length > 0 && (
@@ -7646,19 +7650,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           {task && (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
-              className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
+              className="px-3 sm:px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               Delete
             </button>
           )}
           
-          {/* Save as Template */}
+          {/* Save as Template - desktop only */}
+          <div className="hidden sm:block">
           {showSaveTemplateInput ? (
             <div className="flex items-center gap-2">
               <input
@@ -7703,20 +7708,23 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               💾 Save as Template
             </button>
           )}
+          </div>
+          
+          <div className="flex-1" />
           
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            className="px-3 sm:px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 text-sm sm:text-base"
           >
-            {loading ? 'Saving...' : task ? <><u>S</u>ave Changes</> : <><u>S</u>ave Task</>}
+            {loading ? 'Saving...' : task ? 'Save' : 'Create'}
           </button>
         </div>
       </form>
