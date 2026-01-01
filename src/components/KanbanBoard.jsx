@@ -8299,6 +8299,31 @@ export default function KanbanBoard() {
   const [quickAddTitle, setQuickAddTitle] = useState('')
   const [quickAddProject, setQuickAddProject] = useState('')
   
+  // Lock body scroll when Quick Add modal is open (fixes iOS Safari scroll issues)
+  useEffect(() => {
+    if (quickAddOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.top = `-${window.scrollY}px`
+    } else {
+      const scrollY = document.body.style.top
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+      document.body.style.top = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+      document.body.style.top = ''
+    }
+  }, [quickAddOpen])
+  
   // Daily Planning mode
   const [planningModeOpen, setPlanningModeOpen] = useState(false)
 
