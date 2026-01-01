@@ -511,7 +511,7 @@ const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
             {actionLabel || 'Undo'}
           </button>
         )}
-        <button onClick={onClose} className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded transition-colors">
+        <button onClick={onClose} className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded transition-colors touch-manipulation">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -4998,7 +4998,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
               {showRemove && !isCompleted && (
                 <button
                   onClick={(e) => handleRemoveFromMyDay(e, task)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                  className="sm:opacity-0 sm:group-hover:opacity-100 p-2 sm:p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all touch-manipulation"
                   title="Remove from My Day"
                 >
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7304,7 +7304,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       <button
                         type="button"
                         onClick={() => setSubtasks(subtasks.filter(s => s.id !== subtask.id))}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-2 sm:p-1 text-gray-400 hover:text-red-500 transition-colors touch-manipulation"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -7740,7 +7740,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                           <button
                             type="button"
                             onClick={() => setComments(comments.filter(c => c.id !== item.id))}
-                            className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                            className="p-2 sm:p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors touch-manipulation"
                             title="Delete comment"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10433,7 +10433,7 @@ export default function KanbanBoard() {
                 </button>
               )}
             </div>
-            <button onClick={() => setErrorToast(null)} className="p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded-lg transition-colors">
+            <button onClick={() => setErrorToast(null)} className="p-2 sm:p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded-lg transition-colors touch-manipulation">
               <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -10457,7 +10457,7 @@ export default function KanbanBoard() {
           </button>
           <button
             onClick={() => setUndoToast(null)}
-            className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors"
+            className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors touch-manipulation"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -10481,7 +10481,7 @@ export default function KanbanBoard() {
           <span className="text-sm font-medium">{notification.message}</span>
           <button
             onClick={() => setNotification(null)}
-            className="p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors"
+            className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors touch-manipulation"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -10521,7 +10521,7 @@ export default function KanbanBoard() {
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
                         <button
                           onClick={() => setNavMenuOpen(false)}
-                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg touch-manipulation"
                         >
                           <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -11192,7 +11192,7 @@ export default function KanbanBoard() {
               {hasActiveFilters && (
                 <button
                   onClick={() => setShowSaveViewModal(true)}
-                  className="p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  className="p-2 sm:p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 touch-manipulation"
                   title="Save current filters as a view"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11217,7 +11217,7 @@ export default function KanbanBoard() {
               <span className="text-sm text-gray-500">{project.customers?.length || 0} customers</span>
               <button
                 onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
-                className="ml-2 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="ml-2 p-2 sm:p-1 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
               >
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -12259,7 +12259,7 @@ Or we can extract from:
                       </div>
                       <button
                         onClick={() => removeExtractedTask(task.id)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-2 sm:p-1 text-gray-400 hover:text-red-500 transition-colors touch-manipulation"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -12504,7 +12504,7 @@ Or we can extract from:
                       <span className="text-gray-700 dark:text-gray-300">{view.name}</span>
                       <button
                         onClick={() => deleteFilterView(view.id)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        className="p-2 sm:p-1 text-gray-400 hover:text-red-500 transition-colors touch-manipulation"
                         title="Delete view"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
