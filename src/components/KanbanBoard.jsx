@@ -5529,17 +5529,18 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">All Tasks</h2>
-          <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-600 dark:text-gray-300">
-            {sortedTasks.length} {sortedTasks.length === 1 ? 'task' : 'tasks'}
+      <div className="flex items-center justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">All Tasks</h2>
+          <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+            {sortedTasks.length}
           </span>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Filter button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               showFilters || Object.values(columnFilters).some(v => v)
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -5548,50 +5549,62 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            Filters
+            <span className="hidden sm:inline">Filters</span>
             {Object.values(columnFilters).some(v => v) && (
               <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
             )}
           </button>
+          
+          {/* Clear filters - show when active */}
           {Object.values(columnFilters).some(v => v) && (
             <button
               onClick={() => setColumnFilters({})}
-              className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="px-2 py-1.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
             >
-              Clear Filters
+              Clear
             </button>
           )}
-          <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+          
+          {/* Divider - desktop only */}
+          <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-gray-700" />
+          
+          {/* Export button */}
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-900/70 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-900/70 rounded-lg text-sm font-medium transition-colors"
+            title="Export CSV"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Export CSV
+            <span className="hidden sm:inline">Export</span>
           </button>
+          
+          {/* Import button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900/70 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            title="Import CSV"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import'}</span>
+          </button>
+          
+          {/* Template button - desktop only */}
           <button
             onClick={downloadTemplate}
-            className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
-            title="Download blank CSV template with example row"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+            title="Download CSV template"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Template
           </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-900/70 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-            title="Import CSV to create or update tasks"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            {importing ? 'Importing...' : 'Import CSV'}
-          </button>
+          
           <input
             ref={fileInputRef}
             type="file"
@@ -12307,10 +12320,10 @@ Or we can extract from:
         </svg>
       </button>
       
-      {/* Floating Feedback Button */}
+      {/* Floating Feedback Button - hide on All Tasks view on mobile */}
       <button
         onClick={() => setFeedbackModalOpen(true)}
-        className="fixed bottom-24 right-6 sm:bottom-8 sm:right-8 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all"
+        className={`fixed bottom-24 right-6 sm:bottom-8 sm:right-8 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all ${currentView === 'tasks' ? 'hidden sm:flex' : ''}`}
         title="Send Feedback"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
