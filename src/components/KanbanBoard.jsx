@@ -10633,7 +10633,7 @@ export default function KanbanBoard() {
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium flex items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
                 title={`${shortcutModifier}T`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
