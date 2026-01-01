@@ -6302,11 +6302,11 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
       
       <div className="space-y-2 overflow-visible">
         {displayTasks.length === 0 && !isDragOver && (
-          <div className="py-8 text-center">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-2 opacity-60">
-              <span className="text-lg">{column.id === 'done' ? '✅' : column.id === 'in_progress' ? '💭' : column.id === 'todo' ? '📋' : '📦'}</span>
+          <div className="py-6 sm:py-8 text-center">
+            <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3 sm:mb-2 opacity-60">
+              <span className="text-xl sm:text-lg">{column.id === 'done' ? '✅' : column.id === 'in_progress' ? '💭' : column.id === 'todo' ? '📋' : '📦'}</span>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-sm sm:text-xs text-gray-400 dark:text-gray-500 px-4">
               {column.id === 'done' ? 'Completed tasks appear here' : column.id === 'in_progress' ? 'Tasks you\'re working on' : column.id === 'todo' ? 'Ready to start' : 'Future tasks'}
             </p>
           </div>
@@ -6382,9 +6382,9 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {/* Add Task Button */}
         <button
           onClick={() => onAddTask(column.id)}
-          className="w-full mt-3 py-2.5 text-sm text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all flex items-center justify-center gap-2"
+          className="w-full mt-3 py-3 sm:py-2.5 text-sm text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add task
@@ -11141,17 +11141,17 @@ export default function KanbanBoard() {
 
       {/* Empty State */}
       {projects.length === 0 && (
-        <div className="max-w-md mx-auto mt-20 text-center px-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="max-w-md mx-auto mt-12 sm:mt-20 text-center px-6">
+          <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to Trackli!</h2>
-          <p className="text-gray-500 mb-6">Get started by creating your first project.</p>
+          <h2 className="text-2xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Welcome to Trackli!</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 text-base sm:text-base">Get started by creating your first project.</p>
           <button
             onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25"
+            className="w-full sm:w-auto px-8 py-4 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 text-lg sm:text-base active:scale-95"
           >
             Create Your First Project
           </button>
@@ -11581,7 +11581,13 @@ export default function KanbanBoard() {
                     })
                   }
                   {tasks.filter(t => t.status === 'done').length === 0 && (
-                    <p className="text-center py-8 text-gray-500 dark:text-gray-400">No completed tasks yet. Get started! 💪</p>
+                    <div className="text-center py-10 sm:py-8">
+                      <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                        <span className="text-2xl sm:text-xl">💪</span>
+                      </div>
+                      <p className="text-gray-500 dark:text-gray-400 text-base sm:text-sm">No completed tasks yet</p>
+                      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Get started!</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -12531,9 +12537,12 @@ Or we can extract from:
                 }
                 
                 {tasks.filter(t => t.status === 'backlog' && !isBlocked(t, tasks)).length === 0 && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <p className="text-lg mb-2">🎉 Backlog is empty!</p>
-                    <p className="text-sm">All tasks are either planned or done.</p>
+                  <div className="text-center py-10 sm:py-8">
+                    <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl sm:text-xl">🎉</span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium text-base sm:text-lg mb-1">Backlog is empty!</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm">All tasks are either planned or done.</p>
                   </div>
                 )}
               </div>
