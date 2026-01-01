@@ -6856,7 +6856,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             { id: 'details', label: 'Details' },
             { id: 'additional', label: 'More' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'dependencies', label: 'Deps' },
+            { id: 'dependencies', label: 'Dependencies' },
             { id: 'activity', label: 'Activity' },
           ].map((tab) => (
             <button
@@ -7588,7 +7588,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium text-gray-800 dark:text-gray-200">Blocking Tasks</h3>
+                <h3 className="font-medium text-gray-800 dark:text-gray-200">Blocked by</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This task won't start until these are done</p>
               </div>
               {selectedDependencies.length > 0 && (
