@@ -12216,18 +12216,18 @@ Or we can extract from:
       
       {/* Quick Add Modal */}
       {quickAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center">
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setQuickAddOpen(false)}
           />
-          <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 p-4 sm:p-6">
+          <div className="relative z-10 bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 p-4 pr-8 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Quick Add Task</h3>
               <button
                 type="button"
-                onClick={() => setQuickAddOpen(false)}
-                className="p-3 -mr-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors touch-manipulation"
+                onClick={() => { setQuickAddOpen(false); setQuickAddTitle('') }}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors touch-manipulation active:bg-gray-200 dark:active:bg-gray-700"
               >
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
