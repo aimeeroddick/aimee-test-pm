@@ -6325,7 +6325,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate, onShowConfirm }) => {
   const fileInputRef = useRef(null)
   const [showSaveTemplateInput, setShowSaveTemplateInput] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -7360,7 +7360,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         </a>
                         <button
                           type="button"
-                          onClick={() => removeExistingAttachment(attachment.id)}
+                          onClick={() => {
+                            if (onShowConfirm) {
+                              onShowConfirm({
+                                title: 'Remove Attachment',
+                                message: `Remove "${attachment.file_name || attachment.name}"? This cannot be undone.`,
+                                confirmLabel: 'Remove',
+                                confirmStyle: 'danger',
+                                icon: '🗑️',
+                                onConfirm: () => removeExistingAttachment(attachment.id)
+                              })
+                            } else {
+                              removeExistingAttachment(attachment.id)
+                            }
+                          }}
                           className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-500"
                           title="Delete"
                         >
@@ -11418,6 +11431,7 @@ export default function KanbanBoard() {
         templates={taskTemplates}
         onSaveTemplate={saveTaskTemplate}
         onDeleteTemplate={deleteTaskTemplate}
+        onShowConfirm={setConfirmDialog}
       />
       
       <ProjectModal
