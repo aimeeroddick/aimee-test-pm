@@ -577,6 +577,110 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
   )
 }
 
+// Pull to Refresh Component for Mobile
+const PullToRefresh = ({ onRefresh, children }) => {
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const touchStartY = useRef(0)
+  const PULL_THRESHOLD = 80
+  
+  const handleTouchStart = (e) => {
+    // Only activate if at the top of window scroll
+    if (window.scrollY === 0) {
+      touchStartY.current = e.touches[0].clientY
+    }
+  }
+  
+  const handleTouchMove = (e) => {
+    if (isRefreshing || touchStartY.current === 0) return
+    if (window.scrollY > 0) {
+      touchStartY.current = 0
+      setPullDistance(0)
+      return
+    }
+    
+    const currentY = e.touches[0].clientY
+    const diff = currentY - touchStartY.current
+    
+    if (diff > 0) {
+      // Apply resistance to make pull feel natural
+      const resistance = Math.min(diff * 0.4, PULL_THRESHOLD + 40)
+      setPullDistance(resistance)
+      // Prevent default scroll when pulling
+      if (resistance > 10) e.preventDefault()
+    }
+  }
+  
+  const handleTouchEnd = async () => {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      setIsRefreshing(true)
+      setPullDistance(PULL_THRESHOLD)
+      
+      try {
+        await onRefresh()
+      } finally {
+        setIsRefreshing(false)
+        setPullDistance(0)
+      }
+    } else {
+      setPullDistance(0)
+    }
+    touchStartY.current = 0
+  }
+  
+  useEffect(() => {
+    // Only add listeners on mobile/touch devices
+    const isTouchDevice = 'ontouchstart' in window
+    if (!isTouchDevice) return
+    
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isRefreshing, pullDistance])
+  
+  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1)
+  
+  return (
+    <>
+      {/* Pull indicator - fixed at top */}
+      <div 
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-200 overflow-hidden bg-gradient-to-b from-indigo-50 to-transparent dark:from-indigo-900/30 sm:hidden"
+        style={{ height: pullDistance > 0 ? `${pullDistance}px` : 0 }}
+      >
+        <div className={`flex items-center gap-2 text-indigo-600 dark:text-indigo-400 ${
+          isRefreshing ? 'animate-pulse' : ''
+        }`}>
+          <svg 
+            className={`w-5 h-5 transition-transform duration-200 ${
+              isRefreshing ? 'animate-spin' : ''
+            }`}
+            style={{ transform: isRefreshing ? 'none' : `rotate(${progress * 180}deg)` }}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            {isRefreshing ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            )}
+          </svg>
+          <span className="text-sm font-medium">
+            {isRefreshing ? 'Refreshing...' : progress >= 1 ? 'Release to refresh' : 'Pull to refresh'}
+          </span>
+        </div>
+      </div>
+      {children}
+    </>
+  )
+}
+
 // Feedback Modal Component
 const FeedbackModal = ({ isOpen, onClose, user }) => {
   const [type, setType] = useState('suggestion')
@@ -10305,6 +10409,7 @@ export default function KanbanBoard() {
   }
 
   return (
+    <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
       {/* Enhanced Error Toast with Retry */}
       {errorToast && (
@@ -12843,5 +12948,6 @@ Or we can extract from:
         </div>
       )}
     </div>
+    </PullToRefresh>
   )
 }
