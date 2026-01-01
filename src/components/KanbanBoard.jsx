@@ -7650,19 +7650,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        <div className="flex gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           {task && (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
-              className="px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50"
+              className="px-3 sm:px-4 py-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               Delete
             </button>
           )}
           
-          {/* Save as Template */}
+          {/* Save as Template - desktop only */}
+          <div className="hidden sm:block">
           {showSaveTemplateInput ? (
             <div className="flex items-center gap-2">
               <input
@@ -7707,20 +7708,23 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               💾 Save as Template
             </button>
           )}
+          </div>
+          
+          <div className="flex-1" />
           
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            className="px-3 sm:px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 text-sm sm:text-base"
           >
-            {loading ? 'Saving...' : task ? <><u>S</u>ave Changes</> : <><u>S</u>ave Task</>}
+            {loading ? 'Saving...' : task ? 'Save' : 'Create'}
           </button>
         </div>
       </form>
