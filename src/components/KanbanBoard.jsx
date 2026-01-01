@@ -6120,28 +6120,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         </div>
       </div>
       )}
-      
-      {/* Mobile Status Picker */}
-      {onStatusChange && (
-        <div className="sm:hidden mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-          {showStatusPicker ? (
-            <div className="flex gap-1">
-              {COLUMNS.map(col => (
-                <button key={col.id} onClick={(e) => { e.stopPropagation(); if (col.id !== task.status) onStatusChange(task.id, col.id); setShowStatusPicker(false) }}
-                  className={`flex-1 py-1 rounded text-xs font-medium ${col.id === task.status ? 'bg-gray-200 dark:bg-gray-600' : 'bg-gray-100 dark:bg-gray-700'}`}
-                  style={col.id === task.status ? { backgroundColor: col.color + '30', color: col.color } : {}}>
-                  {col.id === 'backlog' ? '📥' : col.id === 'todo' ? '📋' : col.id === 'in_progress' ? '⏳' : '✅'}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <button onClick={(e) => { e.stopPropagation(); setShowStatusPicker(true) }} 
-              className="w-full py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300">
-              Move to...
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }
