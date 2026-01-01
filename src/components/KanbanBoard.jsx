@@ -12312,24 +12312,24 @@ Or we can extract from:
             setQuickAddOpen(true)
           }
         }}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center z-30 active:scale-95 transition-transform"
+        className="sm:hidden fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center z-30 active:scale-95 transition-transform"
         disabled={projects.length === 0}
       >
-        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </button>
       
-      {/* Floating Feedback Button - hide on All Tasks view on mobile */}
+      {/* Floating Feedback Button - icon-only on mobile, hide on All Tasks view on mobile */}
       <button
         onClick={() => setFeedbackModalOpen(true)}
-        className={`fixed bottom-24 right-6 sm:bottom-8 sm:right-8 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all ${currentView === 'tasks' ? 'hidden sm:flex' : ''}`}
+        className={`fixed bottom-20 right-6 sm:bottom-8 sm:right-8 p-2.5 sm:px-4 sm:py-2.5 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2 z-30 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all ${currentView === 'tasks' ? 'hidden sm:flex' : ''}`}
         title="Send Feedback"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        <span className="text-sm font-medium">Feedback</span>
+        <span className="hidden sm:inline text-sm font-medium">Feedback</span>
       </button>
       
       {/* Feedback Modal */}
