@@ -10522,20 +10522,6 @@ export default function KanbanBoard() {
                           <span className="font-medium">Send Feedback</span>
                         </button>
                         <button
-                          onClick={() => { setHelpModalOpen(true); setNavMenuOpen(false) }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <span className="text-lg">❓</span>
-                          <span className="font-medium">Help Guide</span>
-                        </button>
-                        <button
-                          onClick={() => { setEditingProject(null); setProjectModalOpen(true); setNavMenuOpen(false) }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <span className="text-lg">📁</span>
-                          <span className="font-medium">New Project</span>
-                        </button>
-                        <button
                           onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
@@ -10661,7 +10647,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setHelpModalOpen(true)}
-                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Help Guide"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
