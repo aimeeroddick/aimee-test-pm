@@ -12324,11 +12324,18 @@ Or we can extract from:
                     <button
                       type="button"
                       onClick={() => {
+                        // Pass the entered data to the full task modal
+                        const parsed = parseNaturalLanguageDate(quickAddTitle)
+                        setEditingTask({
+                          title: parsed.cleanedText || quickAddTitle,
+                          project_id: quickAddProject,
+                          due_date: parsed.date || null
+                        })
                         setQuickAddOpen(false)
-                        setEditingTask(null)
+                        setQuickAddTitle('')
                         setTaskModalOpen(true)
                       }}
-                      className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                      className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors whitespace-nowrap"
                     >
                       More options
                     </button>
