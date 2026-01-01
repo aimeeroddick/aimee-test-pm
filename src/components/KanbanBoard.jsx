@@ -3419,7 +3419,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     // Empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="h-28 bg-gray-50/50" />)
+      days.push(<div key={`empty-${i}`} className="h-20 sm:h-28 bg-gray-50/50 dark:bg-gray-800/30" />)
     }
     
     // Days of the month
@@ -3448,20 +3448,20 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           }}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }}
           onDrop={(e) => { e.preventDefault(); handleDropOnDate(date) }}
-          className={`h-28 p-2 border-b border-r border-gray-100 dark:border-gray-800 cursor-pointer transition-all hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 ${
+          className={`h-20 sm:h-28 p-1.5 sm:p-2 border-b border-r border-gray-100 dark:border-gray-800 cursor-pointer transition-all hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 touch-manipulation ${
             isToday ? 'bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-inset ring-indigo-400' : 
             isSelected ? 'bg-indigo-100 dark:bg-indigo-900/50' : 
             isPast ? 'bg-gray-50/30 dark:bg-gray-800/30' : 'bg-white dark:bg-gray-900'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-sm font-semibold ${
+          <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+            <span className={`text-xs sm:text-sm font-semibold ${
               isToday ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'
             }`}>
               {day}
             </span>
             {dayTasks.length > 0 && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full ${
                 overdueTasks.length > 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                 criticalTasks.length > 0 ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
                 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -3470,8 +3470,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               </span>
             )}
           </div>
-          <div className="space-y-1 overflow-hidden">
-            {dayTasks.slice(0, 3).map(task => {
+          <div className="space-y-0.5 sm:space-y-1 overflow-hidden">
+            {dayTasks.slice(0, 2).map(task => {
               const project = projects.find(p => p.id === task.project_id)
               return (
                 <div
@@ -3480,7 +3480,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                   onDragStart={(e) => handleDragStart(e, task)}
                   onDragEnd={handleDragEnd}
                   onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
-                  className={`text-xs px-2 py-1 rounded truncate cursor-grab active:cursor-grabbing transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600 ${
+                  className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded truncate cursor-grab active:cursor-grabbing transition-all hover:ring-2 hover:ring-indigo-300 dark:hover:ring-indigo-600 ${
                     task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                     task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                     isPast && !isToday ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
@@ -3492,9 +3492,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 </div>
               )
             })}
-            {dayTasks.length > 3 && (
-              <div className="text-xs text-gray-400 dark:text-gray-500 px-2">
-                +{dayTasks.length - 3} more
+            {dayTasks.length > 2 && (
+              <div className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 px-1.5 sm:px-2">
+                +{dayTasks.length - 2} more
               </div>
             )}
           </div>
@@ -4237,62 +4237,28 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   return (
     <div className="max-w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
-            {getHeaderTitle()}
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {tasks.filter(t => (t.due_date || t.start_date) && t.status !== 'done').length} tasks scheduled
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          {/* View Mode Switcher */}
-          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('daily')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'daily' 
-                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              Day
-            </button>
-            <button
-              onClick={() => setViewMode('weekly')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'weekly' 
-                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              Week
-            </button>
-            <button
-              onClick={() => setViewMode('monthly')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'monthly' 
-                  ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              Month
-            </button>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
+              {getHeaderTitle()}
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+              {tasks.filter(t => (t.due_date || t.start_date) && t.status !== 'done').length} tasks scheduled
+            </p>
           </div>
           
-          {/* Navigation */}
-          <div className="flex items-center gap-2">
+          {/* Navigation - always visible */}
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={goToToday}
-              className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
             >
               Today
             </button>
             <button
               onClick={prevPeriod}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors touch-manipulation"
             >
               <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -4300,13 +4266,47 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             </button>
             <button
               onClick={nextPeriod}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors touch-manipulation"
             >
               <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
+        </div>
+        
+        {/* View Mode Switcher - full width on mobile */}
+        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('daily')}
+            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+              viewMode === 'daily' 
+                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            }`}
+          >
+            Day
+          </button>
+          <button
+            onClick={() => setViewMode('weekly')}
+            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+              viewMode === 'weekly' 
+                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            }`}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => setViewMode('monthly')}
+            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+              viewMode === 'monthly' 
+                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            }`}
+          >
+            Month
+          </button>
         </div>
       </div>
       
@@ -4322,9 +4322,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
             {/* Day Headers */}
             <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              {dayNames.map(day => (
-                <div key={day} className="py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
-                  {day}
+              {dayNames.map((day, idx) => (
+                <div key={day} className="py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  <span className="hidden sm:inline">{day}</span>
+                  <span className="sm:hidden">{day.charAt(0)}</span>
                 </div>
               ))}
             </div>
