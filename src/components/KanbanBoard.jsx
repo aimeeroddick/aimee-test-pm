@@ -3724,6 +3724,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             const dx = Math.abs(touch.clientX - touchStartPosRef.current.x)
             const dy = Math.abs(touch.clientY - touchStartPosRef.current.y)
             if (dx > 10 || dy > 10) {
+              // User is scrolling, not tapping
+              didDragRef.current = true
               if (holdTimerRef.current) {
                 clearTimeout(holdTimerRef.current)
                 holdTimerRef.current = null
@@ -4747,6 +4749,8 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           const dx = Math.abs(touch.clientX - touchStartPosRef.current.x)
           const dy = Math.abs(touch.clientY - touchStartPosRef.current.y)
           if (dx > 10 || dy > 10) {
+            // User is scrolling, not tapping
+            didDragRef.current = true
             if (holdTimerRef.current) {
               clearTimeout(holdTimerRef.current)
               holdTimerRef.current = null
