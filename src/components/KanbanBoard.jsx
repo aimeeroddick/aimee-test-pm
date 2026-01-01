@@ -6856,7 +6856,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             { id: 'details', label: 'Details' },
             { id: 'additional', label: 'More' },
             { id: 'subtasks', label: 'Subtasks' },
-            { id: 'dependencies', label: 'Dependencies' },
+            { id: 'dependencies', label: 'Deps', labelFull: 'Dependencies' },
             { id: 'activity', label: 'Activity' },
           ].map((tab) => (
             <button
@@ -6867,7 +6867,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              {tab.label}
+              {tab.labelFull ? (
+                <>
+                  <span className="sm:hidden">{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.labelFull}</span>
+                </>
+              ) : tab.label}
             </button>
           ))}
         </div>
