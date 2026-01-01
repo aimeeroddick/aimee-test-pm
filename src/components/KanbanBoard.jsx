@@ -1236,23 +1236,24 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fadeIn"
         onClick={onClose}
       />
-      <div className={`relative bg-white dark:bg-gray-900 shadow-2xl w-full overflow-y-auto animate-modalSlideUp ${
+      <div className={`relative bg-white dark:bg-gray-900 shadow-2xl w-full flex flex-col animate-modalSlideUp ${
         fullScreenMobile 
           ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl sm:mx-4' 
           : 'rounded-t-2xl sm:rounded-2xl sm:mx-4 max-h-[95vh] sm:max-h-[90vh]'
       } ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <div className={`flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
+        <div className={`flex-shrink-0 flex items-center justify-between p-4 pr-6 sm:p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-400"
+            className="p-3 -mr-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-400 touch-manipulation"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div className="p-4 sm:p-6 overflow-x-hidden">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">{children}</div>
       </div>
     </div>
   )
@@ -6544,7 +6545,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   useEffect(() => {
     // Only initialize if modal just opened or we're editing a different task
-    const taskKey = task?.id || (isOpen ? 'new' : null)
+    // Include prefill data in key to ensure re-initialization when coming from Quick Add
+    const taskKey = task?.id ? `edit-${task.id}` : (isOpen ? `new-${task?.title || ''}-${task?.project_id || ''}` : null)
     if (!isOpen || initializedRef.current === taskKey) return
     initializedRef.current = taskKey
     
@@ -6586,7 +6588,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     } else {
       // New task - may have prefilled status
       setFormData({
-        title: '',
+        title: task?.title || '',
         description: '',
         project_id: task?.project_id || projects[0]?.id || '',
         status: task?.status || 'backlog',
@@ -6594,7 +6596,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         start_date: '',
         start_time: '',
         end_time: '',
-        due_date: '',
+        due_date: task?.due_date || '',
         assignee: '',
         time_estimate: '',
         energy_level: 'medium',
@@ -6621,7 +6623,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     setUploadError('')
     setNewSubtaskTitle('')
     setNewCommentText('')
-  }, [task?.id, isOpen])
+  }, [task?.id, task?.title, task?.project_id, isOpen])
   
   // Reset initialization tracking when modal closes
   useEffect(() => {
@@ -6690,10 +6692,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   }
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={task ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
+    <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
         {/* Template selector for new tasks */}
-        {!task && templates.length > 0 && (
+        {!task?.id && templates.length > 0 && (
           <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">📋 Use template:</span>
@@ -6744,7 +6746,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
         )}
         
-        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto">
+        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto min-h-[44px]">
           {[
             { id: 'details', label: 'Details' },
             { id: 'additional', label: 'More' },
@@ -6756,7 +6758,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`sm:flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
@@ -7651,7 +7653,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         )}
         
         <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
-          {task && (
+          {task?.id && (
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
@@ -7724,7 +7726,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             disabled={loading}
             className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 text-sm sm:text-base"
           >
-            {loading ? 'Saving...' : task ? 'Save' : 'Create'}
+            {loading ? 'Saving...' : task?.id ? 'Save' : 'Create'}
           </button>
         </div>
       </form>
@@ -12214,19 +12216,20 @@ Or we can extract from:
       
       {/* Quick Add Modal */}
       {quickAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center">
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setQuickAddOpen(false)}
           />
-          <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 p-4 sm:p-6">
+          <div className="relative z-10 bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:mx-4 p-4 pr-8 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Quick Add Task</h3>
               <button
-                onClick={() => setQuickAddOpen(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                type="button"
+                onClick={() => { setQuickAddOpen(false); setQuickAddTitle('') }}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors touch-manipulation active:bg-gray-200 dark:active:bg-gray-700"
               >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -12322,11 +12325,22 @@ Or we can extract from:
                     <button
                       type="button"
                       onClick={() => {
+                        // Pass the entered data to the full task modal
+                        const parsed = parseNaturalLanguageDate(quickAddTitle)
+                        const prefillData = {
+                          title: parsed.cleanedText || quickAddTitle,
+                          project_id: quickAddProject,
+                          due_date: parsed.date || null
+                        }
+                        // Close Quick Add first, then open Task Modal after a brief delay
                         setQuickAddOpen(false)
-                        setEditingTask(null)
-                        setTaskModalOpen(true)
+                        setQuickAddTitle('')
+                        setTimeout(() => {
+                          setEditingTask(prefillData)
+                          setTaskModalOpen(true)
+                        }, 100)
                       }}
-                      className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                      className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors whitespace-nowrap"
                     >
                       More options
                     </button>
