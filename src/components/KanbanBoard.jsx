@@ -10522,6 +10522,20 @@ export default function KanbanBoard() {
                           <span className="font-medium">Send Feedback</span>
                         </button>
                         <button
+                          onClick={() => { setHelpModalOpen(true); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <span className="text-lg">❓</span>
+                          <span className="font-medium">Help Guide</span>
+                        </button>
+                        <button
+                          onClick={() => { setEditingProject(null); setProjectModalOpen(true); setNavMenuOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <span className="text-lg">📁</span>
+                          <span className="font-medium">New Project</span>
+                        </button>
+                        <button
                           onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
@@ -10581,7 +10595,7 @@ export default function KanbanBoard() {
               {currentView === 'board' && (
                 <button
                   onClick={() => { setBulkSelectMode(!bulkSelectMode); setSelectedTaskIds(new Set()) }}
-                  className={`p-2 rounded-xl transition-colors ${bulkSelectMode ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
+                  className={`hidden sm:block p-2 rounded-xl transition-colors ${bulkSelectMode ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
                   title="Bulk select"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10595,7 +10609,7 @@ export default function KanbanBoard() {
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium flex items-center gap-1.5"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium items-center gap-1.5"
                 title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10635,7 +10649,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setHelpModalOpen(true)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
                 title="Help Guide"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
