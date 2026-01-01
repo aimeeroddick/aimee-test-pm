@@ -8594,61 +8594,64 @@ export default function KanbanBoard() {
     setError(null)
     
     try {
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Fetch all data in parallel with bulk queries (fixes N+1 query problem)
+      const [projectsRes, tasksRes, membersRes, customersRes, attachmentsRes, dependenciesRes] = await Promise.all([
+        supabase.from('projects').select('*').order('created_at', { ascending: false }),
+        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+        supabase.from('project_members').select('project_id, name'),
+        supabase.from('project_customers').select('project_id, name'),
+        supabase.from('attachments').select('*'),
+        supabase.from('task_dependencies').select('task_id, depends_on_id')
+      ])
       
-      if (projectsError) throw projectsError
-
-      const projectsWithRelations = await Promise.all(
-        projectsData.map(async (project) => {
-          const { data: members } = await supabase
-            .from('project_members')
-            .select('name')
-            .eq('project_id', project.id)
-          
-          const { data: customers } = await supabase
-            .from('project_customers')
-            .select('name')
-            .eq('project_id', project.id)
-          
-          return {
-            ...project,
-            members: members?.map(m => m.name) || [],
-            customers: customers?.map(c => c.name) || [],
-          }
-        })
-      )
-
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false })
+      if (projectsRes.error) throw projectsRes.error
+      if (tasksRes.error) throw tasksRes.error
       
-      if (tasksError) throw tasksError
-
-      const tasksWithRelations = await Promise.all(
-        tasksData.map(async (task) => {
-          const { data: attachments } = await supabase
-            .from('attachments')
-            .select('*')
-            .eq('task_id', task.id)
-          
-          const attachmentsWithUrls = attachments?.map(att => ({
-            ...att,
-            file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
-          })) || []
-          
-          const { data: dependencies } = await supabase
-            .from('task_dependencies')
-            .select('depends_on_id')
-            .eq('task_id', task.id)
-          
-          return { ...task, attachments: attachmentsWithUrls, dependencies: dependencies || [] }
+      // Group members and customers by project_id
+      const membersByProject = {}
+      const customersByProject = {}
+      
+      membersRes.data?.forEach(m => {
+        if (!membersByProject[m.project_id]) membersByProject[m.project_id] = []
+        membersByProject[m.project_id].push(m.name)
+      })
+      
+      customersRes.data?.forEach(c => {
+        if (!customersByProject[c.project_id]) customersByProject[c.project_id] = []
+        customersByProject[c.project_id].push(c.name)
+      })
+      
+      // Map projects with their relations
+      const projectsWithRelations = projectsRes.data.map(project => ({
+        ...project,
+        members: membersByProject[project.id] || [],
+        customers: customersByProject[project.id] || []
+      }))
+      
+      // Group attachments and dependencies by task_id
+      const attachmentsByTask = {}
+      const dependenciesByTask = {}
+      
+      attachmentsRes.data?.forEach(att => {
+        if (!attachmentsByTask[att.task_id]) attachmentsByTask[att.task_id] = []
+        attachmentsByTask[att.task_id].push({
+          ...att,
+          file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
         })
-      )
-
+      })
+      
+      dependenciesRes.data?.forEach(dep => {
+        if (!dependenciesByTask[dep.task_id]) dependenciesByTask[dep.task_id] = []
+        dependenciesByTask[dep.task_id].push(dep)
+      })
+      
+      // Map tasks with their relations
+      const tasksWithRelations = tasksRes.data.map(task => ({
+        ...task,
+        attachments: attachmentsByTask[task.id] || [],
+        dependencies: dependenciesByTask[task.id] || []
+      }))
+      
       setProjects(projectsWithRelations)
       setTasks(tasksWithRelations)
       
@@ -8680,40 +8683,20 @@ export default function KanbanBoard() {
         return startDate <= today
       })
       
-      for (const task of tasksToMove) {
+      // Batch update tasks to move (instead of one at a time)
+      if (tasksToMove.length > 0) {
+        const taskIdsToMove = tasksToMove.map(t => t.id)
         await supabase
           .from('tasks')
           .update({ status: 'todo' })
-          .eq('id', task.id)
-      }
-      
-      if (tasksToMove.length > 0) {
-        const { data: updatedTasksData } = await supabase
-          .from('tasks')
-          .select('*')
-          .order('created_at', { ascending: false })
+          .in('id', taskIdsToMove)
         
-        const updatedTasksWithRelations = await Promise.all(
-          updatedTasksData.map(async (task) => {
-            const { data: attachments } = await supabase
-              .from('attachments')
-              .select('*')
-              .eq('task_id', task.id)
-            
-            const attachmentsWithUrls = attachments?.map(att => ({
-              ...att,
-              file_url: supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl
-            })) || []
-            
-            const { data: dependencies } = await supabase
-              .from('task_dependencies')
-              .select('depends_on_id')
-              .eq('task_id', task.id)
-            
-            return { ...task, attachments: attachmentsWithUrls, dependencies: dependencies || [] }
-          })
-        )
-        setTasks(updatedTasksWithRelations)
+        // Update local state without refetching (we already have the relations)
+        setTasks(prev => prev.map(task => 
+          taskIdsToMove.includes(task.id) 
+            ? { ...task, status: 'todo' } 
+            : task
+        ))
       }
     } catch (err) {
       console.error('Error fetching data:', err)
