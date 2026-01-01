@@ -40,7 +40,7 @@ export default function LandingPage() {
               Sign In
             </Link>
             <Link
-              to="/login"
+              to="/login?signup=true"
               className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-medium shadow-lg shadow-indigo-500/25"
             >
               Get Started
@@ -75,7 +75,7 @@ export default function LandingPage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/login"
+              to="/login?signup=true"
               className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
             >
               Get Early Access
@@ -428,7 +428,7 @@ export default function LandingPage() {
             Start organizing your work today. Free to use, no credit card required.
           </p>
           <Link
-            to="/login"
+            to="/login?signup=true"
             className="inline-block px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
           >
             Get Started Free
