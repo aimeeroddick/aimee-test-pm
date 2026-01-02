@@ -3803,14 +3803,22 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     const handleCardDragStart = (e) => {
-    if (!isHoldingRef.current) { e.preventDefault(); return }
-    didDragRef.current = true
+      isDraggingRef.current = true
+      didDragRef.current = true
       setIsDragging(true)
       handleDragStart(e, task)
     }
     
+    const handleCardDragEnd = () => {
+      setIsDragging(false)
+      setTimeout(() => {
+        isDraggingRef.current = false
+        didDragRef.current = false
+      }, 100)
+    }
+    
     const handleClick = () => {
-      if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
+      if (!isDraggingRef.current) onEditTask(task)
     }
     
     // Touch event handlers for mobile drag and drop
@@ -3922,7 +3930,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           onMouseUp={handleMouseUp}
           onMouseLeave={() => holdTimerRef.current && clearTimeout(holdTimerRef.current)}
           onDragStart={handleCardDragStart}
-          onDragEnd={handleMouseUp}
+          onDragEnd={handleCardDragEnd}
           onClick={handleClick}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -4834,21 +4842,26 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     }
     
     const handleClick = () => {
-      if (!didDragRef.current && !isHoldingRef.current) {
+      if (!isDraggingRef.current) {
         onEditTask(task)
       }
     }
     
     const handleDragStart = (e) => {
-      if (!isHoldingRef.current) {
-        e.preventDefault()
-        return
-      }
+      isDraggingRef.current = true
       didDragRef.current = true
       setIsDragging(true)
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('taskId', task.id)
       onDragStart && onDragStart(e, task)
+    }
+    
+    const handleDragEnd = () => {
+      setIsDragging(false)
+      setTimeout(() => {
+        isDraggingRef.current = false
+        didDragRef.current = false
+      }, 100)
     }
     
     // Touch event handlers for mobile drag and drop
@@ -4949,7 +4962,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onDragStart={handleDragStart}
-        onDragEnd={handleMouseUp}
+        onDragEnd={handleDragEnd}
         onClick={handleClick}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -5925,6 +5938,22 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(task.title)
   const titleInputRef = useRef(null)
+  const isDraggingRef = useRef(false)
+  
+  const handleCardDragStart = (e) => {
+    isDraggingRef.current = true
+    onDragStart(e, task)
+  }
+  
+  const handleCardDragEnd = () => {
+    setTimeout(() => { isDraggingRef.current = false }, 100)
+  }
+  
+  const handleCardClick = () => {
+    if (!isDraggingRef.current) {
+      bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)
+    }
+  }
   
   // Inline title editing handlers
   const handleTitleDoubleClick = (e) => {
@@ -5974,8 +6003,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, task)}
-      onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
+      onDragStart={handleCardDragStart}
+      onDragEnd={handleCardDragEnd}
+      onClick={handleCardClick}
       className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
         isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
       } ${
