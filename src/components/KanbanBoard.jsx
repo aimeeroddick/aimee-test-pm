@@ -2240,7 +2240,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                       <div>🚩 = Critical/Flagged</div>
                       <div>🔒 = Blocked by another task</div>
                       <div>🔁 = Recurring task</div>
-                      <div>📅 = Due date (red if overdue)</div>
+                      <div>🗓 = Due date (red if overdue)</div>
                       <div>▶ = Start date</div>
                       <div>⏱ = Time estimate</div>
                     </div>
@@ -3036,7 +3036,7 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
           </p>
           <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
             {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
-            {task.due_date && <span>📅{formatDate(task.due_date)}</span>}
+            {task.due_date && <span>🗓{formatDate(task.due_date)}</span>}
           </div>
         </div>
         {/* Schedule button */}
@@ -3054,7 +3054,7 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
       {/* Schedule popup */}
       {showScheduler && (
         <div 
-          className="absolute top-full left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
+          className="absolute top-full left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="space-y-2">
@@ -4086,7 +4086,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             </p>
             <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
               {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
-              {task.due_date && <span>📅{formatDate(task.due_date)}</span>}
+              {task.due_date && <span>🗓{formatDate(task.due_date)}</span>}
             </div>
           </div>
         </div>
@@ -7214,7 +7214,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       </div>
                     </div>
                     <p className="text-xs text-blue-600 dark:text-blue-400">
-                      📅 {formData.recurrence_end_date 
+                      🗓 {formData.recurrence_end_date 
                         ? `Will create occurrences until ${formData.recurrence_end_date}` 
                         : `Will create ${formData.recurrence_count} future occurrence${formData.recurrence_count !== 1 ? 's' : ''}`}
                     </p>
