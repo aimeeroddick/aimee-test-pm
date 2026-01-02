@@ -1782,7 +1782,7 @@ const ScheduleTaskAnimation = () => (
       <rect x="105" y="30" width="24" height="24" rx="6" fill="#EEF2FF">
         <animate attributeName="fill" values="#EEF2FF;#C7D2FE;#EEF2FF" dur="2s" repeatCount="indefinite" />
       </rect>
-      <text x="117" y="47" textAnchor="middle" fontSize="14">📅</text>
+      <text x="117" y="47" textAnchor="middle" fontSize="14">🗓</text>
       {/* Click indicator */}
       <circle cx="117" cy="42" r="12" fill="none" stroke="#6366F1" strokeWidth="2">
         <animate attributeName="r" values="12;18;18" dur="2s" repeatCount="indefinite" />
@@ -1956,7 +1956,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       },
       {
         title: 'Schedule a Task',
-        description: 'Click the 📅 calendar button on any task to set a date and time. The task will appear on the calendar.',
+        description: 'Click the 🗓 calendar button on any task to set a date and time. The task will appear on the calendar.',
         icon: '✨',
         animation: 'dragToCalendar',
       },
@@ -2442,7 +2442,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click the Calendar Button:</p>
-                    <p className="text-sm text-gray-500">Click the <span className="text-lg">📅</span> calendar button on any task to open the scheduling modal. Set a date and time, then click Schedule.</p>
+                    <p className="text-sm text-gray-500">Click the <span className="text-lg">🗓</span> calendar button on any task to open the scheduling modal. Set a date and time, then click Schedule.</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Duration:</p>
