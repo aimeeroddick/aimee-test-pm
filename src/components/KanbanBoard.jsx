@@ -7123,11 +7123,9 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, templates = [], onSaveTemplate, onDeleteTemplate, onShowConfirm }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm }) => {
   const fileInputRef = useRef(null)
-  const [showSaveTemplateInput, setShowSaveTemplateInput] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [templateName, setTemplateName] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -7188,62 +7186,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showDeleteConfirm, task, onDelete, onClose])
-  
-  // Apply a template to the form
-  const applyTemplate = (template) => {
-    if (!template) return
-    setFormData(prev => ({
-      ...prev,
-      title: template.title || '',
-      description: template.description || '',
-      project_id: template.project_id || prev.project_id,
-      category: template.category || 'deliverable',
-      energy_level: template.energy_level || 'medium',
-      time_estimate: template.time_estimate || '',
-      source: template.source || 'ad_hoc',
-      assignee: template.assignee || '',
-      customer: template.customer || '',
-      critical: template.critical || false,
-      recurrence_type: template.recurrence_type || null,
-      recurrence_count: template.recurrence_count || 8,
-    }))
-    setSubtasks(template.subtasks || [])
-    if (template.assignee) {
-      const allAssignees = projects.flatMap(p => p.team_members || [])
-      if (!allAssignees.includes(template.assignee)) {
-        setUseCustomAssignee(true)
-        setCustomAssignee(template.assignee)
-      }
-    }
-    if (template.customer) {
-      setUseCustomCustomer(true)
-      setCustomCustomer(template.customer)
-    }
-  }
-  
-  // Save current form as template
-  const handleSaveAsTemplate = () => {
-    if (!templateName.trim()) return
-    onSaveTemplate({
-      name: templateName.trim(),
-      title: formData.title,
-      description: formData.description,
-      project_id: formData.project_id,
-      category: formData.category,
-      energy_level: formData.energy_level,
-      time_estimate: formData.time_estimate,
-      source: formData.source,
-      assignee: useCustomAssignee ? customAssignee : formData.assignee,
-      customer: useCustomCustomer ? customCustomer : formData.customer,
-      critical: formData.critical,
-      recurrence_type: formData.recurrence_type,
-      recurrence_count: formData.recurrence_count,
-      subtasks: subtasks,
-    })
-    setShowSaveTemplateInput(false)
-    setTemplateName('')
-  }
-  
+
   const handlePaste = async (e) => {
     const items = e.clipboardData?.items
     if (!items) return
@@ -7422,58 +7365,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
-        {/* Template selector for new tasks */}
-        {!task?.id && templates.length > 0 && (
-          <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">📋 Use template:</span>
-              <select
-                onChange={(e) => {
-                  const template = templates.find(t => t.id === parseInt(e.target.value))
-                  if (template) applyTemplate(template)
-                  e.target.value = ''
-                }}
-                className="flex-1 min-w-[150px] px-3 py-1.5 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-                value=""
-              >
-                <option value="">Select a template...</option>
-                {templates.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-              {onDeleteTemplate && (
-                <div className="relative group">
-                  <button
-                    type="button"
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                    title="Manage templates"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 hidden group-hover:block">
-                    <div className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">Delete template</div>
-                    {templates.map(t => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => onDeleteTemplate(t.id)}
-                        className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        {t.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
         <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto min-h-[44px]">
           {[
             { id: 'details', label: 'Details' },
@@ -8427,54 +8318,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             </button>
           )}
           
-          {/* Save as Template - desktop only */}
-          <div className="hidden sm:block">
-          {showSaveTemplateInput ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Template name..."
-                className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500"
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (templateName.trim() && onSaveTemplate) {
-                    onSaveTemplate({ ...formData, name: templateName.trim(), subtasks })
-                    setTemplateName('')
-                    setShowSaveTemplateInput(false)
-                  }
-                }}
-                disabled={!templateName.trim()}
-                className="px-3 py-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/60 disabled:opacity-50"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowSaveTemplateInput(false); setTemplateName('') }}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowSaveTemplateInput(true)}
-              className="px-4 py-2.5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors text-sm"
-              title="Save current task settings as a reusable template"
-            >
-              💾 Save as Template
-            </button>
-          )}
-          </div>
-          
           <div className="flex-1" />
           
           <button
@@ -8951,16 +8794,9 @@ export default function KanbanBoard() {
   const [showSaveViewModal, setShowSaveViewModal] = useState(false)
   const [newViewName, setNewViewName] = useState('')
   
-  // Task Templates
-  const [taskTemplates, setTaskTemplates] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('trackli_task_templates') || '[]')
-    } catch { return [] }
-  })
-  const [showTemplatesModal, setShowTemplatesModal] = useState(false)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const welcomeProjectCreating = useRef(false)
-    
+  
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
   const [meetingNotesData, setMeetingNotesData] = useState({
@@ -10815,37 +10651,6 @@ export default function KanbanBoard() {
     setSavedFilterViews(updated)
     localStorage.setItem('trackli_saved_views', JSON.stringify(updated))
   }
-  
-  // Task Template functions
-  const saveTaskTemplate = (template) => {
-    const newTemplate = {
-      id: Date.now(),
-      name: template.name,
-      title: template.title || '',
-      description: template.description || '',
-      project_id: template.project_id || '',
-      category: template.category || 'deliverable',
-      energy_level: template.energy_level || 'medium',
-      time_estimate: template.time_estimate || '',
-      source: template.source || 'ad_hoc',
-      assignee: template.assignee || '',
-      customer: template.customer || '',
-      critical: template.critical || false,
-      recurrence_type: template.recurrence_type || null,
-      recurrence_count: template.recurrence_count || 8,
-      subtasks: template.subtasks || [],
-    }
-    const updated = [...taskTemplates, newTemplate]
-    setTaskTemplates(updated)
-    localStorage.setItem('trackli_task_templates', JSON.stringify(updated))
-    return newTemplate
-  }
-  
-  const deleteTaskTemplate = (templateId) => {
-    const updated = taskTemplates.filter(t => t.id !== templateId)
-    setTaskTemplates(updated)
-    localStorage.setItem('trackli_task_templates', JSON.stringify(updated))
-  }
 
   const readyToStartCount = tasks.filter((t) => {
     if (selectedProjectId !== 'all' && t.project_id !== selectedProjectId) return false
@@ -12577,9 +12382,6 @@ export default function KanbanBoard() {
         onSave={handleSaveTask}
         onDelete={handleDeleteTask}
         loading={saving}
-        templates={taskTemplates}
-        onSaveTemplate={saveTaskTemplate}
-        onDeleteTemplate={deleteTaskTemplate}
         onShowConfirm={setConfirmDialog}
       />
       
