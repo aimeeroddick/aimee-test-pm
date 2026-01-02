@@ -2376,6 +2376,64 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   )
 }
 
+// Help Modal Tab Icons
+const HelpTabIcons = {
+  tasks: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="#10B981" />
+      <path d="M7 12 L10 15 L17 8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  board: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="#6366F1" />
+      <rect x="4" y="6" width="4" height="12" rx="1" fill="white" opacity="0.9" />
+      <rect x="10" y="6" width="4" height="8" rx="1" fill="white" opacity="0.7" />
+      <rect x="16" y="6" width="4" height="5" rx="1" fill="white" opacity="0.5" />
+    </svg>
+  ),
+  myday: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="12" y1="3" x2="12" y2="5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
+      ))}
+    </svg>
+  ),
+  calendar: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="#6366F1" />
+      <rect x="3" y="5" width="18" height="5" rx="2" fill="#4F46E5" />
+      <circle cx="7" cy="3" r="1.5" fill="#6366F1" />
+      <circle cx="17" cy="3" r="1.5" fill="#6366F1" />
+      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="white" opacity="0.9" />
+      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="white" opacity="0.6" />
+      <rect x="6" y="16" width="3" height="2" rx="0.5" fill="white" opacity="0.6" />
+    </svg>
+  ),
+  alltasks: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="#6366F1" />
+      <line x1="5" y1="8" x2="19" y2="8" stroke="white" strokeWidth="1.5" opacity="0.8" />
+      <line x1="5" y1="12" x2="19" y2="12" stroke="white" strokeWidth="1.5" opacity="0.6" />
+      <line x1="5" y1="16" x2="19" y2="16" stroke="white" strokeWidth="1.5" opacity="0.4" />
+    </svg>
+  ),
+  shortcuts: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="6" width="20" height="12" rx="2" fill="#6B7280" />
+      <rect x="4" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
+      <rect x="8" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
+      <rect x="12" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
+      <rect x="16" y="8" width="4" height="2" rx="0.5" fill="white" opacity="0.8" />
+      <rect x="4" y="11" width="4" height="2" rx="0.5" fill="white" opacity="0.6" />
+      <rect x="9" y="11" width="6" height="2" rx="0.5" fill="white" opacity="0.6" />
+      <rect x="16" y="11" width="4" height="2" rx="0.5" fill="white" opacity="0.6" />
+      <rect x="6" y="14" width="12" height="2" rx="0.5" fill="white" opacity="0.4" />
+    </svg>
+  ),
+}
+
 // Help Modal Component
 const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -2390,12 +2448,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   if (!isOpen) return null
   
   const tabs = [
-    { id: 'tasks', label: 'Tasks', icon: '✅' },
-    { id: 'board', label: 'Board', icon: '📋' },
-    { id: 'myday', label: 'My Day', icon: '☀️' },
-    { id: 'calendar', label: 'Calendar', icon: '🗓' },
-    { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
-    { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
+    { id: 'tasks', label: 'Tasks', iconComponent: 'tasks' },
+    { id: 'board', label: 'Board', iconComponent: 'board' },
+    { id: 'myday', label: 'My Day', iconComponent: 'myday' },
+    { id: 'calendar', label: 'Calendar', iconComponent: 'calendar' },
+    { id: 'alltasks', label: 'All Tasks', iconComponent: 'alltasks' },
+    { id: 'shortcuts', label: 'Shortcuts', iconComponent: 'shortcuts' },
   ]
   
   return (
@@ -2432,7 +2490,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
               }`}
             >
-              <span>{tab.icon}</span>
+              <span>{tab.iconComponent && HelpTabIcons[tab.iconComponent] ? HelpTabIcons[tab.iconComponent]() : tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           ))}
