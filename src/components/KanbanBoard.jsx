@@ -8365,6 +8365,7 @@ export default function KanbanBoard() {
   })
   const [showTemplatesModal, setShowTemplatesModal] = useState(false)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const welcomeProjectCreating = useRef(false)
     
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
@@ -8845,7 +8846,8 @@ export default function KanbanBoard() {
       const currentUser = userRes.data?.user
       const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
       
-      if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0) {
+      if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0 && !welcomeProjectCreating.current) {
+        welcomeProjectCreating.current = true
         await createWelcomeProject()
         
         // Mark user as welcomed so this never happens again
