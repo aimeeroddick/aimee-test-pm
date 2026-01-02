@@ -2990,6 +2990,16 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
     console.log('DRAG START', task.title)
     isDraggingRef.current = true
     setIsDragging(true)
+    
+    // Create a custom drag image
+    const dragImage = e.target.cloneNode(true)
+    dragImage.style.position = 'absolute'
+    dragImage.style.top = '-1000px'
+    dragImage.style.opacity = '0.8'
+    document.body.appendChild(dragImage)
+    e.dataTransfer.setDragImage(dragImage, 50, 20)
+    setTimeout(() => document.body.removeChild(dragImage), 0)
+    
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', task.id)
     onDragStart(task)
