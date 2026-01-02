@@ -4801,41 +4801,29 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
     const isDraggingRef = useRef(false)
-    const didDragRef = useRef(false)
     
-    const handleMouseDown = (e) => {
-      if (isCompleted) return
-      if (e.target.closest('button')) return
-      didDragRef.current = false
-    }
-    
-    const handleDragStart = (e) => {
+    const handleCardDragStart = (e) => {
       isDraggingRef.current = true
-      didDragRef.current = true
       onDragStart(e, task)
     }
     
-    const handleDragEnd = () => {
-      setTimeout(() => {
-        isDraggingRef.current = false
-        didDragRef.current = false
-      }, 100)
+    const handleCardDragEnd = () => {
+      setTimeout(() => { isDraggingRef.current = false }, 100)
     }
     
-    const handleClick = () => {
-      if (!isDraggingRef.current && !didDragRef.current) {
+    const handleCardClick = () => {
+      if (!isDraggingRef.current) {
         onEditTask(task)
       }
     }
     
     return (
       <div
-        draggable={!isCompleted}
-        onMouseDown={handleMouseDown}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onClick={handleClick}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing ${
+        draggable
+        onDragStart={handleCardDragStart}
+        onDragEnd={handleCardDragEnd}
+        onClick={handleCardClick}
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-pointer ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
