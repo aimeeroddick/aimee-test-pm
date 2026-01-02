@@ -88,7 +88,7 @@ export default function Login() {
               <path d="M6 18L28 6L28 38L6 26Z" fill="url(#login-left)"/>
               <path d="M28 6L50 18L50 46L28 38Z" fill="url(#login-right)"/>
               <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
-              <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <h1 className="text-3xl font-bold">
