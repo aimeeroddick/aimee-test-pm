@@ -670,6 +670,173 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
   )
 }
 
+// Task Breakdown Modal - AI-powered subtask suggestions
+const TaskBreakdownModal = ({ isOpen, onClose, task, projectName, onAddSubtasks }) => {
+  const [subtasks, setSubtasks] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [selected, setSelected] = useState({})
+
+  // Fetch suggestions when modal opens
+  useEffect(() => {
+    if (isOpen && task) {
+      fetchSuggestions()
+    }
+  }, [isOpen, task])
+
+  const fetchSuggestions = async () => {
+    setLoading(true)
+    setError(null)
+    setSubtasks([])
+    setSelected({})
+
+    try {
+      const response = await fetch('/api/break-down-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskTitle: task.title,
+          taskDescription: task.description || '',
+          projectName: projectName || ''
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get suggestions')
+      }
+
+      setSubtasks(data.subtasks || [])
+      // Pre-select all by default
+      const initialSelected = {}
+      data.subtasks?.forEach((_, idx) => { initialSelected[idx] = true })
+      setSelected(initialSelected)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleSubtask = (idx) => {
+    setSelected(prev => ({ ...prev, [idx]: !prev[idx] }))
+  }
+
+  const handleAddSelected = () => {
+    const selectedSubtasks = subtasks.filter((_, idx) => selected[idx])
+    if (selectedSubtasks.length > 0) {
+      onAddSubtasks(selectedSubtasks)
+    }
+    onClose()
+  }
+
+  const selectedCount = Object.values(selected).filter(Boolean).length
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+      <div 
+        className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <span className="text-xl">✨</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Break Down Task</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[300px]">{task?.title}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Analyzing task...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl">
+              <p className="font-medium">Unable to break down task</p>
+              <p className="text-sm mt-1">{error}</p>
+              <button 
+                onClick={fetchSuggestions}
+                className="mt-3 text-sm font-medium text-red-600 hover:text-red-700 underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && subtasks.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Select the subtasks you want to add:</p>
+              {subtasks.map((subtask, idx) => (
+                <label
+                  key={idx}
+                  className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                    selected[idx] 
+                      ? 'bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-600' 
+                      : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected[idx] || false}
+                    onChange={() => toggleSubtask(idx)}
+                    className="mt-0.5 w-5 h-5 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-200">{subtask}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {!loading && !error && subtasks.length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p>No suggestions available for this task.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <button
+            onClick={fetchSuggestions}
+            disabled={loading}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50"
+          >
+            ↻ Regenerate
+          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddSelected}
+              disabled={loading || selectedCount === 0}
+              className="px-4 py-2 rounded-xl font-medium bg-purple-500 text-white hover:bg-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Add {selectedCount > 0 ? `${selectedCount} Subtask${selectedCount > 1 ? 's' : ''}` : 'Selected'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Pull to Refresh Component for Mobile
 const PullToRefresh = ({ onRefresh, children }) => {
   const [pullDistance, setPullDistance] = useState(0)
@@ -6608,7 +6775,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical, isMobile }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical, onBreakdown, isMobile }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(task.title)
@@ -6976,6 +7143,17 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               </svg>
             </button>
           )}
+          
+          {/* AI Break Down Task */}
+          {onBreakdown && !isDone && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onBreakdown(task) }}
+              className="p-1.5 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
+              title="Break down into subtasks"
+            >
+              <span className="text-sm">✨</span>
+            </button>
+          )}
         </div>
       </div>
       )}
@@ -7061,7 +7239,7 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
 }
 
 // Column Component
-const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle, onToggleCritical }) => {
+const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle, onToggleCritical, onBreakdown }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const [showAllDone, setShowAllDone] = useState(false)
   const [showAllBacklog, setShowAllBacklog] = useState(false)
@@ -7144,6 +7322,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             isDragging={draggedTask?.id === task.id}
             onUpdateTitle={onUpdateTitle}
             onToggleCritical={onToggleCritical}
+            onBreakdown={onBreakdown}
             isMobile={isMobileFullWidth}
           />
         ))}
@@ -8669,7 +8848,8 @@ export default function KanbanBoard() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [undoToast, setUndoToast] = useState(null) // { taskId, previousStatus, message }
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
-  
+  const [breakdownTask, setBreakdownTask] = useState(null) // Task to break down with AI
+
   // Track online/offline status
   useEffect(() => {
     const handleOnline = () => setIsOffline(false)
@@ -10617,7 +10797,35 @@ export default function KanbanBoard() {
       setError(err.message)
     }
   }
-  
+
+  // Add subtasks from AI breakdown
+  const handleAddBreakdownSubtasks = async (subtaskTitles) => {
+    if (!breakdownTask) return
+    
+    try {
+      const existingSubtasks = breakdownTask.subtasks || []
+      const newSubtasks = subtaskTitles.map(title => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        title,
+        completed: false
+      }))
+      const allSubtasks = [...existingSubtasks, ...newSubtasks]
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update({ subtasks: allSubtasks })
+        .eq('id', breakdownTask.id)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === breakdownTask.id ? { ...t, subtasks: allSubtasks } : t))
+      showNotification(`✨ Added ${newSubtasks.length} subtask${newSubtasks.length > 1 ? 's' : ''}`)
+    } catch (err) {
+      console.error('Error adding subtasks:', err)
+      setError(err.message)
+    }
+  }
+
   // Calendar task update (for drag-drop scheduling)
   const handleCalendarTaskUpdate = async (taskId, updates) => {
     try {
@@ -12381,6 +12589,7 @@ export default function KanbanBoard() {
                     draggedTask={draggedTask}
                     onUpdateTitle={handleUpdateTaskTitle}
                     onToggleCritical={handleToggleCritical}
+                    onBreakdown={setBreakdownTask}
                   />
                 ) : (
                   COLUMNS.map((column) => (
@@ -12421,6 +12630,7 @@ export default function KanbanBoard() {
                       draggedTask={draggedTask}
                       onUpdateTitle={handleUpdateTaskTitle}
                       onToggleCritical={handleToggleCritical}
+                      onBreakdown={setBreakdownTask}
                     />
                   ))
                 )}
@@ -12538,6 +12748,15 @@ export default function KanbanBoard() {
         confirmStyle={confirmDialog?.confirmStyle}
         icon={confirmDialog?.icon}
         loading={saving}
+      />
+      
+      {/* AI Task Breakdown Modal */}
+      <TaskBreakdownModal
+        isOpen={!!breakdownTask}
+        onClose={() => setBreakdownTask(null)}
+        task={breakdownTask}
+        projectName={projects.find(p => p.id === breakdownTask?.project_id)?.name}
+        onAddSubtasks={handleAddBreakdownSubtasks}
       />
       
       {/* Delete Recurring Task Confirmation */}
