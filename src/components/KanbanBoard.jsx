@@ -4079,19 +4079,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   
   // Handle drop on time slot (30-minute increments)
   const handleDropOnSlot = async (date, slotIndex, e) => {
-    console.log('handleDropOnSlot called', { date, slotIndex, hasEvent: !!e, draggedTask })
-    
     // Get task from state OR from dataTransfer (backup if dragEnd fires first)
     let taskToSchedule = draggedTask
     if (!taskToSchedule && e?.dataTransfer) {
       const taskId = e.dataTransfer.getData('text/plain')
-      console.log('Fallback to dataTransfer, taskId:', taskId)
       taskToSchedule = allTasks.find(t => t.id === taskId)
-      console.log('Found task from allTasks:', taskToSchedule?.title)
     }
     
     if (!taskToSchedule || !onUpdateTask) {
-      console.log('Drop failed: no task or onUpdateTask', { taskToSchedule, hasOnUpdateTask: !!onUpdateTask, allTasksLength: allTasks?.length })
       return
     }
     
@@ -4104,14 +4099,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const duration = taskToSchedule.time_estimate || 30 // default 30 mins
     const endTimeMinutes = startTimeMinutes + duration
     const endTime = formatTime(endTimeMinutes)
-    
-    console.log('Dropping task:', {
-      taskId: taskToSchedule.id,
-      dateStr,
-      startTime,
-      endTime,
-      duration
-    })
     
     const updates = {
       start_date: dateStr,
@@ -4139,7 +4126,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     try {
       await onUpdateTask(taskId, updates)
-      console.log('Task updated successfully with:', updates)
     } catch (err) {
       console.error('Error updating task:', err)
     }
@@ -4194,13 +4180,6 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     if (startMinutes !== null) {
       const newEndMinutes = startMinutes + newDuration
       const newEndTime = formatTime(newEndMinutes)
-      
-      console.log('Resizing task:', {
-        taskId: resizingTask.task.id,
-        oldDuration: resizingTask.originalDuration,
-        newDuration,
-        newEndTime
-      })
       
       await onUpdateTask(resizingTask.task.id, {
         time_estimate: newDuration,
@@ -9422,7 +9401,6 @@ export default function KanbanBoard() {
           .from('tasks')
           .update({ status: 'todo' })
           .in('id', taskIdsToMove)
-          .then(() => console.log('Auto-moved', taskIdsToMove.length, 'tasks to todo'))
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -9810,11 +9788,8 @@ export default function KanbanBoard() {
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) {
-      console.log('No file selected')
       return
     }
-    
-    console.log('File selected:', file.name, file.type, file.size)
     
     // Use canvas to compress/resize large images
     const img = new Image()
@@ -9844,8 +9819,6 @@ export default function KanbanBoard() {
         // Convert to base64 with compression (0.8 quality)
         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8)
         const base64 = compressedDataUrl.split(',')[1]
-        
-        console.log('Compressed image size:', Math.round(base64.length * 0.75 / 1024), 'KB')
         
         setUploadedImage({
           base64,
