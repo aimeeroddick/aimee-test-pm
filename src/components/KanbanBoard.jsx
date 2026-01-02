@@ -1501,7 +1501,7 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
           {EmptyStateIcons[icon] ? EmptyStateIcons[icon]() : <div className="text-3xl sm:text-4xl">{icon}</div>}
         </div>
       </div>
-      <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
       <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-6 max-w-xs sm:max-w-sm leading-relaxed">{description}</p>
       {action && (
         <button
@@ -1859,7 +1859,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
             ))}
           </div>
           
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
             {currentStep.title}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -2408,7 +2408,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
                   ? TourIcons[currentStep.iconComponent]() 
                   : <span className="text-4xl">{currentStep.icon}</span>}
               </div>
-            <h3 className="text-xl font-bold">{currentStep.title}</h3>
+            <h3 className="text-xl font-semibold">{currentStep.title}</h3>
           </div>
           
           {/* Content */}
@@ -2673,7 +2673,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               ❓
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Trackli Help Guide</h2>
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Trackli Help Guide</h2>
               <p className="text-sm text-gray-500">Learn how to use Trackli effectively</p>
             </div>
           </div>
@@ -5767,7 +5767,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
         <div>
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             {MenuIcons.myday()}
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">My Day</h2>
             <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({sortedMyDayActive.length} active)</span>
           </div>
           
@@ -5845,7 +5845,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
         <div>
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             {MenuIcons.lightbulb()}
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Recommendations</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Recommendations</h2>
           </div>
           
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
@@ -13293,7 +13293,7 @@ Or we can extract from:
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit">
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
+              <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Settings</h2>
               <button
                 onClick={() => { setSettingsModalOpen(false); setShowDeleteConfirm(false); setDeleteConfirmText(''); setEditingDisplayName(false); setPasswordResetSent(false); }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
