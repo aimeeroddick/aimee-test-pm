@@ -1713,7 +1713,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
           ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl sm:mx-4' 
           : 'rounded-t-2xl sm:rounded-2xl sm:mx-4 max-h-[95vh] sm:max-h-[90vh]'
       } ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <div className={`flex-shrink-0 flex items-center justify-between p-4 pr-6 sm:p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
+        <div className={`flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             type="button"
@@ -1725,7 +1725,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 overscroll-contain">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 overscroll-contain">{children}</div>
       </div>
     </div>
   )
@@ -7688,41 +7688,44 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit} className="-mt-5">
+      <form onSubmit={handleSubmit}>
         {/* Status & Project - top row */}
-        <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-          {/* Status chips */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+          {/* Status - sleek segmented control */}
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
             {COLUMNS.map((col) => (
               <button
                 key={col.id}
                 type="button"
                 onClick={() => setFormData({ ...formData, status: col.id })}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   formData.status === col.id
-                    ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500'
-                    : 'opacity-60 hover:opacity-100'
+                    ? 'bg-white dark:bg-gray-700 shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 }`}
-                style={{ backgroundColor: col.color + '20', color: col.color, borderLeft: `3px solid ${col.color}` }}
+                style={formData.status === col.id ? { color: col.color } : {}}
               >
                 {col.title}
               </button>
             ))}
           </div>
-          {/* Project dropdown */}
-          <select
-            required
-            value={formData.project_id}
-            onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-            className={`px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-[120px] ${
-              !formData.project_id ? 'border-l-4 border-l-red-400' : ''
-            }`}
-          >
-            <option value="">Project...</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          {/* Project - pill with icon */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <select
+              required
+              value={formData.project_id}
+              onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
+              className="bg-transparent text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="">Select project</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
         
         {/* ═══════ CORE FIELDS ═══════ */}
