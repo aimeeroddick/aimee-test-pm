@@ -8004,7 +8004,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newSubtaskTitle.trim()) {
                       e.preventDefault()
-                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false }])
+                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false, due_date: null }])
                       setNewSubtaskTitle('')
                     }
                   }}
@@ -8015,7 +8015,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   type="button"
                   onClick={() => {
                     if (newSubtaskTitle.trim()) {
-                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false }])
+                      setSubtasks([...subtasks, { id: Date.now().toString(), title: newSubtaskTitle.trim(), completed: false, due_date: null }])
                       setNewSubtaskTitle('')
                     }
                   }}
@@ -8084,6 +8084,38 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       }`}>
                         {subtask.title}
                       </span>
+                      {/* Subtask due date */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="date"
+                          value={subtask.due_date || ''}
+                          onChange={(e) => {
+                            setSubtasks(subtasks.map(s =>
+                              s.id === subtask.id ? { ...s, due_date: e.target.value || null } : s
+                            ))
+                          }}
+                          className={`w-28 px-2 py-1 text-xs border rounded-lg transition-all ${
+                            subtask.due_date 
+                              ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' 
+                              : 'border-gray-200 dark:border-gray-600 bg-transparent text-gray-400 dark:text-gray-500'
+                          } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                          title="Set due date for this subtask"
+                        />
+                        {subtask.due_date && (
+                          <button
+                            type="button"
+                            onClick={() => setSubtasks(subtasks.map(s =>
+                              s.id === subtask.id ? { ...s, due_date: null } : s
+                            ))}
+                            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            title="Clear date"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => setSubtasks(subtasks.filter(s => s.id !== subtask.id))}
@@ -10807,7 +10839,8 @@ export default function KanbanBoard() {
       const newSubtasks = subtaskTitles.map(title => ({
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         title,
-        completed: false
+        completed: false,
+        due_date: null
       }))
       const allSubtasks = [...existingSubtasks, ...newSubtasks]
       
