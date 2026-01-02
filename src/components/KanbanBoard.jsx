@@ -7705,7 +7705,27 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               />
             </div>
             
-            {/* Description - moved up */}
+            {/* Status - clickable chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
+              {COLUMNS.map((col) => (
+                <button
+                  key={col.id}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: col.id })}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                    formData.status === col.id
+                      ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500'
+                      : 'opacity-60 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: col.color + '20', color: col.color, borderLeft: `3px solid ${col.color}` }}
+                >
+                  {col.title}
+                </button>
+              ))}
+            </div>
+            
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea
@@ -7721,35 +7741,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
             
-            {/* Project & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
-                <select
-                  required
-                  value={formData.project_id}
-                  onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
-                >
-                  <option value="">Select project</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  {COLUMNS.map((col) => (
-                    <option key={col.id} value={col.id}>{col.title}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Project */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
+              <select
+                required
+                value={formData.project_id}
+                onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
+                className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
+              >
+                <option value="">Select project</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
             
             {/* Customer & Energy Level - side by side */}
