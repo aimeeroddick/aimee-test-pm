@@ -2981,6 +2981,64 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
   )
 }
 
+// Calendar Sidebar Task Card - defined OUTSIDE CalendarView to prevent re-creation on render
+const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
+  const isDraggingRef = useRef(false)
+  
+  const handleDragStart = (e) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', task.id)
+    isDraggingRef.current = true
+    onDragStart(task)
+  }
+  
+  const handleDragEnd = () => {
+    setTimeout(() => { isDraggingRef.current = false }, 100)
+  }
+  
+  const handleClick = () => {
+    if (!isDraggingRef.current) {
+      onEditTask(task)
+    }
+  }
+  
+  return (
+    <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onClick={handleClick}
+      className={`p-2.5 rounded-lg border transition-all duration-200 select-none cursor-grab hover:shadow-md hover:-translate-y-0.5 ${
+        highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+        highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
+        highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+        highlight === 'pink' ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800' :
+        highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' :
+        highlight === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+        highlight === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+        highlight === 'gray' ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600' :
+        'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      }`}
+    >
+      <div className="flex items-start gap-2">
+        <div 
+          className="w-2 h-2 rounded-full mt-1.5 shrink-0"
+          style={{ backgroundColor: COLUMN_COLORS[task.status] }}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+            {task.critical && '🚩 '}{task.title}
+          </p>
+          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+            {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
+            {task.due_date && <span>📅{formatDate(task.due_date)}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Calendar View Component - Daily/Weekly/Monthly
 const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onCreateTask, onDeleteTask, onDuplicateTask, viewMode, setViewMode, onShowConfirm }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -3990,7 +4048,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     )
   }
     
-    // Section component
+    // Section component - uses external CalendarSidebarTaskCard for stable drag behavior
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
       if (tasks.length === 0) return null
       return (
@@ -4001,7 +4059,16 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </h4>
           <div className="space-y-1.5">
             {tasks.slice(0, 5).map(task => (
-              <TaskCard key={task.id} task={task} highlight={highlight} />
+              <CalendarSidebarTaskCard
+                key={task.id}
+                task={task}
+                highlight={highlight}
+                onDragStart={setDraggedTask}
+                onEditTask={onEditTask}
+                COLUMN_COLORS={COLUMN_COLORS}
+                formatTimeEstimate={formatTimeEstimate}
+                formatDate={formatDate}
+              />
             ))}
             {tasks.length > 5 && (
               <p className="text-[10px] text-gray-400 text-center">+{tasks.length - 5} more</p>
