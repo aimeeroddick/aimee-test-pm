@@ -1,7 +1,7 @@
 {
   "name": "aimee-test-pm",
   "private": true,
-  "version": "2.5.1",
+  "version": "2.10.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
