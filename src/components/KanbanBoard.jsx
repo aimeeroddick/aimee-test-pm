@@ -10033,6 +10033,7 @@ export default function KanbanBoard() {
   const handleDragStart = (e, task) => {
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', task.id)
   }
 
   const handleDragOver = (e, columnId) => {
