@@ -3575,7 +3575,7 @@ const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEdi
   return (
     <div
       onClick={handleClick}
-      className={`relative p-2.5 rounded-lg border cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
+      className={`relative p-2.5 rounded-lg border shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
         highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
         highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -4597,7 +4597,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className={`p-2.5 rounded-lg border transition-all duration-200 select-none ${
+          className={`p-2.5 rounded-lg border shadow-sm transition-all duration-200 select-none ${
             isDragging || isTouchDragging ? 'opacity-40 scale-[0.98]' : 
             isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' :
             'cursor-pointer hover:shadow-md hover:-translate-y-0.5'
@@ -5136,10 +5136,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                   <div
                     key={task.id}
                     onClick={() => onEditTask(task)}
-                    className={`p-4 rounded-xl border cursor-pointer hover:shadow-md transition-all ${
-                      task.status === 'done' ? 'bg-green-50 border-green-200' :
-                      task.critical ? 'bg-red-50 border-red-200' :
-                      'bg-gray-50 border-gray-200'
+                    className={`p-4 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all ${
+                      task.status === 'done' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                      task.critical ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                      'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -5279,7 +5279,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
   return (
     <div
       onClick={() => onEditTask(task)}
-      className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-pointer ${
+      className={`group relative p-4 rounded-xl shadow-sm select-none transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${
         isCompleted 
           ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
           : blocked 
@@ -6660,7 +6660,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       onDragEnd={handleCardDragEnd}
       onClick={handleCardClick}
       className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
-        isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
+        isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-md'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
         !isDragging && isOverdue ? 'bg-red-50 dark:bg-red-900/40' :
