@@ -7736,7 +7736,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           <div className="space-y-2">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Title *</label>
               <input
                 type="text"
                 required
@@ -7749,7 +7749,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -7766,7 +7766,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Customer & Effort Level - side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Customer/Client</label>
                 {!useCustomCustomer ? (
                   <select
                     value={formData.customer}
@@ -7807,7 +7807,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effort Level</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Effort Level</label>
                 <div className="flex gap-1.5">
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
                     <button
@@ -7830,7 +7830,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             
             {/* Time Estimate - Quick Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Estimate</label>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Time Estimate</label>
               <div className="flex gap-2 items-center">
                 <div className="flex gap-1">
                   {[
@@ -7907,7 +7907,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Start Date & Due Date side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Start Date</label>
                 <div className="flex gap-1 mb-1.5">
                   {[
                     { label: 'T', title: 'Today', days: 0 },
@@ -7976,7 +7976,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Due Date</label>
                 <div className="flex gap-1 mb-1.5">
                   {[
                     { label: 'T', title: 'Today', days: 0 },
@@ -8049,7 +8049,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Start Time & End Time side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Start Time</label>
                 <input
                   type="text"
                   value={formData.start_time || ''}
@@ -8077,7 +8077,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">End Time</label>
                 <input
                   type="text"
                   value={formData.end_time || ''}
@@ -8139,7 +8139,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {formData.recurrence_type && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Repeat</label>
+                  <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Repeat</label>
                   <select
                     value={formData.recurrence_type || ''}
                     onChange={(e) => setFormData({ ...formData, recurrence_type: e.target.value || null })}
@@ -8381,7 +8381,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           <div className="p-4 space-y-4">
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Notes</label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -8397,7 +8397,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             
             {/* Attachments */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachments</label>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Attachments</label>
               <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
                 <input
                   ref={fileInputRef}
