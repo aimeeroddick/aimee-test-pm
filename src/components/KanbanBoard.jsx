@@ -4780,7 +4780,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const handleDropOnMyDay = (e) => {
     e.preventDefault()
     setDragOverMyDay(false)
-    const taskId = e.dataTransfer.getData('taskId')
+    const taskId = e.dataTransfer.getData('text/plain')
     if (taskId) {
       onUpdateMyDayDate(taskId, todayStr)
     }
@@ -4804,9 +4804,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     
     const handleDragStart = (e) => {
       isDraggingRef.current = true
-      e.dataTransfer.effectAllowed = 'move'
-      e.dataTransfer.setData('taskId', task.id)
-      onDragStart && onDragStart(e, task)
+      onDragStart(e, task)
     }
     
     const handleDragEnd = () => {
