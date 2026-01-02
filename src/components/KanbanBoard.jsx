@@ -2742,19 +2742,19 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">☀️ My Day View</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘D</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}D</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">📋 Board View</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘B</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}B</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">🗓 Calendar View</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘L</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}L</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">🔍 Quick Search</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘K</kbd>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">/</kbd>
                   </div>
                 </div>
               </section>
@@ -2771,8 +2771,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}P</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="text-gray-700 dark:text-gray-300">Import Tasks</span>
+                    <span className="text-gray-700 dark:text-gray-300">Import Notes</span>
                     <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}N</kbd>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <span className="text-gray-700 dark:text-gray-300">Quick Add Task</span>
+                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Q</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
@@ -2790,10 +2794,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
                   <p>• <strong>Click task</strong> – Open task editor</p>
                   <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
-                  <p>• <strong>Drag task</strong> – Move between columns or schedule on calendar</p>
-                  <p>• <strong>Hover task</strong> – See details popup (desktop only)</p>
-                  <p>• <strong>Double-click calendar</strong> – Create task at that time</p>
-                  <p>• <strong>Drag task edge</strong> – Resize duration on calendar</p>
+                  <p>• <strong>Drag task</strong> – Move between columns on board</p>
+                  <p>• <strong>Hover task</strong> – See quick action buttons (desktop)</p>
+                  <p>• <strong>Click 🗓 button</strong> – Schedule task on calendar</p>
                 </div>
               </section>
             </div>
