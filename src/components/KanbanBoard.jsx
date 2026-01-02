@@ -11343,30 +11343,7 @@ export default function KanbanBoard() {
         )}
       </header>
 
-            {/* Project Info - only show on board view */}
-      {currentView === 'board' && selectedProjectId !== 'all' && (
-        <div className="max-w-full mx-auto px-6 py-4">
-          {projects.filter((p) => p.id === selectedProjectId).map((project) => (
-            <div key={project.id} className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100">
-              <span className="font-medium text-gray-800">{project.name}</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-sm text-gray-500">{project.members?.length || 0} members</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-sm text-gray-500">{project.customers?.length || 0} customers</span>
-              <button
-                onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
-                className="ml-2 p-2 sm:p-1 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
-              >
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
+                  {/* Empty State */}
       {projects.length === 0 && (
         <div className="max-w-md mx-auto mt-12 sm:mt-20 text-center px-6">
           <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-6">
