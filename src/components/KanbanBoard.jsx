@@ -3381,9 +3381,9 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
         {/* Search Input */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -3394,9 +3394,9 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks by title, description, assignee, customer..."
-              className="flex-1 text-lg outline-none placeholder-gray-400"
+              className="flex-1 text-lg outline-none placeholder-gray-400 bg-transparent dark:text-white"
             />
-            <kbd className="px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded">ESC</kbd>
+            <kbd className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">ESC</kbd>
           </div>
         </div>
         
@@ -3418,7 +3418,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try a different search term</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredTasks.map(task => {
                 const project = projects.find(p => p.id === task.project_id)
                 const category = CATEGORIES.find(c => c.id === task.category)
@@ -3431,7 +3431,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                       onEditTask(task)
                       onClose()
                     }}
-                    className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                    className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <div className="flex items-start gap-3">
                       <div 
@@ -3440,12 +3440,12 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-800 truncate">{task.title}</h4>
+                          <h4 className="font-medium text-gray-800 dark:text-white truncate">{task.title}</h4>
                           {task.critical && (
-                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">Critical</span>
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">Critical</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <span>{project?.name}</span>
                           {category && (
                             <>
@@ -5089,12 +5089,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       
       {/* Selected Date Tasks */}
       {selectedDate && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-800 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-4">
             Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </h3>
           {selectedTasks.length === 0 ? (
-            <p className="text-gray-500 text-sm">No tasks due on this date</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No tasks due on this date</p>
           ) : (
             <div className="space-y-3">
               {selectedTasks.map(task => {
@@ -7096,7 +7096,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isDoneColumn && hiddenCount > 0 && !showAllDone && (
           <button
             onClick={() => setShowAllDone(true)}
-            className="w-full py-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium bg-white rounded-xl border border-gray-200 hover:border-indigo-300 transition-all"
+            className="w-full py-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all"
           >
             View all {tasks.length} completed tasks →
           </button>
@@ -7105,7 +7105,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isDoneColumn && showAllDone && tasks.length > DONE_DISPLAY_LIMIT && (
           <button
             onClick={() => setShowAllDone(false)}
-            className="w-full py-3 text-sm text-gray-500 hover:text-gray-700 font-medium bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all"
+            className="w-full py-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
           >
             Show less ↑
           </button>
@@ -7114,7 +7114,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isBacklogColumn && hiddenCount > 0 && !showAllBacklog && (
           <button
             onClick={() => setShowAllBacklog(true)}
-            className="w-full py-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-indigo-300 transition-all"
+            className="w-full py-3 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all"
           >
             View all {tasks.length} backlog tasks →
           </button>
@@ -7123,7 +7123,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isBacklogColumn && showAllBacklog && tasks.length > BACKLOG_DISPLAY_LIMIT && (
           <button
             onClick={() => setShowAllBacklog(false)}
-            className="w-full py-3 text-sm text-gray-500 hover:text-gray-700 font-medium bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-gray-300 transition-all"
+            className="w-full py-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
           >
             Show less ↑
           </button>
