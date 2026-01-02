@@ -6629,7 +6629,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical, isMobile }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(task.title)
@@ -6698,7 +6698,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 
   return (
     <div
-      draggable
+      draggable={!isMobile}
       onDragStart={handleCardDragStart}
       onDragEnd={handleCardDragEnd}
       onClick={handleCardClick}
@@ -7165,6 +7165,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             isDragging={draggedTask?.id === task.id}
             onUpdateTitle={onUpdateTitle}
             onToggleCritical={onToggleCritical}
+            isMobile={isMobileFullWidth}
           />
         ))}
         
