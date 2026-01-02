@@ -1898,7 +1898,7 @@ const ProgressBarAnimation = () => (
     </rect>
     
     {/* Percentage text */}
-    <text x="120" y="38" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="bold">
+    <text x="200" y="38" textAnchor="end" fontSize="10" fill="#059669" fontWeight="bold">
       <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.4;0.9;1" />
       100% ✓
     </text>
@@ -1931,9 +1931,9 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   const tourContent = {
     myday: [
       {
-        title: '☀️ Welcome to My Day!',
+        title: 'Welcome to My Day!',
         description: 'This is your personal daily focus list. Plan what to work on today without cluttering your board view.',
-        icon: '🎯',
+        icon: '☀️',
       },
       {
         title: 'Add Tasks to My Day',
