@@ -4771,7 +4771,12 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const handleDropOnMyDay = (e) => {
     e.preventDefault()
     setDragOverMyDay(false)
-    const taskId = e.dataTransfer.getData('taskId')
+    // Try 'taskId' first (from MyDay TaskCard), then 'text/plain' (from main drag handler)
+    let taskId = e.dataTransfer.getData('taskId')
+    if (!taskId) {
+      taskId = e.dataTransfer.getData('text/plain')
+    }
+    console.log('handleDropOnMyDay', taskId)
     if (taskId) {
       onUpdateMyDayDate(taskId, todayStr)
     }
@@ -10124,11 +10129,9 @@ export default function KanbanBoard() {
     }
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
+    // Set both keys for compatibility with different drop handlers
     e.dataTransfer.setData('text/plain', task.id)
-    // Set drag image
-    if (e.target) {
-      e.dataTransfer.setDragImage(e.target, 10, 10)
-    }
+    e.dataTransfer.setData('taskId', task.id)
   }
 
   const handleDragOver = (e, columnId) => {
