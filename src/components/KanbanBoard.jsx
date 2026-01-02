@@ -4760,10 +4760,10 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
             {showRemove && !isCompleted && (
               <button
                 onClick={(e) => onRemoveFromMyDay(e, task)}
-                className="sm:opacity-0 sm:group-hover:opacity-100 p-2 sm:p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all touch-manipulation"
+                className="p-2 sm:p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 sm:bg-transparent sm:dark:bg-transparent sm:opacity-0 sm:group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all touch-manipulation"
                 title="Remove from My Day"
               >
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -6228,6 +6228,20 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                   ↩ Reopen
                 </button>
               )}
+              {/* My Day toggle - mobile */}
+              {onToggleMyDay && !isDone && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
+                  className={`py-1 px-2 text-[10px] font-medium rounded transition-colors ${
+                    inMyDay 
+                      ? 'text-amber-600 bg-amber-100 dark:bg-amber-900/50 dark:text-amber-400' 
+                      : 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 hover:bg-amber-50 hover:text-amber-600'
+                  }`}
+                  title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
+                >
+                  ☀️
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -6284,14 +6298,18 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </button>
           )}
           
-          {/* Add to My Day - only show if not already in My Day and not done */}
-          {onToggleMyDay && !inMyDay && !isDone && (
+          {/* Toggle My Day - show for non-done tasks */}
+          {onToggleMyDay && !isDone && (
             <button
-              onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, true) }}
-              className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded transition-colors"
-              title="Add to My Day"
+              onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
+              className={`p-1.5 rounded transition-colors ${
+                inMyDay 
+                  ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' 
+                  : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+              }`}
+              title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill={inMyDay ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </button>
