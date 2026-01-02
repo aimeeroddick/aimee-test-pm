@@ -2264,11 +2264,10 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
                     <p className="text-sm text-gray-500 mb-2">Click any stat in the summary bar to filter:</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="text-amber-600 font-medium">☀️ My Day</span> – Daily focus tasks</div>
-                      <div><span className="text-green-600 font-medium">Active</span> – To Do + In Progress</div>
                       <div><span className="text-red-600 font-medium">🚩 Critical</span> – Flagged tasks</div>
-                      <div><span className="text-orange-600 font-medium">Due Today</span></div>
+                      <div><span className="text-orange-600 font-medium">Due Today</span> – Due today</div>
                       <div><span className="text-red-600 font-medium">Overdue</span> – Past due date</div>
+                      <div><span className="text-amber-600 font-medium">☀️ My Day</span> – Daily focus tasks</div>
                     </div>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
