@@ -2418,16 +2418,16 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Drag & Drop:</p>
-                    <p className="text-sm text-gray-500">Drag tasks from the sidebar onto any time slot to schedule them. The task's start time and date will be automatically set.</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Set Start Date & Time:</p>
+                    <p className="text-sm text-gray-500">Open any task and set a <strong>Start Date</strong> and <strong>Start Time</strong>. The task will appear on the calendar at that scheduled time.</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Resize Duration:</p>
-                    <p className="text-sm text-gray-500">Drag the bottom edge of a scheduled task to adjust its duration. Time estimate updates automatically.</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Duration:</p>
+                    <p className="text-sm text-gray-500">Set the <strong>Time Estimate</strong> on a task to control how tall it appears on the calendar (e.g., 30m, 1h, 2h).</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Double-Click:</p>
-                    <p className="text-sm text-gray-500">Double-click any empty time slot to create a new task at that time.</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click to Edit:</p>
+                    <p className="text-sm text-gray-500">Click any task on the calendar to open and edit its details, change times, or mark it complete.</p>
                   </div>
                 </div>
               </section>
@@ -2435,9 +2435,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
-                  Sidebar Task Sections
+                  How to Schedule
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">The sidebar organizes unscheduled tasks by priority:</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Set a Start Date and Start Time on any task to have it appear on the calendar.</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-2">
                     <span>🔴</span><span>Overdue tasks</span>
