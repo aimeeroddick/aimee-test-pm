@@ -2986,10 +2986,6 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
   const isDraggingRef = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
   
-  const handleMouseDown = (e) => {
-    console.log('MOUSEDOWN on', task.title)
-  }
-  
   const handleDragStart = (e) => {
     console.log('DRAG START', task.title)
     isDraggingRef.current = true
@@ -3014,11 +3010,11 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
   return (
     <div
       draggable="true"
-      onMouseDown={handleMouseDown}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
-      className={`p-2.5 rounded-lg border transition-all duration-200 cursor-grab active:cursor-grabbing ${
+      style={{ userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}
+      className={`p-2.5 rounded-lg border select-none cursor-grab active:cursor-grabbing ${
         isDragging ? 'opacity-30 scale-95' : 'hover:shadow-md hover:-translate-y-0.5'
       } ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
