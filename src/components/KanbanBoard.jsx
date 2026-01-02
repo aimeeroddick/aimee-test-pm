@@ -2982,21 +2982,36 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar Sidebar Task Card - click to schedule approach
-const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
+const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
+  const [showScheduler, setShowScheduler] = useState(false)
+  const [scheduleDate, setScheduleDate] = useState(task.start_date || new Date().toISOString().split('T')[0])
+  const [scheduleTime, setScheduleTime] = useState(task.start_time || '09:00')
   
   const handleScheduleClick = (e) => {
     e.stopPropagation()
-    onSelectForScheduling(task)
+    setShowScheduler(true)
+  }
+  
+  const handleScheduleSave = async (e) => {
+    e.stopPropagation()
+    await onUpdateTask(task.id, {
+      start_date: scheduleDate,
+      start_time: scheduleTime,
+      status: task.status === 'backlog' ? 'todo' : task.status
+    })
+    setShowScheduler(false)
   }
   
   const handleClick = () => {
-    onEditTask(task)
+    if (!showScheduler) {
+      onEditTask(task)
+    }
   }
   
   return (
     <div
       onClick={handleClick}
-      className={`p-2.5 rounded-lg border cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
+      className={`relative p-2.5 rounded-lg border cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
         highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
         highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -3033,6 +3048,49 @@ const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEdi
           </svg>
         </button>
       </div>
+      
+      {/* Schedule popup */}
+      {showScheduler && (
+        <div 
+          className="absolute top-full left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="space-y-2">
+            <div>
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1">Date</label>
+              <input
+                type="date"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1">Time</label>
+              <input
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
+                className="flex-1 px-2 py-1.5 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleScheduleSave}
+                className="flex-1 px-2 py-1.5 text-xs bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+              >
+                Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -4061,7 +4119,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 key={task.id}
                 task={task}
                 highlight={highlight}
-                onSelectForScheduling={setSelectedTaskForScheduling}
+                onUpdateTask={onUpdateTask}
                 onEditTask={onEditTask}
                 COLUMN_COLORS={COLUMN_COLORS}
                 formatTimeEstimate={formatTimeEstimate}
@@ -4252,7 +4310,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
               <span>📅</span> Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 📅 then a time slot{isToday ? ' • Auto-adds to My Day' : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 📅 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
