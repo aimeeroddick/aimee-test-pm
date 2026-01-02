@@ -13553,9 +13553,9 @@ Or we can extract from:
                     </div>
                     <a
                       href="mailto:support@gettrackli.com"
-                      className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors"
+                      className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors whitespace-nowrap"
                     >
-                      Contact Us
+                      Contact
                     </a>
                   </div>
                 </div>
