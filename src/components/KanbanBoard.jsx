@@ -1283,6 +1283,111 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
 }
 
 // Empty State Component - Enhanced with illustrations and animations
+// Greeting Icons for My Day
+const GreetingIcon = ({ hour }) => {
+  if (hour < 12) {
+    // Morning - sunrise
+    return (
+      <svg viewBox="0 0 32 32" className="w-7 h-7 sm:w-8 sm:h-8">
+        <defs>
+          <linearGradient id="sunriseGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#F97316" />
+            <stop offset="100%" stopColor="#FBBF24" />
+          </linearGradient>
+        </defs>
+        <path d="M4 22 L28 22" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="16" cy="18" r="6" fill="url(#sunriseGrad)" />
+        <line x1="16" y1="6" x2="16" y2="9" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+        <line x1="7" y1="12" x2="9" y2="14" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+        <line x1="25" y1="12" x2="23" y2="14" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    )
+  } else if (hour < 17) {
+    // Afternoon - sun
+    return (
+      <svg viewBox="0 0 32 32" className="w-7 h-7 sm:w-8 sm:h-8">
+        <defs>
+          <linearGradient id="afternoonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="6" fill="url(#afternoonGrad)" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+          <line key={i} x1="16" y1="4" x2="16" y2="7" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 16 16)`} />
+        ))}
+      </svg>
+    )
+  } else {
+    // Evening - moon
+    return (
+      <svg viewBox="0 0 32 32" className="w-7 h-7 sm:w-8 sm:h-8">
+        <defs>
+          <linearGradient id="moonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#CBD5E1" />
+            <stop offset="100%" stopColor="#94A3B8" />
+          </linearGradient>
+        </defs>
+        <path d="M20 6 A10 10 0 1 0 20 26 A8 8 0 1 1 20 6" fill="url(#moonGrad)" />
+        <circle cx="24" cy="8" r="1" fill="#FBBF24" />
+        <circle cx="27" cy="14" r="1.5" fill="#FBBF24" />
+        <circle cx="22" cy="20" r="1" fill="#FBBF24" />
+      </svg>
+    )
+  }
+}
+
+// Custom Empty State Icons
+const EmptyStateIcons = {
+  celebrate: () => (
+    <svg viewBox="0 0 48 48" className="w-10 h-10 sm:w-12 sm:h-12">
+      <defs>
+        <linearGradient id="celebrateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F472B6" />
+          <stop offset="100%" stopColor="#EC4899" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="16" fill="url(#celebrateGrad)" />
+      <path d="M16 22 Q18 18 20 22 Q22 26 24 22 Q26 18 28 22 Q30 26 32 22" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="18" cy="18" r="2" fill="white" />
+      <circle cx="30" cy="18" r="2" fill="white" />
+      <path d="M8 8 L12 14" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+      <path d="M40 8 L36 14" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" />
+      <path d="M6 24 L10 24" stroke="#34D399" strokeWidth="2" strokeLinecap="round" />
+      <path d="M38 24 L42 24" stroke="#F472B6" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="10" cy="36" r="2" fill="#FBBF24" />
+      <circle cx="38" cy="36" r="2" fill="#A78BFA" />
+    </svg>
+  ),
+  sun: () => (
+    <svg viewBox="0 0 48 48" className="w-10 h-10 sm:w-12 sm:h-12">
+      <defs>
+        <linearGradient id="emptySunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="10" fill="url(#emptySunGrad)" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="24" y1="6" x2="24" y2="10" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 24 24)`} />
+      ))}
+    </svg>
+  ),
+  folder: () => (
+    <svg viewBox="0 0 48 48" className="w-10 h-10 sm:w-12 sm:h-12">
+      <defs>
+        <linearGradient id="emptyFolderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <path d="M6 14 L6 38 Q6 40 8 40 L40 40 Q42 40 42 38 L42 18 Q42 16 40 16 L24 16 L20 12 L8 12 Q6 12 6 14 Z" fill="url(#emptyFolderGrad)" />
+      <line x1="18" y1="26" x2="30" y2="26" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      <line x1="18" y1="32" x2="26" y2="32" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  ),
+}
+
 const EmptyState = ({ icon, title, description, action, actionLabel, variant = 'default' }) => {
   const variants = {
     default: 'from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30',
@@ -1297,7 +1402,7 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
         {/* Decorative rings */}
         <div className={`absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-br ${variants[variant]} opacity-50 animate-pulse`} style={{ transform: 'scale(1.3)' }} />
         <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br ${variants[variant]} flex items-center justify-center shadow-lg`}>
-          <div className="text-3xl sm:text-4xl">{icon}</div>
+          {EmptyStateIcons[icon] ? EmptyStateIcons[icon]() : <div className="text-3xl sm:text-4xl">{icon}</div>}
         </div>
       </div>
       <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
@@ -1582,8 +1687,8 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   const steps = [
     {
       target: 'summary-bar',
-      title: 'Welcome to Trackli! 👋',
-      description: 'This is your Summary Bar - click any stat to filter tasks. Use the ☀️ My Day filter to see your daily focus, or filter by assignee, customer, category and more.',
+      title: 'Welcome to Trackli!',
+      description: 'This is your Summary Bar - click any stat to filter tasks. Use the My Day filter to see your daily focus, or filter by assignee, customer, category and more.',
       position: 'bottom',
     },
     {
@@ -1595,7 +1700,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'task-card',
       title: 'Task Cards',
-      description: 'Each card shows key info at a glance. Look for the ☀️ sun icon on cards in your My Day list! Hover to see details and attachments.',
+      description: 'Each card shows key info at a glance. Look for the sun icon on cards in your My Day list! Hover to see details and attachments.',
       position: 'right',
     },
     {
@@ -1619,7 +1724,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'help',
       title: 'Need Help?',
-      description: 'Click the ? icon anytime to access the full help guide. You\'re all set! 🎉',
+      description: 'Click the ? icon anytime to access the full help guide. You\'re all set!',
       position: 'bottom',
     },
   ]
@@ -2113,7 +2218,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       },
       {
         title: 'Add Tasks to My Day',
-        description: 'Tasks with today\'s start date appear automatically. Click the ☀️ button on any recommended task to add it to your day!',
+        description: 'Tasks with today\'s start date appear automatically. Click the sun button on any recommended task to add it to your day!',
         iconComponent: 'addTask',
         animation: 'addToMyDay',
       },
@@ -2132,7 +2237,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       },
       {
         title: 'Schedule a Task',
-        description: 'Click the 🗓 calendar button on any task to set a date and time. The task will appear on the calendar.',
+        description: 'Click the calendar button on any task to set a date and time. The task will appear on the calendar.',
         iconComponent: 'sparkle',
         animation: 'dragToCalendar',
       },
@@ -4485,7 +4590,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">All caught up! 🎉</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">All caught up!</p>
               ) : (
                 <>
                   <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
@@ -5073,7 +5178,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const greetingEmoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : '🌙'
   
   const taskInMyDay = (task) => {
     // Check if task was dismissed (my_day_date set to a past date)
@@ -5362,7 +5466,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
       <div className="mb-4 sm:mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 sm:gap-3">
-            {greetingEmoji} {greeting}
+            <GreetingIcon hour={hour} /> {greeting}
           </h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
             {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
@@ -5408,9 +5512,9 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           >
             {sortedMyDayActive.length === 0 && myDayCompleted.length === 0 ? (
               <EmptyState
-                icon="☀️"
+                icon="sun"
                 title="Your day is wide open"
-                description="Click the ☀️ button on recommended tasks below to add them here, or create tasks with today's start date."
+                description="Click the sun button on recommended tasks below to add them here, or create tasks with today's start date."
                 variant="default"
               />
             ) : (
@@ -5543,7 +5647,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
             
             {overdueTasks.length === 0 && dueTodayTasks.length === 0 && dueSoonTasks.length === 0 && quickWinTasks.length === 0 && inProgressTasks.length === 0 && todoTasks.length === 0 && backlogTasks.length === 0 && (
               <EmptyState
-                icon="🎉"
+                icon="celebrate"
                 title="You're all caught up!"
                 description="No tasks need your attention right now. Enjoy the moment or create something new."
                 variant="celebrate"
@@ -8978,7 +9082,7 @@ export default function KanbanBoard() {
       // Create sample tasks
       const sampleTasks = [
         {
-          title: '👋 Welcome! Click me to see task details',
+          title: 'Welcome! Click me to see task details',
           description: 'This is the task editor. Here you can:\n\n• Set due dates and start dates\n• Add time estimates\n• Assign to team members\n• Add subtasks\n• Attach files\n• Set up recurring schedules\n\nTry editing this task, then mark it complete!',
           status: 'todo',
           project_id: project.id,
@@ -8987,8 +9091,8 @@ export default function KanbanBoard() {
           time_estimate: 5,
         },
         {
-          title: '☀️ Check out My Day view',
-          description: 'My Day is your daily focus list. Tasks appear here if:\n\n• Their start date is today or earlier\n• You manually add them via the ☀️ icon\n\nTry switching to My Day view in the menu!',
+          title: 'Check out My Day view',
+          description: 'My Day is your daily focus list. Tasks appear here if:\n\n• Their start date is today or earlier\n• You manually add them via the sun icon\n\nTry switching to My Day view in the menu!',
           status: 'todo',
           project_id: project.id,
           start_date: today,
@@ -8996,7 +9100,7 @@ export default function KanbanBoard() {
           time_estimate: 10,
         },
         {
-          title: '🗓 Explore the Calendar view',
+          title: 'Explore the Calendar view',
           description: 'The Calendar view lets you:\n\n• See tasks on their due dates\n• Drag tasks to reschedule them\n• Switch between daily, weekly, and monthly views\n\nThis task is due tomorrow!',
           status: 'todo',
           project_id: project.id,
@@ -9005,7 +9109,7 @@ export default function KanbanBoard() {
           time_estimate: 15,
         },
         {
-          title: '📝 Try the Notes feature for meetings',
+          title: 'Try the Notes feature for meetings',
           description: 'Click the Notes button in the header to:\n\n• Paste meeting notes\n• Use voice-to-text (speak your notes!)\n• AI extracts action items automatically\n\nPerfect for turning meetings into tasks!',
           status: 'todo',
           project_id: project.id,
@@ -9013,7 +9117,7 @@ export default function KanbanBoard() {
           time_estimate: 20,
         },
         {
-          title: '⌨️ Learn keyboard shortcuts',
+          title: 'Learn keyboard shortcuts',
           description: 'Speed up your workflow with shortcuts:\n\n• ⌘/Ctrl + ⌃ + T — New task\n• ⌘/Ctrl + S — Save\n• Escape — Close modal\n• ? — Help menu\n\nClick the ? icon anytime for more!',
           status: 'backlog',
           project_id: project.id,
@@ -9022,8 +9126,8 @@ export default function KanbanBoard() {
           time_estimate: 10,
         },
         {
-          title: '✅ Complete this task to see the celebration!',
-          description: 'When you complete all your My Day tasks, you get a confetti celebration! 🎉\n\nTry completing this task by clicking the circle on the left.',
+          title: 'Complete this task to see the celebration!',
+          description: 'When you complete all your My Day tasks, you get a confetti celebration!\n\nTry completing this task by clicking the circle on the left.',
           status: 'todo',
           project_id: project.id,
           my_day_date: today,
