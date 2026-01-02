@@ -1762,60 +1762,84 @@ const AddToMyDayAnimation = () => (
   </svg>
 )
 
-const DragToCalendarAnimation = () => (
+const ScheduleTaskAnimation = () => (
   <svg viewBox="0 0 280 140" className="w-full h-36 rounded-lg bg-gray-50 dark:bg-gray-700/50">
     <defs>
-      <linearGradient id="calCardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="calButtonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#818CF8" />
         <stop offset="100%" stopColor="#6366F1" />
       </linearGradient>
-      <filter id="calShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2"/>
-      </filter>
     </defs>
     
-    {/* Sidebar */}
-    <rect x="10" y="10" width="70" height="120" rx="6" fill="#F3F4F6" className="dark:fill-gray-600" />
-    <text x="45" y="26" textAnchor="middle" fontSize="8" fill="#9CA3AF">Tasks</text>
-    <rect x="16" y="34" width="58" height="18" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
-    <rect x="16" y="56" width="58" height="18" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    {/* Task card */}
+    <rect x="15" y="20" width="120" height="50" rx="8" fill="white" stroke="#E5E7EB" strokeWidth="1" />
+    <circle cx="32" cy="38" r="6" fill="#3B82F6" />
+    <rect x="45" y="32" width="55" height="8" rx="2" fill="#374151" />
+    <rect x="45" y="44" width="35" height="6" rx="2" fill="#9CA3AF" />
     
-    {/* Calendar grid */}
-    <rect x="90" y="10" width="180" height="120" rx="6" fill="white" className="dark:fill-gray-800" stroke="#E5E7EB" />
-    
-    {/* Time labels */}
-    <text x="100" y="40" fontSize="8" fill="#9CA3AF">9:00</text>
-    <text x="100" y="70" fontSize="8" fill="#9CA3AF">10:00</text>
-    <text x="100" y="100" fontSize="8" fill="#9CA3AF">11:00</text>
-    
-    {/* Time slot lines */}
-    <line x1="125" y1="32" x2="260" y2="32" stroke="#E5E7EB" strokeWidth="1" />
-    <line x1="125" y1="62" x2="260" y2="62" stroke="#E5E7EB" strokeWidth="1" />
-    <line x1="125" y1="92" x2="260" y2="92" stroke="#E5E7EB" strokeWidth="1" />
-    <line x1="125" y1="122" x2="260" y2="122" stroke="#E5E7EB" strokeWidth="1" />
-    
-    {/* Existing scheduled task */}
-    <rect x="130" y="36" width="120" height="22" rx="4" fill="#10B981" opacity="0.8" />
-    <rect x="136" y="43" width="50" height="6" rx="2" fill="white" opacity="0.7" />
-    
-    {/* Animated dragging card */}
-    <g filter="url(#calShadow)">
-      <rect x="16" y="34" width="58" height="18" rx="4" fill="url(#calCardGradient)">
-        <animate attributeName="x" values="16;130;130" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="y" values="34;66;66" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="width" values="58;120;120" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="height" values="18;22;22" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
+    {/* Calendar button on task - animated pulse */}
+    <g>
+      <rect x="105" y="30" width="24" height="24" rx="6" fill="#EEF2FF">
+        <animate attributeName="fill" values="#EEF2FF;#C7D2FE;#EEF2FF" dur="2s" repeatCount="indefinite" />
       </rect>
-      <rect x="22" y="40" width="30" height="5" rx="2" fill="white" opacity="0.8">
-        <animate attributeName="x" values="22;136;136" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="y" values="40;73;73" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="width" values="30;50;50" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-      </rect>
+      <text x="117" y="47" textAnchor="middle" fontSize="14">📅</text>
+      {/* Click indicator */}
+      <circle cx="117" cy="42" r="12" fill="none" stroke="#6366F1" strokeWidth="2">
+        <animate attributeName="r" values="12;18;18" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.8;0;0" dur="2s" repeatCount="indefinite" />
+      </circle>
     </g>
     
-    {/* Current time indicator */}
-    <line x1="125" y1="85" x2="260" y2="85" stroke="#EF4444" strokeWidth="2" />
-    <circle cx="125" cy="85" r="4" fill="#EF4444" />
+    {/* Arrow pointing to modal */}
+    <path d="M140 45 L155 45" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" markerEnd="url(#arrowhead)">
+      <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.7;1" />
+    </path>
+    
+    {/* Schedule modal */}
+    <g>
+      <rect x="160" y="15" width="105" height="110" rx="8" fill="white" stroke="#E5E7EB" strokeWidth="1">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+      </rect>
+      <text x="212" y="35" textAnchor="middle" fontSize="8" fill="#374151" fontWeight="bold">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        Schedule Task
+      </text>
+      
+      {/* Date field */}
+      <text x="170" y="52" fontSize="7" fill="#6B7280">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        Date
+      </text>
+      <rect x="170" y="55" width="85" height="18" rx="4" fill="#F9FAFB" stroke="#E5E7EB">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+      </rect>
+      <text x="180" y="67" fontSize="8" fill="#374151">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        02/01/2026
+      </text>
+      
+      {/* Time field */}
+      <text x="170" y="82" fontSize="7" fill="#6B7280">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        Time
+      </text>
+      <rect x="170" y="85" width="85" height="18" rx="4" fill="#F9FAFB" stroke="#E5E7EB">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+      </rect>
+      <text x="180" y="97" fontSize="8" fill="#374151">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        09:00
+      </text>
+      
+      {/* Schedule button */}
+      <rect x="190" y="107" width="55" height="14" rx="4" fill="url(#calButtonGradient)">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+      </rect>
+      <text x="217" y="117" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">
+        <animate attributeName="opacity" values="0;0;1;1" dur="2s" repeatCount="indefinite" keyTimes="0;0.3;0.4;1" />
+        Schedule
+      </text>
+    </g>
   </svg>
 )
 
@@ -1926,14 +1950,15 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     ],
     calendar: [
       {
-        title: '🗓 Welcome to Calendar!',
+        title: 'Welcome to Calendar!',
         description: 'View your scheduled tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
         icon: '🗓️',
       },
       {
         title: 'Schedule a Task',
-        description: 'Open any task and set a Start Date and Start Time. The task will appear on the calendar at that time slot.',
+        description: 'Click the 📅 calendar button on any task to set a date and time. The task will appear on the calendar.',
         icon: '✨',
+        animation: 'dragToCalendar',
       },
       {
         title: 'Task Duration',
@@ -1982,7 +2007,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   // Animation component mapping
   const animations = {
     addToMyDay: AddToMyDayAnimation,
-    dragToCalendar: DragToCalendarAnimation,
+    dragToCalendar: ScheduleTaskAnimation,
     resizeTask: ResizeTaskAnimation,
     progressBar: ProgressBarAnimation,
   }
@@ -2416,8 +2441,8 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Set Start Date & Time:</p>
-                    <p className="text-sm text-gray-500">Open any task and set a <strong>Start Date</strong> and <strong>Start Time</strong>. The task will appear on the calendar at that scheduled time.</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click the Calendar Button:</p>
+                    <p className="text-sm text-gray-500">Click the <span className="text-lg">📅</span> calendar button on any task to open the scheduling modal. Set a date and time, then click Schedule.</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Duration:</p>
