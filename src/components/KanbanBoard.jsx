@@ -13307,7 +13307,12 @@ Or we can extract from:
             <div className="p-6 space-y-6">
               {/* Profile Section */}
               <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Profile</h3>
+                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Profile
+                </h3>
                 <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
@@ -13368,7 +13373,12 @@ Or we can extract from:
               {/* Change Password - Only for email accounts */}
               {user?.app_metadata?.provider !== 'google' && (
                 <div>
-                  <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Password</h3>
+                  <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Password
+                  </h3>
                   <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                     {passwordResetSent ? (
                       <div className="text-center">
@@ -13396,7 +13406,13 @@ Or we can extract from:
               
               {/* Preferences Section */}
               <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Preferences</h3>
+                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Preferences
+                </h3>
                 <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   {/* Default View */}
                   <div className="flex items-center justify-between">
@@ -13404,7 +13420,7 @@ Or we can extract from:
                     <select
                       value={defaultView}
                       onChange={(e) => handlePreferenceChange('trackli-default-view', e.target.value)}
-                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="board">Board</option>
                       <option value="myday">My Day</option>
@@ -13420,7 +13436,7 @@ Or we can extract from:
                     <select
                       value={weekStartsOn}
                       onChange={(e) => handlePreferenceChange('trackli-week-start', e.target.value)}
-                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      className={`w-28 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="0">Sunday</option>
                       <option value="1">Monday</option>
@@ -13432,9 +13448,9 @@ Or we can extract from:
                     <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Show confetti on completion</span>
                     <button
                       onClick={() => handlePreferenceChange('trackli-show-confetti', showConfetti ? 'false' : 'true')}
-                      className={`relative w-12 h-6 rounded-full transition-colors ${showConfetti ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                      className={`relative w-12 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${showConfetti ? 'bg-indigo-500' : darkMode ? 'bg-gray-600' : 'bg-gray-300'}`}
                     >
-                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${showConfetti ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-200 ${showConfetti ? 'translate-x-6' : 'translate-x-0.5'}`} />
                     </button>
                   </div>
                 </div>
@@ -13442,7 +13458,12 @@ Or we can extract from:
               
               {/* Data Section */}
               <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Data</h3>
+                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                  Data
+                </h3>
                 <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -13453,7 +13474,7 @@ Or we can extract from:
                       <select
                         value={clearTasksAge}
                         onChange={(e) => setClearTasksAge(e.target.value)}
-                        className={`px-2 py-1.5 rounded-lg border text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                        className={`px-2 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                       >
                         <option value="7">7 days</option>
                         <option value="14">14 days</option>
@@ -13464,7 +13485,7 @@ Or we can extract from:
                       <button
                         onClick={handleClearCompletedTasks}
                         disabled={clearingTasks}
-                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 active:bg-gray-700 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                       >
                         {clearingTasks ? '...' : 'Clear'}
                       </button>
@@ -13475,7 +13496,12 @@ Or we can extract from:
               
               {/* Support Section */}
               <div>
-                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Support</h3>
+                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  Support
+                </h3>
                 <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center justify-between">
                     <div>
@@ -13494,7 +13520,12 @@ Or we can extract from:
               
               {/* Danger Zone */}
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 text-red-500">Danger Zone</h3>
+                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 text-red-500">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Danger Zone
+                </h3>
                 <div className={`p-4 rounded-xl border-2 border-red-200 dark:border-red-800 ${darkMode ? 'bg-red-900/20' : 'bg-red-50'}`}>
                   {!showDeleteConfirm ? (
                     <div className="flex items-center justify-between gap-3">
