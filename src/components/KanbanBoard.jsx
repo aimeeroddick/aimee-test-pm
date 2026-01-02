@@ -1926,6 +1926,182 @@ const ProgressBarAnimation = () => (
   </svg>
 )
 
+// Custom Tour Icons
+const TourIcons = {
+  sun: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="10" fill="url(#sunGrad)" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="24" y1="6" x2="24" y2="10" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 24 24)`} />
+      ))}
+    </svg>
+  ),
+  addTask: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="addGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="12" width="32" height="24" rx="4" fill="url(#addGrad)" />
+      <line x1="24" y1="18" x2="24" y2="30" stroke="white" strokeWidth="3" strokeLinecap="round" />
+      <line x1="18" y1="24" x2="30" y2="24" stroke="white" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  ),
+  chart: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="chartGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#34D399" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="28" width="8" height="12" rx="2" fill="url(#chartGrad)" opacity="0.6" />
+      <rect x="20" y="20" width="8" height="20" rx="2" fill="url(#chartGrad)" opacity="0.8" />
+      <rect x="32" y="10" width="8" height="30" rx="2" fill="url(#chartGrad)" />
+    </svg>
+  ),
+  calendar: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="calGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="12" width="32" height="28" rx="4" fill="url(#calGrad)" />
+      <rect x="8" y="12" width="32" height="8" rx="4" fill="#4F46E5" />
+      <circle cx="14" cy="8" r="2" fill="#6366F1" />
+      <circle cx="34" cy="8" r="2" fill="#6366F1" />
+      <rect x="14" y="24" width="6" height="4" rx="1" fill="white" opacity="0.9" />
+      <rect x="24" y="24" width="6" height="4" rx="1" fill="white" opacity="0.6" />
+      <rect x="14" y="32" width="6" height="4" rx="1" fill="white" opacity="0.6" />
+      <rect x="24" y="32" width="6" height="4" rx="1" fill="white" opacity="0.6" />
+    </svg>
+  ),
+  sparkle: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#A78BFA" />
+          <stop offset="100%" stopColor="#8B5CF6" />
+        </linearGradient>
+      </defs>
+      <path d="M24 4 L26 18 L40 20 L26 22 L24 36 L22 22 L8 20 L22 18 Z" fill="url(#sparkGrad)" />
+      <circle cx="36" cy="10" r="3" fill="#C4B5FD" />
+      <circle cx="12" cy="34" r="2" fill="#C4B5FD" />
+    </svg>
+  ),
+  timer: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="26" r="16" fill="none" stroke="url(#timerGrad)" strokeWidth="4" />
+      <circle cx="24" cy="26" r="12" fill="#EEF2FF" />
+      <line x1="24" y1="26" x2="24" y2="18" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" />
+      <line x1="24" y1="26" x2="30" y2="26" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" />
+      <rect x="20" y="4" width="8" height="4" rx="1" fill="#6366F1" />
+    </svg>
+  ),
+  table: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="tableGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <rect x="6" y="8" width="36" height="32" rx="4" fill="url(#tableGrad)" />
+      <rect x="6" y="8" width="36" height="8" rx="4" fill="#4F46E5" />
+      <line x1="6" y1="22" x2="42" y2="22" stroke="white" strokeWidth="1" opacity="0.3" />
+      <line x1="6" y1="30" x2="42" y2="30" stroke="white" strokeWidth="1" opacity="0.3" />
+      <line x1="18" y1="16" x2="18" y2="40" stroke="white" strokeWidth="1" opacity="0.3" />
+      <line x1="30" y1="16" x2="30" y2="40" stroke="white" strokeWidth="1" opacity="0.3" />
+    </svg>
+  ),
+  importExport: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="importGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#34D399" />
+          <stop offset="100%" stopColor="#10B981" />
+        </linearGradient>
+      </defs>
+      <rect x="10" y="8" width="28" height="32" rx="3" fill="url(#importGrad)" />
+      <path d="M18 20 L24 26 L30 20" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <line x1="24" y1="14" x2="24" y2="26" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="16" y1="32" x2="32" y2="32" stroke="white" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+  folder: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="folderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FBBF24" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <path d="M6 14 L6 38 Q6 40 8 40 L40 40 Q42 40 42 38 L42 18 Q42 16 40 16 L24 16 L20 12 L8 12 Q6 12 6 14 Z" fill="url(#folderGrad)" />
+      <rect x="6" y="16" width="36" height="2" fill="#D97706" opacity="0.3" />
+    </svg>
+  ),
+  settings: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="settingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#9CA3AF" />
+          <stop offset="100%" stopColor="#6B7280" />
+        </linearGradient>
+      </defs>
+      <path d="M24 8 L27 10 L30 8 L32 11 L36 11 L36 15 L39 17 L37 20 L39 23 L36 25 L36 29 L32 29 L30 32 L27 30 L24 32 L21 30 L18 32 L16 29 L12 29 L12 25 L9 23 L11 20 L9 17 L12 15 L12 11 L16 11 L18 8 L21 10 Z" fill="url(#settingsGrad)" />
+      <circle cx="24" cy="20" r="6" fill="white" />
+      <circle cx="24" cy="20" r="3" fill="#6B7280" />
+    </svg>
+  ),
+  chartUp: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="chartUpGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <polyline points="8,36 18,26 28,30 40,14" fill="none" stroke="url(#chartUpGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <polygon points="36,12 42,12 42,18" fill="#6366F1" />
+      <circle cx="8" cy="36" r="3" fill="#A5B4FC" />
+      <circle cx="18" cy="26" r="3" fill="#A5B4FC" />
+      <circle cx="28" cy="30" r="3" fill="#A5B4FC" />
+      <circle cx="40" cy="14" r="3" fill="#6366F1" />
+    </svg>
+  ),
+  trophy: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <defs>
+        <linearGradient id="trophyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <path d="M14 8 L34 8 L34 20 Q34 28 24 32 Q14 28 14 20 Z" fill="url(#trophyGrad)" />
+      <path d="M14 12 L10 12 Q6 12 6 16 L6 18 Q6 22 10 22 L14 22" fill="none" stroke="#F59E0B" strokeWidth="3" />
+      <path d="M34 12 L38 12 Q42 12 42 16 L42 18 Q42 22 38 22 L34 22" fill="none" stroke="#F59E0B" strokeWidth="3" />
+      <rect x="20" y="32" width="8" height="4" fill="#D97706" />
+      <rect x="16" y="36" width="16" height="4" rx="1" fill="#92400E" />
+    </svg>
+  ),
+}
+
 // View-Specific Tour Component
 const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   const tourContent = {
@@ -1933,18 +2109,18 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       {
         title: 'Welcome to My Day!',
         description: 'This is your personal daily focus list. Plan what to work on today without cluttering your board view.',
-        icon: '☀️',
+        iconComponent: 'sun',
       },
       {
         title: 'Add Tasks to My Day',
         description: 'Tasks with today\'s start date appear automatically. Click the ☀️ button on any recommended task to add it to your day!',
-        icon: '📥',
+        iconComponent: 'addTask',
         animation: 'addToMyDay',
       },
       {
         title: 'Track Your Progress',
         description: 'Watch your progress bar fill up as you complete tasks. Finish everything for a confetti celebration!',
-        icon: '📊',
+        iconComponent: 'chart',
         animation: 'progressBar',
       },
     ],
@@ -1952,54 +2128,54 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       {
         title: 'Welcome to Calendar!',
         description: 'View your scheduled tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
-        icon: '🗓️',
+        iconComponent: 'calendar',
       },
       {
         title: 'Schedule a Task',
         description: 'Click the 🗓 calendar button on any task to set a date and time. The task will appear on the calendar.',
-        icon: '✨',
+        iconComponent: 'sparkle',
         animation: 'dragToCalendar',
       },
       {
         title: 'Task Duration',
         description: 'Set the Time Estimate on a task to control how tall it appears on the calendar. Click any task to edit its details.',
-        icon: '⏱️',
+        iconComponent: 'timer',
       },
     ],
     tasks: [
       {
-        title: '🗃️ All Tasks View',
+        title: 'All Tasks View',
         description: 'See every task in a powerful table format. Click any column header to sort, or use the Filters button to narrow down results.',
-        icon: '📋',
+        iconComponent: 'table',
       },
       {
         title: 'Import & Export CSV',
         description: 'Export tasks for reporting, or import to bulk create/edit. Use * in the ID column to create new tasks, or include existing IDs to update them.',
-        icon: '📥',
+        iconComponent: 'importExport',
       },
     ],
     projects: [
       {
-        title: '📁 Projects View',
+        title: 'Projects View',
         description: 'Organize your work into projects. Each project gets its own color that appears on task cards throughout the app.',
-        icon: '🏗️',
+        iconComponent: 'folder',
       },
       {
         title: 'Manage Projects',
         description: 'Create new projects, edit details, or archive completed ones. Archived projects hide their tasks from the main board.',
-        icon: '⚙️',
+        iconComponent: 'settings',
       },
     ],
     progress: [
       {
-        title: '📊 Progress View',
+        title: 'Progress View',
         description: 'Track your productivity across all projects. See completion rates, task counts, and how you\'re doing over time.',
-        icon: '📈',
+        iconComponent: 'chartUp',
       },
       {
         title: 'Completion Insights',
         description: 'The charts show your completed vs. remaining tasks. Use this to identify bottlenecks and celebrate wins!',
-        icon: '🏆',
+        iconComponent: 'trophy',
       },
     ],
   }
@@ -2026,7 +2202,11 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Header with gradient */}
           <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
-            <div className="text-4xl mb-3">{currentStep.icon}</div>
+            <div className="mb-3">
+                {currentStep.iconComponent && TourIcons[currentStep.iconComponent] 
+                  ? TourIcons[currentStep.iconComponent]() 
+                  : <span className="text-4xl">{currentStep.icon}</span>}
+              </div>
             <h3 className="text-xl font-bold">{currentStep.title}</h3>
           </div>
           
