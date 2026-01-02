@@ -4697,7 +4697,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
 }
 
 // My Day Task Card - simplified without drag
-const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay }) => {
+const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay, showReorder = false, isFirst = false, isLast = false, onMoveUp, onMoveDown }) => {
   return (
     <div
       onClick={() => onEditTask(task)}
@@ -4712,6 +4712,40 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
       }`}
     >
       <div className="flex items-start gap-2">
+        {/* Reorder arrows */}
+        {showReorder && !isCompleted && (
+          <div className="flex flex-col gap-0.5 shrink-0">
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveUp?.() }}
+              disabled={isFirst}
+              className={`p-0.5 rounded transition-colors ${
+                isFirst 
+                  ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' 
+                  : 'text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+              }`}
+              title="Move up"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveDown?.() }}
+              disabled={isLast}
+              className={`p-0.5 rounded transition-colors ${
+                isLast 
+                  ? 'text-gray-200 dark:text-gray-700 cursor-not-allowed' 
+                  : 'text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'
+              }`}
+              title="Move down"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        )}
+        
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -4814,6 +4848,14 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   const [confettiShown, setConfettiShown] = useState(false)
   const prevActiveCountRef = useRef(null)
   
+  // Custom order for My Day tasks (stored in localStorage)
+  const [customOrder, setCustomOrder] = useState(() => {
+    try {
+      const stored = localStorage.getItem('trackli-myday-order')
+      return stored ? JSON.parse(stored) : []
+    } catch { return [] }
+  })
+  
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayStr = today.toISOString().split('T')[0]
@@ -4884,42 +4926,72 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   const myDayActive = useMemo(() => myDayTasks.filter(t => t.status !== 'done'), [myDayTasks])
   const myDayCompleted = useMemo(() => myDayTasks.filter(t => t.status === 'done'), [myDayTasks])
   
-  // Sort My Day tasks to match board order:
-  // - Tasks WITH start_date: sorted by date > time
-  // - Tasks WITHOUT start_date: sorted by status > created_at
-  myDayActive.sort((a, b) => {
-    const aHasDate = !!a.start_date
-    const bHasDate = !!b.start_date
+  // Sort My Day tasks - use custom order if available, otherwise default sort
+  const sortedMyDayActive = useMemo(() => {
+    const sorted = [...myDayActive]
     
-    // Tasks with start_date come first
-    if (aHasDate && !bHasDate) return -1
-    if (!aHasDate && bHasDate) return 1
-    
-    // Both have start_date: sort by date, then time
-    if (aHasDate && bHasDate) {
-      const dateDiff = new Date(a.start_date) - new Date(b.start_date)
-      if (dateDiff !== 0) return dateDiff
-      
-      // Same date: sort by time (earliest first, nulls last)
-      const aTime = a.start_time || a.end_time
-      const bTime = b.start_time || b.end_time
-      if (aTime && !bTime) return -1
-      if (!aTime && bTime) return 1
-      if (aTime && bTime) {
-        const timeDiff = aTime.localeCompare(bTime)
-        if (timeDiff !== 0) return timeDiff
-      }
+    // If we have a custom order, use it
+    if (customOrder.length > 0) {
+      sorted.sort((a, b) => {
+        const aIndex = customOrder.indexOf(a.id)
+        const bIndex = customOrder.indexOf(b.id)
+        // Tasks in custom order come first, in their custom order
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+        if (aIndex !== -1) return -1
+        if (bIndex !== -1) return 1
+        // Fall through to default sort for tasks not in custom order
+        return 0
+      })
+    } else {
+      // Default sort: by start_date > time > status > created_at
+      sorted.sort((a, b) => {
+        const aHasDate = !!a.start_date
+        const bHasDate = !!b.start_date
+        
+        if (aHasDate && !bHasDate) return -1
+        if (!aHasDate && bHasDate) return 1
+        
+        if (aHasDate && bHasDate) {
+          const dateDiff = new Date(a.start_date) - new Date(b.start_date)
+          if (dateDiff !== 0) return dateDiff
+          
+          const aTime = a.start_time || a.end_time
+          const bTime = b.start_time || b.end_time
+          if (aTime && !bTime) return -1
+          if (!aTime && bTime) return 1
+          if (aTime && bTime) {
+            const timeDiff = aTime.localeCompare(bTime)
+            if (timeDiff !== 0) return timeDiff
+          }
+        }
+        
+        const statusOrder = { 'in_progress': 0, 'todo': 1, 'backlog': 2 }
+        const aStatus = statusOrder[a.status] ?? 3
+        const bStatus = statusOrder[b.status] ?? 3
+        if (aStatus !== bStatus) return aStatus - bStatus
+        
+        return new Date(a.created_at) - new Date(b.created_at)
+      })
     }
+    return sorted
+  }, [myDayActive, customOrder])
+  
+  // Handle moving task up/down in the list
+  const handleMoveTask = (taskId, direction) => {
+    const currentList = sortedMyDayActive.map(t => t.id)
+    const currentIndex = currentList.indexOf(taskId)
+    if (currentIndex === -1) return
     
-    // Neither has start_date (or same date/time): sort by status > created_at
-    const statusOrder = { 'in_progress': 0, 'todo': 1, 'backlog': 2 }
-    const aStatus = statusOrder[a.status] ?? 3
-    const bStatus = statusOrder[b.status] ?? 3
-    if (aStatus !== bStatus) return aStatus - bStatus
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    if (newIndex < 0 || newIndex >= currentList.length) return
     
-    // Same status: sort by created_at (earliest first)
-    return new Date(a.created_at) - new Date(b.created_at)
-  })
+    // Swap positions
+    const newOrder = [...currentList]
+    ;[newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]]
+    
+    setCustomOrder(newOrder)
+    localStorage.setItem('trackli-myday-order', JSON.stringify(newOrder))
+  }
   
   const notInMyDay = tasks.filter(t => !taskInMyDay(t) && t.status !== 'done')
   
@@ -5119,13 +5191,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <span className="text-lg sm:text-xl">☀️</span>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({myDayActive.length} active)</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({sortedMyDayActive.length} active)</span>
           </div>
           
           <div
             className="min-h-[150px] sm:min-h-[200px] rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 transition-all"
           >
-            {myDayActive.length === 0 && myDayCompleted.length === 0 ? (
+            {sortedMyDayActive.length === 0 && myDayCompleted.length === 0 ? (
               <EmptyState
                 icon="☀️"
                 title="Your day is wide open"
@@ -5134,7 +5206,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
               />
             ) : (
               <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                {myDayActive.map(task => {
+                {sortedMyDayActive.map((task, index) => {
                   const project = projects.find(p => p.id === task.project_id)
                   const blocked = isBlocked(task, allTasks)
                   const dueDateStatus = getDueDateStatus(task.due_date, task.status)
@@ -5151,6 +5223,11 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
                       onEditTask={onEditTask}
                       onQuickStatusChange={onQuickStatusChange}
                       onRemoveFromMyDay={handleRemoveFromMyDay}
+                      showReorder={sortedMyDayActive.length > 1}
+                      isFirst={index === 0}
+                      isLast={index === sortedMyDayActive.length - 1}
+                      onMoveUp={() => handleMoveTask(task.id, 'up')}
+                      onMoveDown={() => handleMoveTask(task.id, 'down')}
                     />
                   )
                 })}
