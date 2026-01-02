@@ -1,6 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/((?!sitemap.xml|robots.txt|og-image.png|favicon.svg|manifest.webmanifest|sw.js|workbox-.*\\.js).*)", "destination": "/" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/" }
   ],
   "headers": [
     {
