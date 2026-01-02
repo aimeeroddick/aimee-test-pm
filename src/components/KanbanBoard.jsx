@@ -2652,9 +2652,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   Completing Tasks
                 </h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>• Click the circle checkbox on the left of the card</p>
-                  <p>• Or drag the task to the "Done" column</p>
-                  <p>• Completed tasks show with a green checkmark</p>
+                  <p>• <strong>Hover</strong> over a task and click the <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-sm">✓ Done</span> button</p>
+                  <p>• Or <strong>drag</strong> the task to the "Done" column</p>
+                  <p>• Or open the task and change its status</p>
                 </div>
               </section>
               
