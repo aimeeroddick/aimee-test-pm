@@ -70,6 +70,206 @@ const LandingIcons = {
   ),
 }
 
+// Kanban Drag Animation - shows card moving between columns
+const KanbanDragAnimation = () => (
+  <svg viewBox="0 0 320 180" className="w-full h-48">
+    <defs>
+      <linearGradient id="kanbanHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+      <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.15" />
+      </filter>
+    </defs>
+    
+    {/* Board background */}
+    <rect x="10" y="10" width="300" height="160" rx="12" fill="#F8FAFC" />
+    
+    {/* Column 1: To Do */}
+    <rect x="20" y="20" width="85" height="140" rx="8" fill="#F1F5F9" />
+    <rect x="25" y="25" width="75" height="20" rx="4" fill="#E2E8F0" />
+    <text x="62" y="39" textAnchor="middle" fontSize="9" fill="#64748B" fontWeight="bold">To Do</text>
+    
+    {/* Static task in To Do */}
+    <rect x="28" y="50" width="69" height="45" rx="6" fill="white" filter="url(#cardShadow)" />
+    <circle cx="40" cy="62" r="5" fill="#94A3B8" />
+    <rect x="50" y="58" width="40" height="6" rx="2" fill="#CBD5E1" />
+    <rect x="50" y="68" width="30" height="4" rx="1" fill="#E2E8F0" />
+    
+    {/* Column 2: In Progress */}
+    <rect x="115" y="20" width="85" height="140" rx="8" fill="#EEF2FF" />
+    <rect x="120" y="25" width="75" height="20" rx="4" fill="#C7D2FE" />
+    <text x="157" y="39" textAnchor="middle" fontSize="9" fill="#4F46E5" fontWeight="bold">In Progress</text>
+    
+    {/* Animated dragging card */}
+    <g>
+      {/* Card moving from To Do to In Progress */}
+      <rect rx="6" fill="white" filter="url(#cardShadow)" width="69" height="45">
+        <animate attributeName="x" values="28;28;75;118;118" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <animate attributeName="y" values="100;100;70;50;50" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <animate attributeName="opacity" values="1;1;0.9;1;1" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+      </rect>
+      <circle r="5" fill="#6366F1">
+        <animate attributeName="cx" values="40;40;87;130;130" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <animate attributeName="cy" values="112;112;82;62;62" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+      </circle>
+      <rect rx="2" fill="#374151" width="40" height="6">
+        <animate attributeName="x" values="50;50;97;140;140" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <animate attributeName="y" values="108;108;78;58;58" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+      </rect>
+      <rect rx="1" fill="#9CA3AF" width="30" height="4">
+        <animate attributeName="x" values="50;50;97;140;140" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <animate attributeName="y" values="118;118;88;68;68" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+      </rect>
+      {/* Drag cursor indicator */}
+      <g>
+        <animate attributeName="opacity" values="0;1;1;0;0" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        <circle r="8" fill="#6366F1" opacity="0.2">
+          <animate attributeName="cx" values="62;62;109;152;152" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+          <animate attributeName="cy" values="122;122;92;72;72" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
+        </circle>
+      </g>
+    </g>
+    
+    {/* Column 3: Done */}
+    <rect x="210" y="20" width="85" height="140" rx="8" fill="#F0FDF4" />
+    <rect x="215" y="25" width="75" height="20" rx="4" fill="#BBF7D0" />
+    <text x="252" y="39" textAnchor="middle" fontSize="9" fill="#16A34A" fontWeight="bold">Done</text>
+    
+    {/* Completed task in Done */}
+    <rect x="218" y="50" width="69" height="45" rx="6" fill="white" filter="url(#cardShadow)" />
+    <circle cx="230" cy="62" r="5" fill="#22C55E" />
+    <path d="M227 62 L229 64 L233 60" stroke="white" strokeWidth="1.5" fill="none" />
+    <rect x="240" y="58" width="40" height="6" rx="2" fill="#CBD5E1" />
+    <rect x="240" y="68" width="30" height="4" rx="1" fill="#E2E8F0" />
+  </svg>
+)
+
+// Calendar Animation - shows task scheduling then calendar with tasks
+const CalendarAnimation = () => (
+  <svg viewBox="0 0 320 200" className="w-full h-52">
+    <defs>
+      <linearGradient id="calGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#F59E0B" />
+        <stop offset="100%" stopColor="#D97706" />
+      </linearGradient>
+    </defs>
+    
+    {/* Phase 1: Task being scheduled (fades out) */}
+    <g>
+      <animate attributeName="opacity" values="1;1;0;0;0" dur="5s" repeatCount="indefinite" keyTimes="0;0.3;0.4;0.9;1" />
+      
+      {/* Task card */}
+      <rect x="20" y="30" width="120" height="55" rx="8" fill="white" stroke="#E5E7EB" />
+      <circle cx="38" cy="50" r="6" fill="#F59E0B" />
+      <rect x="52" y="44" width="70" height="8" rx="2" fill="#374151" />
+      <rect x="52" y="56" width="50" height="6" rx="2" fill="#9CA3AF" />
+      
+      {/* Calendar button pulse */}
+      <rect x="100" y="62" width="28" height="18" rx="4" fill="#FEF3C7">
+        <animate attributeName="fill" values="#FEF3C7;#FDE68A;#FEF3C7" dur="1s" repeatCount="indefinite" />
+      </rect>
+      <text x="114" y="74" textAnchor="middle" fontSize="10" fill="#D97706">🗓</text>
+      
+      {/* Click ripple */}
+      <circle cx="114" cy="71" r="10" fill="none" stroke="#F59E0B" strokeWidth="2">
+        <animate attributeName="r" values="10;20;20" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.6;0;0" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      
+      {/* Arrow */}
+      <path d="M150 57 L170 57" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
+        <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" />
+      </path>
+      <path d="M167 53 L173 57 L167 61" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" />
+      </path>
+      
+      {/* Mini schedule modal */}
+      <rect x="180" y="20" width="120" height="80" rx="8" fill="white" stroke="#E5E7EB" />
+      <text x="240" y="38" textAnchor="middle" fontSize="9" fill="#374151" fontWeight="bold">Schedule Task</text>
+      <rect x="190" y="45" width="100" height="18" rx="4" fill="#FEF3C7" />
+      <text x="240" y="57" textAnchor="middle" fontSize="8" fill="#92400E">Thu, Jan 2 • 9:00 AM</text>
+      <rect x="210" y="70" width="60" height="20" rx="6" fill="url(#calGradient)" />
+      <text x="240" y="84" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">Schedule</text>
+    </g>
+    
+    {/* Phase 2: Full calendar view (fades in) */}
+    <g>
+      <animate attributeName="opacity" values="0;0;1;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.3;0.5;0.9;1" />
+      
+      {/* Calendar container */}
+      <rect x="20" y="15" width="280" height="170" rx="10" fill="white" stroke="#E5E7EB" />
+      
+      {/* Calendar header */}
+      <rect x="20" y="15" width="280" height="30" rx="10" fill="#FFFBEB" />
+      <text x="160" y="35" textAnchor="middle" fontSize="11" fill="#92400E" fontWeight="bold">January 2026</text>
+      
+      {/* Day headers */}
+      <text x="45" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Mon</text>
+      <text x="85" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Tue</text>
+      <text x="125" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Wed</text>
+      <text x="165" y="55" textAnchor="middle" fontSize="8" fill="#F59E0B" fontWeight="bold">Thu</text>
+      <text x="205" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Fri</text>
+      <text x="245" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Sat</text>
+      <text x="280" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Sun</text>
+      
+      {/* Calendar grid - Week 1 */}
+      <line x1="30" y1="62" x2="290" y2="62" stroke="#F3F4F6" />
+      
+      {/* Date numbers */}
+      <text x="125" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">1</text>
+      <text x="165" y="72" textAnchor="middle" fontSize="9" fill="#F59E0B" fontWeight="bold">2</text>
+      <text x="205" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">3</text>
+      <text x="245" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">4</text>
+      <text x="280" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">5</text>
+      
+      {/* Task on Wed 1st */}
+      <rect x="108" y="76" width="34" height="14" rx="3" fill="#DBEAFE" />
+      <text x="125" y="86" textAnchor="middle" fontSize="6" fill="#1E40AF">Review</text>
+      
+      {/* Tasks on Thu 2nd (today - highlighted) */}
+      <rect x="145" y="62" width="40" height="50" rx="0" fill="#FEF3C7" opacity="0.3" />
+      <rect x="148" y="76" width="34" height="14" rx="3" fill="#F59E0B">
+        <animate attributeName="opacity" values="0;0;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.4;0.6;1" />
+      </rect>
+      <text x="165" y="86" textAnchor="middle" fontSize="6" fill="white" fontWeight="bold">
+        <animate attributeName="opacity" values="0;0;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.4;0.6;1" />
+        9:00 AM
+      </text>
+      <rect x="148" y="93" width="34" height="14" rx="3" fill="#A78BFA" />
+      <text x="165" y="103" textAnchor="middle" fontSize="6" fill="white">Meeting</text>
+      
+      {/* Task on Fri 3rd */}
+      <rect x="188" y="76" width="34" height="14" rx="3" fill="#86EFAC" />
+      <text x="205" y="86" textAnchor="middle" fontSize="6" fill="#166534">Deploy</text>
+      
+      {/* Week 2 row */}
+      <line x1="30" y1="115" x2="290" y2="115" stroke="#F3F4F6" />
+      <text x="45" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">6</text>
+      <text x="85" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">7</text>
+      <text x="125" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">8</text>
+      <text x="165" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">9</text>
+      <text x="205" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">10</text>
+      
+      {/* Tasks in week 2 */}
+      <rect x="28" y="132" width="34" height="14" rx="3" fill="#FCA5A5" />
+      <text x="45" y="142" textAnchor="middle" fontSize="6" fill="#991B1B">Sprint</text>
+      <rect x="68" y="132" width="34" height="14" rx="3" fill="#93C5FD" />
+      <text x="85" y="142" textAnchor="middle" fontSize="6" fill="#1E40AF">Design</text>
+      <rect x="148" y="132" width="34" height="14" rx="3" fill="#FDE68A" />
+      <text x="165" y="142" textAnchor="middle" fontSize="6" fill="#92400E">Plan</text>
+      
+      {/* Week 3 row */}
+      <line x1="30" y1="155" x2="290" y2="155" stroke="#F3F4F6" />
+      <text x="45" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">13</text>
+      <text x="85" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">14</text>
+      <text x="125" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">15</text>
+    </g>
+  </svg>
+)
+
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
 
@@ -426,11 +626,8 @@ export default function LandingPage() {
 
           {/* Feature 2: Kanban */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="order-2 lg:order-1 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 flex items-center justify-center">
-              <div className="text-center">
-                {LandingIcons.clipboard()}
-                <p className="font-medium text-gray-600 mt-4">Drag, drop, done</p>
-              </div>
+            <div className="order-2 lg:order-1 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 flex items-center justify-center">
+              <KanbanDragAnimation />
             </div>
             <div className="order-1 lg:order-2">
               <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
@@ -488,11 +685,8 @@ export default function LandingPage() {
                 ))}
               </ul>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 flex items-center justify-center">
-              <div className="text-center">
-                {LandingIcons.calendar()}
-                <p className="font-medium text-gray-600 mt-4">Tasks meet calendar</p>
-              </div>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 flex items-center justify-center">
+              <CalendarAnimation />
             </div>
           </div>
         </div>
