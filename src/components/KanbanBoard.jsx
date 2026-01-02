@@ -4801,18 +4801,29 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
     const isDraggingRef = useRef(false)
+    const didDragRef = useRef(false)
+    
+    const handleMouseDown = (e) => {
+      if (isCompleted) return
+      if (e.target.closest('button')) return
+      didDragRef.current = false
+    }
     
     const handleDragStart = (e) => {
       isDraggingRef.current = true
+      didDragRef.current = true
       onDragStart(e, task)
     }
     
     const handleDragEnd = () => {
-      setTimeout(() => { isDraggingRef.current = false }, 100)
+      setTimeout(() => {
+        isDraggingRef.current = false
+        didDragRef.current = false
+      }, 100)
     }
     
     const handleClick = () => {
-      if (!isDraggingRef.current) {
+      if (!isDraggingRef.current && !didDragRef.current) {
         onEditTask(task)
       }
     }
@@ -4820,6 +4831,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     return (
       <div
         draggable={!isCompleted}
+        onMouseDown={handleMouseDown}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onClick={handleClick}
