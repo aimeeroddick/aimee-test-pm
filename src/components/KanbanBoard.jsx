@@ -12,6 +12,35 @@ const ENERGY_LEVELS = {
   low: { bg: '#D1FAE5', text: '#059669', icon: '▰', label: 'Low Effort' },
 }
 
+// Consistent Button Styles
+const BTN = {
+  // Base styles applied to all buttons
+  base: 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+  
+  // Size variants
+  sizes: {
+    xs: 'px-2 py-1 text-xs rounded-lg gap-1',
+    sm: 'px-3 py-1.5 text-sm rounded-lg gap-1.5',
+    md: 'px-4 py-2 text-sm rounded-xl gap-2',
+    lg: 'px-6 py-3 text-base rounded-xl gap-2',
+  },
+  
+  // Color variants
+  variants: {
+    primary: 'bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 focus:ring-indigo-500 shadow-sm hover:shadow',
+    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
+    danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow',
+    warning: 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 focus:ring-amber-500 shadow-sm hover:shadow',
+    success: 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700 focus:ring-green-500 shadow-sm hover:shadow',
+    ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus:ring-gray-400 dark:text-gray-400 dark:hover:bg-gray-700',
+    outline: 'border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 focus:ring-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-900/20',
+  },
+}
+
+// Helper to compose button classes
+const btn = (variant = 'primary', size = 'md', extra = '') => 
+  `${BTN.base} ${BTN.sizes[size]} ${BTN.variants[variant]} ${extra}`.trim()
+
 const CATEGORIES = [
   { id: 'meeting_followup', label: 'Meeting Follow-up', color: '#8B5CF6' },
   { id: 'email', label: 'Email', color: '#3B82F6' },
@@ -538,9 +567,9 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
   if (!isOpen) return null
   
   const confirmButtonStyles = {
-    danger: 'bg-red-500 hover:bg-red-600 text-white',
-    warning: 'bg-amber-500 hover:bg-amber-600 text-white',
-    primary: 'bg-indigo-500 hover:bg-indigo-600 text-white',
+    danger: 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white focus:ring-red-500 shadow-sm hover:shadow',
+    warning: 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white focus:ring-amber-500 shadow-sm hover:shadow',
+    primary: 'bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white focus:ring-indigo-500 shadow-sm hover:shadow',
   }
   
   return (
@@ -560,14 +589,14 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 rounded-xl font-medium transition-colors ${confirmButtonStyles[confirmStyle]} disabled:opacity-50`}
+            className={`px-4 py-2 rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${confirmButtonStyles[confirmStyle]} disabled:opacity-50`}
           >
             {loading ? 'Please wait...' : confirmLabel}
           </button>
@@ -8451,14 +8480,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           <button
             type="button"
             onClick={onClose}
-            className="px-3 sm:px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-sm sm:text-base"
+            className="px-3 sm:px-4 py-2.5 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded-xl transition-all text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 text-sm sm:text-base"
+            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all font-medium shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {loading ? 'Saving...' : task?.id ? 'Save' : 'Create'}
           </button>
@@ -8490,7 +8519,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               >
                 Cancel
               </button>
@@ -8500,7 +8529,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   setShowDeleteConfirm(false)
                   onClose()
                 }}
-                className="px-4 py-2 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+                className="px-4 py-2 rounded-xl font-medium bg-red-500 hover:bg-red-600 active:bg-red-700 text-white transition-all shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Delete
               </button>
@@ -8678,13 +8707,13 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               </button>
             </>
           )}
-          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-medium disabled:opacity-50"
+            className="px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 active:bg-indigo-700 transition-all font-medium disabled:opacity-50 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {loading ? 'Saving...' : project ? <><u>S</u>ave Changes</> : <><u>S</u>ave Project</>}
           </button>
@@ -11408,7 +11437,7 @@ export default function KanbanBoard() {
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 transition-colors text-sm font-medium items-center gap-1.5"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 active:bg-teal-700 transition-all text-sm font-medium items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 shadow-sm hover:shadow"
                 title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11420,7 +11449,7 @@ export default function KanbanBoard() {
               <button
                 onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 title={`${shortcutModifier}T`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11437,7 +11466,7 @@ export default function KanbanBoard() {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-medium items-center gap-1.5 disabled:opacity-50"
+                className="hidden sm:flex px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 active:bg-amber-700 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 shadow-sm hover:shadow"
                 title="Import Meeting Notes (⌘N)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
