@@ -2327,7 +2327,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Manually added:</p>
-                    <p className="text-sm text-gray-500">Drag tasks from Recommendations into the "My Day" section to add them to your focus list</p>
+                    <p className="text-sm text-gray-500">Click the ☀️ button on any task in Recommendations to add it to your focus list</p>
                   </div>
                 </div>
               </section>
@@ -2347,7 +2347,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
                   Recommendations & All Tasks
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">The sidebar shows all available tasks organized by urgency and status. Drag any task to My Day to add it:</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">The Recommendations section shows tasks organized by urgency and status. Click the ☀️ button on any task to add it:</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                     <span className="font-semibold text-red-600">🔴 Overdue</span>
@@ -4674,12 +4674,10 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref }) => {
-  const [dragOverMyDay, setDragOverMyDay] = useState(false)
+const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref }) => {
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
   const prevActiveCountRef = useRef(null)
-  const isDraggingRef = useRef(false)
   
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -4886,25 +4884,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     // Update previous count
     prevActiveCountRef.current = myDayActive.length
   }, [myDayActive.length, myDayCompleted.length, confettiShown, showConfettiPref])
-  
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    setDragOverMyDay(true)
-  }
-  
-  const handleDragLeave = () => {
-    setDragOverMyDay(false)
-  }
-  
-  const handleDropOnMyDay = (e) => {
-    e.preventDefault()
-    setDragOverMyDay(false)
-    const taskId = e.dataTransfer.getData('text/plain')
-    if (taskId) {
-      onUpdateMyDayDate(taskId, todayStr)
-    }
-  }
-  
+
   const handleRemoveFromMyDay = (e, task) => {
     e.stopPropagation()
     // Set to yesterday to mark as "dismissed from My Day"
@@ -5080,7 +5060,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </div>
           
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
-            Drag tasks to My Day to add them to your focus list
+            Click the ☀️ button on any task to add it to your focus list
           </p>
           
           <div className="space-y-2 sm:space-y-3">
@@ -11320,7 +11300,6 @@ export default function KanbanBoard() {
                 tasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 projects={projects}
                 onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
-                onDragStart={handleDragStart}
                 allTasks={tasks.filter(t => !t.project_id || !projects.find(p => p.id === t.project_id)?.archived)}
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
