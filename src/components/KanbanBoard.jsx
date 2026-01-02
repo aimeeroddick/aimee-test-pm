@@ -4554,6 +4554,121 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   )
 }
 
+// My Day Task Card - defined outside to prevent re-creation on render
+const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onDragStart, onEditTask, onQuickStatusChange, onRemoveFromMyDay }) => {
+  const isDraggingRef = useRef(false)
+  
+  const handleCardDragStart = (e) => {
+    isDraggingRef.current = true
+    onDragStart(e, task)
+  }
+  
+  const handleCardDragEnd = () => {
+    setTimeout(() => { isDraggingRef.current = false }, 100)
+  }
+  
+  const handleCardClick = () => {
+    if (!isDraggingRef.current) {
+      onEditTask(task)
+    }
+  }
+  
+  return (
+    <div
+      draggable
+      onDragStart={handleCardDragStart}
+      onDragEnd={handleCardDragEnd}
+      onClick={handleCardClick}
+      className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-pointer ${
+        isCompleted 
+          ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
+          : blocked 
+            ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800' 
+            : task.critical 
+              ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800' 
+              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
+      }`}
+    >
+      <div className="flex items-start gap-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onQuickStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')
+          }}
+          className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+            task.status === 'done'
+              ? 'bg-emerald-500 border-emerald-500 text-white'
+              : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+          }`}
+        >
+          {task.status === 'done' && (
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </button>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className={`font-medium text-sm leading-tight ${
+              isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-100'
+            }`}>
+              {task.critical && !isCompleted && <span className="text-red-500 mr-1">🚩</span>}
+              {blocked && !isCompleted && <span className="text-orange-500 mr-1">🔒</span>}
+              {task.title}
+            </h4>
+            
+            {showRemove && !isCompleted && (
+              <button
+                onClick={(e) => onRemoveFromMyDay(e, task)}
+                className="sm:opacity-0 sm:group-hover:opacity-100 p-2 sm:p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all touch-manipulation"
+                title="Remove from My Day"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {project && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                {project.name}
+              </span>
+            )}
+            {task.due_date && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                dueDateStatus === 'today' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                dueDateStatus === 'soon' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+              }`}>
+                {formatDate(task.due_date)}
+              </span>
+            )}
+            {energyStyle && (
+              <span className="text-xs" title={`${energyStyle.label} effort`}>
+                {task.energy_level === 'low' && <span style={{color: energyStyle.text}}>▰</span>}
+                {task.energy_level === 'medium' && <span style={{color: energyStyle.text}}>▰▰</span>}
+                {task.energy_level === 'high' && <span style={{color: energyStyle.text}}>▰▰▰</span>}
+              </span>
+            )}
+            {task.time_estimate && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {task.time_estimate < 60 ? `${task.time_estimate}m` : `${Math.round(task.time_estimate / 60)}h`}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // My Day Dashboard Component - Redesigned
 const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref }) => {
   const [dragOverMyDay, setDragOverMyDay] = useState(false)
@@ -4795,124 +4910,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     onUpdateMyDayDate(task.id, yesterdayStr)
   }
   
-  const TaskCard = ({ task, showRemove = false, isCompleted = false }) => {
-    const project = projects.find(p => p.id === task.project_id)
-    const energyStyle = ENERGY_LEVELS[task.energy_level]
-    const dueDateStatus = getDueDateStatus(task.due_date, task.status)
-    const blocked = isBlocked(task, allTasks)
-    const isDraggingRef = useRef(false)
-    
-    const handleCardDragStart = (e) => {
-      isDraggingRef.current = true
-      onDragStart(e, task)
-    }
-    
-    const handleCardDragEnd = () => {
-      setTimeout(() => { isDraggingRef.current = false }, 100)
-    }
-    
-    const handleCardClick = () => {
-      if (!isDraggingRef.current) {
-        onEditTask(task)
-      }
-    }
-    
-    return (
-      <div
-        draggable
-        onDragStart={handleCardDragStart}
-        onDragEnd={handleCardDragEnd}
-        onClick={handleCardClick}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-pointer ${
-          isCompleted 
-            ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
-            : blocked 
-              ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800' 
-              : task.critical 
-                ? 'bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800' 
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'
-        }`}
-      >
-        <div className="flex items-start gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuickStatusChange(task.id, task.status === 'done' ? 'todo' : 'done')
-            }}
-            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
-              task.status === 'done'
-                ? 'bg-emerald-500 border-emerald-500 text-white'
-                : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-            }`}
-          >
-            {task.status === 'done' && (
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </button>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <h4 className={`font-medium text-sm leading-tight ${
-                isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-100'
-              }`}>
-                {task.critical && !isCompleted && <span className="text-red-500 mr-1">🚩</span>}
-                {blocked && !isCompleted && <span className="text-orange-500 mr-1">🔒</span>}
-                {task.title}
-              </h4>
-              
-              {showRemove && !isCompleted && (
-                <button
-                  onClick={(e) => handleRemoveFromMyDay(e, task)}
-                  className="sm:opacity-0 sm:group-hover:opacity-100 p-2 sm:p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all touch-manipulation"
-                  title="Remove from My Day"
-                >
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              {project && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  {project.name}
-                </span>
-              )}
-              {task.due_date && (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  dueDateStatus === 'overdue' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                  dueDateStatus === 'today' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                  dueDateStatus === 'soon' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                }`}>
-                  {formatDate(task.due_date)}
-                </span>
-              )}
-              {energyStyle && (
-                <span className="text-xs" title={`${energyStyle.label} effort`}>
-                  {task.energy_level === 'low' && <span style={{color: energyStyle.text}}>▰</span>}
-                  {task.energy_level === 'medium' && <span style={{color: energyStyle.text}}>▰▰</span>}
-                  {task.energy_level === 'high' && <span style={{color: energyStyle.text}}>▰▰▰</span>}
-                </span>
-              )}
-              {task.time_estimate && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {task.time_estimate < 60 ? `${task.time_estimate}m` : `${Math.round(task.time_estimate / 60)}h`}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  
   const RecommendationSection = ({ title, emoji, color, tasks, id }) => {
     if (tasks.length === 0) return null
     const isExpanded = expandedSection === id
@@ -4935,9 +4932,26 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
         
         {isExpanded && (
           <div className="p-2 sm:p-3 space-y-2 bg-white dark:bg-gray-900">
-            {tasks.map(task => (
-              <TaskCard key={task.id} task={task} />
-            ))}
+            {tasks.map(task => {
+              const project = projects.find(p => p.id === task.project_id)
+              const blocked = isBlocked(task, allTasks)
+              const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+              const energyStyle = ENERGY_LEVELS[task.energy_level]
+              return (
+                <MyDayTaskCard
+                  key={task.id}
+                  task={task}
+                  project={project}
+                  blocked={blocked}
+                  dueDateStatus={dueDateStatus}
+                  energyStyle={energyStyle}
+                  onDragStart={onDragStart}
+                  onEditTask={onEditTask}
+                  onQuickStatusChange={onQuickStatusChange}
+                  onRemoveFromMyDay={handleRemoveFromMyDay}
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -5010,9 +5024,27 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
               />
             ) : (
               <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                {myDayActive.map(task => (
-                  <TaskCard key={task.id} task={task} showRemove={true} />
-                ))}
+                {myDayActive.map(task => {
+                  const project = projects.find(p => p.id === task.project_id)
+                  const blocked = isBlocked(task, allTasks)
+                  const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+                  const energyStyle = ENERGY_LEVELS[task.energy_level]
+                  return (
+                    <MyDayTaskCard
+                      key={task.id}
+                      task={task}
+                      project={project}
+                      showRemove={true}
+                      blocked={blocked}
+                      dueDateStatus={dueDateStatus}
+                      energyStyle={energyStyle}
+                      onDragStart={onDragStart}
+                      onEditTask={onEditTask}
+                      onQuickStatusChange={onQuickStatusChange}
+                      onRemoveFromMyDay={handleRemoveFromMyDay}
+                    />
+                  )
+                })}
                 
                 {myDayCompleted.length > 0 && (
                   <>
@@ -5021,9 +5053,27 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                       <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">Completed today ({myDayCompleted.length})</span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                     </div>
-                    {myDayCompleted.map(task => (
-                      <TaskCard key={task.id} task={task} isCompleted={true} />
-                    ))}
+                    {myDayCompleted.map(task => {
+                      const project = projects.find(p => p.id === task.project_id)
+                      const blocked = isBlocked(task, allTasks)
+                      const dueDateStatus = getDueDateStatus(task.due_date, task.status)
+                      const energyStyle = ENERGY_LEVELS[task.energy_level]
+                      return (
+                        <MyDayTaskCard
+                          key={task.id}
+                          task={task}
+                          project={project}
+                          isCompleted={true}
+                          blocked={blocked}
+                          dueDateStatus={dueDateStatus}
+                          energyStyle={energyStyle}
+                          onDragStart={onDragStart}
+                          onEditTask={onEditTask}
+                          onQuickStatusChange={onQuickStatusChange}
+                          onRemoveFromMyDay={handleRemoveFromMyDay}
+                        />
+                      )
+                    })}
                   </>
                 )}
               </div>
