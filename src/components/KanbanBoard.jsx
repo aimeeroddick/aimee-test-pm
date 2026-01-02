@@ -4554,42 +4554,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   )
 }
 
-// My Day Task Card - defined outside to prevent re-creation on render
-const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onDragStart, onEditTask, onQuickStatusChange, onRemoveFromMyDay }) => {
-  const isDraggingRef = useRef(false)
-  const didDragRef = useRef(false)
-  
-  const handleMouseDown = (e) => {
-    if (e.target.closest('button')) return
-    didDragRef.current = false
-  }
-  
-  const handleCardDragStart = (e) => {
-    isDraggingRef.current = true
-    didDragRef.current = true
-    onDragStart(e, task)
-  }
-  
-  const handleCardDragEnd = () => {
-    setTimeout(() => {
-      isDraggingRef.current = false
-      didDragRef.current = false
-    }, 100)
-  }
-  
-  const handleCardClick = () => {
-    if (!isDraggingRef.current && !didDragRef.current) {
-      onEditTask(task)
-    }
-  }
-  
+// My Day Task Card - simplified without drag
+const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay }) => {
   return (
     <div
-      draggable="true"
-      onMouseDown={handleMouseDown}
-      onDragStart={handleCardDragStart}
-      onDragEnd={handleCardDragEnd}
-      onClick={handleCardClick}
+      onClick={() => onEditTask(task)}
       className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-pointer ${
         isCompleted 
           ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
@@ -4629,6 +4598,23 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
               {task.title}
             </h4>
             
+            {/* Add to My Day button - shown in Recommendations */}
+            {onAddToMyDay && !isCompleted && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddToMyDay(task.id)
+                }}
+                className="p-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all touch-manipulation text-amber-500 hover:text-amber-600 dark:text-amber-400"
+                title="Add to My Day"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Remove from My Day button - shown in My Day list */}
             {showRemove && !isCompleted && (
               <button
                 onClick={(e) => onRemoveFromMyDay(e, task)}
@@ -4956,10 +4942,9 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                   blocked={blocked}
                   dueDateStatus={dueDateStatus}
                   energyStyle={energyStyle}
-                  onDragStart={onDragStart}
                   onEditTask={onEditTask}
                   onQuickStatusChange={onQuickStatusChange}
-                  onRemoveFromMyDay={handleRemoveFromMyDay}
+                  onAddToMyDay={(taskId) => onUpdateMyDayDate(taskId, todayStr)}
                 />
               )
             })}
@@ -5016,21 +5001,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </div>
           
           <div
-            data-dropzone="myday"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDropOnMyDay}
-            className={`min-h-[150px] sm:min-h-[200px] rounded-xl border-2 border-dashed transition-all ${
-              dragOverMyDay 
-                ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' 
-                : 'border-gray-200 dark:border-gray-700'
-            }`}
+            className="min-h-[150px] sm:min-h-[200px] rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 transition-all"
           >
             {myDayActive.length === 0 && myDayCompleted.length === 0 ? (
               <EmptyState
                 icon="☀️"
                 title="Your day is wide open"
-                description="Drag tasks here from the recommendations, or add tasks with today's start date to build your focus list."
+                description="Click the ☀️ button on recommended tasks below to add them here, or create tasks with today's start date."
                 variant="default"
               />
             ) : (
@@ -5049,7 +5026,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                       blocked={blocked}
                       dueDateStatus={dueDateStatus}
                       energyStyle={energyStyle}
-                      onDragStart={onDragStart}
                       onEditTask={onEditTask}
                       onQuickStatusChange={onQuickStatusChange}
                       onRemoveFromMyDay={handleRemoveFromMyDay}
@@ -5078,10 +5054,8 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
                           blocked={blocked}
                           dueDateStatus={dueDateStatus}
                           energyStyle={energyStyle}
-                          onDragStart={onDragStart}
                           onEditTask={onEditTask}
                           onQuickStatusChange={onQuickStatusChange}
-                          onRemoveFromMyDay={handleRemoveFromMyDay}
                         />
                       )
                     })}
