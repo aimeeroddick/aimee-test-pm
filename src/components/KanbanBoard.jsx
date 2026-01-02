@@ -7689,36 +7689,39 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
-        {/* Status & Project - top row */}
-        <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
-          {/* Status - sleek segmented control */}
-          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+        {/* Status & Project - minimal top row */}
+        <div className="flex items-center justify-between gap-4 mb-3">
+          {/* Status - minimal with colored dot */}
+          <div className="flex items-center gap-1">
             {COLUMNS.map((col) => (
               <button
                 key={col.id}
                 type="button"
                 onClick={() => setFormData({ ...formData, status: col.id })}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-all ${
                   formData.status === col.id
-                    ? 'bg-white dark:bg-gray-700 shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    ? 'bg-gray-100 dark:bg-gray-800 font-medium'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
-                style={formData.status === col.id ? { color: col.color } : {}}
               >
-                {col.title}
+                <span 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: col.color }}
+                />
+                {formData.status === col.id && <span style={{ color: col.color }}>{col.title}</span>}
               </button>
             ))}
           </div>
-          {/* Project - pill with icon */}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          {/* Project - minimal text link style */}
+          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
             <select
               required
               value={formData.project_id}
               onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-              className="bg-transparent text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent font-medium text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <option value="">Select project</option>
               {projects.map((p) => (
