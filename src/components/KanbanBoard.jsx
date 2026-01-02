@@ -5621,7 +5621,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div>
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <span className="text-lg sm:text-xl">☀️</span>
+            {MenuIcons.myday()}
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h2>
             <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({sortedMyDayActive.length} active)</span>
           </div>
@@ -5699,12 +5699,12 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
         
         <div>
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <span className="text-lg sm:text-xl">💡</span>
+            {MenuIcons.lightbulb()}
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Recommendations</h2>
           </div>
           
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
-            Click the ☀️ button on any task to add it to your focus list
+            Click the sun button on any task to add it to your focus list
           </p>
           
           <div className="space-y-2 sm:space-y-3">
