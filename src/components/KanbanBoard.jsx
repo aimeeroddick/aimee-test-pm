@@ -10111,6 +10111,7 @@ export default function KanbanBoard() {
   const handleDragStart = (e, task) => {
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', task.id) // Required for drag to work in all browsers
   }
 
   const handleDragOver = (e, columnId) => {
@@ -10119,8 +10120,16 @@ export default function KanbanBoard() {
 
   const handleDrop = (e, columnId) => {
     e.preventDefault()
-    if (draggedTask && draggedTask.status !== columnId) {
-      handleUpdateTaskStatus(draggedTask.id, columnId)
+    
+    // Get task from state, or fallback to dataTransfer if state hasn't updated yet
+    let taskToMove = draggedTask
+    if (!taskToMove) {
+      const taskId = e.dataTransfer.getData('text/plain')
+      taskToMove = tasks.find(t => t.id === taskId)
+    }
+    
+    if (taskToMove && taskToMove.status !== columnId) {
+      handleUpdateTaskStatus(taskToMove.id, columnId)
     }
     setDraggedTask(null)
   }
