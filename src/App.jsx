@@ -7,6 +7,7 @@ import Login from './components/Login'
 import LandingPage from './components/LandingPage'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
+import UpdateNotification from './components/UpdateNotification'
 
 // Lazy load heavy components
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
@@ -121,6 +122,7 @@ function App() {
       </Routes>
       <Analytics />
       <SpeedInsights />
+      <UpdateNotification />
     </>
   )
 }
