@@ -7691,7 +7691,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       <form onSubmit={handleSubmit}>
         {/* ═══════ CORE FIELDS ═══════ */}
         {true && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
@@ -7700,7 +7700,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.title ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
+                className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.title ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
                 placeholder="What needs to be done?"
               />
             </div>
@@ -7713,7 +7713,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 onPaste={handlePaste}
                 rows={2}
-                className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.description ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 placeholder="Add more context... (paste images here!)"
               />
               {pasteMessage && activeTab === 'details' && (
@@ -7797,13 +7797,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effort Level</label>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => setFormData({ ...formData, energy_level: key })}
-                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                         formData.energy_level === key
                           ? 'ring-2 ring-offset-1 ring-indigo-500'
                           : 'hover:opacity-80'
@@ -7934,12 +7934,36 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     </button>
                   )}
                 </div>
-                <input
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.start_date ? new Date(formData.start_date + 'T00:00:00').toLocaleDateString() : ''}
+                    onChange={(e) => {
+                      const val = e.target.value.trim()
+                      if (!val) { setFormData({ ...formData, start_date: '' }); return }
+                      const parsed = parseNaturalLanguageDate(val)
+                      if (parsed.date) setFormData({ ...formData, start_date: parsed.date })
+                    }}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim()
+                      if (!val) return
+                      const parsed = parseNaturalLanguageDate(val)
+                      if (parsed.date) setFormData({ ...formData, start_date: parsed.date })
+                    }}
+                    placeholder="Select date..."
+                    className={`w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                  />
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    title="Open calendar"
+                  />
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
@@ -7980,12 +8004,36 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     </button>
                   )}
                 </div>
-                <input
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.due_date ? new Date(formData.due_date + 'T00:00:00').toLocaleDateString() : ''}
+                    onChange={(e) => {
+                      const val = e.target.value.trim()
+                      if (!val) { setFormData({ ...formData, due_date: '' }); return }
+                      const parsed = parseNaturalLanguageDate(val)
+                      if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
+                    }}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim()
+                      if (!val) return
+                      const parsed = parseNaturalLanguageDate(val)
+                      if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
+                    }}
+                    placeholder="Select date..."
+                    className={`w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                  />
+                  <input
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    title="Open calendar"
+                  />
+                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
             </div>
             
@@ -8818,7 +8866,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </div>
           )}
           </div>
-        )}
         
         <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           {task?.id && (
