@@ -6305,20 +6305,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                   ↩ Reopen
                 </button>
               )}
-              {/* My Day toggle - mobile */}
-              {onToggleMyDay && !isDone && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
-                  className={`py-1 px-2 text-[10px] font-medium rounded transition-colors ${
-                    inMyDay 
-                      ? 'text-amber-600 bg-amber-100 dark:bg-amber-900/50 dark:text-amber-400' 
-                      : 'text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 hover:bg-amber-50 hover:text-amber-600'
-                  }`}
-                  title={inMyDay ? 'Remove from My Day' : 'Add to My Day'}
-                >
-                  ☀️
-                </button>
-              )}
             </div>
           )}
         </div>
