@@ -3036,7 +3036,12 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
           </p>
           <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
             {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
-            {task.due_date && <span>🗓{formatDate(task.due_date)}</span>}
+            {task.due_date && (
+              <span className="flex items-center gap-0.5">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                {formatDate(task.due_date)}
+              </span>
+            )}
           </div>
         </div>
         {/* Schedule button */}
@@ -3051,47 +3056,55 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
         </button>
       </div>
       
-      {/* Schedule popup */}
+      {/* Schedule popup - fixed position modal */}
       {showScheduler && (
-        <div 
-          className="absolute top-full left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="space-y-2">
-            <div>
-              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1">Date</label>
-              <input
-                type="date"
-                value={scheduleDate}
-                onChange={(e) => setScheduleDate(e.target.value)}
-                className="w-full px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-medium text-gray-500 dark:text-gray-400 mb-1">Time</label>
-              <input
-                type="time"
-                value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
-                className="w-full px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
-                className="flex-1 px-2 py-1.5 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleScheduleSave}
-                className="flex-1 px-2 py-1.5 text-xs bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-              >
-                Schedule
-              </button>
+        <>
+          <div 
+            className="fixed inset-0 z-[9998]"
+            onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
+          />
+          <div 
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[9999]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Schedule Task</h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 truncate">{task.title}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Time</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
+                  className="flex-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleSave}
+                  className="flex-1 px-3 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium"
+                >
+                  Schedule
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
