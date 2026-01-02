@@ -7812,54 +7812,94 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             {/* Start Date & Due Date side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Start Date
-                  <span className="ml-2 text-xs text-gray-400 font-normal">T, T+1, W+1, M+1</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                <div className="flex gap-1 mb-1.5">
+                  {[
+                    { label: 'T', title: 'Today', days: 0 },
+                    { label: '+1', title: 'Tomorrow', days: 1 },
+                    { label: 'W', title: 'Next Week', days: 7 },
+                    { label: 'M', title: 'Next Month', days: 30 },
+                  ].map(opt => {
+                    const d = new Date(); d.setDate(d.getDate() + opt.days);
+                    const dateStr = d.toISOString().split('T')[0];
+                    const isActive = formData.start_date === dateStr;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, start_date: dateStr })}
+                        title={opt.title}
+                        className={`px-2 py-1 text-xs font-medium rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                  {formData.start_date && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, start_date: '' })}
+                      title="Clear"
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 <input
-                  type="text"
+                  type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  onBlur={(e) => {
-                    const val = e.target.value.trim()
-                    if (!val) {
-                      setFormData({ ...formData, start_date: '' })
-                      return
-                    }
-                    // Try shorthand parsing first
-                    const parsed = parseNaturalLanguageDate(val)
-                    if (parsed.date) {
-                      setFormData({ ...formData, start_date: parsed.date })
-                    }
-                    // Otherwise keep as-is (might be a valid date already)
-                  }}
-                  placeholder="T, T+1, W+1, or date"
                   className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Due Date
-                  <span className="ml-2 text-xs text-gray-400 font-normal">T, T+1, W+1, M+1</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                <div className="flex gap-1 mb-1.5">
+                  {[
+                    { label: 'T', title: 'Today', days: 0 },
+                    { label: '+1', title: 'Tomorrow', days: 1 },
+                    { label: 'W', title: 'Next Week', days: 7 },
+                    { label: 'M', title: 'Next Month', days: 30 },
+                  ].map(opt => {
+                    const d = new Date(); d.setDate(d.getDate() + opt.days);
+                    const dateStr = d.toISOString().split('T')[0];
+                    const isActive = formData.due_date === dateStr;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, due_date: dateStr })}
+                        title={opt.title}
+                        className={`px-2 py-1 text-xs font-medium rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                  {formData.due_date && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, due_date: '' })}
+                      title="Clear"
+                      className="px-2 py-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 <input
-                  type="text"
+                  type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  onBlur={(e) => {
-                    const val = e.target.value.trim()
-                    if (!val) {
-                      setFormData({ ...formData, due_date: '' })
-                      return
-                    }
-                    // Try shorthand parsing first
-                    const parsed = parseNaturalLanguageDate(val)
-                    if (parsed.date) {
-                      setFormData({ ...formData, due_date: parsed.date })
-                    }
-                    // Otherwise keep as-is (might be a valid date already)
-                  }}
-                  placeholder="T, T+1, W+1, or date"
                   className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                 />
               </div>
