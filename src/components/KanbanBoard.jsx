@@ -7689,46 +7689,78 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
-        {/* Status & Project - minimal top row */}
-        <div className="flex items-center justify-between gap-4 mb-3">
-          {/* Status - minimal with colored dot */}
-          <div className="flex items-center gap-1">
-            {COLUMNS.map((col) => (
-              <button
-                key={col.id}
-                type="button"
-                onClick={() => setFormData({ ...formData, status: col.id })}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-sm transition-all ${
-                  formData.status === col.id
-                    ? 'bg-gray-100 dark:bg-gray-800 font-medium'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                }`}
-              >
-                <span 
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: col.color }}
-                />
-                {formData.status === col.id && <span style={{ color: col.color }}>{col.title}</span>}
-              </button>
+        {/* Status & Project - clean top row */}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          {/* Status - with proper icons */}
+          <div className="flex items-center gap-0.5">
+            {COLUMNS.map((col) => {
+              const isSelected = formData.status === col.id
+              // Status-specific icons
+              const getIcon = () => {
+                switch(col.id) {
+                  case 'backlog':
+                    return (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    )
+                  case 'todo':
+                    return (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                      </svg>
+                    )
+                  case 'in_progress':
+                    return (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )
+                  case 'done':
+                    return (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )
+                  default:
+                    return null
+                }
+              }
+              return (
+                <button
+                  key={col.id}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: col.id })}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-all ${
+                    isSelected
+                      ? 'font-medium'
+                      : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                  style={isSelected ? { color: col.color, backgroundColor: col.color + '15' } : {}}
+                  title={col.title}
+                >
+                  {getIcon()}
+                  {isSelected && <span>{col.title}</span>}
+                </button>
+              )
+            })}
+          </div>
+          {/* Project - sleek pill */}
+          <select
+            required
+            value={formData.project_id}
+            onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
+            className={`text-sm font-medium px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${
+              formData.project_id 
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+            }`}
+          >
+            <option value="">Select project...</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
-          </div>
-          {/* Project - minimal text link style */}
-          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-            <select
-              required
-              value={formData.project_id}
-              onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-              className="bg-transparent font-medium text-gray-700 dark:text-gray-200 focus:outline-none cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-            >
-              <option value="">Select project</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
+          </select>
         </div>
         
         {/* ═══════ CORE FIELDS ═══════ */}
