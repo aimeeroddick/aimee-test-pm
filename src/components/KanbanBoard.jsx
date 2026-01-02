@@ -2981,52 +2981,22 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
   )
 }
 
-// Calendar Sidebar Task Card - defined OUTSIDE CalendarView to prevent re-creation on render
-const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
-  const isDraggingRef = useRef(false)
-  const [isDragging, setIsDragging] = useState(false)
+// Calendar Sidebar Task Card - click to schedule approach
+const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
   
-  const handleDragStart = (e) => {
-    console.log('DRAG START', task.title)
-    isDraggingRef.current = true
-    setIsDragging(true)
-    
-    // Create a custom drag image
-    const dragImage = e.target.cloneNode(true)
-    dragImage.style.position = 'absolute'
-    dragImage.style.top = '-1000px'
-    dragImage.style.opacity = '0.8'
-    document.body.appendChild(dragImage)
-    e.dataTransfer.setDragImage(dragImage, 50, 20)
-    setTimeout(() => document.body.removeChild(dragImage), 0)
-    
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', task.id)
-    onDragStart(task)
-  }
-  
-  const handleDragEnd = () => {
-    console.log('DRAG END', task.title)
-    setIsDragging(false)
-    setTimeout(() => { isDraggingRef.current = false }, 100)
+  const handleScheduleClick = (e) => {
+    e.stopPropagation()
+    onSelectForScheduling(task)
   }
   
   const handleClick = () => {
-    if (!isDraggingRef.current) {
-      onEditTask(task)
-    }
+    onEditTask(task)
   }
   
   return (
     <div
-      draggable="true"
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
       onClick={handleClick}
-      style={{ userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}
-      className={`p-2.5 rounded-lg border select-none cursor-grab active:cursor-grabbing ${
-        isDragging ? 'opacity-30 scale-95' : 'hover:shadow-md hover:-translate-y-0.5'
-      } ${
+      className={`p-2.5 rounded-lg border cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
         highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
         highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -3052,6 +3022,16 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
             {task.due_date && <span>📅{formatDate(task.due_date)}</span>}
           </div>
         </div>
+        {/* Schedule button */}
+        <button
+          onClick={handleScheduleClick}
+          className="shrink-0 p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors"
+          title="Click to schedule"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
       </div>
     </div>
   )
@@ -4066,7 +4046,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     )
   }
     
-    // Section component - uses external CalendarSidebarTaskCard for stable drag behavior
+    // Section component - uses external CalendarSidebarTaskCard with click-to-schedule
     const Section = ({ title, icon, tasks, highlight, defaultOpen = true }) => {
       if (tasks.length === 0) return null
       return (
@@ -4081,7 +4061,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 key={task.id}
                 task={task}
                 highlight={highlight}
-                onDragStart={setDraggedTask}
+                onSelectForScheduling={setSelectedTaskForScheduling}
                 onEditTask={onEditTask}
                 COLUMN_COLORS={COLUMN_COLORS}
                 formatTimeEstimate={formatTimeEstimate}
@@ -4098,12 +4078,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     return (
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        {/* Mobile tap-to-schedule indicator */}
+        {/* Task scheduling indicator - shown when a task is selected */}
         {selectedTaskForScheduling && (
-          <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between animate-slide-up">
+          <div className="fixed bottom-4 left-4 right-4 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between animate-slide-up">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-lg">📌</span>
-              <span className="text-sm font-medium truncate">Tap a time slot to schedule: {selectedTaskForScheduling.title}</span>
+              <span className="text-lg">📅</span>
+              <span className="text-sm font-medium truncate">Click a time slot to schedule: {selectedTaskForScheduling.title}</span>
             </div>
             <button
               onClick={() => setSelectedTaskForScheduling(null)}
@@ -4272,7 +4252,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
               <span>📅</span> Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Drag to calendar • {isToday ? 'Auto-adds to My Day' : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 📅 then a time slot{isToday ? ' • Auto-adds to My Day' : ''}</p>
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
