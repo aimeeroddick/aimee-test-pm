@@ -5610,7 +5610,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref }) => {
+const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref, onToggleSubtask }) => {
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
   const prevActiveCountRef = useRef(null)
@@ -5631,7 +5631,25 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  
+
+  // Compute subtasks due today from all tasks
+  const subtasksDueToday = useMemo(() => {
+    const result = []
+    tasks.forEach(task => {
+      if (!task.subtasks || task.status === 'done') return
+      task.subtasks.forEach(subtask => {
+        if (subtask.due_date === todayStr && !subtask.completed) {
+          result.push({
+            ...subtask,
+            parentTask: task,
+            parentProject: projects.find(p => p.id === task.project_id)
+          })
+        }
+      })
+    })
+    return result
+  }, [tasks, projects, todayStr])
+
   const taskInMyDay = (task) => {
     // Check if task was dismissed (my_day_date set to a past date)
     if (task.my_day_date) {
@@ -5997,6 +6015,45 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
                     />
                   )
                 })}
+                
+                {/* Subtasks Due Today */}
+                {subtasksDueToday.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 pt-3 sm:pt-4 pb-2">
+                      <div className="flex-1 h-px bg-purple-200 dark:bg-purple-800" />
+                      <span className="text-[10px] sm:text-xs text-purple-500 dark:text-purple-400 font-medium">✨ Subtasks for today ({subtasksDueToday.length})</span>
+                      <div className="flex-1 h-px bg-purple-200 dark:bg-purple-800" />
+                    </div>
+                    {subtasksDueToday.map(subtask => (
+                      <div
+                        key={`${subtask.parentTask.id}-${subtask.id}`}
+                        className="flex items-center gap-3 p-2 sm:p-3 ml-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 transition-all"
+                      >
+                        <button
+                          onClick={() => onToggleSubtask(subtask.parentTask.id, subtask.id, true)}
+                          className="w-5 h-5 rounded-full border-2 border-purple-300 dark:border-purple-600 hover:border-purple-500 hover:bg-purple-100 dark:hover:bg-purple-800 flex items-center justify-center transition-all flex-shrink-0"
+                          title="Mark complete"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-800 dark:text-gray-200 truncate">{subtask.title}</p>
+                          <p className="text-[10px] text-purple-600 dark:text-purple-400 truncate">
+                            ↳ {subtask.parentTask.title}
+                            {subtask.parentProject && ` • ${subtask.parentProject.name}`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => onEditTask(subtask.parentTask)}
+                          className="p-1.5 text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-800 rounded-lg transition-colors flex-shrink-0"
+                          title="Open parent task"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
                 
                 {myDayCompleted.length > 0 && (
                   <>
@@ -10876,6 +10933,29 @@ export default function KanbanBoard() {
     }
   }
 
+  const handleToggleSubtask = async (taskId, subtaskId, completed) => {
+    try {
+      const task = tasks.find(t => t.id === taskId)
+      if (!task || !task.subtasks) return
+      
+      const updatedSubtasks = task.subtasks.map(s =>
+        s.id === subtaskId ? { ...s, completed } : s
+      )
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update({ subtasks: updatedSubtasks })
+        .eq('id', taskId)
+      
+      if (error) throw error
+      
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, subtasks: updatedSubtasks } : t))
+    } catch (err) {
+      console.error('Error toggling subtask:', err)
+      setError(err.message)
+    }
+  }
+
   const handleUndo = async () => {
     if (!undoToast) return
     try {
@@ -12169,6 +12249,7 @@ export default function KanbanBoard() {
                 onQuickStatusChange={handleUpdateTaskStatus}
                 onUpdateMyDayDate={handleUpdateMyDayDate}
                 showConfettiPref={showConfetti}
+                onToggleSubtask={handleToggleSubtask}
               />
             </div>
           )}
