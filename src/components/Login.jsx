@@ -34,9 +34,12 @@ export default function Login() {
         setLoading(false)
         return
       }
-      const { error } = await signUp(email, password)
+      const { data, error } = await signUp(email, password)
       if (error) {
         setError(error.message)
+      } else if (data?.user?.identities?.length === 0) {
+        // Email already exists - Supabase returns empty identities array
+        setError('An account with this email already exists. Please sign in instead.')
       } else {
         setMessage('Check your email for the confirmation link!')
       }
