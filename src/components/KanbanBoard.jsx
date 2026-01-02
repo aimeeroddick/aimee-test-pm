@@ -2434,6 +2434,67 @@ const HelpTabIcons = {
   ),
 }
 
+// Navigation Menu Icons
+const MenuIcons = {
+  myday: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="12" y1="3" x2="12" y2="5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
+      ))}
+    </svg>
+  ),
+  board: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="#D4A574" />
+      <rect x="3" y="2" width="10" height="4" rx="1" fill="#B8956E" />
+      <rect x="4" y="8" width="16" height="11" rx="1" fill="#FDF6E9" />
+      <line x1="7" y1="11" x2="17" y2="11" stroke="#E5E7EB" strokeWidth="1.5" />
+      <line x1="7" y1="14" x2="14" y2="14" stroke="#E5E7EB" strokeWidth="1.5" />
+    </svg>
+  ),
+  calendar: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="#FEE2E2" />
+      <rect x="3" y="5" width="18" height="5" rx="2" fill="#EF4444" />
+      <circle cx="7" cy="3" r="1.5" fill="#DC2626" />
+      <circle cx="17" cy="3" r="1.5" fill="#DC2626" />
+      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="6" y="16" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+    </svg>
+  ),
+  alltasks: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="#818CF8" />
+      <rect x="2" y="3" width="20" height="5" rx="2" fill="#6366F1" />
+      <line x1="5" y1="11" x2="19" y2="11" stroke="white" strokeWidth="1.5" opacity="0.6" />
+      <line x1="5" y1="15" x2="19" y2="15" stroke="white" strokeWidth="1.5" opacity="0.4" />
+    </svg>
+  ),
+  projects: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M3 7 L3 19 Q3 20 4 20 L20 20 Q21 20 21 19 L21 9 Q21 8 20 8 L12 8 L10 6 L4 6 Q3 6 3 7 Z" fill="#9CA3AF" />
+      <rect x="3" y="8" width="18" height="1" fill="#6B7280" opacity="0.3" />
+    </svg>
+  ),
+  progress: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="4" y="14" width="4" height="6" rx="1" fill="#EF4444" />
+      <rect x="10" y="10" width="4" height="10" rx="1" fill="#F59E0B" />
+      <rect x="16" y="6" width="4" height="14" rx="1" fill="#10B981" />
+    </svg>
+  ),
+  lightbulb: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M12 2 C8 2 5 5 5 9 C5 12 7 14 8 15 L8 18 L16 18 L16 15 C17 14 19 12 19 9 C19 5 16 2 12 2 Z" fill="#FCD34D" />
+      <rect x="9" y="19" width="6" height="2" rx="1" fill="#F59E0B" />
+      <rect x="10" y="21" width="4" height="1" rx="0.5" fill="#D97706" />
+      <path d="M9 9 L12 12 L15 9" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    </svg>
+  ),
+}
+
 // Help Modal Component
 const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -11098,7 +11159,7 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('myday'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'myday' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">☀️</span>
+                        {MenuIcons.myday()}
                         <span className="font-medium">My Day</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}D</span>
                       </button>
@@ -11106,7 +11167,7 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('board'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'board' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">📋</span>
+                        {MenuIcons.board()}
                         <span className="font-medium">Board</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}B</span>
                       </button>
@@ -11114,7 +11175,7 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('calendar'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">🗓</span>
+                        {MenuIcons.calendar()}
                         <span className="font-medium">Calendar</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}L</span>
                       </button>
@@ -11122,7 +11183,7 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('tasks'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'tasks' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">🗃️</span>
+                        {MenuIcons.alltasks()}
                         <span className="font-medium">All Tasks</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}A</span>
                       </button>
@@ -11133,14 +11194,14 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('projects'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'projects' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">📁</span>
+                        {MenuIcons.projects()}
                         <span className="font-medium">Projects</span>
                       </button>
                       <button
                         onClick={() => { setCurrentView('progress'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'progress' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">📊</span>
+                        {MenuIcons.progress()}
                         <span className="font-medium">Progress</span>
                       </button>
                       
