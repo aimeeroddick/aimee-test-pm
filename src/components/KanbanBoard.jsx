@@ -7797,15 +7797,23 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effort Level</label>
-                <select
-                  value={formData.energy_level}
-                  onChange={(e) => setFormData({ ...formData, energy_level: e.target.value })}
-                  className={`w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.energy_level ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
-                >
+                <div className="flex gap-2">
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
-                    <option key={key} value={key}>{val.icon} {val.label}</option>
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, energy_level: key })}
+                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                        formData.energy_level === key
+                          ? 'ring-2 ring-offset-1 ring-indigo-500'
+                          : 'hover:opacity-80'
+                      }`}
+                      style={{ backgroundColor: val.bg, color: val.text }}
+                    >
+                      {val.icon} {val.label.replace(' Effort', '')}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             </div>
             
