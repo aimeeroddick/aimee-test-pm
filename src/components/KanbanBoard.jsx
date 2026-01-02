@@ -4645,43 +4645,45 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       
       {/* Schedule Task Modal */}
       {taskToSchedule && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-black/50"
             onClick={() => setTaskToSchedule(null)}
           />
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-80 p-5">
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-sm p-5">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">🗓 Schedule Task</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">{taskToSchedule.title}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">{taskToSchedule.title}</p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Date</label>
                 <input
                   type="date"
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full px-4 py-3 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 appearance-none"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Time</label>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Time</label>
                 <input
                   type="time"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="w-full px-4 py-3 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 appearance-none"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setTaskToSchedule(null)}
-                  className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleScheduleFromModal}
-                  className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-semibold"
                 >
                   Schedule
                 </button>
