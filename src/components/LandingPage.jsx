@@ -1,6 +1,75 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
+// Custom Landing Page Icons
+const LandingIcons = {
+  target: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <circle cx="24" cy="24" r="18" fill="none" stroke="#EF4444" strokeWidth="3" />
+      <circle cx="24" cy="24" r="12" fill="none" stroke="#EF4444" strokeWidth="3" />
+      <circle cx="24" cy="24" r="6" fill="#EF4444" />
+      <path d="M38 10 L30 18" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+      <path d="M34 6 L38 10 L42 6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  money: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <rect x="4" y="12" width="32" height="20" rx="2" fill="#FCD34D" />
+      <rect x="12" y="16" width="36" height="20" rx="2" fill="#F59E0B" />
+      <circle cx="30" cy="26" r="6" fill="#FCD34D" />
+      <text x="30" y="30" textAnchor="middle" fontSize="10" fill="#92400E" fontWeight="bold">$</text>
+    </svg>
+  ),
+  refresh: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <path d="M24 8 A16 16 0 1 1 8 24" fill="none" stroke="#6366F1" strokeWidth="4" strokeLinecap="round" />
+      <path d="M24 8 L18 2 M24 8 L18 14" stroke="#6366F1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  sun: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <circle cx="24" cy="24" r="10" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="24" y1="6" x2="24" y2="10" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" transform={`rotate(${angle} 24 24)`} />
+      ))}
+    </svg>
+  ),
+  home: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <path d="M8 22 L24 8 L40 22 L40 40 L8 40 Z" fill="#F97316" />
+      <path d="M24 8 L8 22" stroke="#EA580C" strokeWidth="3" strokeLinecap="round" />
+      <path d="M24 8 L40 22" stroke="#EA580C" strokeWidth="3" strokeLinecap="round" />
+      <rect x="18" y="28" width="12" height="12" fill="#FED7AA" rx="1" />
+    </svg>
+  ),
+  sparkles: () => (
+    <svg viewBox="0 0 48 48" className="w-8 h-8">
+      <path d="M24 4 L26 18 L40 20 L26 22 L24 36 L22 22 L8 20 L22 18 Z" fill="#A78BFA" />
+      <path d="M36 8 L37 14 L43 15 L37 16 L36 22 L35 16 L29 15 L35 14 Z" fill="#C4B5FD" />
+      <path d="M12 28 L13 32 L17 33 L13 34 L12 38 L11 34 L7 33 L11 32 Z" fill="#C4B5FD" />
+    </svg>
+  ),
+  clipboard: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <rect x="10" y="8" width="28" height="36" rx="3" fill="#D4A574" />
+      <rect x="14" y="4" width="20" height="8" rx="2" fill="#B8956E" />
+      <rect x="14" y="16" width="20" height="24" rx="1" fill="#FDF6E9" />
+      <line x1="17" y1="22" x2="31" y2="22" stroke="#D1D5DB" strokeWidth="2" />
+      <line x1="17" y1="28" x2="28" y2="28" stroke="#D1D5DB" strokeWidth="2" />
+      <line x1="17" y1="34" x2="31" y2="34" stroke="#D1D5DB" strokeWidth="2" />
+    </svg>
+  ),
+  calendar: () => (
+    <svg viewBox="0 0 48 48" className="w-12 h-12">
+      <rect x="6" y="10" width="36" height="32" rx="4" fill="#E5E7EB" />
+      <rect x="6" y="10" width="36" height="10" rx="4" fill="#EF4444" />
+      <text x="24" y="18" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">JUL</text>
+      <rect x="12" y="24" width="24" height="14" rx="2" fill="white" />
+      <text x="24" y="35" textAnchor="middle" fontSize="14" fill="#374151" fontWeight="bold">17</text>
+    </svg>
+  ),
+}
+
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
 
@@ -216,37 +285,37 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                icon: '🎯',
+                iconComponent: 'target',
                 title: 'Too simple, then too complex',
                 problem: "Simple tools leave you wanting more. Powerful ones take weeks to learn.",
                 solution: 'Trackli gives you depth without the steep curve.',
               },
               {
-                icon: '💸',
+                iconComponent: 'money',
                 title: 'Paywalled basics',
                 problem: 'Calendar view? That\'ll cost you. Timeline? Premium only.',
                 solution: 'Every view, every feature — included from day one.',
               },
               {
-                icon: '🔄',
+                iconComponent: 'refresh',
                 title: 'Tool fatigue is real',
                 problem: '73% abandon their productivity app within 30 days.',
                 solution: 'Trackli is built to stick — intuitive from the first click.',
               },
               {
-                icon: '☀️',
+                iconComponent: 'sun',
                 title: 'No daily focus',
                 problem: 'Most tools show everything, all the time.',
                 solution: 'My Day view helps you focus on what matters right now.',
               },
               {
-                icon: '🏠',
+                iconComponent: 'home',
                 title: 'Work tools feel like work',
                 problem: 'Enterprise software for tracking groceries?',
                 solution: 'Clean enough for personal life, capable enough for work.',
               },
               {
-                icon: '✨',
+                iconComponent: 'sparkles',
                 title: 'Generic, forgettable design',
                 problem: 'Cluttered interfaces. Outdated aesthetics.',
                 solution: 'A tool you actually enjoy opening.',
@@ -256,8 +325,8 @@ export default function LandingPage() {
                 key={card.title}
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100"
               >
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl mb-4">
-                  {card.icon}
+                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                  {card.iconComponent && LandingIcons[card.iconComponent] ? LandingIcons[card.iconComponent]() : card.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{card.title}</h3>
                 <p className="text-gray-500 line-through text-sm mb-2">{card.problem}</p>
@@ -359,8 +428,8 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div className="order-2 lg:order-1 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-6xl mb-4">📋</div>
-                <p className="font-medium text-gray-600">Drag, drop, done</p>
+                {LandingIcons.clipboard()}
+                <p className="font-medium text-gray-600 mt-4">Drag, drop, done</p>
               </div>
             </div>
             <div className="order-1 lg:order-2">
@@ -421,8 +490,8 @@ export default function LandingPage() {
             </div>
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-6xl mb-4">📅</div>
-                <p className="font-medium text-gray-600">Tasks meet calendar</p>
+                {LandingIcons.calendar()}
+                <p className="font-medium text-gray-600 mt-4">Tasks meet calendar</p>
               </div>
             </div>
           </div>
