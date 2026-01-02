@@ -1927,20 +1927,18 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     calendar: [
       {
         title: '🗓 Welcome to Calendar!',
-        description: 'Schedule your tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
+        description: 'View your scheduled tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
         icon: '🗓️',
       },
       {
-        title: 'Drag to Schedule',
-        description: 'Drag tasks from the sidebar onto any time slot to schedule them. The task\'s start time updates automatically.',
+        title: 'Schedule a Task',
+        description: 'Open any task and set a Start Date and Start Time. The task will appear on the calendar at that time slot.',
         icon: '✨',
-        animation: 'dragToCalendar',
       },
       {
-        title: 'Resize to Adjust Duration',
-        description: 'Drag the bottom edge of any scheduled task to change how long it takes. Time estimate updates automatically!',
-        icon: '🎨',
-        animation: 'resizeTask',
+        title: 'Task Duration',
+        description: 'Set the Time Estimate on a task to control how tall it appears on the calendar. Click any task to edit its details.',
+        icon: '⏱️',
       },
     ],
     tasks: [
