@@ -6653,7 +6653,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   
   // Inline title editing handlers
   const handleTitleDoubleClick = (e) => {
-    if (bulkSelectMode || !onUpdateTitle) return
+    if (isMobile || bulkSelectMode || !onUpdateTitle) return
     e.stopPropagation()
     setIsEditingTitle(true)
     setEditedTitle(task.title)
@@ -6822,14 +6822,14 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
               />
             ) : (
               <h4 
-                onClick={(e) => onUpdateTitle && e.stopPropagation()}
-                onDoubleClick={handleTitleDoubleClick}
+                onClick={(e) => onUpdateTitle && !isMobile && e.stopPropagation()}
+                onDoubleClick={!isMobile ? handleTitleDoubleClick : undefined}
                 className={`flex-1 text-xs font-medium line-clamp-2 leading-tight ${
                   isOverdue ? 'text-red-700 dark:text-red-200 group-hover:text-red-800 dark:group-hover:text-red-100' :
                   isDueToday ? 'text-amber-700 dark:text-amber-200 group-hover:text-amber-800 dark:group-hover:text-amber-100' :
                   'text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
-                } ${onUpdateTitle ? 'cursor-text' : ''}`}
-                title={onUpdateTitle ? 'Double-click to edit' : ''}
+                } ${onUpdateTitle && !isMobile ? 'cursor-text' : ''}`}
+                title={onUpdateTitle && !isMobile ? 'Double-click to edit' : ''}
               >{task.title}</h4>
             )}
           </div>
