@@ -32,7 +32,7 @@ const BTN = {
     danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 focus:ring-red-500 shadow-sm hover:shadow',
     warning: 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 focus:ring-amber-500 shadow-sm hover:shadow',
     success: 'bg-green-500 text-white hover:bg-green-600 active:bg-green-700 focus:ring-green-500 shadow-sm hover:shadow',
-    ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus:ring-gray-400 dark:text-gray-400 dark:hover:bg-gray-700',
+    ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200 focus:ring-gray-400 dark:text-gray-300 dark:hover:bg-gray-700',
     outline: 'border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 focus:ring-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-900/20',
   },
 }
@@ -653,7 +653,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+            className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
           >
             Cancel
           </button>
@@ -959,7 +959,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
               <span className="text-3xl">✓</span>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Thanks for your feedback!</h3>
-            <p className="text-gray-600 dark:text-gray-400">We really appreciate you taking the time to help us improve.</p>
+            <p className="text-gray-600 dark:text-gray-300">We really appreciate you taking the time to help us improve.</p>
           </div>
         ) : (
           <>
@@ -972,7 +972,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                   </svg>
                 </button>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Help us make Trackli better!</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Help us make Trackli better!</p>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6">
@@ -991,7 +991,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                       }`}
                     >
                       <div className="font-medium text-gray-900 dark:text-white text-sm">{t.label}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{t.desc}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-300">{t.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -1040,7 +1040,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Add image or paste from clipboard</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-300">Add image or paste from clipboard</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -1059,7 +1059,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1163,7 +1163,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Feedback Admin</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{feedback.length} total submissions</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">{feedback.length} total submissions</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1235,7 +1235,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
                           ))}
                         </div>
                       )}
-                      <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-300">
                         <span>{item.user_email}</span>
                         <span>•</span>
                         <span>{new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}</span>
@@ -1353,7 +1353,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
         <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
           {shortcuts.map((shortcut, idx) => (
             <div key={idx} className="flex items-center justify-between">
-              <span className="text-gray-600 dark:text-gray-400">{shortcut.description}</span>
+              <span className="text-gray-600 dark:text-gray-300">{shortcut.description}</span>
               <div className="flex items-center gap-1">
                 {shortcut.keys.map((key, keyIdx) => (
                   <span key={keyIdx}>
@@ -1368,7 +1368,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
           ))}
         </div>
         <div className="p-4 bg-gray-50 dark:bg-gray-800/50 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Press <kbd className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">?</kbd> anytime to see shortcuts</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">Press <kbd className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">?</kbd> anytime to see shortcuts</p>
         </div>
       </div>
     </div>
@@ -1502,7 +1502,7 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
         </div>
       </div>
       <h3 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
-      <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-6 max-w-xs sm:max-w-sm leading-relaxed">{description}</p>
+      <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 mb-6 max-w-xs sm:max-w-sm leading-relaxed">{description}</p>
       {action && (
         <button
           onClick={action}
@@ -1551,7 +1551,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
           <button
             type="button"
             onClick={onClose}
-            className="p-3 -mr-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-400 touch-manipulation"
+            className="p-3 -mr-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-300 touch-manipulation"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1738,7 +1738,7 @@ const AttachmentViewer = ({ isOpen, onClose, attachment, attachments, onNavigate
               <span className="text-4xl">✉️</span>
             </div>
             <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">{fileName}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Email files can be opened in your email client</p>
+            <p className="text-gray-500 dark:text-gray-300 text-sm mb-6">Email files can be opened in your email client</p>
             <a
               href={fileUrl}
               download={fileName}
@@ -1758,7 +1758,7 @@ const AttachmentViewer = ({ isOpen, onClose, attachment, attachments, onNavigate
               <span className="text-4xl">📄</span>
             </div>
             <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">{fileName}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Preview not available for this file type</p>
+            <p className="text-gray-500 dark:text-gray-300 text-sm mb-6">Preview not available for this file type</p>
             <a
               href={fileUrl}
               download={fileName}
@@ -1862,7 +1862,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
             {currentStep.title}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
             {currentStep.description}
           </p>
           
@@ -1877,7 +1877,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
               {step > 0 && (
                 <button
                   onClick={() => onNext(step - 1)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
                 >
                   Back
                 </button>
@@ -2413,7 +2413,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
           
           {/* Content */}
           <div className="p-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
               {currentStep.description}
             </p>
             
@@ -2452,7 +2452,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
                 {step > 0 && (
                   <button
                     onClick={() => onNext(step - 1)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
+                    className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
                   >
                     Back
                   </button>
@@ -2736,7 +2736,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === tab.id 
                   ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50'
               }`}
             >
               <span>{tab.iconComponent && HelpTabIcons[tab.iconComponent] ? HelpTabIcons[tab.iconComponent]() : tab.icon}</span>
@@ -2754,7 +2754,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
                   Kanban Columns
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Tasks flow through four columns representing their status:</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">Tasks flow through four columns representing their status:</p>
                 <div className="grid grid-cols-4 gap-2">
                   <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#9CA3AF', backgroundColor: '#F9FAFB' }}>
                     <span className="font-semibold text-gray-700">Backlog</span>
@@ -2786,7 +2786,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click Actions:</p>
-                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                       <p>• <strong>Click card</strong> – Open task to edit all details</p>
                       <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
                       <p>• <strong>Double-click title</strong> – Edit title inline (desktop)</p>
@@ -2914,7 +2914,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">☀️</span>
                   What is My Day?
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
+                <p className="text-gray-600 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
               </section>
               
               <section>
@@ -2949,7 +2949,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
                   Recommendations & All Tasks
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">The Recommendations section shows tasks organized by urgency and status. Click the ☀️ button on any task to add it:</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">The Recommendations section shows tasks organized by urgency and status. Click the ☀️ button on any task to add it:</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                     <span className="font-semibold text-red-600">🔴 Overdue</span>
@@ -2987,7 +2987,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
                   Daily Reset
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Manually added tasks clear from My Day at midnight (or when completed), giving you a fresh start each day. Auto-included tasks based on start date will remain until their start date passes.</p>
+                <p className="text-gray-600 dark:text-gray-300">Manually added tasks clear from My Day at midnight (or when completed), giving you a fresh start each day. Auto-included tasks based on start date will remain until their start date passes.</p>
               </section>
             </div>
           )}
@@ -2999,7 +2999,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗓</span>
                   Calendar View
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘L</kbd>.</p>
+                <p className="text-gray-600 dark:text-gray-300">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘L</kbd>.</p>
               </section>
               
               <section>
@@ -3052,7 +3052,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
                   How to Schedule
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Set a Start Date and Start Time on any task to have it appear on the calendar.</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">Set a Start Date and Start Time on any task to have it appear on the calendar.</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-2">
                     <span>🔴</span><span>Overdue tasks</span>
@@ -3086,7 +3086,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
                   Visual Indicators
                 </h3>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                   <p>• <span className="text-red-500 font-medium">Red line</span> – Current time indicator</p>
                   <p>• <span className="text-orange-500 font-medium">⚠️ Orange ring</span> – Task overlaps with another scheduled task</p>
                   <p>• <span className="font-medium">Colored bars</span> – Tasks are color-coded by project</p>
@@ -3099,19 +3099,19 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">5</span>
                   Quick Actions
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Hover over any scheduled task to reveal action buttons:</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">Hover over any scheduled task to reveal action buttons:</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
                     <span className="text-lg">▶</span>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Start task</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Start task</p>
                   </div>
                   <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
                     <span className="text-lg">✓</span>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Mark done</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Mark done</p>
                   </div>
                   <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
                     <span className="text-lg">✕</span>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs mt-1">Remove from calendar</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Remove from calendar</p>
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-3">💡 Removing a task from calendar clears its scheduled time. If not done, it returns to the sidebar for rescheduling.</p>
@@ -3124,7 +3124,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </h3>
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                   <p className="text-gray-700 dark:text-gray-300">When you schedule a task:</p>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
                     <li>• Status automatically changes to "To Do" (if in Backlog)</li>
                     <li>• Start date is set to the scheduled day</li>
                     <li>• Start time is set to the slot time</li>
@@ -3142,7 +3142,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗃️</span>
                   All Tasks View
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘⌃A</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+Alt+A</kbd> (Win).</p>
+                <p className="text-gray-600 dark:text-gray-300">Access all your tasks in a powerful table format. Click the view switcher in the header and select "All Tasks" or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘⌃A</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+Alt+A</kbd> (Win).</p>
               </section>
               
               <section>
@@ -3151,7 +3151,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   Sorting
                 </h3>
                 <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                  <p className="text-gray-600 dark:text-gray-400">Click any column header to sort by that field. Click again to reverse the sort order. An arrow indicator shows the current sort direction.</p>
+                  <p className="text-gray-600 dark:text-gray-300">Click any column header to sort by that field. Click again to reverse the sort order. An arrow indicator shows the current sort direction.</p>
                   <div className="mt-2 text-sm text-gray-500">Sortable columns: Title, Project, Status, Due Date, Start Date, Assignee, Customer, Category, Effort, Source, Time Estimate, Created</div>
                 </div>
               </section>
@@ -3161,7 +3161,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
                   Filtering
                 </h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• Click the <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium">Filters</span> button to show filter inputs for each column</p>
                   <p>• Type in the filter boxes below column headers to narrow results</p>
                   <p>• Click <span className="text-red-600">Clear Filters</span> to reset all filters</p>
@@ -3188,7 +3188,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </h3>
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
                   <p className="text-gray-700 dark:text-gray-300 mb-2">Click the <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">Import CSV</span> button to bulk create or update tasks.</p>
-                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
                     <p>• <strong>Create new tasks:</strong> Use <code className="px-1 bg-gray-100 dark:bg-gray-700 rounded">*</code> in the ID column</p>
                     <p>• <strong>Update existing:</strong> Include the task's existing ID</p>
                     <p>• <strong>Template:</strong> Export first to get the correct column format</p>
@@ -3206,7 +3206,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
                   Creating Tasks
                 </h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• Click the <span className="px-2 py-1 bg-indigo-500 text-white rounded text-sm font-medium">+</span> button in the header</p>
                   <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘⌃T</kbd> (Mac) / <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Ctrl+Alt+T</kbd> (Win)</p>
                 </div>
@@ -3266,7 +3266,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
                   Completing Tasks
                 </h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• <strong>Hover</strong> over a task and click the <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-sm">✓ Done</span> button</p>
                   <p>• Or <strong>drag</strong> the task to the "Done" column</p>
                   <p>• Or open the task and change its status</p>
@@ -3278,7 +3278,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
                   Dependencies (Blocking)
                 </h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• In the task editor, use "Blocked By" to select tasks that must be completed first</p>
                   <p>• Blocked tasks show with 🔒 and an orange border</p>
                   <p>• When the blocking task is completed, the blocked task becomes "ready to start"</p>
@@ -3290,7 +3290,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
                   Recurring Tasks
                 </h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• Set a recurrence pattern: Daily, Weekly, Bi-weekly, Monthly</p>
                   <p>• When completed, a new instance is automatically created</p>
                   <p>• Recurring tasks show 🔁 on the card</p>
@@ -3383,7 +3383,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Quick Actions</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-2 text-gray-600 dark:text-gray-300">
                   <p>• <strong>Click task</strong> – Open task editor</p>
                   <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
                   <p>• <strong>Drag task</strong> – Move between columns on board</p>
@@ -3471,7 +3471,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               placeholder="Search tasks by title, description, assignee, customer..."
               className="flex-1 text-lg outline-none placeholder-gray-400 bg-transparent dark:text-white"
             />
-            <kbd className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded">ESC</kbd>
+            <kbd className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded">ESC</kbd>
           </div>
         </div>
         
@@ -3490,7 +3490,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                 <span className="text-2xl">🔍</span>
               </div>
               <p className="text-gray-600 dark:text-gray-300 font-medium">No results found</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try a different search term</p>
+              <p className="text-sm text-gray-400 dark:text-gray-300 mt-1">Try a different search term</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -3520,7 +3520,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                             <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">Critical</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
                           <span>{project?.name}</span>
                           {category && (
                             <>
@@ -3639,7 +3639,7 @@ const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEdi
           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
             {task.critical && '🚩 '}{task.title}
           </p>
-          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-300">
             {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
             {task.due_date && (
               <span className="flex items-center gap-0.5">
@@ -4253,7 +4253,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         >
           <div className="flex items-center justify-between mb-0.5 sm:mb-1">
             <span className={`text-xs sm:text-sm font-semibold ${
-              isToday ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'
+              isToday ? 'text-indigo-600 dark:text-indigo-400' : isPast ? 'text-gray-400 dark:text-gray-300' : 'text-gray-700 dark:text-gray-300'
             }`}>
               {day}
             </span>
@@ -4261,7 +4261,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full ${
                 overdueTasks.length > 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                 criticalTasks.length > 0 ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
-                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
               }`}>
                 {dayTasks.length}
               </span>
@@ -4290,7 +4290,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               )
             })}
             {dayTasks.length > 2 && (
-              <div className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 px-1.5 sm:px-2">
+              <div className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-300 px-1.5 sm:px-2">
                 +{dayTasks.length - 2} more
               </div>
             )}
@@ -4665,7 +4665,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
               {task.critical && '🚩 '}{task.title}
             </p>
-            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-300">
               {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
               {task.due_date && <span>🗓{formatDate(task.due_date)}</span>}
             </div>
@@ -4692,7 +4692,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       if (tasks.length === 0) return null
       return (
         <div className="mb-4">
-          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 flex items-center gap-1.5">
             <span>{icon}</span> {title}
             <span className="text-gray-400">({tasks.length})</span>
           </h4>
@@ -4752,7 +4752,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <div className="bg-gray-50 dark:bg-gray-800">
                 {timeSlots.map(({ slotIndex, label, isHour }) => (
                   <div key={slotIndex} className="h-8 px-2 flex items-center justify-end border-b border-gray-100 dark:border-gray-800">
-                    {isHour && <span className="text-[10px] text-gray-500 dark:text-gray-400">{label}</span>}
+                    {isHour && <span className="text-[10px] text-gray-500 dark:text-gray-300">{label}</span>}
                   </div>
                 ))}
               </div>
@@ -4893,11 +4893,11 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
               <span>🗓</span> Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 🗓 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-4">Click 🗓 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">All caught up!</p>
+                <p className="text-sm text-gray-400 dark:text-gray-300 text-center py-8">All caught up!</p>
               ) : (
                 <>
                   <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
@@ -4935,7 +4935,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             const isToday = dateStr === todayStr
             return (
               <div key={idx} className={`h-12 flex flex-col items-center justify-center ${isToday ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{dayNames[date.getDay()]}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-300">{dayNames[date.getDay()]}</span>
                 <span className={`text-sm font-semibold ${isToday ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{date.getDate()}</span>
               </div>
             )
@@ -4949,7 +4949,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <div className="bg-gray-50 dark:bg-gray-800">
               {timeSlots.map(({ slotIndex, label, isHour }) => (
                 <div key={slotIndex} className="h-6 px-1 flex items-center justify-end border-b border-gray-100 dark:border-gray-800">
-                  {isHour && <span className="text-[9px] text-gray-500 dark:text-gray-400">{label}</span>}
+                  {isHour && <span className="text-[9px] text-gray-500 dark:text-gray-300">{label}</span>}
                 </div>
               ))}
             </div>
@@ -5069,7 +5069,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
               {getHeaderTitle()}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-300 mt-0.5 sm:mt-1">
               {tasks.filter(t => (t.due_date || t.start_date) && t.status !== 'done').length} tasks scheduled
             </p>
           </div>
@@ -5086,7 +5086,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               onClick={prevPeriod}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors touch-manipulation"
             >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -5094,7 +5094,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               onClick={nextPeriod}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors touch-manipulation"
             >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -5108,7 +5108,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'daily' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Day
@@ -5118,7 +5118,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'weekly' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Week
@@ -5128,7 +5128,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'monthly' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Month
@@ -5149,7 +5149,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             {/* Day Headers */}
             <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               {dayNames.map((day, idx) => (
-                <div key={day} className="py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400">
+                <div key={day} className="py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">
                   <span className="hidden sm:inline">{day}</span>
                   <span className="sm:hidden">{day.charAt(0)}</span>
                 </div>
@@ -5169,7 +5169,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
           </h3>
           {selectedTasks.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No tasks due on this date</p>
+            <p className="text-gray-500 dark:text-gray-300 text-sm">No tasks due on this date</p>
           ) : (
             <div className="space-y-3">
               {selectedTasks.map(task => {
@@ -5221,7 +5221,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       )}
       
       {/* Legend - Monthly View */}
-          <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-300">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-indigo-400" />
               <span>Today</span>
@@ -5244,7 +5244,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       
       {/* Legend - Day/Week Views */}
       {(viewMode === 'daily' || viewMode === 'weekly') && (
-        <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-6 flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-gray-500 dark:text-gray-300">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-indigo-100 dark:bg-indigo-900/50" />
             <span>Scheduled</span>
@@ -5273,10 +5273,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           />
           <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-xs p-4">
             <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-1">🗓 Schedule Task</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{taskToSchedule.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-3 line-clamp-2">{taskToSchedule.title}</p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Date</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
                 <input
                   type="date"
                   value={scheduleDate}
@@ -5286,7 +5286,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Time</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Time</label>
                 <input
                   type="time"
                   value={scheduleTime}
@@ -5298,7 +5298,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => setTaskToSchedule(null)}
-                  className="flex-1 px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
+                  className="flex-1 px-3 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -5388,7 +5388,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h4 className={`font-medium text-sm leading-tight ${
-              isCompleted ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-100'
+              isCompleted ? 'text-gray-400 dark:text-gray-300 line-through' : 'text-gray-800 dark:text-gray-100'
             }`}>
               {task.critical && !isCompleted && <span className="text-red-500 mr-1">🚩</span>}
               {blocked && !isCompleted && <span className="text-orange-500 mr-1">🔒</span>}
@@ -5418,7 +5418,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
                 className="p-2 sm:p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 sm:bg-transparent sm:dark:bg-transparent sm:opacity-0 sm:group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all touch-manipulation"
                 title="Remove from My Day"
               >
-                <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -5427,7 +5427,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
           
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             {project && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <span className="text-xs text-gray-500 dark:text-gray-300 flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
@@ -5452,7 +5452,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
               </span>
             )}
             {task.time_estimate && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-300">
                 {task.time_estimate < 60 ? `${task.time_estimate}m` : `${Math.round(task.time_estimate / 60)}h`}
               </span>
             )}
@@ -5775,7 +5775,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 sm:gap-3">
             <GreetingIcon hour={hour} /> {greeting}
           </h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 mt-0.5 sm:mt-1">
             {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
           </p>
         </div>
@@ -5787,7 +5787,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Today's Progress</span>
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
               {myDayCompleted.length} of {myDayTasks.length} tasks ({progressPercent}%)
             </span>
           </div>
@@ -5798,7 +5798,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
             />
           </div>
           {totalMyDayTime > 0 && (
-            <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-300">
               <span>~{Math.round(totalMyDayTime / 60)}h remaining</span>
               <span>~{Math.round(completedTime / 60)}h completed</span>
             </div>
@@ -5811,7 +5811,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             {MenuIcons.myday()}
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">My Day</h2>
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">({sortedMyDayActive.length} active)</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">({sortedMyDayActive.length} active)</span>
           </div>
           
           <div
@@ -5856,7 +5856,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
                   <>
                     <div className="flex items-center gap-2 pt-3 sm:pt-4 pb-2">
                       <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">Completed today ({myDayCompleted.length})</span>
+                      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-300">Completed today ({myDayCompleted.length})</span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                     </div>
                     {myDayCompleted.map(task => {
@@ -5891,7 +5891,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Recommendations</h2>
           </div>
           
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-300 mb-3 sm:mb-4">
             Click the sun button on any task to add it to your focus list
           </p>
           
@@ -5948,7 +5948,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
               id="backlog"
               title="Backlog"
               emoji="📋"
-              color="bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400"
+              color="bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300"
               tasks={backlogTasks}
             />
             
@@ -6447,10 +6447,10 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
               <p className="text-red-600 dark:text-red-400">{importResult.error}</p>
             ) : (
               <div className="space-y-2">
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-300">
                   <span className="font-semibold text-green-600">{importResult.created}</span> tasks created
                 </p>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-300">
                   <span className="font-semibold text-blue-600">{importResult.updated}</span> tasks updated
                 </p>
                 {importResult.errors?.length > 0 && (
@@ -6486,7 +6486,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
               {columns.map(col => (
                 <th
                   key={col.key}
-                  className={`${col.width} px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700`}
+                  className={`${col.width} px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700`}
                 >
                   <button
                     onClick={() => handleSort(col.key)}
@@ -6558,7 +6558,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                       <span className="text-2xl">🔍</span>
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 font-medium">No tasks found</p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your filters or search terms</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-300 mt-1">Try adjusting your filters or search terms</p>
                   </div>
                 </td>
               </tr>
@@ -6578,7 +6578,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                         <div className="flex items-center gap-2">
                           {task.critical && <span className="text-red-500">🚨</span>}
                           {isArchived && <span className="text-xs px-1.5 py-0.5 rounded bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300">Archived</span>}
-                          <span className={`font-medium truncate max-w-[250px] ${isArchived ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}>{task.title}</span>
+                          <span className={`font-medium truncate max-w-[250px] ${isArchived ? 'text-gray-500 dark:text-gray-300' : 'text-gray-900 dark:text-gray-100'}`}>{task.title}</span>
                         </div>
                       ) : col.key === 'status' ? (
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -6589,7 +6589,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                           {getCellValue(task, col.key)}
                         </span>
                       ) : (
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-gray-600 dark:text-gray-300">
                           {getCellValue(task, col.key)}
                         </span>
                       )}
@@ -6745,12 +6745,12 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </div>
           )}
           {/* Description */}
-          {task.description && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-3">{task.description}</p>}
+          {task.description && <p className="text-xs text-gray-500 dark:text-gray-300 mb-2 line-clamp-3">{task.description}</p>}
           {/* Assignee with icon */}
           {task.assignee && (
             <div className="flex items-center gap-2 mb-2">
               <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-[10px] font-medium flex items-center justify-center flex-shrink-0">{task.assignee.charAt(0).toUpperCase()}</span>
-              <span className="text-xs text-gray-600 dark:text-gray-400">{task.assignee}</span>
+              <span className="text-xs text-gray-600 dark:text-gray-300">{task.assignee}</span>
             </div>
           )}
           {/* Blocking Tasks */}
@@ -6771,7 +6771,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {/* Subtasks Progress */}
           {task.subtasks?.length > 0 && (
             <div className="mb-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Subtasks</p>
+              <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">Subtasks</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
@@ -6835,7 +6835,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           </div>
           
           {/* Dates & Effort Row */}
-          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-gray-600 dark:text-gray-400">
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-gray-600 dark:text-gray-300">
             {task.start_date && (
               <span className={`flex items-center gap-0.5 ${readyToStart ? 'text-green-600 dark:text-green-400' : ''}`}>
                 <span>▶</span> {formatDate(task.start_date)}
@@ -6886,7 +6886,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {/* Project at bottom - hidden on mobile */}
           {showProject && project && (
             <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-[10px] text-gray-500 dark:text-gray-400">{project.name}</span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-300">{project.name}</span>
             </div>
           )}
           
@@ -7064,14 +7064,14 @@ const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
                   className="flex-1 min-w-0 cursor-pointer"
                   onClick={() => onEditTask(task)}
                 >
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-through truncate">{task.title}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300 line-through truncate">{task.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {project && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{project.name}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-300">{project.name}</span>
                     )}
                   </div>
                 </div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatTimeAgo(task.completed_at)}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-300 shrink-0">{formatTimeAgo(task.completed_at)}</span>
               </div>
             )
           })}
@@ -7129,7 +7129,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           {tasks.length}
         </span>
       </div>
-      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-400`}>
+      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-300`}>
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
         {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
@@ -7141,7 +7141,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3 sm:mb-2 opacity-60">
               {ColumnEmptyIcons[column.id]()}
             </div>
-            <p className="text-sm sm:text-xs text-gray-400 dark:text-gray-500 px-4">
+            <p className="text-sm sm:text-xs text-gray-400 dark:text-gray-300 px-4">
               {column.id === 'done' ? 'Completed tasks appear here' : column.id === 'in_progress' ? 'Tasks you\'re working on' : column.id === 'todo' ? 'Ready to start' : 'Future tasks'}
             </p>
           </div>
@@ -7180,7 +7180,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isDoneColumn && showAllDone && tasks.length > DONE_DISPLAY_LIMIT && (
           <button
             onClick={() => setShowAllDone(false)}
-            className="w-full py-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
+            className="w-full py-3 text-sm text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
           >
             Show less ↑
           </button>
@@ -7198,7 +7198,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {isBacklogColumn && showAllBacklog && tasks.length > BACKLOG_DISPLAY_LIMIT && (
           <button
             onClick={() => setShowAllBacklog(false)}
-            className="w-full py-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
+            className="w-full py-3 text-sm text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300 font-medium bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
           >
             Show less ↑
           </button>
@@ -7485,7 +7485,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                activeTab === tab.id ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
               {tab.labelFull ? (
@@ -7743,7 +7743,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   formData.critical
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 ring-2 ring-red-300 dark:ring-red-700'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 🚩 Critical
@@ -7755,7 +7755,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   formData.recurrence_type
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-300 dark:ring-blue-700'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 🔁 Recurring
@@ -7786,7 +7786,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   <>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Occurrences</label>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Occurrences</label>
                         <input
                           type="number"
                           min="1"
@@ -7797,7 +7797,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Or until date</label>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Or until date</label>
                         <input
                           type="text"
                           value={formData.recurrence_end_date}
@@ -7923,7 +7923,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                         )}
                       </button>
                       <span className={`flex-1 ${
-                        subtask.completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200'
+                        subtask.completed ? 'text-gray-400 dark:text-gray-300 line-through' : 'text-gray-800 dark:text-gray-200'
                       }`}>
                         {subtask.title}
                       </span>
@@ -8117,7 +8117,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     {isUploading ? 'Uploading...' : '📎 Choose Files'}
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Max 10MB • Paste images with ⌘V</p>
+                <p className="text-xs text-gray-400 dark:text-gray-300 mt-2">Max 10MB • Paste images with ⌘V</p>
               </div>
               
               {uploadError && (
@@ -8215,7 +8215,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium text-gray-800 dark:text-gray-200">Blocked by</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This task won't start until these are done</p>
+                <p className="text-xs text-gray-500 dark:text-gray-300 mt-0.5">This task won't start until these are done</p>
               </div>
               {selectedDependencies.length > 0 && (
                 <span className="text-xs font-medium px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full">
@@ -8231,7 +8231,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Select a project first</p>
+                <p className="text-sm text-gray-500 dark:text-gray-300">Select a project first</p>
               </div>
             ) : availableDependencies.length === 0 ? (
               <div className="text-center py-8">
@@ -8240,7 +8240,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">No other tasks to link</p>
+                <p className="text-sm text-gray-500 dark:text-gray-300">No other tasks to link</p>
               </div>
             ) : (
               <div className="space-y-1 max-h-72 overflow-y-auto -mx-1 px-1">
@@ -8289,7 +8289,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                             depTask.status === 'done' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
                             depTask.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
                             depTask.status === 'todo' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
-                            'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                            'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
                           }`}>
                             {COLUMNS.find(c => c.id === depTask.status)?.title}
                           </span>
@@ -8353,12 +8353,12 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <span>📋</span> Activity & Comments
                 {comments.length > 0 && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">({comments.length})</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-300">({comments.length})</span>
                 )}
               </h3>
               
               {comments.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                <div className="text-center py-8 text-gray-400 dark:text-gray-300">
                   <span className="text-3xl mb-2 block">📝</span>
                   <p className="text-sm">No comments yet</p>
                   <p className="text-xs">Add notes to track progress and context</p>
@@ -8379,11 +8379,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                           {item.type === 'comment' ? (
                             <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{item.text}</p>
                           ) : (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              <span className="text-gray-400 dark:text-gray-500">{item.icon || '•'}</span> {item.text}
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <span className="text-gray-400 dark:text-gray-300">{item.icon || '•'}</span> {item.text}
                             </p>
                           )}
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          <p className="text-xs text-gray-400 dark:text-gray-300 mt-1">
                             {new Date(item.created_at).toLocaleString(undefined, { 
                               month: 'short', 
                               day: 'numeric',
@@ -8469,7 +8469,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                className="px-4 py-2 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               >
                 Cancel
               </button>
@@ -8657,7 +8657,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               </button>
             </>
           )}
-          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+          <button type="button" onClick={onClose} className="ml-auto px-4 py-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
             Cancel
           </button>
           <button
@@ -11006,7 +11006,7 @@ export default function KanbanBoard() {
           </h1>
           
           {/* Loading text */}
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-300 text-sm">
             Loading your tasks...
           </p>
         </div>
@@ -11135,7 +11135,7 @@ export default function KanbanBoard() {
                         </button>
                       </div>
                       
-                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Views</div>
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">Views</div>
                       <button
                         onClick={() => { setCurrentView('myday'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'myday' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
@@ -11170,7 +11170,7 @@ export default function KanbanBoard() {
                       </button>
                       
                       <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
-                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Manage</div>
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">Manage</div>
                       <button
                         onClick={() => { setCurrentView('projects'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'projects' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
@@ -11189,7 +11189,7 @@ export default function KanbanBoard() {
                       {/* Mobile-only options */}
                       <div className="sm:hidden">
                         <div className="my-2 border-t border-gray-100 dark:border-gray-700" />
-                        <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Settings</div>
+                        <div className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-300 uppercase tracking-wider">Settings</div>
                         <button
                           onClick={() => { setDarkMode(!darkMode) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -11241,7 +11241,7 @@ export default function KanbanBoard() {
               </div>
               
               {/* Current view indicator */}
-              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:flex items-center gap-1.5">
+              <span className="text-sm text-gray-500 dark:text-gray-300 hidden sm:flex items-center gap-1.5">
                 {currentView === 'myday' && <>{MenuIcons.myday()} My Day</>}
                 {currentView === 'board' && <>{MenuIcons.board()} Board</>}
                 {currentView === 'calendar' && <>{MenuIcons.calendar()} Calendar</>}
@@ -11306,7 +11306,7 @@ export default function KanbanBoard() {
               {/* Utility buttons - icon only */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                 title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? (
@@ -11323,7 +11323,7 @@ export default function KanbanBoard() {
               {currentView === 'board' && (
                 <button
                   onClick={() => { setBulkSelectMode(!bulkSelectMode); setSelectedTaskIds(new Set()) }}
-                  className={`hidden sm:block p-2 rounded-xl transition-colors ${bulkSelectMode ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
+                  className={`hidden sm:block p-2 rounded-xl transition-colors ${bulkSelectMode ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-300'}`}
                   title="Bulk select"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11377,7 +11377,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setHelpModalOpen(true)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                 title="Help Guide"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11389,7 +11389,7 @@ export default function KanbanBoard() {
               {user?.email === ADMIN_EMAIL && (
                 <button
                   onClick={() => setAdminPanelOpen(true)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                   title="View Feedback"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11400,7 +11400,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={() => setSettingsModalOpen(true)}
-                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                 title="Settings"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11411,7 +11411,7 @@ export default function KanbanBoard() {
               
               <button
                 onClick={signOut}
-                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-400"
+                className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                 title="Sign Out"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11490,7 +11490,7 @@ export default function KanbanBoard() {
                   
                   {/* Quick Filters */}
                   <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Quick Filters</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-300 mb-2">Quick Filters</p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setFilterCritical(!filterCritical)}
@@ -11529,7 +11529,7 @@ export default function KanbanBoard() {
                   
                   {/* Field Filters */}
                   <div className="mb-4">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Filter by Field</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-300 mb-2">Filter by Field</p>
                     <div className="space-y-2">
                       {/* Assignee */}
                       <select
@@ -11635,7 +11635,7 @@ export default function KanbanBoard() {
                       ? 'bg-red-500 text-white shadow-sm'
                       : criticalCount > 0 
                         ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                        : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
                   <span>🚩</span>
@@ -11653,7 +11653,7 @@ export default function KanbanBoard() {
                       ? 'bg-orange-500 text-white shadow-sm'
                       : dueTodayCount > 0
                         ? 'text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                        : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
                   <span className="hidden sm:inline">Due Today</span>
@@ -11671,7 +11671,7 @@ export default function KanbanBoard() {
                       ? 'bg-red-600 text-white shadow-sm'
                       : overdueCount > 0
                         ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                        : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
                   <span>Overdue</span>
@@ -11688,7 +11688,7 @@ export default function KanbanBoard() {
                       ? 'bg-amber-500 text-white shadow-sm'
                       : myDayCount > 0
                         ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                        : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
                   <span>☀️</span>
@@ -11739,7 +11739,7 @@ export default function KanbanBoard() {
                   <select
                     value={pendingFilterField}
                     onChange={(e) => setPendingFilterField(e.target.value)}
-                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                   >
                     <option value="">+ Filter</option>
                     {!fieldFilters.assignee && <option value="assignee">Assignee</option>}
@@ -11786,7 +11786,7 @@ export default function KanbanBoard() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 transition-colors"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -11794,7 +11794,7 @@ export default function KanbanBoard() {
                     Clear
                   </button>
                 )}
-                <label className="hidden sm:flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300">
+                <label className="hidden sm:flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-300 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300">
                   <input
                     type="checkbox"
                     checked={showArchivedProjects}
@@ -11814,7 +11814,7 @@ export default function KanbanBoard() {
                       if (view) applyFilterView(view)
                       e.target.value = ''
                     }}
-                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"
+                    className="appearance-none pl-2 pr-5 py-1 bg-transparent border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"
                   >
                     <option value="">📑 Views</option>
                     {savedFilterViews.map(view => (
@@ -11851,7 +11851,7 @@ export default function KanbanBoard() {
             </svg>
           </div>
           <h2 className="text-2xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Welcome to Trackli!</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8 text-base sm:text-base">Get started by creating your first project.</p>
+          <p className="text-gray-500 dark:text-gray-300 mb-8 text-base sm:text-base">Get started by creating your first project.</p>
           <button
             onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
             className="w-full sm:w-auto px-8 py-4 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 text-lg sm:text-base active:scale-95"
@@ -12005,7 +12005,7 @@ export default function KanbanBoard() {
               
               {/* Active Projects */}
               <div className="mb-6">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">Active Projects ({projects.filter(p => !p.archived).length})</h3>
+                <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-3 sm:mb-4">Active Projects ({projects.filter(p => !p.archived).length})</h3>
                 <div className="space-y-3">
                   {projects.filter(p => !p.archived).map(project => {
                     const projectTasks = tasks.filter(t => t.project_id === project.id)
@@ -12030,7 +12030,7 @@ export default function KanbanBoard() {
                               </button>
                             </div>
                             {/* Stats row - wrap on mobile */}
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-gray-500 dark:text-gray-300">
                               <span>{projectTasks.length} tasks</span>
                               <span className="hidden sm:inline">•</span>
                               <span>{project.members?.length || 0} members</span>
@@ -12045,7 +12045,7 @@ export default function KanbanBoard() {
                                   style={{ width: `${progress}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-10 text-right">{progress}%</span>
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-300 w-10 text-right">{progress}%</span>
                             </div>
                           </div>
                           {/* Action buttons - full width on mobile */}
@@ -12095,7 +12095,7 @@ export default function KanbanBoard() {
                         <span className="text-2xl">📁</span>
                       </div>
                       <p className="text-gray-700 dark:text-gray-300 font-medium">No active projects yet</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Create your first project to organize your tasks</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-300 mt-1">Create your first project to organize your tasks</p>
                     </div>
                   )}
                 </div>
@@ -12104,7 +12104,7 @@ export default function KanbanBoard() {
               {/* Archived Projects */}
               {projects.filter(p => p.archived).length > 0 && (
                 <div>
-                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">Archived ({projects.filter(p => p.archived).length})</h3>
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-3 sm:mb-4">Archived ({projects.filter(p => p.archived).length})</h3>
                   <div className="space-y-3">
                     {projects.filter(p => p.archived).map(project => {
                       const projectTasks = tasks.filter(t => t.project_id === project.id)
@@ -12115,9 +12115,9 @@ export default function KanbanBoard() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">📦</span>
-                                <h4 className="font-semibold text-gray-600 dark:text-gray-400 truncate">{project.name}</h4>
+                                <h4 className="font-semibold text-gray-600 dark:text-gray-300 truncate">{project.name}</h4>
                               </div>
-                              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 ml-7">{projectTasks.length} tasks</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1 ml-7">{projectTasks.length} tasks</p>
                             </div>
                             <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-700">
                               <button
@@ -12169,28 +12169,28 @@ export default function KanbanBoard() {
                     {MenuIcons.fire()}
                     <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Day Streak</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Day Streak</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {MenuIcons.checkSquare()}
                     <span className="text-3xl font-bold text-green-600 dark:text-green-400">{completedToday}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Completed Today</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Completed Today</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {MenuIcons.calendarWeek()}
                     <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{weeklyStats.count}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">This Week</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">This Week</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {MenuIcons.stopwatch()}
                     <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{formatTimeEstimate(weeklyStats.time) || '0h'}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Time This Week</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Time This Week</p>
                 </div>
               </div>
               
@@ -12228,12 +12228,12 @@ export default function KanbanBoard() {
                           />
                         </div>
                         <span className={`text-xs font-medium ${
-                          day.isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
+                          day.isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-300'
                         }`}>
                           {day.dayName}
                         </span>
                         <span className={`text-xs ${
-                          day.isToday ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-400 dark:text-gray-500'
+                          day.isToday ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-400 dark:text-gray-300'
                         }`}>
                           {day.count}
                         </span>
@@ -12256,7 +12256,7 @@ export default function KanbanBoard() {
                       <div key={project.id}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-gray-700 dark:text-gray-300">{project.name}</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">{doneTasks}/{projectTasks.length} tasks</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-300">{doneTasks}/{projectTasks.length} tasks</span>
                         </div>
                         <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div 
@@ -12288,9 +12288,9 @@ export default function KanbanBoard() {
                           <span className="text-green-500">✓</span>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-gray-700 dark:text-gray-300 truncate">{task.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{project?.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-300">{project?.name}</p>
                           </div>
-                          <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                          <span className="text-xs text-gray-400 dark:text-gray-300 whitespace-nowrap">
                             {isToday ? 'Today' : formatDate(task.completed_at)}
                           </span>
                         </div>
@@ -12302,8 +12302,8 @@ export default function KanbanBoard() {
                       <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
                         <span className="text-2xl sm:text-xl">💪</span>
                       </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-base sm:text-sm">No completed tasks yet</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Get started!</p>
+                      <p className="text-gray-500 dark:text-gray-300 text-base sm:text-sm">No completed tasks yet</p>
+                      <p className="text-gray-400 dark:text-gray-300 text-sm mt-1">Get started!</p>
                     </div>
                   )}
                 </div>
@@ -12511,7 +12511,7 @@ export default function KanbanBoard() {
                 <span className="text-3xl">🚀</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Trackli!</h2>
-              <p className="text-gray-600 dark:text-gray-400">We've created a starter project with sample tasks to help you learn the app.</p>
+              <p className="text-gray-600 dark:text-gray-300">We've created a starter project with sample tasks to help you learn the app.</p>
             </div>
             
             <div className="space-y-3 mb-6">
@@ -12519,21 +12519,21 @@ export default function KanbanBoard() {
                 <span className="text-xl">👆</span>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Click on any task</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Each task has tips on features to explore</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Each task has tips on features to explore</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
                 <span className="text-xl">☀️</span>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Your daily focus list - some tasks are already there!</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Your daily focus list - some tasks are already there!</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
                 <span className="text-xl">✅</span>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Complete tasks to see them move</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Complete all My Day tasks for a celebration!</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Complete all My Day tasks for a celebration!</p>
                 </div>
               </div>
             </div>
@@ -12658,7 +12658,7 @@ export default function KanbanBoard() {
                 {error}
               </div>
             )}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-300">
               Paste notes or upload a photo of your notes. We'll extract action items automatically.
             </p>
             
@@ -12712,7 +12712,7 @@ export default function KanbanBoard() {
             
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <span className="text-xs text-gray-400 dark:text-gray-500">or paste text notes</span>
+              <span className="text-xs text-gray-400 dark:text-gray-300">or paste text notes</span>
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
             
@@ -12777,7 +12777,7 @@ Or we can extract from:
             </div>
             
             <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-gray-400 dark:text-gray-300">
                 {uploadedImage ? 'AI will analyze your image for tasks' : 'Tip: Follow-Up tables are extracted first'}
               </p>
               <button
@@ -13108,7 +13108,7 @@ Or we can extract from:
             <div className="flex gap-2">
               <button
                 onClick={() => setShowSaveViewModal(false)}
-                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
               >
                 Cancel
               </button>
@@ -13122,7 +13122,7 @@ Or we can extract from:
             </div>
             {savedFilterViews.length > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Existing views:</p>
+                <p className="text-xs text-gray-500 dark:text-gray-300 mb-2">Existing views:</p>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   {savedFilterViews.map(view => (
                     <div key={view.id} className="flex items-center justify-between text-sm">
@@ -13156,7 +13156,7 @@ Or we can extract from:
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">☀️ Plan Your Day</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Pick tasks to focus on today</p>
+                <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Pick tasks to focus on today</p>
               </div>
               <button
                 onClick={() => setPlanningModeOpen(false)}
@@ -13171,7 +13171,7 @@ Or we can extract from:
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               {/* Energy filter */}
               <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">Energy:</span>
+                <span className="text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">Energy:</span>
                 {Object.entries(ENERGY_LEVELS).map(([key, style]) => (
                   <button
                     key={key}
@@ -13226,7 +13226,7 @@ Or we can extract from:
                             {isReady && <span className="text-green-500">✓</span>}
                             <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{task.title}</span>
                           </div>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-300">
                             <span>{project?.name}</span>
                             {task.time_estimate && (
                               <>
@@ -13256,7 +13256,7 @@ Or we can extract from:
                       <span className="text-2xl sm:text-xl">🎉</span>
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 font-medium text-base sm:text-lg mb-1">Backlog is empty!</p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">All tasks are either planned or done.</p>
+                    <p className="text-gray-400 dark:text-gray-300 text-sm">All tasks are either planned or done.</p>
                   </div>
                 )}
               </div>
@@ -13264,7 +13264,7 @@ Or we can extract from:
             
             <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-300">
                   <span className="font-medium text-gray-700 dark:text-gray-300">{tasks.filter(t => t.status === 'todo').length}</span> tasks in Todo
                 </div>
                 <button

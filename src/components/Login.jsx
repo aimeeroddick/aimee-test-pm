@@ -203,7 +203,7 @@ export default function Login() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            <p className="text-gray-500 dark:text-gray-300 text-sm mb-6">
               {isSignUp ? 'Start organizing your tasks today' : 'Sign in to continue to Trackli'}
             </p>
 
@@ -344,7 +344,7 @@ export default function Login() {
                   setError('')
                   setMessage('')
                 }}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
               >
                 {isSignUp
                   ? 'Already have an account? Sign in'
@@ -354,7 +354,7 @@ export default function Login() {
           </div>
 
           {/* Footer links (mobile) */}
-          <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 lg:hidden">
+          <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-300 lg:hidden">
             <p>© 2025 Trackli. All rights reserved.</p>
           </div>
         </div>
