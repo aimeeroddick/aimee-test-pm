@@ -4557,25 +4557,36 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
 // My Day Task Card - defined outside to prevent re-creation on render
 const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onDragStart, onEditTask, onQuickStatusChange, onRemoveFromMyDay }) => {
   const isDraggingRef = useRef(false)
+  const didDragRef = useRef(false)
+  
+  const handleMouseDown = (e) => {
+    if (e.target.closest('button')) return
+    didDragRef.current = false
+  }
   
   const handleCardDragStart = (e) => {
     isDraggingRef.current = true
+    didDragRef.current = true
     onDragStart(e, task)
   }
   
   const handleCardDragEnd = () => {
-    setTimeout(() => { isDraggingRef.current = false }, 100)
+    setTimeout(() => {
+      isDraggingRef.current = false
+      didDragRef.current = false
+    }, 100)
   }
   
   const handleCardClick = () => {
-    if (!isDraggingRef.current) {
+    if (!isDraggingRef.current && !didDragRef.current) {
       onEditTask(task)
     }
   }
   
   return (
     <div
-      draggable
+      draggable="true"
+      onMouseDown={handleMouseDown}
       onDragStart={handleCardDragStart}
       onDragEnd={handleCardDragEnd}
       onClick={handleCardClick}
