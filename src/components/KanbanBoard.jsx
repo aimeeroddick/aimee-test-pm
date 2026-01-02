@@ -2776,7 +2776,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
         
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
-          <p className="text-sm text-gray-500">Need more help? Contact support</p>
+          <p className="text-sm text-gray-500">Need more help? <a href="mailto:support@gettrackli.com" className="text-indigo-500 hover:text-indigo-600 hover:underline">Contact support</a></p>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
@@ -13016,6 +13016,25 @@ Or we can extract from:
                         {clearingTasks ? '...' : 'Clear'}
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Support Section */}
+              <div>
+                <h3 className={`text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Support</h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Need help?</div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Get in touch with our support team</div>
+                    </div>
+                    <a
+                      href="mailto:support@gettrackli.com"
+                      className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors"
+                    >
+                      Contact Us
+                    </a>
                   </div>
                 </div>
               </div>
