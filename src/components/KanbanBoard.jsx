@@ -7688,7 +7688,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="-mt-4">
         {/* ═══════ CORE FIELDS ═══════ */}
         {true && (
           <div className="space-y-2">
@@ -7934,15 +7934,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     </button>
                   )}
                 </div>
-                <div className="relative">
+                <div className="relative flex">
                   <input
                     type="text"
-                    value={formData.start_date ? new Date(formData.start_date + 'T00:00:00').toLocaleDateString() : ''}
+                    value={formData.start_date}
                     onChange={(e) => {
                       const val = e.target.value.trim()
-                      if (!val) { setFormData({ ...formData, start_date: '' }); return }
-                      const parsed = parseNaturalLanguageDate(val)
-                      if (parsed.date) setFormData({ ...formData, start_date: parsed.date })
+                      setFormData({ ...formData, start_date: val })
                     }}
                     onBlur={(e) => {
                       const val = e.target.value.trim()
@@ -7950,19 +7948,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       const parsed = parseNaturalLanguageDate(val)
                       if (parsed.date) setFormData({ ...formData, start_date: parsed.date })
                     }}
-                    placeholder="Select date..."
-                    className={`w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                    placeholder="YYYY-MM-DD"
+                    className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
-                  <input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    title="Open calendar"
-                  />
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <label className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      className="sr-only"
+                    />
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </label>
                 </div>
               </div>
               <div>
@@ -8004,15 +8003,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     </button>
                   )}
                 </div>
-                <div className="relative">
+                <div className="relative flex">
                   <input
                     type="text"
-                    value={formData.due_date ? new Date(formData.due_date + 'T00:00:00').toLocaleDateString() : ''}
+                    value={formData.due_date}
                     onChange={(e) => {
                       const val = e.target.value.trim()
-                      if (!val) { setFormData({ ...formData, due_date: '' }); return }
-                      const parsed = parseNaturalLanguageDate(val)
-                      if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
+                      setFormData({ ...formData, due_date: val })
                     }}
                     onBlur={(e) => {
                       const val = e.target.value.trim()
@@ -8020,19 +8017,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       const parsed = parseNaturalLanguageDate(val)
                       if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
                     }}
-                    placeholder="Select date..."
-                    className={`w-full px-3 py-2 pr-10 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                    placeholder="YYYY-MM-DD"
+                    className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
-                  <input
-                    type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    title="Open calendar"
-                  />
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  <label className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <input
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      className="sr-only"
+                    />
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </label>
                 </div>
               </div>
             </div>
