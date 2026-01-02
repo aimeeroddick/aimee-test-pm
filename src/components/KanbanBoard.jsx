@@ -5973,10 +5973,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 
   return (
     <div
-      draggable
-      onDragStart={(e) => onDragStart(e, task)}
+      draggable="true"
+      onDragStart={(e) => {
+        e.stopPropagation()
+        onDragStart(e, task)
+      }}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
+      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-grab active:cursor-grabbing transition-all duration-200 group hover:z-[100] ${
         isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
@@ -6381,8 +6384,13 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
       className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[400px] xl:max-w-[450px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.01]' : ''
       }`}
+      onDragEnter={(e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+      }}
       onDragOver={(e) => {
         e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
         setIsDragOver(true)
         onDragOver(e, column.id)
       }}
@@ -10116,6 +10124,7 @@ export default function KanbanBoard() {
 
   const handleDragOver = (e, columnId) => {
     e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
   }
 
   const handleDrop = (e, columnId) => {
