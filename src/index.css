@@ -267,15 +267,12 @@ html {
 .task-card {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, box-shadow;
+  -webkit-user-drag: element;
+  user-select: none;
 }
 
 .task-card:hover {
   transform: translateY(-4px);
-}
-
-.task-card:active {
-  transform: scale(0.98) translateY(0);
-  transition-duration: 0.1s;
 }
 
 /* Subtle background brighten on hover for non-colored cards */
