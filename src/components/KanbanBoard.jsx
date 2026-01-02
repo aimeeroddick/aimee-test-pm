@@ -2638,6 +2638,49 @@ const MenuIcons = {
       <rect x="16" y="6" width="4" height="14" rx="1" fill="#10B981" />
     </svg>
   ),
+  // Settings menu icons
+  sun: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="12" y1="2" x2="12" y2="4" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
+      ))}
+    </svg>
+  ),
+  moon: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#FCD34D" />
+    </svg>
+  ),
+  importNotes: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="4" y="2" width="16" height="20" rx="2" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
+      <line x1="8" y1="7" x2="16" y2="7" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="11" x2="16" y2="11" stroke="#FCD34D" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="15" x2="13" y2="15" stroke="#FCD34D" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  feedback: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
+      <circle cx="8" cy="12" r="1" fill="#3B82F6" />
+      <circle cx="12" cy="12" r="1" fill="#3B82F6" />
+      <circle cx="16" cy="12" r="1" fill="#3B82F6" />
+    </svg>
+  ),
+  settingsGear: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <circle cx="12" cy="12" r="3" fill="#9CA3AF" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="#6B7280" strokeWidth="1.5" />
+    </svg>
+  ),
+  signOut: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+      <polyline points="16 17 21 12 16 7" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="21" y1="12" x2="9" y2="12" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
 }
 
 // Help Modal Component
@@ -9168,7 +9211,7 @@ export default function KanbanBoard() {
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
-          name: '🚀 Getting Started with Trackli',
+          name: 'Getting Started with Trackli',
           user_id: user.id,
         })
         .select()
@@ -11151,7 +11194,7 @@ export default function KanbanBoard() {
                           onClick={() => { setDarkMode(!darkMode) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                          <span className="text-lg">{darkMode ? '☀️' : '🌙'}</span>
+                          {darkMode ? MenuIcons.sun() : MenuIcons.moon()}
                           <span className="font-medium">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                         </button>
                         <button
@@ -11165,28 +11208,28 @@ export default function KanbanBoard() {
                           disabled={projects.length === 0}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                         >
-                          <span className="text-lg">📝</span>
+                          {MenuIcons.importNotes()}
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
                           onClick={() => { setFeedbackModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 sm:hidden"
                         >
-                          <span className="text-lg">💬</span>
+                          {MenuIcons.feedback()}
                           <span className="font-medium">Send Feedback</span>
                         </button>
                         <button
                           onClick={() => { setSettingsModalOpen(true); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                          <span className="text-lg">⚙️</span>
+                          {MenuIcons.settingsGear()}
                           <span className="font-medium">Settings</span>
                         </button>
                         <button
                           onClick={() => { signOut(); setNavMenuOpen(false) }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
-                          <span className="text-lg">🚪</span>
+                          {MenuIcons.signOut()}
                           <span className="font-medium">Sign Out</span>
                         </button>
                         {/* Bottom padding for safe area */}
