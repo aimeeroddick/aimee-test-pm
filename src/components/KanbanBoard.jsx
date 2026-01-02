@@ -2982,32 +2982,16 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 }
 
 // Calendar Sidebar Task Card - click to schedule approach
-const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
-  const [showScheduler, setShowScheduler] = useState(false)
-  const [scheduleDate, setScheduleDate] = useState(task.start_date || new Date().toISOString().split('T')[0])
-  const [scheduleTime, setScheduleTime] = useState(task.start_time || '09:00')
+const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
   
   const handleScheduleClick = (e) => {
     e.stopPropagation()
     e.preventDefault()
-    console.log('Schedule button clicked for:', task.title)
-    setShowScheduler(true)
-  }
-  
-  const handleScheduleSave = async (e) => {
-    e.stopPropagation()
-    await onUpdateTask(task.id, {
-      start_date: scheduleDate,
-      start_time: scheduleTime,
-      status: task.status === 'backlog' ? 'todo' : task.status
-    })
-    setShowScheduler(false)
+    onSelectForScheduling(task)
   }
   
   const handleClick = () => {
-    if (!showScheduler) {
-      onEditTask(task)
-    }
+    onEditTask(task)
   }
   
   return (
@@ -3055,57 +3039,6 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
           </svg>
         </button>
       </div>
-      
-      {/* Schedule popup - fixed position modal */}
-      {showScheduler && (
-        <>
-          <div 
-            className="fixed inset-0 z-[9998]"
-            onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
-          />
-          <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[9999]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Schedule Task</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 truncate">{task.title}</p>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Time</label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowScheduler(false) }}
-                  className="flex-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleScheduleSave}
-                  className="flex-1 px-3 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium"
-                >
-                  Schedule
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
 }
@@ -3119,6 +3052,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
+  const [taskToSchedule, setTaskToSchedule] = useState(null) // For schedule modal
+  const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().split('T')[0])
+  const [scheduleTime, setScheduleTime] = useState('09:00')
   const calendarScrollRef = useRef(null)
   const isDraggingRef = useRef(false)
   
@@ -3901,6 +3837,17 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
   }
   
+  // Handle schedule task from modal
+  const handleScheduleFromModal = async () => {
+    if (!taskToSchedule) return
+    await onUpdateTask(taskToSchedule.id, {
+      start_date: scheduleDate,
+      start_time: scheduleTime,
+      status: taskToSchedule.status === 'backlog' ? 'todo' : taskToSchedule.status
+    })
+    setTaskToSchedule(null)
+  }
+
   // Render Daily View
   const renderDailyView = () => {
     const dateStr = currentDate.toISOString().split('T')[0]
@@ -4134,7 +4081,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 key={task.id}
                 task={task}
                 highlight={highlight}
-                onUpdateTask={onUpdateTask}
+                onSelectForScheduling={setTaskToSchedule}
                 onEditTask={onEditTask}
                 COLUMN_COLORS={COLUMN_COLORS}
                 formatTimeEstimate={formatTimeEstimate}
@@ -4692,6 +4639,54 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           <div className="flex items-center gap-2">
             <span className="text-xs">📌</span>
             <span>Drag tasks to schedule time</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Schedule Task Modal */}
+      {taskToSchedule && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setTaskToSchedule(null)}
+          />
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-80 p-5">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">🗓 Schedule Task</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">{taskToSchedule.title}</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Time</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setTaskToSchedule(null)}
+                  className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleFromModal}
+                  className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium"
+                >
+                  Schedule
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
