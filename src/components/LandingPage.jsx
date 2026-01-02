@@ -19,8 +19,8 @@ export default function LandingPage() {
         scrolled ? 'bg-white/90 backdrop-blur-lg shadow-sm' : 'bg-transparent'
       }`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-16 h-16">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-14 sm:h-14">
               <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                 <defs>
                   <linearGradient id="landing-header-left" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               Trackli
             </span>
           </div>
