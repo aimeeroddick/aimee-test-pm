@@ -521,8 +521,39 @@ const DATE_SHORTCUTS = [
   { label: 'Next Month', getValue: () => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split('T')[0] } },
 ]
 
+// Toast Notification Icons
+const ToastIcons = {
+  success: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+      <circle cx="12" cy="12" r="10" fill="#10B981" />
+      <path d="M8 12l2.5 2.5L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  error: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+      <circle cx="12" cy="12" r="10" fill="#EF4444" />
+      <path d="M12 7v5" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="12" cy="16" r="1.5" fill="white" />
+    </svg>
+  ),
+  warning: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+      <path d="M12 3L2 21h20L12 3z" fill="#F59E0B" />
+      <path d="M12 9v5" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="12" cy="17" r="1.5" fill="white" />
+    </svg>
+  ),
+  info: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+      <circle cx="12" cy="12" r="10" fill="#3B82F6" />
+      <circle cx="12" cy="8" r="1.5" fill="white" />
+      <path d="M12 11v6" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  ),
+}
+
 // Toast Component for undo actions
-const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
+const Toast = ({ message, action, actionLabel, onClose, duration = 5000, type = 'info' }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, duration)
     return () => clearTimeout(timer)
@@ -530,18 +561,19 @@ const Toast = ({ message, action, actionLabel, onClose, duration = 5000 }) => {
   
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
-      <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl shadow-lg">
-        <span className="text-sm font-medium">{message}</span>
+      <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl">
+        {type === 'success' ? ToastIcons.success() : type === 'error' ? ToastIcons.error() : ToastIcons.info()}
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{message}</span>
         {action && (
           <button
             onClick={() => { action(); onClose(); }}
-            className="px-3 py-1 text-sm font-semibold bg-white/20 dark:bg-gray-900/20 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm font-semibold bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
           >
             {actionLabel || 'Undo'}
           </button>
         )}
-        <button onClick={onClose} className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded transition-colors touch-manipulation">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -10924,28 +10956,26 @@ export default function KanbanBoard() {
       
       {/* Enhanced Error Toast with Retry */}
       {errorToast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4 shadow-lg animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">{errorToast.details || 'Error'}</p>
-              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{errorToast.message}</p>
+            {ToastIcons.error()}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{errorToast.details || 'Error'}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">{errorToast.message}</p>
               {errorToast.retryAction && (
                 <button
                   onClick={() => {
                     setErrorToast(null)
                     errorToast.retryAction()
                   }}
-                  className="mt-2 px-3 py-1 bg-red-100 dark:bg-red-800/50 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded-lg text-xs font-medium transition-colors"
+                  className="mt-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-lg text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
                   Try Again
                 </button>
               )}
             </div>
-            <button onClick={() => setErrorToast(null)} className="p-2 sm:p-1 hover:bg-red-100 dark:hover:bg-red-800/50 rounded-lg transition-colors touch-manipulation">
-              <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={() => setErrorToast(null)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -10955,22 +10985,20 @@ export default function KanbanBoard() {
 
       {/* Undo Toast */}
       {undoToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl px-4 py-3 shadow-lg flex items-center gap-4 animate-in slide-in-from-bottom-5">
-          <svg className="w-5 h-5 text-emerald-400 dark:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="text-sm font-medium">"{undoToast.taskTitle}" marked as done</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
+          {ToastIcons.success()}
+          <span className="text-sm font-medium text-gray-900 dark:text-white">"{undoToast.taskTitle}" marked as done</span>
           <button
             onClick={handleUndo}
-            className="px-3 py-1 bg-white/20 dark:bg-gray-900/20 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded-lg text-sm font-semibold transition-colors"
+            className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
           >
             Undo
           </button>
           <button
             onClick={() => setUndoToast(null)}
-            className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors touch-manipulation"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -10979,22 +11007,14 @@ export default function KanbanBoard() {
       
       {/* Notification Toast */}
       {notification && (
-        <div className="fixed bottom-6 left-6 z-50 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-5">
-          {notification.type === 'success' ? (
-            <svg className="w-5 h-5 text-emerald-400 dark:text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-blue-400 dark:text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-          <span className="text-sm font-medium">{notification.message}</span>
+        <div className="fixed bottom-6 left-6 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
+          {notification.type === 'success' ? ToastIcons.success() : ToastIcons.info()}
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{notification.message}</span>
           <button
             onClick={() => setNotification(null)}
-            className="p-2 sm:p-1 hover:bg-white/20 dark:hover:bg-gray-900/20 rounded-lg transition-colors touch-manipulation"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
