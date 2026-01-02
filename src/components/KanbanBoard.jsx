@@ -1704,53 +1704,60 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
 }
 
 // Animated SVG Components for Tours
-const DragToMyDayAnimation = () => (
+const AddToMyDayAnimation = () => (
   <svg viewBox="0 0 280 120" className="w-full h-32 rounded-lg bg-gray-50 dark:bg-gray-700/50">
     <defs>
-      <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#818CF8" />
-        <stop offset="100%" stopColor="#6366F1" />
+      <linearGradient id="sunGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+        <stop offset="0%" stopColor="#FCD34D" />
+        <stop offset="100%" stopColor="#F59E0B" />
       </linearGradient>
-      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2"/>
-      </filter>
     </defs>
     
-    {/* Sidebar area */}
-    <rect x="10" y="10" width="80" height="100" rx="8" fill="#F3F4F6" className="dark:fill-gray-600" />
-    <text x="50" y="28" textAnchor="middle" fontSize="9" fill="#9CA3AF">Tasks</text>
+    {/* Recommendations section */}
+    <rect x="10" y="10" width="120" height="100" rx="8" fill="#F3F4F6" className="dark:fill-gray-600" />
+    <text x="70" y="26" textAnchor="middle" fontSize="9" fill="#6B7280">💡 Recommendations</text>
     
-    {/* Static cards in sidebar */}
-    <rect x="18" y="38" width="64" height="20" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
-    <rect x="18" y="62" width="64" height="20" rx="4" fill="#E5E7EB" className="dark:fill-gray-500" />
+    {/* Task card with sun button */}
+    <rect x="18" y="36" width="104" height="32" rx="6" fill="white" className="dark:fill-gray-500" stroke="#E5E7EB" />
+    <circle cx="30" cy="52" r="6" fill="#E5E7EB" />
+    <rect x="42" y="48" width="50" height="8" rx="2" fill="#9CA3AF" />
     
-    {/* My Day area */}
-    <rect x="110" y="10" width="160" height="100" rx="8" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2" strokeDasharray="4" />
-    <text x="190" y="28" textAnchor="middle" fontSize="10" fill="#D97706" fontWeight="bold">☀️ My Day</text>
-    
-    {/* Task already in My Day */}
-    <rect x="120" y="38" width="140" height="24" rx="6" fill="#FDE68A" />
-    <circle cx="132" cy="50" r="6" fill="#10B981" />
-    <rect x="144" y="46" width="60" height="8" rx="2" fill="#92400E" opacity="0.3" />
-    
-    {/* Animated dragging card */}
-    <g filter="url(#shadow)">
-      <rect x="18" y="38" width="64" height="20" rx="4" fill="url(#cardGradient)">
-        <animate attributeName="x" values="18;120;120" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="y" values="38;70;70" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="width" values="64;140;140" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="height" values="20;24;24" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-      </rect>
-      <rect x="24" y="44" width="40" height="6" rx="2" fill="white" opacity="0.8">
-        <animate attributeName="x" values="24;132;132" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="y" values="44;78;78" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-        <animate attributeName="width" values="40;80;80" dur="2.5s" repeatCount="indefinite" keyTimes="0;0.4;1" />
-      </rect>
+    {/* Sun button - animated */}
+    <g>
+      <circle cx="108" cy="52" r="10" fill="#FEF3C7">
+        <animate attributeName="r" values="10;12;10" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      <text x="108" y="56" textAnchor="middle" fontSize="12">☀️</text>
+      {/* Click ripple effect */}
+      <circle cx="108" cy="52" r="10" fill="none" stroke="#F59E0B" strokeWidth="2">
+        <animate attributeName="r" values="10;20;20" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.8;0;0" dur="1.5s" repeatCount="indefinite" />
+      </circle>
     </g>
     
-    {/* Arrow indicator */}
-    <path d="M95 55 L105 55 L100 60 Z" fill="#6366F1">
-      <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />
+    {/* Second task card */}
+    <rect x="18" y="74" width="104" height="28" rx="6" fill="white" className="dark:fill-gray-500" stroke="#E5E7EB" />
+    <circle cx="30" cy="88" r="5" fill="#E5E7EB" />
+    <rect x="42" y="84" width="40" height="8" rx="2" fill="#D1D5DB" />
+    
+    {/* My Day area */}
+    <rect x="150" y="10" width="120" height="100" rx="8" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2" />
+    <text x="210" y="26" textAnchor="middle" fontSize="10" fill="#D97706" fontWeight="bold">☀️ My Day</text>
+    
+    {/* Task appearing in My Day */}
+    <rect x="158" y="36" width="104" height="32" rx="6" fill="#FDE68A">
+      <animate attributeName="opacity" values="0;0;1;1" dur="1.5s" repeatCount="indefinite" keyTimes="0;0.3;0.5;1" />
+    </rect>
+    <circle cx="170" cy="52" r="6" fill="#10B981">
+      <animate attributeName="opacity" values="0;0;1;1" dur="1.5s" repeatCount="indefinite" keyTimes="0;0.3;0.5;1" />
+    </circle>
+    <rect x="182" y="48" width="50" height="8" rx="2" fill="#92400E" opacity="0.5">
+      <animate attributeName="opacity" values="0;0;0.5;0.5" dur="1.5s" repeatCount="indefinite" keyTimes="0;0.3;0.5;1" />
+    </rect>
+    
+    {/* Arrow showing the action */}
+    <path d="M125 52 L145 52 L140 47 M145 52 L140 57" stroke="#F59E0B" strokeWidth="2" fill="none" strokeLinecap="round">
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" repeatCount="indefinite" keyTimes="0;0.2;0.6;1" />
     </path>
   </svg>
 )
@@ -1905,10 +1912,10 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         icon: '🎯',
       },
       {
-        title: 'Drag Tasks to My Day',
-        description: 'Tasks with today\'s start date appear automatically. Drag any task from the sidebar to add it manually!',
+        title: 'Add Tasks to My Day',
+        description: 'Tasks with today\'s start date appear automatically. Click the ☀️ button on any recommended task to add it to your day!',
         icon: '📥',
-        animation: 'dragToMyDay',
+        animation: 'addToMyDay',
       },
       {
         title: 'Track Your Progress',
@@ -1976,7 +1983,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
 
   // Animation component mapping
   const animations = {
-    dragToMyDay: DragToMyDayAnimation,
+    addToMyDay: AddToMyDayAnimation,
     dragToCalendar: DragToCalendarAnimation,
     resizeTask: ResizeTaskAnimation,
     progressBar: ProgressBarAnimation,
