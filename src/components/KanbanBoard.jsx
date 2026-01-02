@@ -7817,6 +7817,82 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
+            {/* Time Estimate - Quick Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Estimate</label>
+              <div className="flex gap-2 items-center">
+                <div className="flex gap-1">
+                  {[
+                    { label: '15m', mins: 15 },
+                    { label: '30m', mins: 30 },
+                    { label: '1h', mins: 60 },
+                    { label: '2h', mins: 120 },
+                    { label: '4h', mins: 240 },
+                  ].map(opt => (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      onClick={() => {
+                        const updates = { time_estimate: String(opt.mins) }
+                        if (formData.start_time) {
+                          const [hours, mins] = formData.start_time.split(':').map(Number)
+                          const startMinutes = hours * 60 + mins
+                          const endMinutes = startMinutes + opt.mins
+                          const endHours = Math.floor(endMinutes / 60)
+                          const endMins = endMinutes % 60
+                          updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                        }
+                        setFormData({ ...formData, ...updates })
+                      }}
+                      className={`px-2 py-1 text-xs font-medium rounded-lg transition-all ${
+                        formData.time_estimate === String(opt.mins)
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="5"
+                  value={formData.time_estimate}
+                  onChange={(e) => {
+                    const newEstimate = e.target.value
+                    const updates = { time_estimate: newEstimate }
+                    if (formData.start_time && newEstimate) {
+                      const [hours, mins] = formData.start_time.split(':').map(Number)
+                      const startMinutes = hours * 60 + mins
+                      const endMinutes = startMinutes + parseInt(newEstimate)
+                      const endHours = Math.floor(endMinutes / 60)
+                      const endMins = endMinutes % 60
+                      updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                    }
+                    setFormData({ ...formData, ...updates })
+                  }}
+                  className="w-20 px-2 py-1 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  placeholder="mins"
+                />
+                {formData.time_estimate && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {formatTimeEstimate(parseInt(formData.time_estimate))}
+                  </span>
+                )}
+                {formData.time_estimate && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, time_estimate: '' })}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+            
             {/* Start Date & Due Date side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
