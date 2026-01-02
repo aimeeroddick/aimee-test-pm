@@ -2069,7 +2069,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
 }
 
 // Help Modal Component
-const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '⌘⌃' }) => {
+const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
   
   // Reset to initialTab when modal opens
@@ -2082,11 +2082,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
   if (!isOpen) return null
   
   const tabs = [
+    { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'board', label: 'Board', icon: '📋' },
     { id: 'myday', label: 'My Day', icon: '☀️' },
     { id: 'calendar', label: 'Calendar', icon: '🗓' },
     { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
-    { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
   ]
   
@@ -2131,44 +2131,15 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
         </div>
         
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-240px)]">
           {activeTab === 'board' && (
             <div className="space-y-6">
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">1</span>
-                  Summary Bar (Filter Stats)
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Click any stat to filter your tasks:</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="font-semibold text-indigo-600">Active</span>
-                    <p className="text-sm text-gray-500">Tasks in To Do + In Progress</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="font-semibold text-purple-600">Backlog</span>
-                    <p className="text-sm text-gray-500">Future work not yet started</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="font-semibold text-red-600">🚩 Critical</span>
-                    <p className="text-sm text-gray-500">High priority flagged tasks</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="font-semibold text-orange-600">Due Today</span>
-                    <p className="text-sm text-gray-500">Tasks due today</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="font-semibold text-red-600">Overdue</span>
-                    <p className="text-sm text-gray-500">Past due date</p>
-                  </div>
-                </div>
-              </section>
-              
-              <section>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
                   Kanban Columns
                 </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">Tasks flow through four columns representing their status:</p>
                 <div className="grid grid-cols-4 gap-2">
                   <div className="p-3 rounded-xl border-l-4" style={{ borderColor: '#9CA3AF', backgroundColor: '#F9FAFB' }}>
                     <span className="font-semibold text-gray-700">Backlog</span>
@@ -2187,7 +2158,40 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                     <p className="text-xs text-gray-500">Completed</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-3">💡 Drag and drop tasks between columns to change status</p>
+                <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300"><strong>👆 Drag & Drop:</strong> Drag any task card between columns to change its status instantly.</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">2</span>
+                  Task Card Quick Actions
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click Actions:</p>
+                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      <p>• <strong>Click card</strong> – Open task to edit all details</p>
+                      <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
+                      <p>• <strong>Double-click title</strong> – Edit title inline (desktop)</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Hover Actions (Desktop):</p>
+                    <p className="text-sm text-gray-500 mb-2">Hover over a card to reveal quick action buttons:</p>
+                    <div className="flex flex-wrap gap-2 text-sm">
+                      <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded">▶ Start</span>
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded">✓ Done</span>
+                      <span className="px-2 py-1 bg-red-100 text-red-700 rounded">🚩 Critical</span>
+                      <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded">☀️ My Day</span>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Mobile Quick Actions:</p>
+                    <p className="text-sm text-gray-500">On mobile, quick status buttons appear at the bottom of each card.</p>
+                  </div>
+                </div>
               </section>
               
               <section>
@@ -2200,12 +2204,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border Colors:</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <div className="w-1 h-6 rounded bg-orange-500"></div>
-                        <span>Orange = Blocked</span>
+                        <div className="w-1 h-6 rounded bg-red-500"></div>
+                        <span>Red = Overdue or Critical</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-1 h-6 rounded bg-red-500"></div>
-                        <span>Red = Critical</span>
+                        <div className="w-1 h-6 rounded bg-orange-500"></div>
+                        <span>Orange = Blocked or Due Today</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-1 h-6 rounded bg-green-500"></div>
@@ -2213,36 +2217,38 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-1 h-6 rounded bg-blue-500"></div>
-                        <span>Blue/Pink/Gray = Column</span>
+                        <span>Blue/Pink/Gray = Column status</span>
                       </div>
                     </div>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Effort Indicator (under checkbox):</p>
-                    <div className="flex gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600 font-bold">▰</span>
-                        <span>Low Effort</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-600 font-bold">▰▰</span>
-                        <span>Medium Effort</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-red-600 font-bold">▰▰▰</span>
-                        <span>High Effort</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Other Indicators:</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Icons & Badges:</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>🚩 = Critical/Flagged</div>
                       <div>🔒 = Blocked by another task</div>
                       <div>🔁 = Recurring task</div>
-                      <div>🗓 = Due date (red if overdue)</div>
+                      <div>☀️ = In My Day</div>
                       <div>▶ = Start date</div>
+                      <div>📅 = Due date</div>
                       <div>⏱ = Time estimate</div>
+                      <div>📎 = Has attachments</div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Effort Bars:</p>
+                    <div className="flex gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 font-bold">▰</span>
+                        <span>Low</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-600 font-bold">▰▰</span>
+                        <span>Medium</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-600 font-bold">▰▰▰</span>
+                        <span>High</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2250,43 +2256,25 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
               
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">3</span>
-                  Hover Popup
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">4</span>
+                  Filtering & Search
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">Hover over any task card to see additional details:</p>
-                <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <li>• Category badge</li>
-                  <li>• Customer name</li>
-                  <li>• Effort level badge</li>
-                  <li>• Full description</li>
-                  <li>• Assignee</li>
-                  <li>• Subtask progress</li>
-                  <li>• Attachments count</li>
-                </ul>
-              </section>
-              
-              <section>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">5</span>
-                  Filtering Tasks
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">Use the filter bar above the board to narrow down your tasks:</p>
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Quick Filters (Summary Bar):</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
+                    <p className="text-sm text-gray-500 mb-2">Click any stat in the summary bar to filter:</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>☀️ My Day – Tasks in your daily focus</div>
-                      <div>🟢 Active – To Do + In Progress</div>
-                      <div>🟣 Backlog – Future work</div>
-                      <div>🟠 Due Today</div>
-                      <div>🔴 Overdue</div>
-                      <div>🚩 Critical – Flagged tasks</div>
+                      <div>☀️ <span className="text-amber-600 font-medium">My Day</span> – Daily focus tasks</div>
+                      <div>🟢 <span className="text-green-600 font-medium">Active</span> – To Do + In Progress</div>
+                      <div>🚩 <span className="text-red-600 font-medium">Critical</span> – Flagged tasks</div>
+                      <div>🟠 <span className="text-orange-600 font-medium">Due Today</span></div>
+                      <div>🔴 <span className="text-red-600 font-medium">Overdue</span> – Past due date</div>
                     </div>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Field Filters:</p>
-                    <p className="text-sm text-gray-500 mb-2">Use the "Filter by..." dropdown to filter by:</p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <p className="text-sm text-gray-500 mb-2">Click the filter icon (🔍) to filter by:</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
                       <div>• Assignee</div>
                       <div>• Customer</div>
                       <div>• Category</div>
@@ -2295,9 +2283,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                       <div>• Due Date</div>
                     </div>
                   </div>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Search:</p>
-                    <p className="text-sm text-gray-500">Type in the search box to find tasks by title or description. Press ⌘K to jump to search.</p>
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                    <p className="font-semibold text-indigo-700 dark:text-indigo-300 mb-1">🔍 Quick Search</p>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400">Press <kbd className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-800 rounded text-xs font-mono">⌘K</kbd> (Mac) or <kbd className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-800 rounded text-xs font-mono">Ctrl+K</kbd> (Win) to open search. Find tasks by title, description, assignee, or customer.</p>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mt-3">💡 Active filters show a count badge. Click "Clear" to reset all filters.</p>
@@ -2574,8 +2562,24 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                 </h3>
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                   <p className="text-gray-700 dark:text-gray-300 mb-2">Click the <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">Export CSV</span> button to download your tasks.</p>
-                  <p className="text-sm text-gray-500">The export includes: Title, Project, Status, Critical, Due Date, Start Date, Assignee, Customer, Category, Effort, Source, Time Estimate, Description, and Created date.</p>
-                  <p className="text-sm text-gray-500 mt-2">💡 Only currently filtered/visible tasks are exported, making it easy to export specific subsets of your data.</p>
+                  <p className="text-sm text-gray-500">Includes: Title, Project, Status, Critical, Due Date, Start Date, Assignee, Customer, Category, Effort, Source, Time Estimate, Description, and Created date.</p>
+                  <p className="text-sm text-gray-500 mt-2">💡 Only currently filtered/visible tasks are exported.</p>
+                </div>
+              </section>
+              
+              <section>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">4</span>
+                  Import from CSV
+                </h3>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <p className="text-gray-700 dark:text-gray-300 mb-2">Click the <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">Import CSV</span> button to bulk create or update tasks.</p>
+                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p>• <strong>Create new tasks:</strong> Use <code className="px-1 bg-gray-100 dark:bg-gray-700 rounded">*</code> in the ID column</p>
+                    <p>• <strong>Update existing:</strong> Include the task's existing ID</p>
+                    <p>• <strong>Template:</strong> Export first to get the correct column format</p>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">💡 Great for migrating from other tools or bulk task creation.</p>
                 </div>
               </section>
             </div>
