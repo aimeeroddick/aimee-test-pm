@@ -2986,10 +2986,12 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
   const isDraggingRef = useRef(false)
   
   const handleDragStart = (e) => {
+    console.log('CalendarSidebarTaskCard dragstart fired for:', task.title)
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', task.id)
     isDraggingRef.current = true
     onDragStart(task)
+    console.log('Drag data set, task id:', task.id)
   }
   
   const handleDragEnd = () => {
