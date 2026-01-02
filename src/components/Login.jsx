@@ -43,9 +43,8 @@ export default function Login() {
       const { error } = await signIn(email, password)
       if (error) {
         setError(error.message)
-      } else {
-        navigate('/app')
       }
+      // Don't navigate here - let PublicRoute handle redirect when auth state updates
     }
 
     setLoading(false)
