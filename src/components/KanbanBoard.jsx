@@ -4800,47 +4800,17 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
-    const holdTimerRef = useRef(null)
-    const isHoldingRef = useRef(false)
     const isDraggingRef = useRef(false)
-    const [isHolding, setIsHolding] = useState(false)
-    const [isDragging, setIsDragging] = useState(false)
-    const didDragRef = useRef(false)
-    const touchStartPosRef = useRef(null)
-    const [isTouchDragging, setIsTouchDragging] = useState(false)
-    const [touchPos, setTouchPos] = useState({ x: 0, y: 0 })
     
-    const handleMouseDown = (e) => {
-      if (isCompleted) return
-      // Don't start hold if clicking on a button
-      if (e.target.closest('button')) return
-      
-      didDragRef.current = false
-      holdTimerRef.current = setTimeout(() => {
-        isHoldingRef.current = true
-        setIsHolding(true)
-      }, 200)
+    const handleDragStart = (e) => {
+      isDraggingRef.current = true
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('taskId', task.id)
+      onDragStart && onDragStart(e, task)
     }
     
-    const handleMouseUp = () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current)
-        holdTimerRef.current = null
-      }
-      setIsDragging(false)
-      // Small delay before resetting to allow drag to complete
-      setTimeout(() => {
-        isHoldingRef.current = false
-        setIsHolding(false)
-        didDragRef.current = false
-      }, 100)
-    }
-    
-    const handleMouseLeave = () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current)
-        holdTimerRef.current = null
-      }
+    const handleDragEnd = () => {
+      setTimeout(() => { isDraggingRef.current = false }, 100)
     }
     
     const handleClick = () => {
@@ -4849,129 +4819,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       }
     }
     
-    const handleDragStart = (e) => {
-      isDraggingRef.current = true
-      didDragRef.current = true
-      setIsDragging(true)
-      e.dataTransfer.effectAllowed = 'move'
-      e.dataTransfer.setData('taskId', task.id)
-      onDragStart && onDragStart(e, task)
-    }
-    
-    const handleDragEnd = () => {
-      setIsDragging(false)
-      setTimeout(() => {
-        isDraggingRef.current = false
-        didDragRef.current = false
-      }, 100)
-    }
-    
-    // Touch event handlers for mobile drag and drop
-    const handleTouchStart = (e) => {
-      if (isCompleted) return
-      if (e.target.closest('button')) return
-      
-      const touch = e.touches[0]
-      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }
-      didDragRef.current = false
-      
-      holdTimerRef.current = setTimeout(() => {
-        isHoldingRef.current = true
-        setIsHolding(true)
-        // Vibrate on mobile to indicate drag ready
-        if (navigator.vibrate) navigator.vibrate(50)
-      }, 200)
-    }
-    
-    const handleTouchMove = (e) => {
-      if (!isHoldingRef.current) {
-        // Cancel hold if moved too much before hold completes
-        if (touchStartPosRef.current) {
-          const touch = e.touches[0]
-          const dx = Math.abs(touch.clientX - touchStartPosRef.current.x)
-          const dy = Math.abs(touch.clientY - touchStartPosRef.current.y)
-          if (dx > 10 || dy > 10) {
-            // User is scrolling, not tapping
-            didDragRef.current = true
-            if (holdTimerRef.current) {
-              clearTimeout(holdTimerRef.current)
-              holdTimerRef.current = null
-            }
-          }
-        }
-        return
-      }
-      
-      e.preventDefault()
-      setIsTouchDragging(true)
-      didDragRef.current = true
-      
-      const touch = e.touches[0]
-      setTouchPos({ x: touch.clientX, y: touch.clientY })
-      
-      // Highlight drop zone if over it
-      const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
-      const dropZone = elemBelow?.closest('[data-dropzone="myday"]')
-      
-      document.querySelectorAll('[data-dropzone="myday"]').forEach(el => {
-        el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
-      })
-      
-      if (dropZone) {
-        dropZone.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
-      }
-    }
-    
-    const handleTouchEnd = (e) => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current)
-        holdTimerRef.current = null
-      }
-      
-      // Clean up drop zone highlighting
-      document.querySelectorAll('[data-dropzone="myday"]').forEach(el => {
-        el.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-900/30')
-      })
-      
-      if (isTouchDragging && isHoldingRef.current) {
-        const touch = e.changedTouches[0]
-        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY)
-        const dropZone = elemBelow?.closest('[data-dropzone="myday"]')
-        
-        if (dropZone) {
-          // Trigger the same action as regular drop
-          onUpdateMyDayDate(task.id, new Date().toISOString().split('T')[0])
-        }
-      } else if (!didDragRef.current && !isHoldingRef.current) {
-        // It was a tap, not a drag
-        onEditTask(task)
-      }
-      
-      setIsTouchDragging(false)
-      setTimeout(() => {
-        isHoldingRef.current = false
-        setIsHolding(false)
-        didDragRef.current = false
-      }, 100)
-      touchStartPosRef.current = null
-    }
-    
     return (
-      <>
       <div
         draggable={!isCompleted}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onClick={handleClick}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 ${
-          isDragging || isTouchDragging ? 'opacity-40 scale-[0.98]' : isHolding ? 'cursor-grabbing ring-2 ring-indigo-400 scale-[1.02] shadow-lg' : 'cursor-pointer'
-        } ${
+        className={`group relative p-4 rounded-xl select-none transition-all duration-200 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing ${
           isCompleted 
             ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
             : blocked 
@@ -5058,18 +4912,6 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
           </div>
         </div>
       </div>
-      {/* Touch drag ghost */}
-      {isTouchDragging && (
-        <div
-          className="fixed pointer-events-none z-[9999] p-3 rounded-xl border bg-white dark:bg-gray-800 border-indigo-400 shadow-2xl opacity-90 max-w-[200px]"
-          style={{ left: touchPos.x - 100, top: touchPos.y - 30 }}
-        >
-          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-            {task.critical && '🚩 '}{task.title}
-          </p>
-        </div>
-      )}
-      </>
     )
   }
   
