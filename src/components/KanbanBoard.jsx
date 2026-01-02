@@ -3774,6 +3774,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     // Reusable task card component for sidebar with hold-to-drag
     const TaskCard = ({ task, highlight }) => {
+    const holdTimerRef = useRef(null)
+    const isHoldingRef = useRef(false)
+    const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
     const touchStartPosRef = useRef(null)
@@ -3781,25 +3784,33 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const [touchPos, setTouchPos] = useState({ x: 0, y: 0 })
     
     const handleMouseDown = (e) => {
-      if (e.target.closest('button')) return
-      didDragRef.current = false
+    if (e.target.closest('button')) return
+    didDragRef.current = false
+    holdTimerRef.current = setTimeout(() => {
+      isHoldingRef.current = true
+        setIsHolding(true)
+      }, 200)
     }
     
     const handleMouseUp = () => {
-      setIsDragging(false)
-      setTimeout(() => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
+    setIsDragging(false)
+    setTimeout(() => {
+    isHoldingRef.current = false
+      setIsHolding(false)
         didDragRef.current = false
       }, 100)
     }
     
     const handleCardDragStart = (e) => {
-      didDragRef.current = true
+    if (!isHoldingRef.current) { e.preventDefault(); return }
+    didDragRef.current = true
       setIsDragging(true)
       handleDragStart(e, task)
     }
     
     const handleClick = () => {
-      if (!didDragRef.current) onEditTask(task)
+      if (!didDragRef.current && !isHoldingRef.current) onEditTask(task)
     }
     
     // Touch event handlers for mobile drag and drop
@@ -4760,12 +4771,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
   const handleDropOnMyDay = (e) => {
     e.preventDefault()
     setDragOverMyDay(false)
-    // Try 'taskId' first (from MyDay TaskCard), then 'text/plain' (from main drag handler)
-    let taskId = e.dataTransfer.getData('taskId')
-    if (!taskId) {
-      taskId = e.dataTransfer.getData('text/plain')
-    }
-    console.log('handleDropOnMyDay', taskId)
+    const taskId = e.dataTransfer.getData('taskId')
     if (taskId) {
       onUpdateMyDayDate(taskId, todayStr)
     }
@@ -4785,6 +4791,9 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const energyStyle = ENERGY_LEVELS[task.energy_level]
     const dueDateStatus = getDueDateStatus(task.due_date, task.status)
     const blocked = isBlocked(task, allTasks)
+    const holdTimerRef = useRef(null)
+    const isHoldingRef = useRef(false)
+    const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
     const touchStartPosRef = useRef(null)
@@ -4795,29 +4804,50 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
       if (isCompleted) return
       // Don't start hold if clicking on a button
       if (e.target.closest('button')) return
+      
       didDragRef.current = false
+      holdTimerRef.current = setTimeout(() => {
+        isHoldingRef.current = true
+        setIsHolding(true)
+      }, 200)
     }
     
     const handleMouseUp = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
       setIsDragging(false)
       // Small delay before resetting to allow drag to complete
       setTimeout(() => {
+        isHoldingRef.current = false
+        setIsHolding(false)
         didDragRef.current = false
       }, 100)
     }
     
+    const handleMouseLeave = () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current)
+        holdTimerRef.current = null
+      }
+    }
+    
     const handleClick = () => {
-      if (!didDragRef.current) {
+      if (!didDragRef.current && !isHoldingRef.current) {
         onEditTask(task)
       }
     }
     
     const handleDragStart = (e) => {
+      if (!isHoldingRef.current) {
+        e.preventDefault()
+        return
+      }
       didDragRef.current = true
       setIsDragging(true)
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('taskId', task.id)
-      e.dataTransfer.setData('text/plain', task.id)
       onDragStart && onDragStart(e, task)
     }
     
@@ -5943,13 +5973,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
 
   return (
     <div
-      draggable="true"
-      onDragStart={(e) => {
-        e.stopPropagation()
-        onDragStart(e, task)
-      }}
+      draggable
+      onDragStart={(e) => onDragStart(e, task)}
       onClick={() => bulkSelectMode ? onToggleSelect?.(task.id) : onEdit(task)}
-      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-grab active:cursor-grabbing transition-all duration-200 group hover:z-[100] ${
+      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
         isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
@@ -6354,13 +6381,8 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
       className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[400px] xl:max-w-[450px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.01]' : ''
       }`}
-      onDragEnter={(e) => {
-        e.preventDefault()
-        e.dataTransfer.dropEffect = 'move'
-      }}
       onDragOver={(e) => {
         e.preventDefault()
-        e.dataTransfer.dropEffect = 'move'
         setIsDragOver(true)
         onDragOver(e, column.id)
       }}
@@ -10087,39 +10109,18 @@ export default function KanbanBoard() {
 
   // Drag and drop
   const handleDragStart = (e, task) => {
-    console.log('handleDragStart called', task?.id, task?.title)
-    if (!task) {
-      console.error('No task provided to handleDragStart')
-      return
-    }
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
-    // Set both keys for compatibility with different drop handlers
-    e.dataTransfer.setData('text/plain', task.id)
-    e.dataTransfer.setData('taskId', task.id)
   }
 
   const handleDragOver = (e, columnId) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
   }
 
   const handleDrop = (e, columnId) => {
     e.preventDefault()
-    console.log('handleDrop called', columnId, 'draggedTask:', draggedTask?.id)
-    
-    // Get task from state, or fallback to dataTransfer if state hasn't updated yet
-    let taskToMove = draggedTask
-    if (!taskToMove) {
-      const taskId = e.dataTransfer.getData('text/plain')
-      console.log('Fallback to dataTransfer taskId:', taskId)
-      taskToMove = tasks.find(t => t.id === taskId)
-    }
-    
-    console.log('taskToMove:', taskToMove?.id, 'to column:', columnId)
-    
-    if (taskToMove && taskToMove.status !== columnId) {
-      handleUpdateTaskStatus(taskToMove.id, columnId)
+    if (draggedTask && draggedTask.status !== columnId) {
+      handleUpdateTaskStatus(draggedTask.id, columnId)
     }
     setDraggedTask(null)
   }
