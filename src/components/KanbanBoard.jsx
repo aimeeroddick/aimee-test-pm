@@ -10470,9 +10470,22 @@ export default function KanbanBoard() {
         <div className="text-center">
           {/* Animated Logo */}
           <div className="relative mb-6">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-xl shadow-indigo-500/30 animate-pulse">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            <div className="w-20 h-20 mx-auto">
+              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full drop-shadow-xl">
+                <defs>
+                  <linearGradient id="loading-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4F46E5"/>
+                    <stop offset="100%" stopColor="#7C3AED"/>
+                  </linearGradient>
+                  <linearGradient id="loading-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA"/>
+                    <stop offset="100%" stopColor="#EC4899"/>
+                  </linearGradient>
+                </defs>
+                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#loading-left)"/>
+                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#loading-right)"/>
+                <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             {/* Pulse ring */}
@@ -10740,9 +10753,22 @@ export default function KanbanBoard() {
             {/* Center: Logo */}
             {/* Mobile: Small icon + name */}
             <div className="flex sm:hidden items-center gap-1.5">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <div className="w-7 h-7">
+                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="mobile-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#4F46E5"/>
+                      <stop offset="100%" stopColor="#7C3AED"/>
+                    </linearGradient>
+                    <linearGradient id="mobile-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#9333EA"/>
+                      <stop offset="100%" stopColor="#EC4899"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M6 18L28 6L28 38L6 26Z" fill="url(#mobile-left)"/>
+                  <path d="M28 6L50 18L50 46L28 38Z" fill="url(#mobile-right)"/>
+                  <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                  <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <span className="text-base font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -10751,9 +10777,22 @@ export default function KanbanBoard() {
             </div>
             {/* Desktop: Centered logo */}
             <div className="absolute left-1/2 transform -translate-x-1/2 hidden xl:flex items-center gap-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8">
+                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="desktop-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#4F46E5"/>
+                      <stop offset="100%" stopColor="#7C3AED"/>
+                    </linearGradient>
+                    <linearGradient id="desktop-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#9333EA"/>
+                      <stop offset="100%" stopColor="#EC4899"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M6 18L28 6L28 38L6 26Z" fill="url(#desktop-left)"/>
+                  <path d="M28 6L50 18L50 46L28 38Z" fill="url(#desktop-right)"/>
+                  <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                  <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <h1 className="hidden sm:block text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">

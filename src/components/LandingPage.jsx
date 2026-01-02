@@ -20,9 +20,22 @@ export default function LandingPage() {
       }`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            <div className="w-10 h-10">
+              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="landing-header-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4F46E5"/>
+                    <stop offset="100%" stopColor="#7C3AED"/>
+                  </linearGradient>
+                  <linearGradient id="landing-header-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA"/>
+                    <stop offset="100%" stopColor="#EC4899"/>
+                  </linearGradient>
+                </defs>
+                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#landing-header-left)"/>
+                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#landing-header-right)"/>
+                <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -442,9 +455,22 @@ export default function LandingPage() {
       <footer className="py-12 px-6 border-t border-gray-200">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            <div className="w-8 h-8">
+              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="landing-footer-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4F46E5"/>
+                    <stop offset="100%" stopColor="#7C3AED"/>
+                  </linearGradient>
+                  <linearGradient id="landing-footer-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA"/>
+                    <stop offset="100%" stopColor="#EC4899"/>
+                  </linearGradient>
+                </defs>
+                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#landing-footer-left)"/>
+                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#landing-footer-right)"/>
+                <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <span className="font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
