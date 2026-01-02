@@ -1926,7 +1926,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     ],
     calendar: [
       {
-        title: '📆 Welcome to Calendar!',
+        title: '🗓 Welcome to Calendar!',
         description: 'Schedule your tasks visually. Switch between daily, weekly, and monthly views using the buttons at the top.',
         icon: '🗓️',
       },
@@ -2084,7 +2084,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
   const tabs = [
     { id: 'board', label: 'Board', icon: '📋' },
     { id: 'myday', label: 'My Day', icon: '☀️' },
-    { id: 'calendar', label: 'Calendar', icon: '📆' },
+    { id: 'calendar', label: 'Calendar', icon: '🗓' },
     { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
     { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
@@ -2394,7 +2394,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
             <div className="space-y-6">
               <section>
                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">📆</span>
+                  <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">🗓</span>
                   Calendar View
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">⌘L</kbd>.</p>
@@ -2407,12 +2407,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
-                    <span className="text-2xl">📅</span>
+                    <span className="text-2xl">🗓</span>
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mt-1">Daily</p>
                     <p className="text-xs text-gray-500">Single day view</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
-                    <span className="text-2xl">📆</span>
+                    <span className="text-2xl">🗓</span>
                     <p className="font-semibold text-gray-700 dark:text-gray-200 mt-1">Weekly</p>
                     <p className="text-xs text-gray-500">7-day overview</p>
                   </div>
@@ -2723,7 +2723,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'board', shortcutModifier = '
                     <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘B</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <span className="text-gray-700 dark:text-gray-300">📆 Calendar View</span>
+                    <span className="text-gray-700 dark:text-gray-300">🗓 Calendar View</span>
                     <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">⌘L</kbd>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
@@ -2989,6 +2989,8 @@ const CalendarSidebarTaskCard = ({ task, highlight, onUpdateTask, onEditTask, CO
   
   const handleScheduleClick = (e) => {
     e.stopPropagation()
+    e.preventDefault()
+    console.log('Schedule button clicked for:', task.title)
     setShowScheduler(true)
   }
   
@@ -4140,7 +4142,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         {selectedTaskForScheduling && (
           <div className="fixed bottom-4 left-4 right-4 z-50 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between animate-slide-up">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-lg">📅</span>
+              <span className="text-lg">🗓</span>
               <span className="text-sm font-medium truncate">Click a time slot to schedule: {selectedTaskForScheduling.title}</span>
             </div>
             <button
@@ -4308,9 +4310,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         <div className="w-full lg:w-72 lg:shrink-0">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
-              <span>📅</span> Schedule Tasks
+              <span>🗓</span> Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 📅 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Click 🗓 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
@@ -8693,7 +8695,7 @@ export default function KanbanBoard() {
           time_estimate: 10,
         },
         {
-          title: '📅 Explore the Calendar view',
+          title: '🗓 Explore the Calendar view',
           description: 'The Calendar view lets you:\n\n• See tasks on their due dates\n• Drag tasks to reschedule them\n• Switch between daily, weekly, and monthly views\n\nThis task is due tomorrow!',
           status: 'todo',
           project_id: project.id,
@@ -10635,7 +10637,7 @@ export default function KanbanBoard() {
                         onClick={() => { setCurrentView('calendar'); setNavMenuOpen(false) }}
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        <span className="text-lg">📆</span>
+                        <span className="text-lg">🗓</span>
                         <span className="font-medium">Calendar</span>
                         <span className="ml-auto text-xs text-gray-400 hidden sm:inline">{shortcutModifier}L</span>
                       </button>
@@ -10721,7 +10723,7 @@ export default function KanbanBoard() {
               
               {/* Current view indicator */}
               <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '📆 Calendar' : currentView === 'tasks' ? '🗃️ All Tasks' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
+                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '🗓 Calendar' : currentView === 'tasks' ? '🗃️ All Tasks' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
               </span>
             </div>
             
@@ -11651,7 +11653,7 @@ export default function KanbanBoard() {
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">📅</span>
+                    <span className="text-2xl">🗓</span>
                     <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{weeklyStats.count}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">This Week</p>
