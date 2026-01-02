@@ -91,7 +91,7 @@ export default function Login() {
               <path d="M18 20L25 27L38 14" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold" style={{background: 'linear-gradient(to right, #4F46E5, #9333EA, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
             Trackli
           </h1>
           <p className="text-gray-500 mt-2">Track. Manage. Deliver.</p>
