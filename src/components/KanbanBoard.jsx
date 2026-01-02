@@ -3776,6 +3776,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     const TaskCard = ({ task, highlight }) => {
     const holdTimerRef = useRef(null)
     const isHoldingRef = useRef(false)
+    const isDraggingRef = useRef(false)
     const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
@@ -4801,6 +4802,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, onDragStart, allTasks, on
     const blocked = isBlocked(task, allTasks)
     const holdTimerRef = useRef(null)
     const isHoldingRef = useRef(false)
+    const isDraggingRef = useRef(false)
     const [isHolding, setIsHolding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const didDragRef = useRef(false)
