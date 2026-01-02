@@ -8353,7 +8353,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           )}
           </div>
           
-          {/* ═══════ MORE OPTIONS ═══════ */}
+          {/* ═══════ NOTES & ATTACHMENTS ═══════ */}
           <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
             <button
               type="button"
@@ -8361,54 +8361,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm">⚙️</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">More Options</span>
+                <span className="text-sm">📝</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes & Attachments</span>
               </div>
               <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.more ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
           {expandedSections.more && (
           <div className="p-4 space-y-4">
-            {/* Category & Source */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
-                <select
-                  value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  {SOURCES.map((src) => (
-                    <option key={src.id} value={src.id}>{src.icon} {src.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            {/* Source Link */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Link</label>
-              <input
-                type="text"
-                value={formData.source_link}
-                onChange={(e) => setFormData({ ...formData, source_link: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                placeholder="URL or reference to the source"
-              />
-            </div>
-            
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
