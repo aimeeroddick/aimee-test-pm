@@ -2984,17 +2984,24 @@ const ProgressRing = ({ progress, size = 120, strokeWidth = 8, color = '#6366F1'
 // Calendar Sidebar Task Card - defined OUTSIDE CalendarView to prevent re-creation on render
 const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COLUMN_COLORS, formatTimeEstimate, formatDate }) => {
   const isDraggingRef = useRef(false)
+  const [isDragging, setIsDragging] = useState(false)
+  
+  const handleMouseDown = (e) => {
+    console.log('MOUSEDOWN on', task.title)
+  }
   
   const handleDragStart = (e) => {
-    console.log('CalendarSidebarTaskCard dragstart fired for:', task.title)
+    console.log('DRAG START', task.title)
+    isDraggingRef.current = true
+    setIsDragging(true)
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', task.id)
-    isDraggingRef.current = true
     onDragStart(task)
-    console.log('Drag data set, task id:', task.id)
   }
   
   const handleDragEnd = () => {
+    console.log('DRAG END', task.title)
+    setIsDragging(false)
     setTimeout(() => { isDraggingRef.current = false }, 100)
   }
   
@@ -3006,11 +3013,14 @@ const CalendarSidebarTaskCard = ({ task, highlight, onDragStart, onEditTask, COL
   
   return (
     <div
-      draggable
+      draggable="true"
+      onMouseDown={handleMouseDown}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
-      className={`p-2.5 rounded-lg border transition-all duration-200 select-none cursor-grab hover:shadow-md hover:-translate-y-0.5 ${
+      className={`p-2.5 rounded-lg border transition-all duration-200 cursor-grab active:cursor-grabbing ${
+        isDragging ? 'opacity-30 scale-95' : 'hover:shadow-md hover:-translate-y-0.5'
+      } ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
         highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
         highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
