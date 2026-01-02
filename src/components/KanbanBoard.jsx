@@ -7688,9 +7688,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit} className="-mt-3">
+      <form onSubmit={handleSubmit} className="-mt-5">
         {/* Status & Project - top row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
           {/* Status chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {COLUMNS.map((col) => (
@@ -7714,9 +7714,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             required
             value={formData.project_id}
             onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-            className={`px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
+            className={`px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-w-[120px] ${
+              !formData.project_id ? 'border-l-4 border-l-red-400' : ''
+            }`}
           >
-            <option value="">Select project</option>
+            <option value="">Project...</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
