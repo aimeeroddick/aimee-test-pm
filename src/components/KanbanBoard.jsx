@@ -1319,19 +1319,22 @@ const GreetingIcon = ({ hour }) => {
       </svg>
     )
   } else {
-    // Evening - moon
+    // Evening - moon with stars
     return (
       <svg viewBox="0 0 32 32" className="w-7 h-7 sm:w-8 sm:h-8">
         <defs>
           <linearGradient id="moonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#CBD5E1" />
-            <stop offset="100%" stopColor="#94A3B8" />
+            <stop offset="0%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#F59E0B" />
           </linearGradient>
         </defs>
-        <path d="M20 6 A10 10 0 1 0 20 26 A8 8 0 1 1 20 6" fill="url(#moonGrad)" />
-        <circle cx="24" cy="8" r="1" fill="#FBBF24" />
-        <circle cx="27" cy="14" r="1.5" fill="#FBBF24" />
-        <circle cx="22" cy="20" r="1" fill="#FBBF24" />
+        {/* Crescent moon */}
+        <circle cx="14" cy="16" r="8" fill="url(#moonGrad)" />
+        <circle cx="18" cy="13" r="6" fill="#F8FAFC" className="dark:fill-gray-800" />
+        {/* Stars */}
+        <circle cx="26" cy="8" r="1.5" fill="#FCD34D" />
+        <circle cx="24" cy="22" r="1" fill="#FCD34D" />
+        <circle cx="6" cy="10" r="1" fill="#FCD34D" />
       </svg>
     )
   }
@@ -2491,6 +2494,55 @@ const MenuIcons = {
       <rect x="9" y="19" width="6" height="2" rx="1" fill="#F59E0B" />
       <rect x="10" y="21" width="4" height="1" rx="0.5" fill="#D97706" />
       <path d="M9 9 L12 12 L15 9" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    </svg>
+  ),
+  // Progress Dashboard icons
+  fire: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <defs>
+        <linearGradient id="fireGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#DC2626" />
+          <stop offset="50%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#FCD34D" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2 C12 2 8 6 8 10 C8 11 8.5 12 9 12.5 C8.5 11 9 9 12 7 C15 9 15.5 11 15 12.5 C15.5 12 16 11 16 10 C16 6 12 2 12 2 Z M12 22 C8 22 5 19 5 15 C5 11 8 8 12 8 C16 8 19 11 19 15 C19 19 16 22 12 22 Z" fill="url(#fireGrad)" />
+    </svg>
+  ),
+  checkSquare: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="#22C55E" />
+      <path d="M7 12 L10 15 L17 8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  calendarWeek: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="#FEE2E2" />
+      <rect x="3" y="5" width="18" height="5" rx="2" fill="#EF4444" />
+      <circle cx="7" cy="3" r="1.5" fill="#DC2626" />
+      <circle cx="17" cy="3" r="1.5" fill="#DC2626" />
+      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="15" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="6" y="16" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="10.5" y="16" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+    </svg>
+  ),
+  stopwatch: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <circle cx="12" cy="13" r="9" fill="#E9D5FF" stroke="#A855F7" strokeWidth="2" />
+      <circle cx="12" cy="13" r="6" fill="white" />
+      <line x1="12" y1="13" x2="12" y2="9" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" />
+      <line x1="12" y1="13" x2="15" y2="13" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="10" y="1" width="4" height="3" rx="1" fill="#A855F7" />
+      <circle cx="12" cy="13" r="1" fill="#7C3AED" />
+    </svg>
+  ),
+  chartBar: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="4" y="14" width="4" height="6" rx="1" fill="#EF4444" />
+      <rect x="10" y="10" width="4" height="10" rx="1" fill="#F59E0B" />
+      <rect x="16" y="6" width="4" height="14" rx="1" fill="#10B981" />
     </svg>
   ),
 }
@@ -12179,34 +12231,34 @@ export default function KanbanBoard() {
           
           {currentView === 'progress' && (
             <main className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">📊 Progress Dashboard</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Progress Dashboard</h2>
               
               {/* Stats Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">🔥</span>
+                    {MenuIcons.fire()}
                     <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Day Streak</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">✅</span>
+                    {MenuIcons.checkSquare()}
                     <span className="text-3xl font-bold text-green-600 dark:text-green-400">{completedToday}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Completed Today</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">🗓</span>
+                    {MenuIcons.calendarWeek()}
                     <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{weeklyStats.count}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">This Week</p>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">⏱️</span>
+                    {MenuIcons.stopwatch()}
                     <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{formatTimeEstimate(weeklyStats.time) || '0h'}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Time This Week</p>
