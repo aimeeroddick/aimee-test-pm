@@ -552,6 +552,38 @@ const ToastIcons = {
   ),
 }
 
+// Empty State Icons for Kanban Columns
+const ColumnEmptyIcons = {
+  backlog: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="3" y="6" width="18" height="14" rx="2" fill="#9CA3AF" />
+      <rect x="3" y="6" width="18" height="4" rx="2" fill="#6B7280" />
+      <rect x="7" y="12" width="10" height="2" rx="1" fill="#E5E7EB" />
+      <rect x="7" y="15" width="6" height="2" rx="1" fill="#E5E7EB" opacity="0.7" />
+    </svg>
+  ),
+  todo: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="4" y="3" width="16" height="18" rx="2" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
+      <rect x="7" y="7" width="10" height="2" rx="1" fill="#3B82F6" />
+      <rect x="7" y="11" width="8" height="2" rx="1" fill="#93C5FD" />
+      <rect x="7" y="15" width="6" height="2" rx="1" fill="#93C5FD" opacity="0.7" />
+    </svg>
+  ),
+  in_progress: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <circle cx="12" cy="12" r="9" fill="#FCE7F3" stroke="#EC4899" strokeWidth="1.5" />
+      <path d="M12 7v5l3 3" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  done: () => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6">
+      <circle cx="12" cy="12" r="9" fill="#D1FAE5" stroke="#10B981" strokeWidth="1.5" />
+      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+}
+
 // Toast Component for undo actions
 const Toast = ({ message, action, actionLabel, onClose, duration = 5000, type = 'info' }) => {
   useEffect(() => {
@@ -7064,7 +7096,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
         {displayTasks.length === 0 && !isDragOver && (
           <div className="py-6 sm:py-8 text-center">
             <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3 sm:mb-2 opacity-60">
-              <span className="text-xl sm:text-lg">{column.id === 'done' ? '✅' : column.id === 'in_progress' ? '💭' : column.id === 'todo' ? '📋' : '📦'}</span>
+              {ColumnEmptyIcons[column.id]()}
             </div>
             <p className="text-sm sm:text-xs text-gray-400 dark:text-gray-500 px-4">
               {column.id === 'done' ? 'Completed tasks appear here' : column.id === 'in_progress' ? 'Tasks you\'re working on' : column.id === 'todo' ? 'Ready to start' : 'Future tasks'}
