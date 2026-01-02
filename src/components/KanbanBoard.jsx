@@ -7688,24 +7688,39 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit} className="-mt-4">
-        {/* Status - clickable chips at very top */}
-        <div className="flex items-center gap-2 flex-wrap mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          {COLUMNS.map((col) => (
-            <button
-              key={col.id}
-              type="button"
-              onClick={() => setFormData({ ...formData, status: col.id })}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                formData.status === col.id
-                  ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500'
-                  : 'opacity-60 hover:opacity-100'
-              }`}
-              style={{ backgroundColor: col.color + '20', color: col.color, borderLeft: `3px solid ${col.color}` }}
-            >
-              {col.title}
-            </button>
-          ))}
+      <form onSubmit={handleSubmit} className="-mt-3">
+        {/* Status & Project - top row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+          {/* Status chips */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {COLUMNS.map((col) => (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => setFormData({ ...formData, status: col.id })}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                  formData.status === col.id
+                    ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500'
+                    : 'opacity-60 hover:opacity-100'
+                }`}
+                style={{ backgroundColor: col.color + '20', color: col.color, borderLeft: `3px solid ${col.color}` }}
+              >
+                {col.title}
+              </button>
+            ))}
+          </div>
+          {/* Project dropdown */}
+          <select
+            required
+            value={formData.project_id}
+            onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
+            className={`px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
+          >
+            <option value="">Select project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
         </div>
         
         {/* ═══════ CORE FIELDS ═══════ */}
@@ -7740,23 +7755,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
             
-            {/* Project */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
-              <select
-                required
-                value={formData.project_id}
-                onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-                className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${!formData.project_id ? 'border-l-4 border-l-red-400 dark:border-l-red-500' : ''}`}
-              >
-                <option value="">Select project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Customer & Energy Level - side by side */}
+            {/* Customer & Effort Level - side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer/Client</label>
