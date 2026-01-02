@@ -2085,7 +2085,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
     { id: 'tasks', label: 'Tasks', icon: '✅' },
     { id: 'board', label: 'Board', icon: '📋' },
     { id: 'myday', label: 'My Day', icon: '☀️' },
-    { id: 'calendar', label: 'Calendar', icon: '🗓' },
+    { id: 'calendar', label: 'Calendar', icon: '📅' },
     { id: 'alltasks', label: 'All Tasks', icon: '🗃️' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️' },
   ]
