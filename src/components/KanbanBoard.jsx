@@ -4480,34 +4480,34 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           </div>
         </div>
         
-        {/* View Mode Switcher - full width on mobile */}
-        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        {/* View Mode Switcher - sleek pill design */}
+        <div className="inline-flex items-center bg-gray-100 dark:bg-gray-800 rounded-full p-0.5">
           <button
             onClick={() => setViewMode('daily')}
-            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'daily' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Day
           </button>
           <button
             onClick={() => setViewMode('weekly')}
-            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'weekly' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Week
           </button>
           <button
             onClick={() => setViewMode('monthly')}
-            className={`flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all ${
               viewMode === 'monthly' 
                 ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Month
