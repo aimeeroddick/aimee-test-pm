@@ -11260,8 +11260,13 @@ export default function KanbanBoard() {
               </div>
               
               {/* Current view indicator */}
-              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                {currentView === 'myday' ? '☀️ My Day' : currentView === 'board' ? '📋 Board' : currentView === 'calendar' ? '🗓 Calendar' : currentView === 'tasks' ? '🗃️ All Tasks' : currentView === 'progress' ? '📊 Progress' : '📁 Projects'}
+              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:flex items-center gap-1.5">
+                {currentView === 'myday' && <>{MenuIcons.myday()} My Day</>}
+                {currentView === 'board' && <>{MenuIcons.board()} Board</>}
+                {currentView === 'calendar' && <>{MenuIcons.calendar()} Calendar</>}
+                {currentView === 'tasks' && <>{MenuIcons.alltasks()} All Tasks</>}
+                {currentView === 'progress' && <>{MenuIcons.progress()} Progress</>}
+                {currentView === 'projects' && <>{MenuIcons.projects()} Projects</>}
               </span>
             </div>
             
