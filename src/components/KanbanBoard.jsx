@@ -10752,8 +10752,8 @@ export default function KanbanBoard() {
             
             {/* Center: Logo */}
             {/* Mobile: Small icon + name */}
-            <div className="flex sm:hidden items-center gap-1.5">
-              <div className="w-7 h-7">
+            <div className="flex sm:hidden items-center gap-2">
+              <div className="w-9 h-9">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
                     <linearGradient id="mobile-left" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -10776,8 +10776,8 @@ export default function KanbanBoard() {
               </span>
             </div>
             {/* Desktop: Centered logo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 hidden xl:flex items-center gap-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8">
+            <div className="absolute left-1/2 transform -translate-x-1/2 hidden xl:flex items-center gap-2.5">
+              <div className="w-9 h-9 sm:w-10 sm:h-10">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
                     <linearGradient id="desktop-left" x1="0%" y1="0%" x2="100%" y2="100%">

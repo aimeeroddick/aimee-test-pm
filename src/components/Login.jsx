@@ -73,7 +73,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4">
+          <div className="w-20 h-20 mx-auto mb-4">
             <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
               <defs>
                 <linearGradient id="login-left" x1="0%" y1="0%" x2="100%" y2="100%">

@@ -20,7 +20,7 @@ export default function LandingPage() {
       }`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10">
+            <div className="w-12 h-12">
               <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                 <defs>
                   <linearGradient id="landing-header-left" x1="0%" y1="0%" x2="100%" y2="100%">
