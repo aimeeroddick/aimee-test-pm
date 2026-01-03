@@ -13076,7 +13076,7 @@ export default function KanbanBoard() {
         fullScreenMobile
       >
         {!showExtractedTasks ? (
-          <div className="space-y-3">
+          <div className="flex flex-col space-y-3 h-full">
             {error && (
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
                 {error}
@@ -13139,8 +13139,8 @@ export default function KanbanBoard() {
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent"></div>
             </div>
             
-            {/* Meeting Title & Date side by side */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Meeting Title & Date - stack on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Meeting Title</label>
                 <input
@@ -13178,7 +13178,7 @@ export default function KanbanBoard() {
             </div>
             
             {/* Meeting Notes */}
-            <div>
+            <div className="flex-1 flex flex-col min-h-0">
               <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Meeting Notes</label>
               <textarea
                 value={meetingNotesData.notes}
@@ -13186,27 +13186,25 @@ export default function KanbanBoard() {
                 placeholder={`Paste your meeting notes here...
 
 Best format - Follow-Up table:
-| Follow-Up | Owner | Due Date | Status |
-| Review proposal | Sarah | 30/12 | Open |
+| Follow-Up | Owner | Due Date |
+| Review proposal | Sarah | 30/12 |
 
 Or we can extract from:
 • Action items like 'John to send report by Friday'
-• TODO: Review the proposal
-• @Sarah: Update the timeline`}
-                rows={8}
-                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-xs leading-relaxed"
+• TODO: Review the proposal`}
+                className="flex-1 min-h-[120px] sm:min-h-[180px] w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-xs leading-relaxed resize-none"
               />
             </div>
             
             {/* Footer */}
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-gray-400 dark:text-gray-300">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 sm:pt-1">
+              <p className="text-xs text-gray-400 dark:text-gray-500 text-center sm:text-left">
                 {uploadedImage ? 'AI will analyze your image for tasks' : 'Tip: Follow-Up tables are extracted first'}
               </p>
               <button
                 onClick={handleExtractTasks}
                 disabled={(!meetingNotesData.notes.trim() && !uploadedImage) || isExtracting}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
               >
                 {isExtracting ? (
                   <>
