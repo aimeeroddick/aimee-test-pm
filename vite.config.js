@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: {
         name: 'Trackli - Task Management',
         short_name: 'Trackli',
-        description: 'Beautiful task management with Kanban boards, calendar, and AI-powered features',
+        description: 'Task management that just works with Kanban boards, calendar, and AI-powered features',
         theme_color: '#6366f1',
         background_color: '#ffffff',
         display: 'standalone',
