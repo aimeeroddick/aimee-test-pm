@@ -573,11 +573,11 @@ export default function LandingPage() {
                 My Day: Your daily command center
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Start each day with a clear view of what matters. Drag tasks from any project into today's focus, track your progress, and actually finish what you start.
+                Start each day with a clear view of what matters. Add tasks from any project to today's focus, track your progress, and actually finish what you start.
               </p>
               <ul className="space-y-3">
                 {[
-                  'Pull tasks from any project into your day',
+                  'Add tasks from any project to your day',
                   'Visual progress tracking',
                   'Keyboard shortcuts for power users',
                   'Satisfying completion animations',
@@ -620,12 +620,12 @@ export default function LandingPage() {
                 Kanban boards that scale with you
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Intuitive drag-and-drop boards that work for solo projects and team collaboration alike. No artificial limits, no surprise paywalls.
+                Intuitive drag-and-drop boards that help you visualize your work. No artificial limits, no surprise paywalls.
               </p>
               <ul className="space-y-3">
                 {[
                   'Unlimited projects and boards',
-                  'Custom columns and workflows',
+                  'Organized workflow columns',
                   'Subtasks, attachments, and due dates',
                   'Filter and search across everything',
                 ].map((item) => (
