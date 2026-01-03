@@ -7650,6 +7650,16 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     }
   }
   
+  // Show time fields only if start_date is within 1 day in past, today, or future
+  const showTimeFields = (() => {
+    if (!formData.start_date) return false
+    const startDate = new Date(formData.start_date + 'T00:00:00')
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+    return startDate >= yesterday
+  })()
+  
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files)
     if (files.length === 0) return
@@ -8113,7 +8123,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             </div>
             
-            {/* Start Time & End Time side by side */}
+            {/* Start Time & End Time side by side - only show if start_date is recent/future */}
+            {showTimeFields && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Start Time</label>
@@ -8174,6 +8185,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 />
               </div>
             </div>
+            )}
             
             {/* Critical & Recurring - compact toggles */}
             <div className="flex flex-wrap gap-2">
