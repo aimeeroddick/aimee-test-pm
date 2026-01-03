@@ -677,7 +677,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Download Desktop App Section */}
+      {/* Download Desktop App Section - TEMPORARILY HIDDEN
       <section id="download" className="py-20 px-6 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-indigo-300 text-sm font-medium mb-6">
@@ -694,7 +694,6 @@ export default function LandingPage() {
             Works offline and syncs automatically when you're back online.
           </p>
           
-          {/* Download Buttons - Auto-detect OS */}
           <DownloadButtons />
           
           <p className="mt-8 text-sm text-gray-500">
@@ -703,6 +702,7 @@ export default function LandingPage() {
           </p>
         </div>
       </section>
+      */}
 
       </main>
 
