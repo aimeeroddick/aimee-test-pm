@@ -7133,9 +7133,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         </div>
       </div>
       
-      {/* Quick Actions - floating bubble in top-right corner on hover (desktop only) */}
+      {/* Quick Actions - floating bubble above card on hover (desktop only) */}
       {!isDragging && (
-      <div className="hidden md:flex absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 z-10">
+      <div className="hidden md:flex absolute -top-9 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 z-10">
         <div className="flex items-center gap-0.5 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
           {/* Start button - show if not in progress and not done */}
           {!isInProgress && !isDone && onQuickComplete && (
