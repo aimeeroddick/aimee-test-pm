@@ -1996,11 +1996,11 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   if (!currentStep) return null
   
   return (
-    <div className="fixed inset-0 z-[1000]">
+    <div className="fixed inset-0 z-[1000] flex flex-col">
       {/* Dark overlay with spotlight cutout */}
       <div className="absolute inset-0 bg-black/60" onClick={onSkip} />
       
-      {/* Tooltip */}
+      {/* Tooltip - positioned based on step */}
       <div 
         className={`absolute z-[1001] max-w-sm animate-fadeIn ${
           step === 0 ? 'top-32 left-1/2 -translate-x-1/2' :
@@ -2029,34 +2029,9 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
             {currentStep.title}
           </h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
+          <p className="text-gray-600 dark:text-gray-300">
             {currentStep.description}
           </p>
-          
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onSkip}
-              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            >
-              Skip tour
-            </button>
-            <div className="flex gap-2">
-              {step > 0 && (
-                <button
-                  onClick={() => onNext(step - 1)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
-                >
-                  Back
-                </button>
-              )}
-              <button
-                onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
-                className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
-              >
-                {step < steps.length - 1 ? 'Next' : 'Get Started!'}
-              </button>
-            </div>
-          </div>
         </div>
         
         {/* Arrow pointer */}
@@ -2066,6 +2041,34 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           currentStep.position === 'right' ? '-left-2 top-8 border-l border-b' :
           '-right-2 top-8 border-r border-t'
         }`} />
+      </div>
+      
+      {/* Fixed bottom navigation - stays in one place */}
+      <div className="fixed bottom-0 left-0 right-0 z-[1002] p-4 bg-gradient-to-t from-black/50 to-transparent">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <button
+            onClick={onSkip}
+            className="px-4 py-2.5 text-sm text-white/80 hover:text-white transition-colors"
+          >
+            Skip tour
+          </button>
+          <div className="flex gap-2">
+            {step > 0 && (
+              <button
+                onClick={() => onNext(step - 1)}
+                className="px-5 py-2.5 bg-white/20 text-white rounded-xl font-medium hover:bg-white/30 transition-colors"
+              >
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
+              className="px-5 py-2.5 bg-white text-indigo-600 rounded-xl font-medium hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              {step < steps.length - 1 ? 'Next' : 'Get Started!'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -2561,77 +2564,81 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   if (!currentStep) return null
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1000] flex flex-col">
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onSkip} />
       
-      {/* Tour card */}
-      <div className="relative z-[1001] max-w-md w-full animate-fadeIn">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-          {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
-            <div className="mb-3">
-                {currentStep.iconComponent && TourIcons[currentStep.iconComponent] 
-                  ? TourIcons[currentStep.iconComponent]() 
-                  : <span className="text-4xl">{currentStep.icon}</span>}
+      {/* Tour card - centered */}
+      <div className="flex-1 flex items-center justify-center p-4 pb-24">
+        <div className="relative z-[1001] max-w-md w-full animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
+              <div className="mb-3">
+                  {currentStep.iconComponent && TourIcons[currentStep.iconComponent] 
+                    ? TourIcons[currentStep.iconComponent]() 
+                    : <span className="text-4xl">{currentStep.icon}</span>}
+                </div>
+              <h3 className="text-xl font-semibold">{currentStep.title}</h3>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                {currentStep.description}
+              </p>
+              
+              {/* Animation if available */}
+              {currentStep.animation && animations[currentStep.animation] && (
+                <div className="mb-4">
+                  {(() => {
+                    const AnimationComponent = animations[currentStep.animation]
+                    return <AnimationComponent />
+                  })()}
+                </div>
+              )}
+              
+              {/* Progress dots */}
+              <div className="flex items-center justify-center gap-2">
+                {steps.map((_, i) => (
+                  <div 
+                    key={i}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      i === step ? 'w-8 bg-indigo-500' : 
+                      i < step ? 'bg-indigo-300' : 'bg-gray-200 dark:bg-gray-600'
+                    }`}
+                  />
+                ))}
               </div>
-            <h3 className="text-xl font-semibold">{currentStep.title}</h3>
+            </div>
           </div>
-          
-          {/* Content */}
-          <div className="p-6">
-            <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-              {currentStep.description}
-            </p>
-            
-            {/* Animation if available */}
-            {currentStep.animation && animations[currentStep.animation] && (
-              <div className="mb-6">
-                {(() => {
-                  const AnimationComponent = animations[currentStep.animation]
-                  return <AnimationComponent />
-                })()}
-              </div>
-            )}
-            
-            {/* Progress dots */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              {steps.map((_, i) => (
-                <div 
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === step ? 'w-8 bg-indigo-500' : 
-                    i < step ? 'bg-indigo-300' : 'bg-gray-200 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-            
-            {/* Actions */}
-            <div className="flex items-center justify-between">
+        </div>
+      </div>
+      
+      {/* Fixed bottom navigation - stays in one place */}
+      <div className="fixed bottom-0 left-0 right-0 z-[1002] p-4 bg-gradient-to-t from-black/30 to-transparent">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <button
+            onClick={onSkip}
+            className="px-4 py-2.5 text-sm text-white/80 hover:text-white transition-colors"
+          >
+            Skip tour
+          </button>
+          <div className="flex gap-2">
+            {step > 0 && (
               <button
-                onClick={onSkip}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                onClick={() => onNext(step - 1)}
+                className="px-5 py-2.5 bg-white/20 text-white rounded-xl font-medium hover:bg-white/30 transition-colors"
               >
-                Skip
+                Back
               </button>
-              <div className="flex gap-2">
-                {step > 0 && (
-                  <button
-                    onClick={() => onNext(step - 1)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-colors"
-                  >
-                    Back
-                  </button>
-                )}
-                <button
-                  onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
-                  className="px-4 py-2 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors"
-                >
-                  {step < steps.length - 1 ? 'Next' : 'Got it!'}
-                </button>
-              </div>
-            </div>
+            )}
+            <button
+              onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
+              className="px-5 py-2.5 bg-white text-indigo-600 rounded-xl font-medium hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              {step < steps.length - 1 ? 'Next' : 'Got it!'}
+            </button>
           </div>
         </div>
       </div>
