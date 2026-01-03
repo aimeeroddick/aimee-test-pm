@@ -884,10 +884,24 @@ Examples we can extract from:
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900">{task.title}</p>
                           {(task.assignee || task.dueDate) && (
-                            <p className="text-sm text-gray-500 mt-0.5">
-                              {task.assignee && <span>👤 {task.assignee}</span>}
-                              {task.assignee && task.dueDate && <span className="mx-2">•</span>}
-                              {task.dueDate && <span>📅 {task.dueDate}</span>}
+                            <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1 flex-wrap">
+                              {task.assignee && (
+                                <span className="flex items-center gap-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                  {task.assignee}
+                                </span>
+                              )}
+                              {task.assignee && task.dueDate && <span className="mx-1">•</span>}
+                              {task.dueDate && (
+                                <span className="flex items-center gap-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  {task.dueDate}
+                                </span>
+                              )}
                             </p>
                           )}
                         </div>
@@ -1108,6 +1122,192 @@ Examples we can extract from:
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* More Features Grid */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
+              And so much more
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Features that save you time
+            </h2>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                ),
+                title: "Voice to Task",
+                description: "Speak your tasks on mobile. Perfect for capturing ideas on the go.",
+                bgColor: "bg-indigo-100",
+                textColor: "text-indigo-600"
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                ),
+                title: "Quick Add",
+                description: "Add tasks in seconds with smart parsing. Type naturally, we'll figure it out.",
+                bgColor: "bg-amber-100",
+                textColor: "text-amber-600"
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                ),
+                title: "AI Task Breakdown",
+                description: "Stuck on a big task? AI suggests subtasks to break it into manageable pieces.",
+                bgColor: "bg-purple-100",
+                textColor: "text-purple-600"
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                title: "Meeting Notes Import",
+                description: "Paste meeting notes or emails, extract action items automatically.",
+                bgColor: "bg-green-100",
+                textColor: "text-green-600"
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                ),
+                title: "Dark Mode",
+                description: "Easy on the eyes for late night planning sessions.",
+                bgColor: "bg-gray-100",
+                textColor: "text-gray-600"
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                ),
+                title: "Mobile Optimized",
+                description: "Full-featured mobile experience. Manage tasks anywhere.",
+                bgColor: "bg-pink-100",
+                textColor: "text-pink-600"
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center ${feature.textColor} mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-600">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Coming Soon Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
+              Coming Soon
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Even more on the way
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We're building the integrations and features you've been asking for.
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900">Calendar Integration</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Connect Google Calendar or Outlook. See your meetings and tasks together, block time for deep work.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                In development
+              </span>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900">Email to Task</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Forward any email to your Trackli inbox and it becomes a task. Simple as that.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                In development
+              </span>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900">AI Weekly Summary</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Get an AI-generated status report based on your completed tasks. Perfect for standups.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
+                Planned
+              </span>
+            </div>
+            
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900">Zapier Integration</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Connect Trackli to 5,000+ apps. Automate task creation from Slack, Salesforce, and more.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                Planned
+              </span>
+            </div>
+          </div>
+          
+          <p className="text-center text-gray-500 text-sm mt-8">
+            Have a feature request? <a href="mailto:hello@gettrackli.com" className="text-indigo-600 hover:text-indigo-700 font-medium">Let us know</a>
+          </p>
         </div>
       </section>
 
