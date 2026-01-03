@@ -11978,18 +11978,6 @@ export default function KanbanBoard() {
                         ))}
                       </select>
                       
-                      {/* Category */}
-                      <select
-                        value={fieldFilters.category || ''}
-                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, category: e.target.value } : (({ category, ...rest }) => rest)(fieldFilters))}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
-                      >
-                        <option value="">Category: All</option>
-                        {CATEGORIES.map(c => (
-                          <option key={c.id} value={c.id}>{c.label}</option>
-                        ))}
-                      </select>
-                      
                       {/* Effort */}
                       <select
                         value={fieldFilters.energy_level || ''}
@@ -12125,7 +12113,7 @@ export default function KanbanBoard() {
               {/* Field Filters */}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {Object.entries(fieldFilters).map(([field, value]) => {
-                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', category: 'Category', energy_level: 'Effort', source: 'Source', due_date: 'Due Date' }
+                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', energy_level: 'Effort', due_date: 'Due Date' }
                   let displayValue = value
                   if (value === '__blank__') displayValue = '(Blank)'
                   else if (field === 'category') displayValue = CATEGORIES.find(c => c.id === value)?.label || value
@@ -12165,9 +12153,7 @@ export default function KanbanBoard() {
                     <option value="">+ Filter</option>
                     {!fieldFilters.assignee && <option value="assignee">Assignee</option>}
                     {!fieldFilters.customer && <option value="customer">Customer</option>}
-                    {!fieldFilters.category && <option value="category">Category</option>}
                     {!fieldFilters.energy_level && <option value="energy_level">Effort</option>}
-                    {!fieldFilters.source && <option value="source">Source</option>}
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
                   </select>
                   <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
