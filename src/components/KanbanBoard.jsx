@@ -7226,83 +7226,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   )
 }
 
-// Recently Completed Component - Shows last 5 completed tasks
-const RecentlyCompleted = ({ tasks, projects, onEditTask, onUndoComplete }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
-  
-  if (tasks.length === 0) return null
-  
-  const formatTimeAgo = (dateStr) => {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now - date
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-    
-    if (diffMins < 1) return 'just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    return `${diffDays}d ago`
-  }
-  
-  return (
-    <div className="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="font-medium text-gray-700 dark:text-gray-200">Recently Completed</span>
-          <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full">{tasks.length}</span>
-        </div>
-        <svg className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      
-      {isExpanded && (
-        <div className="px-4 pb-4 space-y-2">
-          {tasks.map(task => {
-            const project = projects.find(p => p.id === task.project_id)
-            return (
-              <div
-                key={task.id}
-                className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 group hover:border-gray-200 dark:hover:border-gray-600 transition-colors"
-              >
-                <button
-                  onClick={() => onUndoComplete(task.id)}
-                  className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 hover:bg-amber-500 transition-colors"
-                  title="Mark as incomplete"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
-                <div 
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => onEditTask(task)}
-                >
-                  <p className="text-sm text-gray-500 dark:text-gray-300 line-through truncate">{task.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {project && (
-                      <span className="text-xs text-gray-400 dark:text-gray-300">{project.name}</span>
-                    )}
-                  </div>
-                </div>
-                <span className="text-xs text-gray-400 dark:text-gray-300 shrink-0">{formatTimeAgo(task.completed_at)}</span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // Column Component
 const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, onDrop, showProject, allTasks, onQuickComplete, onStatusChange, onSetDueDate, bulkSelectMode, selectedTaskIds, onToggleSelect, onAddTask, onToggleMyDay, isMobileFullWidth, draggedTask, onUpdateTitle, onToggleCritical, onBreakdown }) => {
   const [isDragOver, setIsDragOver] = useState(false)
@@ -12950,14 +12873,6 @@ export default function KanbanBoard() {
                   ))
                 )}
               </div>
-              
-              {/* Recently Completed Section */}
-              <RecentlyCompleted 
-                tasks={tasks.filter(t => t.status === 'done' && t.completed_at).sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at)).slice(0, 5)}
-                projects={projects}
-                onEditTask={(task) => { setEditingTask(task); setTaskModalOpen(true) }}
-                onUndoComplete={(taskId) => handleUpdateTaskStatus(taskId, 'todo')}
-              />
               </div>
             </main>
           )}
