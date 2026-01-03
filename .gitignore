@@ -31,3 +31,4 @@ npm-debug.log*
 *.deb
 *.zip
 *.blockmap
+public/screenshots/*.mov

@@ -592,11 +592,18 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 overflow-hidden">
-              <img 
-                src="/screenshots/my-day.png" 
-                alt="Trackli My Day View" 
-                className="w-full rounded-xl shadow-lg"
-              />
+              <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-700/50">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                </div>
+                <img 
+                  src="/screenshots/my-day.png" 
+                  alt="Trackli My Day View" 
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
 
@@ -640,10 +647,10 @@ export default function LandingPage() {
                 Time Awareness
               </p>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Calendar integration that makes sense
+                Schedule tasks on a calendar
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                See your tasks alongside your schedule. No more double-booking yourself or missing deadlines buried in a backlog.
+                See your tasks in a calendar view. Drag to schedule, set time estimates, and never miss a deadline again.
               </p>
               <ul className="space-y-3">
                 {[
@@ -662,11 +669,18 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 overflow-hidden">
-              <img 
-                src="/screenshots/calendar.png" 
-                alt="Trackli Calendar View" 
-                className="w-full rounded-xl shadow-lg"
-              />
+              <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-700/50">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                </div>
+                <img 
+                  src="/screenshots/calendar.png" 
+                  alt="Trackli Calendar View" 
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
