@@ -13228,7 +13228,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <textarea
                 value={meetingNotesData.notes}
                 onChange={(e) => setMeetingNotesData({ ...meetingNotesData, notes: e.target.value })}
-                placeholder={`Paste your meeting notes here...
+                placeholder={`Paste your meeting notes or email thread here...
 
 Best format - Follow-Up table:
 | Follow-Up | Owner | Due Date |
@@ -13236,6 +13236,7 @@ Best format - Follow-Up table:
 
 Or we can extract from:
 • Action items like 'John to send report by Friday'
+• Email requests like 'Can you send me the report?'
 • TODO: Review the proposal`}
                 className="flex-1 min-h-[120px] sm:min-h-[180px] w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-xs leading-relaxed resize-none"
               />
