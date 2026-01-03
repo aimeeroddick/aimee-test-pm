@@ -13073,6 +13073,7 @@ export default function KanbanBoard() {
         }} 
         title="Import Meeting Notes"
         wide
+        fullScreenMobile
       >
         {!showExtractedTasks ? (
           <div className="space-y-3">
@@ -13224,89 +13225,89 @@ Or we can extract from:
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="font-medium text-gray-800">
+                <h3 className="text-sm sm:text-base font-semibold text-indigo-600 dark:text-indigo-400">
                   Found {extractedTasks.length} potential task{extractedTasks.length !== 1 ? 's' : ''}
                 </h3>
-                <p className="text-sm text-gray-500">Review and edit before creating</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Review and edit before creating</p>
               </div>
               <button
                 onClick={() => setShowExtractedTasks(false)}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium self-end sm:self-auto"
               >
                 ← Back to Notes
               </button>
             </div>
             
             {extractedTasks.length === 0 ? (
-              <div className="text-center py-8">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-6 sm:py-8">
+                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-gray-500">No action items found in your notes.</p>
-                <p className="text-sm text-gray-400 mt-1">Try adding bullet points or phrases like "Action:", "TODO:", or "@name"</p>
+                <p className="text-gray-500 dark:text-gray-400">No action items found in your notes.</p>
+                <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">Try adding bullet points or phrases like "Action:", "TODO:", or "@name"</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-2 sm:space-y-3 max-h-[50vh] sm:max-h-96 overflow-y-auto -mx-1 px-1">
                 {extractedTasks.map((task) => (
                   <div 
                     key={task.id}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
                       task.selected 
-                        ? 'border-indigo-200 bg-indigo-50/50' 
-                        : 'border-gray-100 bg-gray-50 opacity-60'
+                        ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20' 
+                        : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       <input
                         type="checkbox"
                         checked={task.selected}
                         onChange={(e) => updateExtractedTask(task.id, 'selected', e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="mt-1.5 sm:mt-1 w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
                       />
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <input
                           type="text"
                           value={task.title}
                           onChange={(e) => updateExtractedTask(task.id, 'title', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
+                          className="w-full px-2.5 sm:px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-medium"
                         />
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Assignee:</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 w-16 sm:w-auto">Assignee:</span>
                             <input
                               type="text"
                               value={task.assignee || ''}
                               onChange={(e) => updateExtractedTask(task.id, 'assignee', e.target.value)}
                               placeholder="Unassigned"
-                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs w-28 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs flex-1 sm:w-28 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Due:</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 w-16 sm:w-auto">Due:</span>
                             <input
                               type="date"
                               value={task.dueDate || ''}
                               onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
-                              className="px-2 py-1 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs flex-1 sm:w-auto focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
                           </div>
-                          <label className="flex items-center gap-1 text-xs">
+                          <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto sm:ml-0">
                             <input
                               type="checkbox"
                               checked={task.critical}
                               onChange={(e) => updateExtractedTask(task.id, 'critical', e.target.checked)}
-                              className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-red-600 focus:ring-red-500"
                             />
-                            <span className="text-red-600">Critical</span>
+                            <span className="text-red-600 dark:text-red-400">Critical</span>
                           </label>
                         </div>
                       </div>
                       <button
                         onClick={() => removeExtractedTask(task.id)}
-                        className="p-2 sm:p-1 text-gray-400 hover:text-red-500 transition-colors touch-manipulation"
+                        className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors touch-manipulation flex-shrink-0 -mr-1"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -13318,14 +13319,14 @@ Or we can extract from:
               </div>
             )}
             
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <p className="text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 sm:pt-4 mt-1 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {extractedTasks.filter(t => t.selected).length} task{extractedTasks.filter(t => t.selected).length !== 1 ? 's' : ''} selected
               </p>
               <button
                 onClick={handleCreateExtractedTasks}
                 disabled={extractedTasks.filter(t => t.selected).length === 0 || saving}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
               >
                 {saving ? (
                   <>
