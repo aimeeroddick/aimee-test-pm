@@ -1,5 +1,6 @@
-const { app, BrowserWindow, shell, nativeTheme } = require('electron')
+const { app, BrowserWindow, shell, nativeTheme, dialog } = require('electron')
 const path = require('path')
+const { autoUpdater } = require('electron-updater')
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling
 if (require('electron-squirrel-startup')) {
@@ -85,6 +86,42 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+  
+  // Auto-updater (only in production)
+  if (!isDev) {
+    // Configure auto-updater
+    autoUpdater.autoDownload = true
+    autoUpdater.autoInstallOnAppQuit = true
+    
+    // Check for updates
+    autoUpdater.checkForUpdatesAndNotify()
+    
+    // Update available
+    autoUpdater.on('update-available', (info) => {
+      console.log('Update available:', info.version)
+    })
+    
+    // Update downloaded - prompt user to restart
+    autoUpdater.on('update-downloaded', (info) => {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Update Ready',
+        message: `Version ${info.version} has been downloaded.`,
+        detail: 'Restart Trackli to install the update.',
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0
+      }).then((result) => {
+        if (result.response === 0) {
+          autoUpdater.quitAndInstall()
+        }
+      })
+    })
+    
+    // Handle errors
+    autoUpdater.on('error', (err) => {
+      console.log('Auto-updater error:', err)
+    })
+  }
 })
 
 // Quit when all windows are closed (except on macOS)

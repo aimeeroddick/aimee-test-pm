@@ -25,6 +25,7 @@
     "@vercel/speed-insights": "^1.3.1",
     "canvas-confetti": "^1.9.4",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.0"
@@ -56,16 +57,25 @@
       "electron/**/*",
       "public/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "aimeeroddick",
+      "repo": "aimee-test-pm"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         }
       ],
       "icon": "build/icon.icns",
@@ -80,14 +90,19 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
       "artifactName": "${productName}-Setup.${ext}"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Office",
       "icon": "build/icons"
     },
