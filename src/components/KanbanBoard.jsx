@@ -1144,7 +1144,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
             
             <form onSubmit={handleSubmit} className="p-6">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {feedbackTypes.map(t => (
                     <button
@@ -1165,7 +1165,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
               </div>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -1178,7 +1178,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
               
               {/* Image Upload Section */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Screenshots (optional)</label>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Screenshots (optional)</label>
                 
                 {/* Display uploaded images */}
                 {images.length > 0 && (
@@ -8920,7 +8920,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
     <Modal isOpen={isOpen} onClose={onClose} title={project ? 'Edit Project' : 'New Project'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Name *</label>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project Name *</label>
           <input
             type="text"
             required
@@ -8932,7 +8932,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Members</label>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Team Members</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
@@ -8961,7 +8961,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customers/Clients</label>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Customers/Clients</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
@@ -13768,7 +13768,7 @@ Or we can extract from:
             <div className="p-6 space-y-6">
               {/* Profile Section */}
               <div>
-                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -13789,7 +13789,7 @@ Or we can extract from:
                   
                   {/* Display Name */}
                   <div>
-                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display Name</label>
+                    <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Display Name</label>
                     {editingDisplayName ? (
                       <div className="flex gap-2">
                         <input
@@ -13834,7 +13834,7 @@ Or we can extract from:
               {/* Change Password - Only for email accounts */}
               {user?.app_metadata?.provider !== 'google' && (
                 <div>
-                  <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -13867,7 +13867,7 @@ Or we can extract from:
               
               {/* Preferences Section */}
               <div>
-                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -13919,7 +13919,7 @@ Or we can extract from:
               
               {/* Data Section */}
               <div>
-                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                   </svg>
@@ -13957,7 +13957,7 @@ Or we can extract from:
               
               {/* Support Section */}
               <div>
-                <h3 className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
