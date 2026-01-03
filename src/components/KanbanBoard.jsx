@@ -13491,13 +13491,11 @@ Or we can extract from:
                           project_id: quickAddProject,
                           due_date: parsed.date || null
                         }
-                        // Close Quick Add first, then open Task Modal after a brief delay
+                        // Open Task Modal immediately, then close Quick Add
+                        setEditingTask(prefillData)
+                        setTaskModalOpen(true)
                         setQuickAddOpen(false)
                         setQuickAddTitle('')
-                        setTimeout(() => {
-                          setEditingTask(prefillData)
-                          setTaskModalOpen(true)
-                        }, 100)
                       }}
                       className="px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors whitespace-nowrap"
                     >
