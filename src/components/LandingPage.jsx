@@ -270,6 +270,82 @@ const CalendarAnimation = () => (
   </svg>
 )
 
+// GitHub Release URLs - Update these when you publish releases
+const DOWNLOAD_URLS = {
+  mac: 'https://github.com/aimeeroddick/aimee-test-pm/releases/latest/download/Trackli.dmg',
+  windows: 'https://github.com/aimeeroddick/aimee-test-pm/releases/latest/download/Trackli-Setup.exe',
+}
+
+// Download Buttons Component with OS Detection
+const DownloadButtons = () => {
+  const [detectedOS, setDetectedOS] = useState('mac')
+  
+  useEffect(() => {
+    // Detect OS from user agent
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    if (userAgent.includes('win')) {
+      setDetectedOS('windows')
+    } else if (userAgent.includes('mac')) {
+      setDetectedOS('mac')
+    }
+    // Default to mac for other OS (Linux users can use web version)
+  }, [])
+  
+  const primaryOS = detectedOS
+  const secondaryOS = detectedOS === 'mac' ? 'windows' : 'mac'
+  
+  const osConfig = {
+    mac: {
+      name: 'macOS',
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+      ),
+      downloadUrl: DOWNLOAD_URLS.mac,
+      fileName: 'Trackli.dmg'
+    },
+    windows: {
+      name: 'Windows',
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/>
+        </svg>
+      ),
+      downloadUrl: DOWNLOAD_URLS.windows,
+      fileName: 'Trackli-Setup.exe'
+    }
+  }
+  
+  const primary = osConfig[primaryOS]
+  const secondary = osConfig[secondaryOS]
+  
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+      {/* Primary Download Button */}
+      <a
+        href={primary.downloadUrl}
+        className="group flex items-center gap-3 px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all hover:-translate-y-0.5"
+      >
+        {primary.icon}
+        <span>Download for {primary.name}</span>
+        <svg className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </a>
+      
+      {/* Secondary Download Link */}
+      <a
+        href={secondary.downloadUrl}
+        className="flex items-center gap-2 px-6 py-3 text-gray-300 hover:text-white transition-colors"
+      >
+        {secondary.icon}
+        <span>Download for {secondary.name}</span>
+      </a>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
 
@@ -709,6 +785,33 @@ export default function LandingPage() {
           >
             Get Started Free
           </Link>
+        </div>
+      </section>
+
+      {/* Download Desktop App Section */}
+      <section id="download" className="py-20 px-6 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-indigo-300 text-sm font-medium mb-6">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Desktop App
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Take Trackli everywhere
+          </h2>
+          <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
+            Download the desktop app for a faster, native experience. 
+            Works offline and syncs automatically when you're back online.
+          </p>
+          
+          {/* Download Buttons - Auto-detect OS */}
+          <DownloadButtons />
+          
+          <p className="mt-8 text-sm text-gray-500">
+            Also available on the web at{' '}
+            <a href="https://gettrackli.com" className="text-indigo-400 hover:text-indigo-300">gettrackli.com</a>
+          </p>
         </div>
       </section>
 
