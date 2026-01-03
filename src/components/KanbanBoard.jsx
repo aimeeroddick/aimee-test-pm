@@ -13170,7 +13170,7 @@ export default function KanbanBoard() {
                 onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               >
-                {projects.map((p) => (
+                {projects.filter(p => !p.archived).map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
