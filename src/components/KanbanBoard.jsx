@@ -6512,38 +6512,30 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     { key: 'start_date', label: 'Start Date', width: 'min-w-[100px]' },
     { key: 'assignee', label: 'Assignee', width: 'min-w-[120px]' },
     { key: 'customer', label: 'Customer', width: 'min-w-[120px]' },
-    { key: 'category', label: 'Category', width: 'min-w-[120px]' },
     { key: 'energy_level', label: 'Effort', width: 'min-w-[100px]' },
-    { key: 'source', label: 'Source', width: 'min-w-[100px]' },
     { key: 'time_estimate', label: 'Est. Time', width: 'min-w-[90px]' },
     { key: 'created_at', label: 'Created', width: 'min-w-[100px]' },
   ]
   
   const getCellValue = (task, key) => {
-    const emptyPlaceholder = '—' // subtle em-dash for empty values
     switch (key) {
       case 'project':
-        return projects.find(p => p.id === task.project_id)?.name || emptyPlaceholder
+        return projects.find(p => p.id === task.project_id)?.name || '-'
       case 'status':
         return { backlog: 'Backlog', todo: 'To Do', in_progress: 'In Progress', done: 'Done' }[task.status] || task.status
       case 'critical':
-        return task.critical ? '🚨 Yes' : emptyPlaceholder
+        return task.critical ? 'Yes' : '-'
       case 'due_date':
       case 'start_date':
-        return task[key] ? formatDate(task[key]) : emptyPlaceholder
-      case 'category':
-        return CATEGORIES.find(c => c.id === task.category)?.label || emptyPlaceholder
+        return task[key] ? formatDate(task[key]) : '-'
       case 'energy_level':
-        return task.energy_level || emptyPlaceholder
-      case 'source':
-        const src = SOURCES.find(s => s.id === task.source)
-        return src ? `${src.icon} ${src.label}` : emptyPlaceholder
+        return { high: 'High', medium: 'Medium', low: 'Low' }[task.energy_level] || '-'
       case 'time_estimate':
-        return task.time_estimate ? formatTimeEstimate(task.time_estimate) : emptyPlaceholder
+        return task.time_estimate ? formatTimeEstimate(task.time_estimate) : '-'
       case 'created_at':
-        return task.created_at ? new Date(task.created_at).toLocaleDateString() : emptyPlaceholder
+        return task.created_at ? new Date(task.created_at).toLocaleDateString() : '-'
       default:
-        return task[key] || emptyPlaceholder
+        return task[key] || '-'
     }
   }
   
@@ -6797,29 +6789,29 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                           <span className={`font-medium truncate max-w-[250px] ${isArchived ? 'text-gray-500 dark:text-gray-300' : 'text-gray-900 dark:text-gray-100'}`}>{task.title}</span>
                         </div>
                       ) : col.key === 'status' ? (
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                        <span className={`text-sm font-medium ${
+                          task.status === 'done' ? 'text-green-600 dark:text-green-400' :
+                          task.status === 'in_progress' ? 'text-pink-600 dark:text-pink-400' :
+                          task.status === 'todo' ? 'text-blue-600 dark:text-blue-400' :
+                          'text-gray-500 dark:text-gray-400'
+                        }`}>
                           {getCellValue(task, col.key)}
                         </span>
                       ) : col.key === 'critical' ? (
-                        task.critical ? (
-                          <span className="text-red-500 font-medium">{getCellValue(task, col.key)}</span>
-                        ) : (
-                          <span className="text-gray-300 dark:text-gray-600">—</span>
-                        )
+                        <span className={task.critical ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-400 dark:text-gray-500'}>
+                          {getCellValue(task, col.key)}
+                        </span>
                       ) : col.key === 'energy_level' ? (
-                        task.energy_level ? (
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            task.energy_level === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' :
-                            task.energy_level === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' :
-                            'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
-                          }`}>
-                            {task.energy_level === 'high' ? '●●● High Effort' : task.energy_level === 'medium' ? '●● Medium Effort' : '● Low Effort'}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 dark:text-gray-600">—</span>
-                        )
+                        <span className={`text-sm ${
+                          task.energy_level === 'high' ? 'text-red-600 dark:text-red-400 font-medium' :
+                          task.energy_level === 'medium' ? 'text-amber-600 dark:text-amber-400' :
+                          task.energy_level === 'low' ? 'text-green-600 dark:text-green-400' :
+                          'text-gray-400 dark:text-gray-500'
+                        }`}>
+                          {getCellValue(task, col.key)}
+                        </span>
                       ) : (
-                        <span className={getCellValue(task, col.key) === '—' ? 'text-gray-300 dark:text-gray-600' : 'text-gray-600 dark:text-gray-300'}>
+                        <span className={getCellValue(task, col.key) === '-' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}>
                           {getCellValue(task, col.key)}
                         </span>
                       )}
