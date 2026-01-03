@@ -43,6 +43,24 @@ function createWindow() {
   } else {
     // In production, load the built files
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    
+    // Handle refresh (Cmd+R / Ctrl+R / F5) - always reload index.html for SPA
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      const isRefresh = input.type === 'keyDown' && (
+        (input.key.toLowerCase() === 'r' && (input.meta || input.control)) ||
+        input.key === 'F5'
+      )
+      if (isRefresh) {
+        event.preventDefault()
+        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+      }
+    })
+    
+    // Also handle did-fail-load as backup
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+      console.log('Load failed, reloading index.html:', errorDescription)
+      mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    })
   }
 
   // Open external links in default browser
