@@ -14041,6 +14041,20 @@ Or we can extract from:
           </div>
         </div>
       )}
+      
+      {/* Footer */}
+      <footer className="mt-auto py-4 px-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className="font-medium text-gray-700 dark:text-gray-300">Trackli</span>
+          <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
+          <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">About</a>
+          <a href="https://gettrackli.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Privacy</a>
+          <a href="https://gettrackli.com/terms" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Terms</a>
+          <a href="mailto:support@gettrackli.com" className="hover:text-indigo-500 transition-colors">Contact</a>
+          <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
+          <span className="text-gray-400 dark:text-gray-500">© {new Date().getFullYear()}</span>
+        </div>
+      </footer>
     </div>
     </PullToRefresh>
   )
