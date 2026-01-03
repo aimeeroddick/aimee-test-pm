@@ -745,7 +745,7 @@ export default function LandingPage() {
             <Link to="/terms" className="text-gray-500 hover:text-gray-700 transition-colors">Terms</Link>
             <a href="mailto:support@gettrackli.com" className="text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
           </div>
-          <p className="text-gray-400 text-sm">© 2025 Trackli. All rights reserved.</p>
+          <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Trackli. All rights reserved.</p>
         </div>
       </footer>
     </div>
