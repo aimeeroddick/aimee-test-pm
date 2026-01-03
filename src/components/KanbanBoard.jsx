@@ -7143,13 +7143,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       
       {/* Quick Actions - floating bubble above card on hover (desktop only) */}
       {!isDragging && (
-      <div className="hidden md:flex absolute -top-9 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100 z-10">
-        <div className="flex items-center gap-0.5 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
+      <div className="hidden md:flex absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 z-10">
+        <div className="flex items-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-full shadow-md border border-gray-200/50 dark:border-gray-600/50 px-1 py-0.5">
           {/* Start button - show if not in progress and not done */}
           {!isInProgress && !isDone && onQuickComplete && (
             <button
               onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, 'in_progress') }}
-              className="p-1.5 text-gray-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/30 rounded transition-colors"
+              className="p-1 text-gray-400 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-pink-900/30 rounded-full transition-colors"
               title="Start working"
             >
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
@@ -7162,7 +7162,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {onQuickComplete && (
             <button
               onClick={(e) => { e.stopPropagation(); onQuickComplete(task.id, isDone ? 'todo' : 'done') }}
-              className={`p-1.5 rounded transition-colors ${
+              className={`p-1 rounded-full transition-colors ${
                 isDone 
                   ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30' 
                   : 'text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
@@ -7179,7 +7179,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {onToggleCritical && (
             <button
               onClick={(e) => { e.stopPropagation(); onToggleCritical(task.id, !task.critical) }}
-              className={`p-1.5 rounded transition-colors ${
+              className={`p-1 rounded-full transition-colors ${
                 task.critical 
                   ? 'text-red-500 bg-red-50 dark:bg-red-900/30' 
                   : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30'
@@ -7196,7 +7196,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {onToggleMyDay && !isDone && (
             <button
               onClick={(e) => { e.stopPropagation(); onToggleMyDay(task.id, !inMyDay) }}
-              className={`p-1.5 rounded transition-colors ${
+              className={`p-1 rounded-full transition-colors ${
                 inMyDay 
                   ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' 
                   : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30'
@@ -7213,10 +7213,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           {onBreakdown && !isDone && (
             <button
               onClick={(e) => { e.stopPropagation(); onBreakdown(task) }}
-              className="p-1.5 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
+              className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full transition-colors"
               title="Break down into subtasks"
             >
-              <span className="text-sm">✨</span>
+              <span className="text-xs">✨</span>
             </button>
           )}
         </div>
