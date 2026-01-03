@@ -8233,9 +8233,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Subtasks</span>
                 {subtasks.length > 0 && <span className="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full">{subtasks.filter(s => s.completed).length}/{subtasks.length}</span>}
               </div>
-              <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.subtasks ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedSections.subtasks ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
-          {expandedSections.subtasks && (
+          <div className={`grid transition-all duration-200 ease-out ${expandedSections.subtasks ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <div className="overflow-hidden">
           <div className="p-4 space-y-4">
             <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
               <div className="flex items-center gap-3 mb-3">
@@ -8382,7 +8383,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
           </div>
-          )}
+          </div>
+          </div>
           </div>
           
           {/* ═══════ NOTES & ATTACHMENTS ═══════ */}
@@ -8396,9 +8398,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <span className="text-sm">📝</span>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes & Attachments</span>
               </div>
-              <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.more ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedSections.more ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
-          {expandedSections.more && (
+          <div className={`grid transition-all duration-200 ease-out ${expandedSections.more ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <div className="overflow-hidden">
           <div className="p-4 space-y-4">
             {/* Notes */}
             <div>
@@ -8545,7 +8548,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
           </div>
-          )}
+          </div>
+          </div>
           </div>
           
           {/* ═══════ DEPENDENCIES ═══════ */}
@@ -8560,9 +8564,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dependencies</span>
                 {selectedDependencies.length > 0 && <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full">{selectedDependencies.length}</span>}
               </div>
-              <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.dependencies ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedSections.dependencies ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
-          {expandedSections.dependencies && (
+          <div className={`grid transition-all duration-200 ease-out ${expandedSections.dependencies ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <div className="overflow-hidden">
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -8656,7 +8661,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
             )}
           </div>
-          )}
+          </div>
+          </div>
           </div>
           
           {/* ═══════ ACTIVITY ═══════ */}
@@ -8671,9 +8677,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Activity</span>
                 {comments.length > 0 && <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">{comments.length}</span>}
               </div>
-              <svg className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.activity ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expandedSections.activity ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
-          {expandedSections.activity && (
+          <div className={`grid transition-all duration-200 ease-out ${expandedSections.activity ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <div className="overflow-hidden">
           <div className="p-4 space-y-4">
             {/* Add Comment */}
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
@@ -8770,7 +8777,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
-                        )}
+                        )
                       </div>
                     </div>
                   ))}
@@ -8778,10 +8785,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
           </div>
-          )}
           </div>
-        
-        <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
+          </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 sm:gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-700">
           {task?.id && (
             <button
               type="button"
