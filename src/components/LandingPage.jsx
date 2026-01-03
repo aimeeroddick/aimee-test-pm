@@ -348,6 +348,125 @@ const DownloadButtons = () => {
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
+  const [notes, setNotes] = useState('')
+  const [extractedTasks, setExtractedTasks] = useState([])
+  const [isExtracting, setIsExtracting] = useState(false)
+
+  // Simplified task extraction logic
+  const extractTasks = (text) => {
+    const lines = text.split('\n')
+    const tasks = []
+    
+    // Action verbs that indicate a task
+    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
+    
+    // Try table format first (Follow-Up | Owner | Due Date)
+    let inTable = false
+    let columnIndices = { task: -1, owner: -1, due: -1 }
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      
+      // Detect table header
+      if (line.includes('|') && (line.toLowerCase().includes('follow') || line.toLowerCase().includes('action') || line.toLowerCase().includes('task'))) {
+        const cells = line.split('|').map(c => c.trim().toLowerCase())
+        cells.forEach((cell, j) => {
+          if (cell.includes('follow') || cell.includes('action') || cell.includes('task')) columnIndices.task = j
+          if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) columnIndices.owner = j
+          if (cell.includes('due') || cell.includes('date') || cell.includes('when')) columnIndices.due = j
+        })
+        if (columnIndices.task !== -1) {
+          inTable = true
+          continue
+        }
+      }
+      
+      // Skip separator row
+      if (inTable && /^[\s|:-]+$/.test(line)) continue
+      
+      // Parse table row
+      if (inTable && line.includes('|')) {
+        const cells = line.split('|').map(c => c.trim())
+        const taskText = cells[columnIndices.task] || ''
+        if (taskText && taskText.length > 3) {
+          tasks.push({
+            id: `task-${i}`,
+            title: taskText.charAt(0).toUpperCase() + taskText.slice(1),
+            assignee: columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : '',
+            dueDate: columnIndices.due !== -1 ? (cells[columnIndices.due] || '') : '',
+          })
+        }
+        continue
+      }
+      
+      // Pattern matching for non-table content
+      let taskTitle = ''
+      let assignee = ''
+      
+      // Bullet points or numbered lists
+      if (/^[-*•]\s+/.test(line) || /^\d+[.)\s]/.test(line)) {
+        taskTitle = line.replace(/^[-*•]\s+/, '').replace(/^\d+[.)\s]+/, '').trim()
+      }
+      // "Person to do X" or "Person will do X"
+      else if (/(.+?)\s+(?:to|will|should|needs? to)\s+(.+)/i.test(line)) {
+        const match = line.match(/(.+?)\s+(?:to|will|should|needs? to)\s+(.+)/i)
+        if (match) {
+          assignee = match[1].trim()
+          taskTitle = match[2].trim()
+        }
+      }
+      // Action verb at start
+      else if (actionVerbs.test(line)) {
+        taskTitle = line
+      }
+      // "@person: task" format
+      else if (/@(\w+)[:\s]+(.+)/.test(line)) {
+        const match = line.match(/@(\w+)[:\s]+(.+)/)
+        if (match) {
+          assignee = match[1]
+          taskTitle = match[2].trim()
+        }
+      }
+      // "Person: task" format with action verb
+      else if (line.includes(':') && !line.startsWith('http')) {
+        const [before, ...after] = line.split(':')
+        const potentialTask = after.join(':').trim()
+        if (before.length < 25 && potentialTask.length > 5 && actionVerbs.test(potentialTask)) {
+          assignee = before.trim()
+          taskTitle = potentialTask
+        }
+      }
+      
+      if (taskTitle && taskTitle.length > 3) {
+        tasks.push({
+          id: `task-${i}`,
+          title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
+          assignee: assignee,
+          dueDate: '',
+        })
+      }
+    }
+    
+    return tasks
+  }
+
+  const handleExtract = () => {
+    if (!notes.trim()) return
+    setIsExtracting(true)
+    
+    // Small delay for UX feedback
+    setTimeout(() => {
+      const tasks = extractTasks(notes)
+      setExtractedTasks(tasks)
+      setIsExtracting(false)
+    }, 500)
+  }
+
+  const resetExtractor = () => {
+    setNotes('')
+    setExtractedTasks([])
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -416,54 +535,134 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Now in beta — Try it free
+            Try it now — No signup required
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Task management that{' '}
+            Paste your notes.{' '}
             <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              just <span className="italic">works</span>
+              Get tasks.
             </span>
           </h1>
           
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            Tired of tools that are either too simple or overwhelmingly complex? 
-            Trackli is the sweet spot: powerful enough for real work, simple enough to actually use.
+            Meeting notes, emails, whatever — paste it below and watch the magic happen.
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login?signup=true"
-              className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
-            >
-              Get Early Access
-            </Link>
-            <a
-              href="#demo"
-              className="px-8 py-4 bg-white text-indigo-600 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all font-semibold flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Try Demo
-            </a>
-          </div>
         </div>
 
-        {/* App Preview */}
-        <div className="max-w-6xl mx-auto mt-16 px-4">
+        {/* Interactive Extractor */}
+        <div className="max-w-3xl mx-auto relative z-10">
           <div className="relative">
-            {/* Gradient glow behind screenshot */}
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
             
-            {/* Screenshot */}
-            <img 
-              src="/screenshots/board.png" 
-              alt="Trackli Kanban Board" 
-              className="relative w-full rounded-2xl shadow-2xl"
-            />
+            <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+              {extractedTasks.length === 0 ? (
+                // Input state
+                <div className="p-6">
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={`Paste your meeting notes or email here...
+
+Examples we can extract from:
+• Follow-up tables from Teams/Outlook
+• "John to send the report by Friday"
+• Action items and bullet points
+• @sarah: Review the proposal`}
+                    className="w-full h-48 p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-700 placeholder:text-gray-400"
+                  />
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                      ✨ Works with tables, bullet points, and natural language
+                    </p>
+                    <button
+                      onClick={handleExtract}
+                      disabled={!notes.trim() || isExtracting}
+                      className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isExtracting ? (
+                        <>
+                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Extracting...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Extract Tasks
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Results state
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                      Found {extractedTasks.length} task{extractedTasks.length !== 1 ? 's' : ''}!
+                    </h3>
+                    <button
+                      onClick={resetExtractor}
+                      className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Try again
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {extractedTasks.map((task, index) => (
+                      <div
+                        key={task.id}
+                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
+                      >
+                        <div className="w-5 h-5 rounded border-2 border-indigo-500 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900">{task.title}</p>
+                          {(task.assignee || task.dueDate) && (
+                            <p className="text-sm text-gray-500 mt-0.5">
+                              {task.assignee && <span>👤 {task.assignee}</span>}
+                              {task.assignee && task.dueDate && <span className="mx-2">•</span>}
+                              {task.dueDate && <span>📅 {task.dueDate}</span>}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <p className="text-center text-gray-600 mb-4">
+                      Want to save these tasks and track them?
+                    </p>
+                    <Link
+                      to="/login?signup=true"
+                      className="block w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25 text-center"
+                    >
+                      Save to Trackli — Free
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+          
+          {/* Social proof */}
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Built by a PM, for PMs and busy professionals
+          </p>
         </div>
       </section>
 
