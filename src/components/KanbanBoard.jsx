@@ -9626,6 +9626,11 @@ export default function KanbanBoard() {
     }
   }, [currentView, viewToursCompleted, isMobile, showOnboarding])
   
+  // Scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [currentView])
+  
   // Handle completing a view tour
   const handleViewTourComplete = (view) => {
     const newCompleted = { ...viewToursCompleted, [view]: true }
