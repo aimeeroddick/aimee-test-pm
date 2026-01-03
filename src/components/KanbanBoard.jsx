@@ -7448,7 +7448,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 // Task Modal Component
 const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm }) => {
   const fileInputRef = useRef(null)
-  const [formReady, setFormReady] = useState(false)
+  const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -7692,12 +7692,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      {!formReady ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : (
-      <form onSubmit={handleSubmit} className="animate-contentFadeIn">
+      <form onSubmit={handleSubmit}>
         {/* Status & Project - unified control bar */}
         <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
           {/* Status - contained segmented control */}
@@ -8828,7 +8823,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </button>
         </div>
       </form>
-      )}
       
       {/* Attachment Viewer */}
       <AttachmentViewer
