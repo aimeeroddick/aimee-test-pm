@@ -11556,7 +11556,7 @@ export default function KanbanBoard() {
                       style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}
                     >
                       {/* Mobile header */}
-                      <div className="sm:hidden flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                      <div className="sm:hidden flex items-center justify-between px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-gray-100 dark:border-gray-700">
                         <span className="font-semibold text-gray-800 dark:text-gray-200">Menu</span>
                         <button
                           onClick={() => setNavMenuOpen(false)}
