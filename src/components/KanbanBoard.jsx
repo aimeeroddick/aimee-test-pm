@@ -7551,6 +7551,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       const isCustomAssignee = project && !project.members?.includes(task.assignee) && task.assignee
       const isCustomCustomer = project && !project.customers?.includes(task.customer) && task.customer
       
+      // Clear times if start_date is in the past (no longer relevant for scheduling)
+      const startDateInPast = task.start_date && new Date(task.start_date + 'T23:59:59') < new Date()
+      
       setFormData({
         title: task.title || '',
         description: task.description || '',
@@ -7558,8 +7561,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         status: task.status || 'backlog',
         critical: task.critical || false,
         start_date: task.start_date || '',
-        start_time: task.start_time || '',
-        end_time: task.end_time || '',
+        start_time: startDateInPast ? '' : (task.start_time || ''),
+        end_time: startDateInPast ? '' : (task.end_time || ''),
         due_date: task.due_date || '',
         assignee: isCustomAssignee ? '' : (task.assignee || ''),
         time_estimate: task.time_estimate || '',
