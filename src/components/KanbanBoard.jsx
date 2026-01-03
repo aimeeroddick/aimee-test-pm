@@ -7715,10 +7715,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   onClick={() => setFormData({ ...formData, status: col.id })}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
                     isSelected
-                      ? 'bg-white dark:bg-gray-700 shadow-sm'
+                      ? 'shadow-sm ring-1 ring-inset'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                   }`}
-                  style={isSelected ? { color: col.color } : {}}
+                  style={isSelected ? { 
+                    color: col.color, 
+                    backgroundColor: col.color + '18',
+                    '--tw-ring-color': col.color + '40'
+                  } : {}}
                   title={col.title}
                 >
                   {getIcon()}
