@@ -88,6 +88,16 @@ function App() {
           } 
         />
         
+        {/* Demo mode route (no auth required) */}
+        <Route
+          path="/demo"
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <KanbanBoard demoMode={true} />
+            </Suspense>
+          }
+        />
+        
         {/* Protected app route */}
         <Route
           path="/app"

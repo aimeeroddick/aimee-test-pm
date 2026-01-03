@@ -8,8 +8,16 @@ export const useAuth = () => useContext(AuthContext)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [demoMode, setDemoMode] = useState(false)
 
   useEffect(() => {
+    // Check if demo mode was set in URL
+    if (window.location.pathname === '/demo') {
+      setDemoMode(true)
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
@@ -24,6 +32,14 @@ export function AuthProvider({ children }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const enterDemoMode = () => {
+    setDemoMode(true)
+  }
+
+  const exitDemoMode = () => {
+    setDemoMode(false)
+  }
 
   const signUp = async (email, password) => {
     const { data, error } = await supabase.auth.signUp({
@@ -56,6 +72,9 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    demoMode,
+    enterDemoMode,
+    exitDemoMode,
     signUp,
     signIn,
     signOut,

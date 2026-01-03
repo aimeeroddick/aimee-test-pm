@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { DEMO_PROJECTS, DEMO_TASKS, DEMO_USER, DEMO_MEETING_NOTES } from '../data/demoData'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
@@ -9054,8 +9055,11 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
 
 
 // Main KanbanBoard Component
-export default function KanbanBoard() {
-  const { user, signOut } = useAuth()
+export default function KanbanBoard({ demoMode = false }) {
+  const { user: authUser, signOut } = useAuth()
+  
+  // Use demo user if in demo mode, otherwise use authenticated user
+  const user = demoMode ? DEMO_USER : authUser
   
   // Detect OS for keyboard shortcut display
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
@@ -9700,6 +9704,26 @@ export default function KanbanBoard() {
   const fetchData = async () => {
     setLoading(true)
     setError(null)
+    
+    // If in demo mode, load demo data instead of fetching from database
+    if (demoMode) {
+      const projectsWithRelations = DEMO_PROJECTS.map(project => ({
+        ...project,
+        members: project.team_members || [],
+        customers: project.customers || []
+      }))
+      
+      const tasksWithRelations = DEMO_TASKS.map(task => ({
+        ...task,
+        attachments: [],
+        dependencies: []
+      }))
+      
+      setProjects(projectsWithRelations)
+      setTasks(tasksWithRelations)
+      setLoading(false)
+      return
+    }
     
     try {
       // Fetch all data in parallel with bulk queries (fixes N+1 query problem)
@@ -11462,6 +11486,27 @@ export default function KanbanBoard() {
         </div>
       )}
       
+      {/* Demo Mode Banner */}
+      {demoMode && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2.5 text-center text-sm font-medium shadow-lg">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="inline-flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              You're exploring Trackli in demo mode — changes won't be saved
+            </span>
+            <a
+              href="/login?signup=true"
+              className="px-4 py-1.5 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition-colors text-sm"
+            >
+              Sign Up Free
+            </a>
+          </div>
+        </div>
+      )}
+      
       {/* Enhanced Error Toast with Retry */}
       {errorToast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow-xl animate-in slide-in-from-bottom-5">
@@ -11530,7 +11575,7 @@ export default function KanbanBoard() {
       )}
 
       {/* Header */}
-      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''}`}>
+      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
