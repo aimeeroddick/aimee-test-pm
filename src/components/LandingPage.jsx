@@ -352,110 +352,314 @@ export default function LandingPage() {
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
 
-  // Simplified task extraction logic
-  const extractTasks = (text) => {
-    const lines = text.split('\n')
-    const tasks = []
+  // Full task extraction logic (copied from KanbanBoard)
+  const isUSDateFormat = () => {
+    try {
+      const formatted = new Date(2000, 0, 15).toLocaleDateString()
+      return formatted.startsWith('1')
+    } catch {
+      return false
+    }
+  }
+
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return null
     
-    // Action verbs that indicate a task
-    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
+    const cleaned = dateStr.trim().toLowerCase()
+    const today = new Date()
+    const isUS = isUSDateFormat()
     
-    // Try table format first (Follow-Up | Owner | Due Date)
-    let inTable = false
-    let columnIndices = { task: -1, owner: -1, due: -1 }
+    if (cleaned === 'today' || cleaned === 'eod') {
+      return today.toISOString().split('T')[0]
+    }
+    if (cleaned === 'tomorrow') {
+      today.setDate(today.getDate() + 1)
+      return today.toISOString().split('T')[0]
+    }
+    if (cleaned === 'asap') {
+      return today.toISOString().split('T')[0]
+    }
+    
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+    const dayIndex = days.indexOf(cleaned)
+    if (dayIndex !== -1) {
+      let daysUntil = (dayIndex - today.getDay() + 7) % 7
+      if (daysUntil === 0) daysUntil = 7
+      today.setDate(today.getDate() + daysUntil)
+      return today.toISOString().split('T')[0]
+    }
+    
+    // Parse numeric dates
+    let match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)
+    if (match) {
+      let day, month
+      if (isUS) {
+        month = parseInt(match[1]) - 1
+        day = parseInt(match[2])
+      } else {
+        day = parseInt(match[1])
+        month = parseInt(match[2]) - 1
+      }
+      const year = match[3].length === 2 ? 2000 + parseInt(match[3]) : parseInt(match[3])
+      const date = new Date(year, month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    // Short date without year
+    match = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})(?!\d)/)
+    if (match) {
+      let day, month
+      if (isUS) {
+        month = parseInt(match[1]) - 1
+        day = parseInt(match[2])
+      } else {
+        day = parseInt(match[1])
+        month = parseInt(match[2]) - 1
+      }
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    // Month names
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    match = dateStr.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
+    if (match) {
+      const day = parseInt(match[1])
+      const month = months.indexOf(match[2].toLowerCase())
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    match = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
+    if (match) {
+      const day = parseInt(match[2])
+      const month = months.indexOf(match[1].toLowerCase())
+      const date = new Date(today.getFullYear(), month, day)
+      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+    }
+    
+    return dateStr // Return original if can't parse
+  }
+
+  const extractFromFollowUpTable = (notesText) => {
+    const lines = notesText.split('\n')
+    const actionItems = []
+    
+    let headerRowIndex = -1
+    let columnIndices = { followUp: -1, owner: -1, dueDate: -1, status: -1 }
+    let delimiter = '|'
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase()
+      
+      // Check for pipe-delimited table
+      if (line.includes('|') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
+        const cells = lines[i].split('|').map(c => c.trim().toLowerCase())
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cell = cells[j]
+          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
+            columnIndices.followUp = j
+          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who') || cell.includes('responsible')) {
+            columnIndices.owner = j
+          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when') || cell.includes('deadline')) {
+            columnIndices.dueDate = j
+          } else if (cell.includes('status') || cell.includes('state') || cell.includes('progress')) {
+            columnIndices.status = j
+          }
+        }
+        
+        if (columnIndices.followUp !== -1) {
+          headerRowIndex = i
+          delimiter = '|'
+          break
+        }
+      }
+      
+      // Check for tab-delimited table
+      if (line.includes('\t') && (line.includes('follow') || line.includes('action') || line.includes('task'))) {
+        const cells = lines[i].split('\t').map(c => c.trim().toLowerCase())
+        
+        for (let j = 0; j < cells.length; j++) {
+          const cell = cells[j]
+          if (cell.includes('follow') || cell.includes('action') || cell.includes('task') || cell.includes('item')) {
+            columnIndices.followUp = j
+          } else if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) {
+            columnIndices.owner = j
+          } else if (cell.includes('due') || cell.includes('date') || cell.includes('when')) {
+            columnIndices.dueDate = j
+          } else if (cell.includes('status') || cell.includes('state')) {
+            columnIndices.status = j
+          }
+        }
+        
+        if (columnIndices.followUp !== -1) {
+          headerRowIndex = i
+          delimiter = '\t'
+          break
+        }
+      }
+    }
+    
+    if (headerRowIndex === -1 || columnIndices.followUp === -1) {
+      return []
+    }
+    
+    let startRow = headerRowIndex + 1
+    if (startRow < lines.length && /^[\s|:-]+$/.test(lines[startRow].replace(/\t/g, ''))) {
+      startRow++
+    }
+    
+    for (let i = startRow; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (!line || (!line.includes(delimiter) && delimiter === '|') || 
+          (delimiter === '\t' && !line.includes('\t') && line.split(/\s{2,}/).length < 2)) {
+        if (actionItems.length > 0) break
+        continue
+      }
+      
+      const cells = delimiter === '|' 
+        ? line.split('|').map(c => c.trim())
+        : line.split('\t').map(c => c.trim())
+      
+      const followUp = cells[columnIndices.followUp] || ''
+      const owner = columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : ''
+      const dueDateStr = columnIndices.dueDate !== -1 ? (cells[columnIndices.dueDate] || '') : ''
+      const status = columnIndices.status !== -1 ? (cells[columnIndices.status] || '').toLowerCase() : ''
+      
+      if (!followUp || followUp.length < 3) continue
+      if (status.includes('done') || status.includes('complete') || status.includes('closed')) continue
+      
+      let dueDate = dueDateStr ? parseDateString(dueDateStr) : ''
+      
+      const isCritical = /urgent|asap|critical|important|high/i.test(followUp) ||
+                        /urgent|asap|critical|important|high/i.test(status)
+      
+      actionItems.push({
+        id: `extracted-table-${i}`,
+        title: followUp.charAt(0).toUpperCase() + followUp.slice(1),
+        assignee: owner,
+        dueDate: dueDate,
+        critical: isCritical,
+      })
+    }
+    
+    return actionItems
+  }
+
+  const extractFromPatterns = (lines) => {
+    const actionItems = []
+    
+    const actionPatterns = [
+      /^[-*•]\s*\[?\s*\]?\s*(.+)/i,
+      /^(?:action|todo|task|to-do|to do)[:\s]+(.+)/i,
+      /^(\d+[.)]\s*.+)/i,
+      /(.+?)\s+(?:will|to|should|must|needs? to|has to)\s+(.+)/i,
+      /(?:@|assigned to:?)\s*(\w+)\s*[-:]\s*(.+)/i,
+      /^(?:ai|action item)[:\s]+(.+)/i,
+      /^follow[ -]?up[:\s]+(.+)/i,
+    ]
+    
+    const actionVerbs = /^(schedule|send|create|update|review|prepare|draft|complete|finish|follow|contact|call|email|write|set up|organize|coordinate|check|confirm|arrange|book|submit|share|distribute|circulate|research|investigate|look into|find|get|obtain|collect|gather|compile|analyze|assess|evaluate|implement|execute|deliver|present|discuss|meet|sync|align|escalate|resolve|fix|address)/i
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
       if (!line) continue
       
-      // Detect table header
-      if (line.includes('|') && (line.toLowerCase().includes('follow') || line.toLowerCase().includes('action') || line.toLowerCase().includes('task'))) {
-        const cells = line.split('|').map(c => c.trim().toLowerCase())
-        cells.forEach((cell, j) => {
-          if (cell.includes('follow') || cell.includes('action') || cell.includes('task')) columnIndices.task = j
-          if (cell.includes('owner') || cell.includes('assignee') || cell.includes('who')) columnIndices.owner = j
-          if (cell.includes('due') || cell.includes('date') || cell.includes('when')) columnIndices.due = j
-        })
-        if (columnIndices.task !== -1) {
-          inTable = true
-          continue
-        }
-      }
-      
-      // Skip separator row
-      if (inTable && /^[\s|:-]+$/.test(line)) continue
-      
-      // Parse table row
-      if (inTable && line.includes('|')) {
-        const cells = line.split('|').map(c => c.trim())
-        const taskText = cells[columnIndices.task] || ''
-        if (taskText && taskText.length > 3) {
-          tasks.push({
-            id: `task-${i}`,
-            title: taskText.charAt(0).toUpperCase() + taskText.slice(1),
-            assignee: columnIndices.owner !== -1 ? (cells[columnIndices.owner] || '') : '',
-            dueDate: columnIndices.due !== -1 ? (cells[columnIndices.due] || '') : '',
-          })
-        }
-        continue
-      }
-      
-      // Pattern matching for non-table content
+      let matched = false
       let taskTitle = ''
       let assignee = ''
       
-      // Bullet points or numbered lists
-      if (/^[-*•]\s+/.test(line) || /^\d+[.)\s]/.test(line)) {
-        taskTitle = line.replace(/^[-*•]\s+/, '').replace(/^\d+[.)\s]+/, '').trim()
-      }
-      // "Person to do X" or "Person will do X"
-      else if (/(.+?)\s+(?:to|will|should|needs? to)\s+(.+)/i.test(line)) {
-        const match = line.match(/(.+?)\s+(?:to|will|should|needs? to)\s+(.+)/i)
+      for (const pattern of actionPatterns) {
+        const match = line.match(pattern)
         if (match) {
-          assignee = match[1].trim()
-          taskTitle = match[2].trim()
-        }
-      }
-      // Action verb at start
-      else if (actionVerbs.test(line)) {
-        taskTitle = line
-      }
-      // "@person: task" format
-      else if (/@(\w+)[:\s]+(.+)/.test(line)) {
-        const match = line.match(/@(\w+)[:\s]+(.+)/)
-        if (match) {
-          assignee = match[1]
-          taskTitle = match[2].trim()
-        }
-      }
-      // "Person: task" format with action verb
-      else if (line.includes(':') && !line.startsWith('http')) {
-        const [before, ...after] = line.split(':')
-        const potentialTask = after.join(':').trim()
-        if (before.length < 25 && potentialTask.length > 5 && actionVerbs.test(potentialTask)) {
-          assignee = before.trim()
-          taskTitle = potentialTask
+          if (pattern.toString().includes('will|to|should')) {
+            assignee = match[1]?.trim() || ''
+            taskTitle = `${assignee} ${match[2]?.trim() || ''}`.trim()
+          } 
+          else if (pattern.toString().includes('@|assigned')) {
+            assignee = match[1]?.trim() || ''
+            taskTitle = match[2]?.trim() || ''
+          }
+          else {
+            taskTitle = match[1]?.trim() || ''
+          }
+          matched = true
+          break
         }
       }
       
-      if (taskTitle && taskTitle.length > 3) {
-        tasks.push({
-          id: `task-${i}`,
-          title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
-          assignee: assignee,
-          dueDate: '',
-        })
+      if (!matched && actionVerbs.test(line)) {
+        taskTitle = line
+        matched = true
+      }
+      
+      if (!matched && line.includes(':') && !line.startsWith('http')) {
+        const parts = line.split(':')
+        if (parts.length >= 2 && parts[0].length < 30) {
+          const potentialAssignee = parts[0].trim()
+          const potentialTask = parts.slice(1).join(':').trim()
+          if (potentialTask.length > 5 && actionVerbs.test(potentialTask)) {
+            assignee = potentialAssignee
+            taskTitle = potentialTask
+            matched = true
+          }
+        }
+      }
+      
+      if (matched && taskTitle.length > 3) {
+        taskTitle = taskTitle
+          .replace(/^[-*•]\s*\[?\s*\]?\s*/, '')
+          .replace(/^\d+[.)]\s*/, '')
+          .replace(/^(?:action|todo|task|ai|action item|follow[ -]?up)[:\s]*/i, '')
+          .trim()
+        
+        let dueDate = ''
+        const datePatterns = [
+          /by\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+          /by\s+(\d{1,2}\/\d{1,2})/i,
+          /due\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+          /(eod|end of day|eow|end of week|asap)/i,
+        ]
+        
+        for (const datePattern of datePatterns) {
+          const dateMatch = taskTitle.match(datePattern)
+          if (dateMatch) {
+            dueDate = parseDateString(dateMatch[1])
+            taskTitle = taskTitle.replace(datePattern, '').trim()
+          }
+        }
+        
+        if (taskTitle.length > 3) {
+          actionItems.push({
+            id: `extracted-${i}`,
+            title: taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1),
+            assignee: assignee,
+            dueDate: dueDate,
+            critical: /urgent|asap|critical|important/i.test(taskTitle),
+          })
+        }
       }
     }
     
-    return tasks
+    return actionItems
+  }
+
+  const extractTasks = (text) => {
+    // Try table format first
+    const tableResult = extractFromFollowUpTable(text)
+    if (tableResult.length > 0) {
+      return tableResult
+    }
+    
+    // Fall back to pattern matching
+    return extractFromPatterns(text.split('\n'))
   }
 
   const handleExtract = () => {
     if (!notes.trim()) return
     setIsExtracting(true)
     
-    // Small delay for UX feedback
     setTimeout(() => {
       const tasks = extractTasks(notes)
       setExtractedTasks(tasks)
@@ -535,23 +739,71 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Try it now — No signup required
+            Now in beta — Try it free
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Paste your notes.{' '}
+            Task management that{' '}
             <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Get tasks.
+              just <span className="italic">works</span>
             </span>
           </h1>
           
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            Meeting notes, emails, whatever — paste it below and watch the magic happen.
+            Tired of tools that are either too simple or overwhelmingly complex? 
+            Trackli is the sweet spot: powerful enough for real work, simple enough to actually use.
           </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/login?signup=true"
+              className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
+            >
+              Get Started Free
+            </Link>
+            <a
+              href="#try-it"
+              className="px-8 py-4 bg-white text-indigo-600 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all font-semibold flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Try It Now
+            </a>
+          </div>
         </div>
 
-        {/* Interactive Extractor */}
-        <div className="max-w-3xl mx-auto relative z-10">
+        {/* App Preview */}
+        <div className="max-w-6xl mx-auto mt-16 px-4">
+          <div className="relative">
+            {/* Gradient glow behind screenshot */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
+            
+            {/* Screenshot */}
+            <img 
+              src="/screenshots/board.png" 
+              alt="Trackli Kanban Board" 
+              className="relative w-full rounded-2xl shadow-2xl"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Try It Now Section - Interactive Extractor */}
+      <section id="try-it" className="py-20 px-6 bg-gradient-to-b from-white to-indigo-50">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
+              Try it now — No signup required
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Paste your notes. Get tasks.
+            </h2>
+            <p className="text-lg text-gray-600 max-w-xl mx-auto">
+              Meeting notes, emails, whatever — paste it below and watch the magic happen.
+            </p>
+          </div>
+
           <div className="relative">
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
             
@@ -623,7 +875,7 @@ Examples we can extract from:
                   </div>
                   
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {extractedTasks.map((task, index) => (
+                    {extractedTasks.map((task) => (
                       <div
                         key={task.id}
                         className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
@@ -659,7 +911,6 @@ Examples we can extract from:
             </div>
           </div>
           
-          {/* Social proof */}
           <p className="text-center text-sm text-gray-500 mt-6">
             Built by a PM, for PMs and busy professionals
           </p>
