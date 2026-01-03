@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Detect if building for Electron
+const isElectron = process.env.ELECTRON === 'true'
+
 export default defineConfig({
+  // Use relative paths for Electron builds
+  base: isElectron ? './' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -115,4 +120,10 @@ export default defineConfig({
       }
     })
   ],
+  // Ensure proper build for Electron
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true
+  }
 })
