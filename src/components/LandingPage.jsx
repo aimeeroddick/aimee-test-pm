@@ -360,7 +360,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-[env(safe-area-inset-top)] ${
         scrolled ? 'bg-white/90 backdrop-blur-lg shadow-sm' : 'bg-transparent'
       }`}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">

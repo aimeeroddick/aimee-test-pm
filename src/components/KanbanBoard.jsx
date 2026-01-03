@@ -11530,7 +11530,7 @@ export default function KanbanBoard() {
       )}
 
       {/* Header */}
-      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 ${isElectron && isMac ? 'pl-16 pt-1' : ''}`}>
+      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
@@ -13393,7 +13393,7 @@ Or we can extract from:
                       onChange={(e) => setQuickAddTitle(e.target.value)}
                       placeholder='e.g., "Call mom tomorrow" or "Report due friday"'
                       autoFocus
-                      className="flex-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="flex-1 px-3 py-2.5 text-base border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                     />
                     {voiceSupported && (
                       <button
