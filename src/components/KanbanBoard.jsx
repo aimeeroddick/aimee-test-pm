@@ -615,6 +615,125 @@ const Toast = ({ message, action, actionLabel, onClose, duration = 5000, type = 
   )
 }
 
+// PWA Install Prompt - encourages users to add to home screen
+const PWAInstallPrompt = ({ onDismiss }) => {
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [showPrompt, setShowPrompt] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+
+  useEffect(() => {
+    // Check if already installed/standalone
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+    setIsStandalone(standalone)
+    if (standalone) return
+
+    // Check if iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+    setIsIOS(iOS)
+
+    // Check if dismissed recently (within 7 days)
+    const dismissed = localStorage.getItem('pwaPromptDismissed')
+    if (dismissed) {
+      const dismissedDate = new Date(dismissed)
+      const daysSince = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24)
+      if (daysSince < 7) return
+    }
+
+    // Check if user has enough engagement (at least 3 tasks created)
+    const taskCount = parseInt(localStorage.getItem('taskCount') || '0')
+    if (taskCount < 3) return
+
+    // For non-iOS, listen for install prompt
+    if (!iOS) {
+      const handler = (e) => {
+        e.preventDefault()
+        setInstallPrompt(e)
+        setShowPrompt(true)
+      }
+      window.addEventListener('beforeinstallprompt', handler)
+      return () => window.removeEventListener('beforeinstallprompt', handler)
+    } else {
+      // For iOS, show after delay if not in standalone
+      const timer = setTimeout(() => setShowPrompt(true), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      installPrompt.prompt()
+      const { outcome } = await installPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowPrompt(false)
+      }
+      setInstallPrompt(null)
+    }
+  }
+
+  const handleDismiss = () => {
+    localStorage.setItem('pwaPromptDismissed', new Date().toISOString())
+    setShowPrompt(false)
+    onDismiss?.()
+  }
+
+  if (!showPrompt || isStandalone) return null
+
+  return (
+    <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 animate-slide-up">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 max-w-sm mx-auto sm:mx-0">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Get Trackli on your phone</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {isIOS 
+                ? "Add to home screen for quick access & notifications"
+                : "Install for quick access & notifications"
+              }
+            </p>
+          </div>
+          <button 
+            onClick={handleDismiss}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+          >
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {isIOS ? (
+          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <p className="text-xs text-gray-600 dark:text-gray-300">
+              Tap <span className="inline-flex items-center"><svg className="w-4 h-4 mx-0.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></span> Share then <strong>"Add to Home Screen"</strong>
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={handleDismiss}
+              className="flex-1 px-3 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            >
+              Maybe later
+            </button>
+            <button
+              onClick={handleInstall}
+              className="flex-1 px-3 py-2 text-xs font-medium bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors"
+            >
+              Install
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Confirm Modal Component - replaces browser confirm()
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel = 'Confirm', confirmStyle = 'danger', icon = '⚠️', loading = false }) => {
   // Keyboard shortcuts: Enter to confirm, Escape to cancel
@@ -10804,6 +10923,12 @@ export default function KanbanBoard({ demoMode = false }) {
       // Show notification
       const isNew = !taskData.id
       showNotification(isNew ? "✓ Task created" : "✓ Task saved")
+      
+      // Track task count for PWA install prompt
+      if (isNew) {
+        const currentCount = parseInt(localStorage.getItem('taskCount') || '0')
+        localStorage.setItem('taskCount', (currentCount + 1).toString())
+      }
     } catch (err) {
       console.error('Error saving task:', err)
       showError(
@@ -13400,6 +13525,9 @@ Or we can extract from:
           onClose={() => setToast(null)}
         />
       )}
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
       
       {/* Quick Add Modal */}
       {quickAddOpen && (
