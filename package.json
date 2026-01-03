@@ -7,7 +7,7 @@
   "description": "Modern task management for busy professionals",
   "author": "Trackli <hello@gettrackli.com>",
   "homepage": "https://gettrackli.com",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
