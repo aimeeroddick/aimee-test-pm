@@ -9048,6 +9048,9 @@ export default function KanbanBoard() {
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const shortcutModifier = isMac ? '⌘⌃' : 'Ctrl+Alt+'
   
+  // Detect Electron for macOS traffic light spacing
+  const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.includes('Electron')
+  
   const [projects, setProjects] = useState([])
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -11514,7 +11517,7 @@ export default function KanbanBoard() {
       )}
 
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40">
+      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 ${isElectron && isMac ? 'pl-16 pt-1' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
