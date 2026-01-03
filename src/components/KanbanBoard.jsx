@@ -628,6 +628,9 @@ const PWAInstallPrompt = ({ onDismiss }) => {
     setIsStandalone(standalone)
     if (standalone) return
 
+    // Check if user previously installed
+    if (localStorage.getItem('pwaInstalled') === 'true') return
+
     // Check if iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
     setIsIOS(iOS)
@@ -665,6 +668,7 @@ const PWAInstallPrompt = ({ onDismiss }) => {
       installPrompt.prompt()
       const { outcome } = await installPrompt.userChoice
       if (outcome === 'accepted') {
+        localStorage.setItem('pwaInstalled', 'true')
         setShowPrompt(false)
       }
       setInstallPrompt(null)
@@ -708,10 +712,29 @@ const PWAInstallPrompt = ({ onDismiss }) => {
         </div>
         
         {isIOS ? (
-          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <p className="text-xs text-gray-600 dark:text-gray-300">
-              Tap <span className="inline-flex items-center"><svg className="w-4 h-4 mx-0.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></span> Share then <strong>"Add to Home Screen"</strong>
-            </p>
+          <div className="mt-3">
+            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                Tap <span className="inline-flex items-center"><svg className="w-4 h-4 mx-0.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></span> Share then <strong>"Add to Home Screen"</strong>
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDismiss}
+                className="flex-1 px-3 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+              >
+                Maybe later
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('pwaInstalled', 'true')
+                  setShowPrompt(false)
+                }}
+                className="flex-1 px-3 py-2 text-xs font-medium bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors"
+              >
+                Done
+              </button>
+            </div>
           </div>
         ) : (
           <div className="mt-3 flex gap-2">
