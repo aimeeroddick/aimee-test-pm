@@ -467,6 +467,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Interactive Demo Section */}
+      <section className="py-16 px-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
+              See it in action
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+              Turn meeting notes into tasks in seconds
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto">
+              Click through this interactive demo to see how Trackli works
+            </p>
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+            <div style={{ position: 'relative', paddingBottom: 'calc(58.947368% + 41px)', height: '0px', width: '100%' }}>
+              <iframe 
+                src="https://demo.arcade.software/Sy0Ssp9rMh2oc9q50W6K?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" 
+                title="Import Meeting Notes and Convert Them Into Actionable Tasks" 
+                frameBorder="0" 
+                loading="lazy" 
+                webkitallowfullscreen="true" 
+                mozallowfullscreen="true" 
+                allowFullScreen 
+                allow="clipboard-write" 
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light' }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pain Points Section */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
