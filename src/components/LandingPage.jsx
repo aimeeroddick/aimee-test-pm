@@ -453,27 +453,12 @@ export default function LandingPage() {
             {/* Gradient glow behind screenshot */}
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
             
-            {/* Screenshot with browser frame */}
-            <div className="relative bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-gray-700/50">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-                <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 bg-gray-600/50 rounded-md text-xs text-gray-300">
-                    gettrackli.com
-                  </div>
-                </div>
-              </div>
-              
-              {/* Screenshot */}
-              <img 
-                src="/screenshots/board.png" 
-                alt="Trackli Kanban Board" 
-                className="w-full"
-              />
-            </div>
+            {/* Screenshot */}
+            <img 
+              src="/screenshots/board.png" 
+              alt="Trackli Kanban Board" 
+              className="relative w-full rounded-2xl shadow-2xl"
+            />
           </div>
         </div>
       </section>
@@ -483,13 +468,13 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              Sound Familiar?
+              Why Trackli?
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              The productivity tool paradox
+              Built different, on purpose
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Most task managers either leave you wanting more, or overwhelm you with features you'll never use.
+              We designed Trackli to solve the problems we kept running into with other tools.
             </p>
           </div>
 
@@ -497,51 +482,51 @@ export default function LandingPage() {
             {[
               {
                 iconComponent: 'target',
-                title: 'Too simple, then too complex',
-                problem: "Simple tools leave you wanting more. Powerful ones take weeks to learn.",
-                solution: 'Trackli gives you depth without the steep curve.',
+                title: 'Depth without the learning curve',
+                subtitle: "Simple tools leave you wanting more. Powerful ones take weeks to learn.",
+                highlight: 'Trackli gives you both.',
               },
               {
                 iconComponent: 'money',
-                title: 'Paywalled basics',
-                problem: 'Calendar view? That\'ll cost you. Timeline? Premium only.',
-                solution: 'Every view, every feature — included from day one.',
+                title: 'Everything included from day one',
+                subtitle: 'Calendar view? Timeline? Premium only... elsewhere.',
+                highlight: 'Every feature, no paywalls.',
               },
               {
                 iconComponent: 'refresh',
-                title: 'Tool fatigue is real',
-                problem: '73% abandon their productivity app within 30 days.',
-                solution: 'Trackli is built to stick — intuitive from the first click.',
+                title: 'Built to stick',
+                subtitle: '73% abandon their productivity app within 30 days.',
+                highlight: 'Intuitive from the first click.',
               },
               {
                 iconComponent: 'sun',
-                title: 'No daily focus',
-                problem: 'Most tools show everything, all the time.',
-                solution: 'My Day view helps you focus on what matters right now.',
+                title: 'Focus on what matters today',
+                subtitle: 'Most tools show everything, all the time.',
+                highlight: 'My Day keeps you focused.',
               },
               {
                 iconComponent: 'home',
-                title: 'Work tools feel like work',
-                problem: 'Enterprise software for tracking groceries?',
-                solution: 'Clean enough for personal life, capable enough for work.',
+                title: 'Works for work and life',
+                subtitle: 'Enterprise software for tracking groceries?',
+                highlight: 'Clean for personal, capable for work.',
               },
               {
                 iconComponent: 'sparkles',
-                title: 'Generic, forgettable design',
-                problem: 'Cluttered interfaces. Outdated aesthetics.',
-                solution: 'A tool you actually enjoy opening.',
+                title: 'A tool you actually enjoy',
+                subtitle: 'Cluttered interfaces. Outdated aesthetics.',
+                highlight: 'Modern design that stays out of your way.',
               },
             ].map((card) => (
               <div
                 key={card.title}
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100"
               >
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
                   {card.iconComponent && LandingIcons[card.iconComponent] ? LandingIcons[card.iconComponent]() : card.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{card.title}</h3>
-                <p className="text-gray-500 line-through text-sm mb-2">{card.problem}</p>
-                <p className="text-indigo-600 font-medium text-sm">{card.solution}</p>
+                <p className="text-gray-500 text-sm mb-2">{card.subtitle}</p>
+                <p className="text-indigo-600 font-medium text-sm">{card.highlight}</p>
               </div>
             ))}
           </div>
@@ -592,18 +577,11 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 overflow-hidden">
-              <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-700/50">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                </div>
-                <img 
-                  src="/screenshots/my-day.png" 
-                  alt="Trackli My Day View" 
-                  className="w-full"
-                />
-              </div>
+              <img 
+                src="/screenshots/my-day.png" 
+                alt="Trackli My Day View" 
+                className="w-full rounded-xl shadow-lg"
+              />
             </div>
           </div>
 
@@ -669,18 +647,11 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 overflow-hidden">
-              <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-                <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-700/50">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                </div>
-                <img 
-                  src="/screenshots/calendar.png" 
-                  alt="Trackli Calendar View" 
-                  className="w-full"
-                />
-              </div>
+              <img 
+                src="/screenshots/calendar.png" 
+                alt="Trackli Calendar View" 
+                className="w-full rounded-xl shadow-lg"
+              />
             </div>
           </div>
         </div>
