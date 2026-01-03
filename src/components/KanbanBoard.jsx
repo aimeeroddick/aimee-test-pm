@@ -6903,8 +6903,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   
   const accentColor = isOverdue ? '#DC2626' : isDueToday ? '#D97706' : blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
   
-  const hasExtraInfo = task.description || task.assignee || category || 
-    (task.subtasks?.length > 0) || (task.attachments?.length > 0)
+  const hasExtraInfo = task.description || task.assignee || task.notes ||
+    (task.subtasks?.length > 0) || (task.attachments?.length > 0) || (task.dependencies?.length > 0)
 
   return (
     <div
@@ -6932,66 +6932,67 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
     >
       {/* Hover Popup Bubble - Hidden on mobile */}
       {hasExtraInfo && (
-        <div className={`hidden md:block absolute top-0 z-[200] w-56 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
+        <div className={`hidden md:block absolute top-0 z-[200] w-52 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
           task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
         }`}>
-          {/* Category */}
-          {category && (
-            <div className="mb-2">
-              <span className="px-2 py-0.5 text-xs font-medium rounded text-white" style={{ backgroundColor: category.color }}>{category.label}</span>
-            </div>
-          )}
-          {/* Customer */}
-          {task.customer && <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-2">{task.customer}</p>}
-          {/* Effort Level */}
-          {energyStyle && (
-            <div className="flex items-center gap-2 mb-2">
-              <span 
-                className="px-2 py-0.5 text-xs font-medium rounded-full"
-                style={{ backgroundColor: energyStyle.bg, color: energyStyle.text }}
-              >
-                {energyStyle.icon} {energyStyle.label}
-              </span>
-            </div>
-          )}
-          {/* Description */}
-          {task.description && <p className="text-xs text-gray-500 dark:text-gray-300 mb-2 line-clamp-3">{task.description}</p>}
-          {/* Assignee with icon */}
-          {task.assignee && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-[10px] font-medium flex items-center justify-center flex-shrink-0">{task.assignee.charAt(0).toUpperCase()}</span>
-              <span className="text-xs text-gray-600 dark:text-gray-300">{task.assignee}</span>
-            </div>
-          )}
-          {/* Blocking Tasks */}
-          {task.dependencies?.length > 0 && (() => {
-            const blockingTasks = task.dependencies
-              .map(dep => allTasks.find(t => t.id === dep.depends_on_id))
-              .filter(t => t && t.status !== 'done')
-            if (blockingTasks.length === 0) return null
-            return (
-              <div className="mb-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">🚫 Blocked by:</p>
-                {blockingTasks.map(t => (
-                  <p key={t.id} className="text-xs text-red-500 dark:text-red-400 truncate">• {t.title}</p>
-                ))}
-              </div>
-            )
-          })()}
-          {/* Subtasks Progress */}
-          {task.subtasks?.length > 0 && (
-            <div className="mb-2">
-              <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">Subtasks</p>
+          <div className="space-y-2">
+            {/* Description */}
+            {task.description && (
+              <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">{task.description}</p>
+            )}
+            
+            {/* Assignee */}
+            {task.assignee && (
               <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[10px] font-medium flex items-center justify-center flex-shrink-0">
+                  {task.assignee.charAt(0).toUpperCase()}
+                </span>
+                <span className="text-xs text-gray-600 dark:text-gray-300">{task.assignee}</span>
+              </div>
+            )}
+            
+            {/* Subtasks Progress */}
+            {task.subtasks?.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 dark:text-gray-400">Subtasks</span>
                 <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
                 </div>
-                <span className="text-xs text-gray-500">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
               </div>
-            </div>
-          )}
-          {/* Attachments */}
-          {task.attachments?.length > 0 && <div className="text-xs text-gray-500">📎 {task.attachments.length} attachment{task.attachments.length > 1 ? 's' : ''}</div>}
+            )}
+            
+            {/* Attachments & Notes - compact row */}
+            {(task.attachments?.length > 0 || task.notes) && (
+              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                {task.attachments?.length > 0 && (
+                  <span>📎 {task.attachments.length}</span>
+                )}
+                {task.notes && (
+                  <span>📝 Notes</span>
+                )}
+              </div>
+            )}
+            
+            {/* Blocking Tasks */}
+            {task.dependencies?.length > 0 && (() => {
+              const blockingTasks = task.dependencies
+                .map(dep => allTasks.find(t => t.id === dep.depends_on_id))
+                .filter(t => t && t.status !== 'done')
+              if (blockingTasks.length === 0) return null
+              return (
+                <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-[10px] font-medium text-red-600 dark:text-red-400 mb-0.5">🚫 Blocked by:</p>
+                  {blockingTasks.slice(0, 2).map(t => (
+                    <p key={t.id} className="text-[10px] text-red-500 dark:text-red-400 truncate">• {t.title}</p>
+                  ))}
+                  {blockingTasks.length > 2 && (
+                    <p className="text-[10px] text-red-400">+{blockingTasks.length - 2} more</p>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
         </div>
       )}
       
