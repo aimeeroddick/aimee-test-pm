@@ -739,7 +739,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Now in beta — Try it free
+            Now in beta
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
@@ -759,7 +759,7 @@ export default function LandingPage() {
               to="/login?signup=true"
               className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
             >
-              Get Started Free
+              Get Started
             </Link>
             <a
               href="#try-it"
@@ -769,6 +769,16 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Try It Now
+            </a>
+            <a
+              href="#demo"
+              className="px-8 py-4 bg-white text-gray-700 rounded-xl border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all font-semibold flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              View Demo
             </a>
           </div>
         </div>
@@ -794,7 +804,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              Try it now — No signup required
+              AI-Powered Productivity
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Paste your notes. Get tasks.
@@ -1315,34 +1325,34 @@ Examples we can extract from:
 
       {/* Interactive Demo Section */}
       <section id="demo" className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              See it in action
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-              Watch how Trackli works
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Click through this interactive demo to explore the features
-            </p>
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
-            <div style={{ position: 'relative', paddingBottom: 'calc(58.947368% + 41px)', height: '0px', width: '100%' }}>
-              <iframe 
-                src="https://demo.arcade.software/Sy0Ssp9rMh2oc9q50W6K?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true" 
-                title="Import Meeting Notes and Convert Them Into Actionable Tasks" 
-                frameBorder="0" 
-                loading="lazy" 
-                webkitallowfullscreen="true" 
-                mozallowfullscreen="true" 
-                allowFullScreen 
-                allow="clipboard-write" 
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light' }}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-8">
+      <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
+      Interactive Tour
+      </p>
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+      See Trackli in Action
+      </h2>
+      <p className="text-gray-600 max-w-xl mx-auto">
+      Take a 2-minute tour of the key features — boards, My Day, calendar, and more.
+      </p>
+      </div>
+      <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+      <div style={{ position: 'relative', paddingBottom: 'calc(58.947368% + 41px)', height: '0px', width: '100%' }}>
+      <iframe 
+      src="https://demo.arcade.software/Sy0Ssp9rMh2oc9q50W6K?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+      title="Trackli Product Tour"
+      frameBorder="0"
+      loading="lazy"
+      webkitallowfullscreen="true"
+      mozallowfullscreen="true"
+      allowFullScreen
+      allow="clipboard-write"
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light' }}
+      />
+      </div>
+      </div>
+      </div>
       </section>
 
       {/* CTA Section */}
@@ -1352,13 +1362,13 @@ Examples we can extract from:
             Ready to get things done?
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Start organizing your work today. Free to use, no credit card required.
+            Start organizing your work today. No credit card required.
           </p>
           <Link
             to="/login?signup=true"
             className="inline-block px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
           >
-            Get Started Free
+            Get Started
           </Link>
         </div>
       </section>
