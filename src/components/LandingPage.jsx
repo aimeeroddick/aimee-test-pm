@@ -475,10 +475,10 @@ export default function LandingPage() {
               See it in action
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-              Turn meeting notes into tasks in seconds
+              Watch how Trackli works
             </h2>
             <p className="text-gray-600 max-w-xl mx-auto">
-              Click through this interactive demo to see how Trackli works
+              Click through this interactive demo to explore the features
             </p>
           </div>
           <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
