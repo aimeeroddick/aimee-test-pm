@@ -6839,7 +6839,7 @@ const CriticalToggle = ({ checked, onChange }) => (
 )
 
 // Task Card Component
-const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, onUpdateTitle, onToggleCritical, onBreakdown, isMobile }) => {
+const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allTasks = [], onQuickComplete, bulkSelectMode, isSelected, onToggleSelect, onStatusChange, onSetDueDate, onToggleMyDay, isDragging, anyDragging, onUpdateTitle, onToggleCritical, onBreakdown, isMobile }) => {
   const [showStatusPicker, setShowStatusPicker] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(task.title)
@@ -6930,8 +6930,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '2px', borderLeftColor: accentColor }}
     >
-      {/* Hover Popup Bubble - Hidden on mobile */}
-      {hasExtraInfo && (
+      {/* Hover Popup Bubble - Hidden on mobile and during drag */}
+      {hasExtraInfo && !anyDragging && (
         <div className={`hidden md:block absolute top-0 z-[200] w-52 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
           task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
         }`}>
@@ -7308,6 +7308,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
             onToggleSelect={onToggleSelect}
             onToggleMyDay={onToggleMyDay}
             isDragging={draggedTask?.id === task.id}
+            anyDragging={!!draggedTask}
             onUpdateTitle={onUpdateTitle}
             onToggleCritical={onToggleCritical}
             onBreakdown={onBreakdown}
