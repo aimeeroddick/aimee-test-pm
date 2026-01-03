@@ -121,7 +121,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Features (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 flex-col items-center justify-center relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -135,8 +135,8 @@ export default function Login() {
         </div>
         
         {/* Content */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="relative z-10 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
             <div className="w-12 h-12">
               <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                 <path d="M6 18L28 6L28 38L6 26Z" fill="white" fillOpacity="0.9"/>
@@ -147,11 +147,10 @@ export default function Login() {
             </div>
             <span className="text-3xl font-bold text-white">Trackli</span>
           </div>
-          <p className="text-white/80 text-lg">Track. Manage. Deliver.</p>
-        </div>
+          <p className="text-white/80 text-lg mb-10">Track. Manage. Deliver.</p>
         
-        <div className="relative z-10 space-y-6">
           <h2 className="text-2xl font-semibold text-white mb-6">Everything you need to stay productive</h2>
+          <div className="space-y-4 text-left inline-block">
           {features.map((feature) => (
             <div key={feature.title} className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
@@ -164,9 +163,8 @@ export default function Login() {
             </div>
           ))}
         </div>
-        
-        <div className="relative z-10">
-          <p className="text-white/60 text-sm">© 2025 Trackli. All rights reserved.</p>
+          
+          <p className="text-white/60 text-sm mt-10">© 2026 Trackli. All rights reserved.</p>
         </div>
       </div>
 
@@ -355,7 +353,7 @@ export default function Login() {
 
           {/* Footer links (mobile) */}
           <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-300 lg:hidden">
-            <p>© 2025 Trackli. All rights reserved.</p>
+            <p>© 2026 Trackli. All rights reserved.</p>
           </div>
         </div>
       </div>
