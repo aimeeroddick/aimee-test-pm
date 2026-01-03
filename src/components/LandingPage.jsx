@@ -438,8 +438,8 @@ export default function LandingPage() {
             >
               Get Early Access
             </Link>
-            <Link
-              to="/demo"
+            <a
+              href="#demo"
               className="px-8 py-4 bg-white text-indigo-600 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all font-semibold flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,7 +447,7 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Try Demo
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -664,7 +664,7 @@ export default function LandingPage() {
       {/* Pricing Section - TODO: Add back when pricing is finalized */}
 
       {/* Interactive Demo Section */}
-      <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section id="demo" className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">

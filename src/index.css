@@ -12,6 +12,7 @@
 /* Ensure consistent color rendering */
 html {
   color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
 /* Boost font weights slightly for Chrome */
