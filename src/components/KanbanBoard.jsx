@@ -73,7 +73,7 @@ const COLUMN_COLORS = {
   todo: '#3B82F6',
   in_progress: '#EC4899',
   blocked: '#EF4444',
-  done: '#64748B',
+  done: '#10B981',
 }
 
 const COLUMNS = [
