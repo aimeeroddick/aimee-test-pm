@@ -1713,7 +1713,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
           ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl sm:mx-4' 
           : 'rounded-t-2xl sm:rounded-2xl sm:mx-4 max-h-[95vh] sm:max-h-[90vh]'
       } ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <div className={`flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
+        <div className={`flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-20 ${fullScreenMobile ? 'pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pt-4 rounded-none sm:rounded-t-2xl' : 'rounded-t-2xl'}`}>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
           <button
             type="button"
