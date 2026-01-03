@@ -7633,6 +7633,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   const selectedProject = projects.find((p) => p.id === formData.project_id)
   
+  // Check if due date is overdue
+  const isOverdue = formData.due_date && new Date(formData.due_date + 'T23:59:59') < new Date()
+  
+  // Format date for display in user's locale
+  const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return ''
+    try {
+      const date = new Date(dateStr + 'T00:00:00')
+      return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch {
+      return dateStr
+    }
+  }
+  
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files)
     if (files.length === 0) return
@@ -7999,9 +8013,19 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     </svg>
                   </label>
                 </div>
+                {formData.start_date && (
+                  <p className="text-xs mt-1 text-gray-400">
+                    {formatDateForDisplay(formData.start_date)}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Due Date</label>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider ${isOverdue ? 'text-red-500' : 'text-indigo-600/80 dark:text-indigo-400'}`}>Due Date</label>
+                  {isOverdue && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">OVERDUE</span>
+                  )}
+                </div>
                 <div className="flex gap-1 mb-1.5">
                   {[
                     { label: 'T', title: 'Today', days: 0 },
@@ -8053,21 +8077,36 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       const parsed = parseNaturalLanguageDate(val)
                       if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
                     }}
-                    placeholder="YYYY-MM-DD"
-                    className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.due_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
+                    placeholder="YYYY-MM-DD or 'tomorrow'"
+                    className={`w-full px-3 py-2 border rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-sm ${
+                      isOverdue 
+                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
+                        : !formData.due_date 
+                          ? 'border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-300 dark:border-l-amber-500 text-gray-900 dark:text-gray-100' 
+                          : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
+                    }`}
                   />
-                  <label className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <label className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
+                    isOverdue
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
+                      : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}>
                     <input
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                       className="sr-only"
                     />
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </label>
                 </div>
+                {formData.due_date && (
+                  <p className={`text-xs mt-1 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
+                    {formatDateForDisplay(formData.due_date)}
+                  </p>
+                )}
               </div>
             </div>
             
