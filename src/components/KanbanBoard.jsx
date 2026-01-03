@@ -13487,7 +13487,7 @@ Or we can extract from:
                       }}
                       className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                     >
-                      More options
+                      Full editor
                     </button>
                     <button
                       type="submit"
