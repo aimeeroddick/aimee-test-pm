@@ -12791,7 +12791,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 )}
               
               {/* Desktop: All columns | Mobile: Single column */}
-              <div className={isMobile ? '' : 'flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6'}>
+              <div className={isMobile ? '' : 'flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6 justify-center'}>
                 {isMobile ? (
                   <Column
                     key={COLUMNS[mobileColumnIndex].id}
