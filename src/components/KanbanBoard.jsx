@@ -1513,7 +1513,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
               No feedback yet
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {filteredFeedback.map(item => (
                 <div key={item.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
                   <div className="flex items-start justify-between gap-4">
@@ -3042,9 +3042,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   const SectionCard = ({ index, title, children, icon }) => {
     const color = rainbowColors[index % rainbowColors.length]
     return (
-      <section className={`rounded-2xl border-l-4 ${color.border} ${color.bg} p-5 transition-all hover:shadow-md`}>
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-3">
-          <span className={`w-8 h-8 rounded-xl ${color.numBg} flex items-center justify-center ${color.text} font-bold text-sm shadow-sm`}>
+      <section className={`rounded-xl sm:rounded-2xl border-l-4 ${color.border} ${color.bg} p-3 sm:p-5 transition-all hover:shadow-md`}>
+        <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+          <span className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${color.numBg} flex items-center justify-center ${color.text} font-bold text-xs sm:text-sm shadow-sm`}>
             {icon || index + 1}
           </span>
           <span>{title}</span>
@@ -3074,22 +3074,22 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   )
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
         
         {/* Rainbow gradient bar at top */}
         <div className="h-1.5 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500" />
         
         {/* Header */}
-        <div className="p-6 pb-4">
+        <div className="p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/30">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-lg sm:text-2xl shadow-lg shadow-purple-500/30">
                 📚
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                   Help Guide
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Master your productivity with Trackli</p>
@@ -3107,7 +3107,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         </div>
         
         {/* Tabs */}
-        <div className="px-6 pb-4">
+        <div className="px-4 sm:px-6 pb-3 sm:pb-4">
           <div className="flex gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl overflow-x-auto">
             {tabs.map(tab => (
               <button
@@ -3127,8 +3127,8 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         </div>
         
         {/* Content */}
-        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(90vh-280px)]">
-          <div className="space-y-4">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(85vh-200px)] sm:max-h-[calc(90vh-280px)]">
+          <div className="space-y-3 sm:space-y-4">
             
             {/* Tasks Tab */}
             {activeTab === 'tasks' && (
@@ -3216,7 +3216,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               <>
                 <SectionCard index={0} title="Kanban Columns">
                   <p className="text-gray-600 dark:text-gray-300 mb-3">Tasks flow through four columns representing their status:</p>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div className="p-3 rounded-xl border-l-4 border-gray-400 bg-gray-100 dark:bg-gray-800">
                       <span className="font-semibold text-gray-700 dark:text-gray-200">Backlog</span>
                       <p className="text-xs text-gray-500">Future work</p>
@@ -3483,13 +3483,13 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-800 flex justify-between items-center">
+        <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-800 flex justify-between items-center gap-2">
           <p className="text-sm text-gray-500">
             Need more help? <a href="mailto:support@gettrackli.com" className="text-indigo-500 hover:text-indigo-600 hover:underline font-medium">Contact support</a>
           </p>
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-purple-500/30 transition-all hover:scale-105"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-lg sm:rounded-xl font-medium text-sm sm:text-base hover:shadow-lg hover:shadow-purple-500/30 transition-all hover:scale-105"
           >
             Got it! ✨
           </button>
@@ -12668,7 +12668,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Project Progress */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Project Progress</h3>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {projects.filter(p => !p.archived).map(project => {
                     const projectTasks = tasks.filter(t => t.project_id === project.id)
                     const doneTasks = projectTasks.filter(t => t.status === 'done').length
