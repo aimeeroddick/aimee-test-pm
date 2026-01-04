@@ -11681,14 +11681,14 @@ export default function KanbanBoard({ demoMode = false }) {
                             setNavMenuOpen(false)
                           }}
                           disabled={projects.length === 0}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                          className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                         >
                           {MenuIcons.importNotes()}
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
                           onClick={() => { setFeedbackModalOpen(true); setNavMenuOpen(false) }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           {MenuIcons.feedback()}
                           <span className="font-medium">Send Feedback</span>
