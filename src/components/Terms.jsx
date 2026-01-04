@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { L } from '../lib/locale'
 
 export default function Terms() {
   return (
@@ -44,7 +45,7 @@ export default function Terms() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2">
               <li>Kanban-style task boards</li>
               <li>Calendar and scheduling views</li>
-              <li>Project organization</li>
+              <li>Project {L.organization}</li>
               <li>Task tracking and progress monitoring</li>
               <li>File attachments and notes</li>
             </ul>

@@ -2,61 +2,10 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { L } from '../lib/locale'
 import { DEMO_PROJECTS, DEMO_TASKS, DEMO_USER, DEMO_MEETING_NOTES } from '../data/demoData'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
-
-// Locale detection and localization
-const getUserLocale = () => {
-  const lang = navigator.language || navigator.userLanguage || 'en-US'
-  
-  // Check if UK/AU/NZ or other British English variants by language code
-  if (/^en-(GB|AU|NZ|IE|ZA|IN)$/i.test(lang)) return 'en-GB'
-  
-  // Fallback: check timezone for UK/Commonwealth regions
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
-    if (/^Europe\/(London|Dublin|Belfast)|Australia|Pacific\/(Auckland|Wellington)/i.test(tz)) {
-      return 'en-GB'
-    }
-  } catch (e) {}
-  
-  return 'en-US'
-}
-
-const LOCALE = getUserLocale()
-const isUK = LOCALE === 'en-GB'
-
-// Localized strings dictionary
-const L = {
-  // Words with different UK/US spellings
-  organize: isUK ? 'organise' : 'organize',
-  Organize: isUK ? 'Organise' : 'Organize',
-  color: isUK ? 'colour' : 'color',
-  Color: isUK ? 'Colour' : 'Color',
-  colors: isUK ? 'colours' : 'colors',
-  Colors: isUK ? 'Colours' : 'Colors',
-  favorite: isUK ? 'favourite' : 'favorite',
-  Favorite: isUK ? 'Favourite' : 'Favorite',
-  favorites: isUK ? 'favourites' : 'favorites',
-  Favorites: isUK ? 'Favourites' : 'Favorites',
-  customize: isUK ? 'customise' : 'customize',
-  Customize: isUK ? 'Customise' : 'Customize',
-  prioritize: isUK ? 'prioritise' : 'prioritize',
-  Prioritize: isUK ? 'Prioritise' : 'Prioritize',
-  categorize: isUK ? 'categorise' : 'categorize',
-  Categorize: isUK ? 'Categorise' : 'Categorize',
-  recognize: isUK ? 'recognise' : 'recognize',
-  Recognize: isUK ? 'Recognise' : 'Recognize',
-  visualize: isUK ? 'visualise' : 'visualize',
-  Visualize: isUK ? 'Visualise' : 'Visualize',
-  analyze: isUK ? 'analyse' : 'analyze',
-  Analyze: isUK ? 'Analyse' : 'Analyze',
-  center: isUK ? 'centre' : 'center',
-  Center: isUK ? 'Centre' : 'Center',
-  canceled: isUK ? 'cancelled' : 'canceled',
-  Canceled: isUK ? 'Cancelled' : 'Canceled',
-}
 
 // Constants
 const ENERGY_LEVELS = {
