@@ -320,7 +320,7 @@ export default function OutlookAddin() {
         notes = `Email from: ${itemData.sender}\nSubject: ${itemData.subject}\n\n${bodyPreview}${itemData.body?.length > 500 ? '...' : ''}`
       }
       
-      const { error: insertError } = await supabase
+      const { data: newTask, error: insertError } = await supabase
         .from('tasks')
         .insert({
           title: formData.title,
@@ -334,8 +334,47 @@ export default function OutlookAddin() {
           notes: notes,
           energy_level: 'medium',
         })
+        .select()
+        .single()
       
       if (insertError) throw insertError
+      
+      // Create email/meeting attachment
+      if (newTask) {
+        const timestamp = new Date().toLocaleString()
+        const emailContent = `
+<!DOCTYPE html>
+<html>
+<head><title>${itemData.subject || 'Email'}</title></head>
+<body>
+<h2>${itemData.subject || 'No Subject'}</h2>
+<p><strong>From:</strong> ${itemData.sender || 'Unknown'} ${itemData.senderEmail ? `&lt;${itemData.senderEmail}&gt;` : ''}</p>
+<p><strong>Date:</strong> ${timestamp}</p>
+<hr/>
+<div>${itemData.body || ''}</div>
+</body>
+</html>
+`.trim()
+        
+        const fileName = `${itemData.isAppointment ? 'meeting' : 'email'}_${Date.now()}.html`
+        const filePath = `${user.id}/${newTask.id}/${fileName}`
+        const blob = new Blob([emailContent], { type: 'text/html' })
+        
+        const { error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(filePath, blob)
+        
+        if (!uploadError) {
+          const icon = itemData.isAppointment ? '📅' : '📧'
+          await supabase.from('attachments').insert({
+            task_id: newTask.id,
+            file_name: `${icon} ${itemData.subject || 'Email'}.html`,
+            file_path: filePath,
+            file_size: blob.size,
+            file_type: 'text/html',
+          })
+        }
+      }
       
       setSuccess(true)
       await loadMyDayTasks()
@@ -379,6 +418,40 @@ export default function OutlookAddin() {
         .eq('id', selectedTask.id)
       
       if (updateError) throw updateError
+      
+      // Create email attachment
+      const emailContent = `
+<!DOCTYPE html>
+<html>
+<head><title>${itemData.subject || 'Email'}</title></head>
+<body>
+<h2>${itemData.subject || 'No Subject'}</h2>
+<p><strong>From:</strong> ${itemData.sender || 'Unknown'} ${itemData.senderEmail ? `&lt;${itemData.senderEmail}&gt;` : ''}</p>
+<p><strong>Date:</strong> ${timestamp}</p>
+<hr/>
+<div>${itemData.body || ''}</div>
+${noteText.trim() ? `<hr/><p><strong>Note:</strong> ${noteText.trim()}</p>` : ''}
+</body>
+</html>
+`.trim()
+      
+      const fileName = `email_${Date.now()}.html`
+      const filePath = `${user.id}/${selectedTask.id}/${fileName}`
+      const blob = new Blob([emailContent], { type: 'text/html' })
+      
+      const { error: uploadError } = await supabase.storage
+        .from('attachments')
+        .upload(filePath, blob)
+      
+      if (!uploadError) {
+        await supabase.from('attachments').insert({
+          task_id: selectedTask.id,
+          file_name: `📧 ${itemData.subject || 'Email'}.html`,
+          file_path: filePath,
+          file_size: blob.size,
+          file_type: 'text/html',
+        })
+      }
       
       setSuccess(true)
       setSelectedTask(null)
