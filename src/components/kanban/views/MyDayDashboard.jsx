@@ -4,6 +4,9 @@ import { getDueDateStatus, isBlocked, formatDate } from '../utils'
 import { TaskCardIcons, MenuIcons } from '../icons'
 import { GreetingIcon, EmptyState } from '../ui/EmptyState'
 
+// Lazy load confetti - only needed when completing tasks
+const loadConfetti = () => import('canvas-confetti').then(m => m.default)
+
 
 const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay, showReorder = false, isFirst = false, isLast = false, onMoveUp, onMoveDown }) => {
   return (
