@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PROJECT_COLORS, DEFAULT_PROJECT_COLOR, btn } from '../constants'
 import { L } from '../../../lib/locale'
+import Modal from '../ui/Modal'
 
 const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm, user }) => {
   const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
