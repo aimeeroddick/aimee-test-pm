@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { track } from '@vercel/analytics'
 import { supabase } from '../lib/supabase'
+import { L } from '../lib/locale'
 import { extractTasks } from '../utils/taskExtraction'
 
 // Custom Landing Page Icons
@@ -849,7 +850,7 @@ Examples we can extract from:
               <ul className="space-y-3">
                 {[
                   'Unlimited projects and boards',
-                  'Organized workflow columns',
+                  `${L.Organized} workflow columns`,
                   'Subtasks, attachments, and due dates',
                   'Filter and search across everything',
                 ].map((item) => (
@@ -1174,7 +1175,7 @@ Examples we can extract from:
             Ready to get things done?
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Start organizing your work today. No credit card required.
+            Start {L.organizing} your work today. No credit card required.
           </p>
           <Link
             to="/login?signup=true"
@@ -1234,7 +1235,7 @@ Examples we can extract from:
                 <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </summary>
               <div className="px-6 pb-6 text-gray-600">
-                Paste your meeting notes, emails, or even attach an image of handwritten notes. Our AI analyzes the content and automatically identifies action items, assignees, and due dates - turning chaos into organized tasks in seconds.
+                Paste your meeting notes, emails, or even attach an image of handwritten notes. Our AI {L.analyze}s the content and automatically identifies action items, assignees, and due dates - turning chaos into {L.organized} tasks in seconds.
               </div>
             </details>
 

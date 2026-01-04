@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { L } from '../lib/locale'
 import { DEMO_PROJECTS, DEMO_TASKS, DEMO_USER, DEMO_MEETING_NOTES } from '../data/demoData'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
@@ -2751,7 +2752,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     projects: [
       {
         title: 'Projects View',
-        description: 'Organize your work into projects. Each project gets its own color that appears on task cards throughout the app.',
+        description: `${L.Organize} your work into projects. Each project gets its own ${L.color} that appears on task cards throughout the app.`,
         iconComponent: 'folder',
       },
       {
@@ -3338,7 +3339,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <SectionCard index={2} title="Task Card Indicators">
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border Colors:</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border {L.Colors}:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-red-500"></div><span>Red = Overdue or Critical</span></div>
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-orange-500"></div><span>Orange = Blocked or Due Today</span></div>
@@ -5428,9 +5429,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <div>
                 <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Time</label>
                 <input
-                  type="time"
+                  type="text"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
+                  onBlur={(e) => {
+                    const parsed = parseFlexibleTime(e.target.value)
+                    if (parsed) setScheduleTime(parsed)
+                  }}
+                  placeholder="e.g. 9am, 230pm, 14:30"
                   className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   style={{ fontSize: '16px' }}
                 />
@@ -7379,6 +7385,8 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 // Task Modal Component
 const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer }) => {
   const fileInputRef = useRef(null)
+  const startDateRef = useRef(null)
+  const dueDateRef = useRef(null)
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
@@ -8005,8 +8013,15 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     placeholder="YYYY-MM-DD"
                     className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
-                  <label className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <label 
+                    className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      startDateRef.current?.showPicker?.()
+                    }}
+                  >
                     <input
+                      ref={startDateRef}
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
@@ -8090,12 +8105,19 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                           : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
                     }`}
                   />
-                  <label className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
+                  <label 
+                    className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
                     isOverdue
                       ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
                       : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}>
+                  }`}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      dueDateRef.current?.showPicker?.()
+                    }}
+                  >
                     <input
+                      ref={dueDateRef}
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
@@ -9000,7 +9022,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project Color</label>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project {L.Color}</label>
           <div className="flex flex-wrap gap-2">
             {PROJECT_COLORS.map((c) => (
               <button

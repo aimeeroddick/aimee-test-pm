@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { L } from '../lib/locale'
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -202,7 +203,7 @@ export default function Login() {
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
             <p className="text-gray-500 dark:text-gray-300 text-sm mb-6">
-              {isSignUp ? 'Start organizing your tasks today' : 'Sign in to continue to Trackli'}
+              {isSignUp ? `Start ${L.organizing} your tasks today` : 'Sign in to continue to Trackli'}
             </p>
 
             {error && (
