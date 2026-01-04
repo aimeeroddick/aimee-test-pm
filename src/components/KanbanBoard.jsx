@@ -9736,6 +9736,19 @@ export default function KanbanBoard({ demoMode = false }) {
   // Create welcome project for new users
   const createWelcomeProject = async () => {
     try {
+      // Double-check: prevent duplicate creation at database level
+      const { data: existingProject } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', 'Getting Started with Trackli')
+        .maybeSingle()
+      
+      if (existingProject) {
+        console.log('Welcome project already exists, skipping creation')
+        return
+      }
+      
       const today = new Date().toISOString().split('T')[0]
       const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
       const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
