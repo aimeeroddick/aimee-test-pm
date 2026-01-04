@@ -7082,9 +7082,8 @@ export default function KanbanBoard({ demoMode = false }) {
                     </select>
                     <button
                       onClick={handleBulkToggleCritical}
-                      className="px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white rounded-lg text-sm font-medium transition-colors"
-                      title="Toggle critical flag"
-                     className="flex items-center gap-1.5">
+                      className="px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                      title="Toggle critical flag">
                       {TaskCardIcons.flag("w-4 h-4")} Critical
                     </button>
                     <button
