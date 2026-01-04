@@ -9272,6 +9272,7 @@ export default function KanbanBoard({ demoMode = false }) {
   })
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false)
   const [showArchivedProjects, setShowArchivedProjects] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
@@ -12100,21 +12101,66 @@ export default function KanbanBoard({ demoMode = false }) {
             
             {/* Desktop Filter Bar */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max overflow-x-auto">
-              {/* Project dropdown */}
+              {/* Project dropdown - custom component for colors */}
               <div className="relative">
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                <button
+                  onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+                  className="flex items-center gap-2 pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                 >
-                  <option value="all">📁 All Projects</option>
-                  {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
-                    <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
-                  ))}
-                </select>
+                  {selectedProjectId === 'all' ? (
+                    <>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#9CA3AF">
+                        <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                      </svg>
+                      <span>All Projects</span>
+                    </>
+                  ) : (() => {
+                    const p = projects.find(proj => proj.id === selectedProjectId)
+                    return p ? (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill={p.color || DEFAULT_PROJECT_COLOR}>
+                          <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                        </svg>
+                        <span className="truncate max-w-[120px]">{p.name}</span>
+                      </>
+                    ) : 'Select Project'
+                  })()}
+                </button>
                 <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
+                
+                {/* Dropdown menu */}
+                {projectDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProjectDropdownOpen(false)} />
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
+                      <button
+                        onClick={() => { setSelectedProjectId('all'); setProjectDropdownOpen(false) }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedProjectId === 'all' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'}`}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#9CA3AF">
+                          <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                        </svg>
+                        All Projects
+                        {selectedProjectId === 'all' && <svg className="w-4 h-4 ml-auto text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                      </button>
+                      {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedProjectId(p.id); setProjectDropdownOpen(false) }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedProjectId === p.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'}`}
+                        >
+                          <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill={p.archived ? '#9CA3AF' : (p.color || DEFAULT_PROJECT_COLOR)}>
+                            <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                          </svg>
+                          <span className="truncate">{p.name}</span>
+                          {selectedProjectId === p.id && <svg className="w-4 h-4 ml-auto flex-shrink-0 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               
               <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
