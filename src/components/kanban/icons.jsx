@@ -113,3 +113,22 @@ export const TaskCardIcons = {
     </svg>
   ),
 }
+
+export const MenuIcons = {
+  myday: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="12" y1="3" x2="12" y2="5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
+      ))}
+    </svg>
+  ),
+  lightbulb: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <path d="M12 2 C8 2 5 5 5 9 C5 12 7 14 8 15 L8 18 L16 18 L16 15 C17 14 19 12 19 9 C19 5 16 2 12 2 Z" fill="#FCD34D" />
+      <rect x="9" y="19" width="6" height="2" rx="1" fill="#F59E0B" />
+      <rect x="10" y="21" width="4" height="1" rx="0.5" fill="#D97706" />
+      <path d="M9 9 L12 12 L15 9" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    </svg>
+  ),
+}

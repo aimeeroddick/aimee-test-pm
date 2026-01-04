@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { ENERGY_LEVELS } from '../constants'
 import { getDueDateStatus, isBlocked, formatDate } from '../utils'
-import { TaskCardIcons } from '../icons'
+import { TaskCardIcons, MenuIcons } from '../icons'
 import { GreetingIcon, EmptyState } from '../ui/EmptyState'
 
 
