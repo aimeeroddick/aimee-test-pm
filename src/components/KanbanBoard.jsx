@@ -11671,7 +11671,7 @@ export default function KanbanBoard({ demoMode = false }) {
             
             {/* Center: Logo */}
             {/* Mobile: Small icon + name */}
-            <div className="flex sm:hidden items-center gap-2">
+            <div className="flex xl:hidden items-center gap-2">
               <div className="w-9 h-9">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
