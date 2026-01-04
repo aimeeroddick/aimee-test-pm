@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import { supabase } from '../lib/supabase'
+import { logError } from '../lib/errorLogger'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -13,27 +13,10 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     // Log to Supabase
-    this.logError(error, errorInfo)
-  }
-
-  async logError(error, errorInfo) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      await supabase.from('error_logs').insert({
-        user_id: user?.id || null,
-        user_email: user?.email || 'anonymous',
-        error_message: error?.message || 'Unknown error',
-        error_stack: error?.stack || '',
-        component_stack: errorInfo?.componentStack || '',
-        url: window.location.href,
-        user_agent: navigator.userAgent,
-        timestamp: new Date().toISOString(),
-        app_version: '2.11.44'
-      })
-    } catch (e) {
-      console.error('Failed to log error:', e)
-    }
+    logError(error, { 
+      type: 'crash', 
+      componentStack: errorInfo?.componentStack 
+    })
   }
 
   handleReload = () => {
