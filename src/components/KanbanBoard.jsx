@@ -3706,7 +3706,7 @@ const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEdi
   return (
     <div
       onClick={handleClick}
-      className={`relative p-2.5 rounded-lg border shadow-md cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ${
+      className={`relative p-2.5 rounded-lg border shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
         highlight === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
         highlight === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
         highlight === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
@@ -5389,7 +5389,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
   return (
     <div
       onClick={() => onEditTask(task)}
-      className={`group relative p-4 rounded-xl shadow-md select-none transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
+      className={`group relative p-4 rounded-xl shadow-sm select-none transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${
         isCompleted 
           ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' 
           : blocked 
@@ -6838,8 +6838,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       onDragStart={handleCardDragStart}
       onDragEnd={handleCardDragEnd}
       onClick={handleCardClick}
-      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-md border cursor-pointer transition-all duration-200 group hover:z-[100] ${
-        isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-lg'
+      className={`task-card relative rounded-lg p-2 sm:p-2.5 shadow-sm border cursor-pointer transition-all duration-200 group hover:z-[100] ${
+        isDragging ? 'opacity-30 scale-95 ring-2 ring-dashed ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'hover:-translate-y-1 hover:shadow-md'
       } ${
         !isDragging && isDone ? 'opacity-60 bg-white dark:bg-gray-800' : 
         !isDragging && isOverdue ? 'bg-red-50 dark:bg-red-900/40' :
@@ -6854,7 +6854,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
         readyToStart ? 'border-green-200 dark:border-green-800 hover:border-green-300' :
         'border-gray-100 dark:border-gray-700 hover:border-gray-200'
       }`}
-      style={{ borderLeftWidth: '3px', borderLeftColor: accentColor }}
+      style={{ borderLeftWidth: '2px', borderLeftColor: accentColor }}
     >
       {/* Hover Popup Bubble - Hidden on mobile and during drag */}
       {hasExtraInfo && !anyDragging && (
@@ -7179,7 +7179,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`${isMobileFullWidth ? 'w-full' : 'flex-1 min-w-[200px] sm:min-w-[240px] max-w-[350px]'} bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 sm:p-4 border border-gray-200/50 dark:border-gray-700/50 transition-all duration-200 overflow-visible ${
+      className={`${isMobileFullWidth ? 'w-full' : 'flex-1 min-w-[200px] sm:min-w-[240px] max-w-[350px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.01]' : ''
       }`}
       onDragOver={(e) => {
