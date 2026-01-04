@@ -555,9 +555,13 @@ export default function LandingPage() {
             
             {/* Screenshot */}
             <img 
-              src="/screenshots/board.png" 
-              alt="Trackli Kanban Board" 
-              className="relative w-full rounded-2xl shadow-2xl"
+            src="/screenshots/board.png" 
+            alt="Trackli Kanban Board"
+            className="relative w-full rounded-2xl shadow-2xl"
+              fetchpriority="high"
+              decoding="async"
+              width={1363}
+              height={460}
             />
           </div>
         </div>
