@@ -7379,6 +7379,8 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 // Task Modal Component
 const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer }) => {
   const fileInputRef = useRef(null)
+  const startDateRef = useRef(null)
+  const dueDateRef = useRef(null)
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
@@ -8005,8 +8007,15 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     placeholder="YYYY-MM-DD"
                     className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
-                  <label className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <label 
+                    className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      startDateRef.current?.showPicker?.()
+                    }}
+                  >
                     <input
+                      ref={startDateRef}
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
@@ -8090,12 +8099,19 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                           : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
                     }`}
                   />
-                  <label className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
+                  <label 
+                    className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
                     isOverdue
                       ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
                       : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}>
+                  }`}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      dueDateRef.current?.showPicker?.()
+                    }}
+                  >
                     <input
+                      ref={dueDateRef}
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
