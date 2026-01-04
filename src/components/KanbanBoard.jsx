@@ -5428,9 +5428,14 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <div>
                 <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Time</label>
                 <input
-                  type="time"
+                  type="text"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
+                  onBlur={(e) => {
+                    const parsed = parseFlexibleTime(e.target.value)
+                    if (parsed) setScheduleTime(parsed)
+                  }}
+                  placeholder="e.g. 9am, 230pm, 14:30"
                   className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   style={{ fontSize: '16px' }}
                 />
