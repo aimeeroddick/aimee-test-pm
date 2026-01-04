@@ -101,6 +101,22 @@ const CUSTOMER_COLORS = [
   { bg: '#CFFAFE', text: '#0891B2', border: '#67E8F9' },
 ]
 
+// Project folder colors
+const PROJECT_COLORS = [
+  { id: 'amber', color: '#F59E0B', label: 'Amber' },
+  { id: 'orange', color: '#F97316', label: 'Orange' },
+  { id: 'red', color: '#EF4444', label: 'Red' },
+  { id: 'pink', color: '#EC4899', label: 'Pink' },
+  { id: 'purple', color: '#A855F7', label: 'Purple' },
+  { id: 'indigo', color: '#6366F1', label: 'Indigo' },
+  { id: 'blue', color: '#3B82F6', label: 'Blue' },
+  { id: 'cyan', color: '#06B6D4', label: 'Cyan' },
+  { id: 'teal', color: '#14B8A6', label: 'Teal' },
+  { id: 'green', color: '#22C55E', label: 'Green' },
+]
+
+const DEFAULT_PROJECT_COLOR = '#F59E0B' // Amber
+
 const getCustomerColor = (customerName) => {
   if (!customerName) return null
   // Auto-assigned color based on name
@@ -8850,19 +8866,20 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
 
 // Project Modal Component
 const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm }) => {
-  const [formData, setFormData] = useState({ name: '', members: [], customers: [] })
+  const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
   
   useEffect(() => {
     if (project) {
       setFormData({ 
-        name: project.name, 
+        name: project.name,
+        color: project.color || DEFAULT_PROJECT_COLOR,
         members: [...(project.members || [])],
         customers: [...(project.customers || [])],
       })
     } else {
-      setFormData({ name: '', members: [], customers: [] })
+      setFormData({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
     }
     setNewMember('')
     setNewCustomer('')
@@ -8921,6 +8938,22 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
             className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             placeholder="Enter project name"
           />
+        </div>
+        
+        <div>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project Color</label>
+          <div className="flex flex-wrap gap-2">
+            {PROJECT_COLORS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setFormData({ ...formData, color: c.color })}
+                className={`w-8 h-8 rounded-lg transition-all ${formData.color === c.color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-105'}`}
+                style={{ backgroundColor: c.color }}
+                title={c.label}
+              />
+            ))}
+          </div>
         </div>
         
         <div>
@@ -10353,7 +10386,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (projectData.id) {
         const { error: updateError } = await supabase
           .from('projects')
-          .update({ name: projectData.name })
+          .update({ name: projectData.name, color: projectData.color })
           .eq('id', projectData.id)
         
         if (updateError) throw updateError
@@ -10375,7 +10408,7 @@ export default function KanbanBoard({ demoMode = false }) {
       } else {
         const { data: newProject, error: insertError } = await supabase
           .from('projects')
-          .insert({ name: projectData.name, user_id: user.id })
+          .insert({ name: projectData.name, color: projectData.color, user_id: user.id })
           .select()
           .single()
         
@@ -12468,7 +12501,12 @@ export default function KanbanBoard({ demoMode = false }) {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between sm:justify-start gap-2">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{project.name}</h4>
+                              <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill={project.color || DEFAULT_PROJECT_COLOR}>
+                                  <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                                </svg>
+                                <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{project.name}</h4>
+                              </div>
                               {/* Mobile: Edit button inline with title */}
                               <button
                                 onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
