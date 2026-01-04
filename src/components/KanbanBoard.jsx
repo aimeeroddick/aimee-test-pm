@@ -8974,10 +8974,10 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add team member"
             />
-            <button type="button" onClick={addMember} className="px-4 py-2.5 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors">
+            <button type="button" onClick={addMember} className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-sm">
               Add
             </button>
-            <button type="button" onClick={addJustMe} className="px-4 py-2.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-xl hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors font-medium">
+            <button type="button" onClick={addJustMe} className="px-3 py-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors text-sm font-medium">
               Just Me
             </button>
           </div>
@@ -9006,7 +9006,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add customer/client"
             />
-            <button type="button" onClick={addCustomer} className="px-4 py-2.5 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
+            <button type="button" onClick={addCustomer} className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm">
               Add
             </button>
           </div>
@@ -11844,7 +11844,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 active:bg-teal-700 transition-all text-sm font-medium items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 shadow-sm hover:shadow"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-emerald-600 active:from-teal-700 active:to-emerald-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-teal-500/25 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11890,7 +11890,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 active:bg-amber-700 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 shadow-sm hover:shadow"
+                className="hidden sm:flex px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-amber-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                 title="Import Meeting Notes (⌘N)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
