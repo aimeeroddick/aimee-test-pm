@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { ENERGY_LEVELS } from '../constants'
 import { getDueDateStatus, isBlocked, formatDate } from '../utils'
 import { TaskCardIcons } from '../icons'
+import { GreetingIcon, EmptyState } from '../ui/EmptyState'
 
 
 const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay, showReorder = false, isFirst = false, isLast = false, onMoveUp, onMoveDown }) => {
