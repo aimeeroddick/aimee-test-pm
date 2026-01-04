@@ -3277,10 +3277,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       )}
       
       {/* Card Content */}
-      <div className="flex flex-col">
+      <div className={`flex flex-col ${bulkSelectMode ? 'pl-5' : ''}`}>
         {/* Bulk select checkbox */}
         {bulkSelectMode && (
-          <div className="absolute top-1 left-1 z-10">
+          <div className="absolute top-2 left-1.5 z-10">
             <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
               className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800'}`}>
               {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
