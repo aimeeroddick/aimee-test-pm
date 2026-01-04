@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
 import Modal from '../ui/Modal'
+import AttachmentViewer from '../ui/AttachmentViewer'
 import { 
   CATEGORIES, SOURCES, ENERGY_LEVELS, RECURRENCE_TYPES, 
   DATE_SHORTCUTS, btn, COLUMN_COLORS, COLUMNS 
