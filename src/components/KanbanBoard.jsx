@@ -7158,8 +7158,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </button>
           )}
           
-          {/* Toggle Critical */}
-          {onToggleCritical && (
+          {/* Toggle Critical - not for done tasks */}
+          {onToggleCritical && !isDone && (
             <button
               onClick={(e) => { e.stopPropagation(); onToggleCritical(task.id, !task.critical) }}
               className={`p-1 rounded-full transition-colors ${
