@@ -6,6 +6,47 @@ import { DEMO_PROJECTS, DEMO_TASKS, DEMO_USER, DEMO_MEETING_NOTES } from '../dat
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
+// Locale detection and localization
+const getUserLocale = () => {
+  const lang = navigator.language || navigator.userLanguage || 'en-US'
+  // Check if UK/AU/NZ or other British English variants
+  return /^en-(GB|AU|NZ|IE|ZA|IN)$/i.test(lang) ? 'en-GB' : 'en-US'
+}
+
+const LOCALE = getUserLocale()
+const isUK = LOCALE === 'en-GB'
+
+// Localized strings dictionary
+const L = {
+  // Words with different UK/US spellings
+  organize: isUK ? 'organise' : 'organize',
+  Organize: isUK ? 'Organise' : 'Organize',
+  color: isUK ? 'colour' : 'color',
+  Color: isUK ? 'Colour' : 'Color',
+  colors: isUK ? 'colours' : 'colors',
+  Colors: isUK ? 'Colours' : 'Colors',
+  favorite: isUK ? 'favourite' : 'favorite',
+  Favorite: isUK ? 'Favourite' : 'Favorite',
+  favorites: isUK ? 'favourites' : 'favorites',
+  Favorites: isUK ? 'Favourites' : 'Favorites',
+  customize: isUK ? 'customise' : 'customize',
+  Customize: isUK ? 'Customise' : 'Customize',
+  prioritize: isUK ? 'prioritise' : 'prioritize',
+  Prioritize: isUK ? 'Prioritise' : 'Prioritize',
+  categorize: isUK ? 'categorise' : 'categorize',
+  Categorize: isUK ? 'Categorise' : 'Categorize',
+  recognize: isUK ? 'recognise' : 'recognize',
+  Recognize: isUK ? 'Recognise' : 'Recognize',
+  visualize: isUK ? 'visualise' : 'visualize',
+  Visualize: isUK ? 'Visualise' : 'Visualize',
+  analyze: isUK ? 'analyse' : 'analyze',
+  Analyze: isUK ? 'Analyse' : 'Analyze',
+  center: isUK ? 'centre' : 'center',
+  Center: isUK ? 'Centre' : 'Center',
+  canceled: isUK ? 'cancelled' : 'canceled',
+  Canceled: isUK ? 'Cancelled' : 'Canceled',
+}
+
 // Constants
 const ENERGY_LEVELS = {
   high: { bg: '#FEE2E2', text: '#DC2626', icon: '▰▰▰', label: 'High Effort' },
@@ -2751,7 +2792,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
     projects: [
       {
         title: 'Projects View',
-        description: 'Organize your work into projects. Each project gets its own color that appears on task cards throughout the app.',
+        description: `${L.Organize} your work into projects. Each project gets its own ${L.color} that appears on task cards throughout the app.`,
         iconComponent: 'folder',
       },
       {
@@ -9021,7 +9062,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
-          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project Color</label>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project {L.Color}</label>
           <div className="flex flex-wrap gap-2">
             {PROJECT_COLORS.map((c) => (
               <button
