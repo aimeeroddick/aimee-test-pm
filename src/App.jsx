@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useAuth } from './contexts/AuthContext'
@@ -7,6 +7,17 @@ import Login from './components/Login'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
 import UpdateNotification from './components/UpdateNotification'
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  
+  return null
+}
 
 // Lazy load heavy components
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
@@ -78,6 +89,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes>
         {/* Public routes */}
         <Route 
