@@ -6913,8 +6913,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '2px', borderLeftColor: accentColor }}
     >
-      {/* Hover Popup Bubble - Hidden on mobile and during drag */}
-      {hasExtraInfo && !anyDragging && (
+      {/* Hover Popup Bubble - Hidden on mobile, during drag, and for done tasks */}
+      {hasExtraInfo && !anyDragging && !isDone && (
         <div className={`hidden md:block absolute top-0 z-[200] w-52 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
           task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
         }`}>
@@ -7158,8 +7158,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             </button>
           )}
           
-          {/* Toggle Critical */}
-          {onToggleCritical && (
+          {/* Toggle Critical - not for done tasks */}
+          {onToggleCritical && !isDone && (
             <button
               onClick={(e) => { e.stopPropagation(); onToggleCritical(task.id, !task.critical) }}
               className={`p-1 rounded-full transition-colors ${
@@ -7257,7 +7257,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
           {tasks.length}
         </span>
       </div>
-      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-300`}>
+      <div className={`${isMobileFullWidth ? 'hidden' : 'flex'} items-center gap-2 mb-4 ml-6 text-xs text-gray-500 dark:text-gray-300 min-h-[16px]`}>
         {totalMinutes > 0 && <span>{formatTimeEstimate(totalMinutes)}</span>}
         {column.id !== 'done' && criticalCount > 0 && <span className="text-red-500">{criticalCount} critical</span>}
         {column.id === 'backlog' && readyCount > 0 && <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>}
@@ -11681,14 +11681,14 @@ export default function KanbanBoard({ demoMode = false }) {
                             setNavMenuOpen(false)
                           }}
                           disabled={projects.length === 0}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                          className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                         >
                           {MenuIcons.importNotes()}
                           <span className="font-medium">Import Notes</span>
                         </button>
                         <button
                           onClick={() => { setFeedbackModalOpen(true); setNavMenuOpen(false) }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           {MenuIcons.feedback()}
                           <span className="font-medium">Send Feedback</span>
