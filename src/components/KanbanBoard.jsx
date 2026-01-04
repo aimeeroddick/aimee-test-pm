@@ -7674,6 +7674,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setUseCustomCustomer(isCustomCustomer)
       setCustomCustomer(isCustomCustomer ? task.customer : '')
       setSubtasks(task.subtasks || [])
+      // Auto-expand subtasks section if task has subtasks
+      if (task.subtasks && task.subtasks.length > 0) {
+        setExpandedSections(prev => ({ ...prev, subtasks: true }))
+      }
       setComments(task.comments || [])
     } else {
       // New task - may have prefilled status
