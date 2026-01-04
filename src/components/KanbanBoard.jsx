@@ -2156,10 +2156,10 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
           step === 3 ? 'top-24 left-8' :
-          step === 4 ? 'top-20 right-[340px]' :
-          step === 5 ? 'top-20 right-[260px]' :
-          step === 6 ? 'top-20 right-[180px]' :
-          'top-20 right-[100px]'
+          step === 4 ? 'top-20 right-[180px]' :
+          step === 5 ? 'top-20 right-[100px]' :
+          step === 6 ? 'top-20 right-[40px]' :
+          'top-20 right-0'
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
