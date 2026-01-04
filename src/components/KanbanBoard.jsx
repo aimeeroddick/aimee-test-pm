@@ -7179,7 +7179,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
   
   return (
     <div
-      className={`${isMobileFullWidth ? 'w-full' : 'flex-shrink-0 w-[280px] sm:w-[300px] lg:flex-1 lg:min-w-[300px] lg:max-w-[400px] xl:max-w-[450px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
+      className={`${isMobileFullWidth ? 'w-full' : 'flex-1 min-w-[200px] sm:min-w-[240px] max-w-[350px]'} bg-gray-50/80 dark:bg-gray-800/80 rounded-2xl p-3 sm:p-4 transition-all duration-200 overflow-visible ${
         isDragOver ? 'ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-gray-900 bg-indigo-50/50 dark:bg-indigo-900/20 scale-[1.01]' : ''
       }`}
       onDragOver={(e) => {
