@@ -8865,7 +8865,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
 }
 
 // Project Modal Component
-const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm }) => {
+const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm, user }) => {
   const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
@@ -8906,6 +8906,13 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
   
   const removeMember = (member) => {
     setFormData({ ...formData, members: formData.members.filter((m) => m !== member) })
+  }
+  
+  const addJustMe = () => {
+    const myName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me'
+    if (!formData.members.includes(myName)) {
+      setFormData({ ...formData, members: [...formData.members, myName] })
+    }
   }
   
   const addCustomer = () => {
@@ -8969,6 +8976,9 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
             />
             <button type="button" onClick={addMember} className="px-4 py-2.5 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors">
               Add
+            </button>
+            <button type="button" onClick={addJustMe} className="px-4 py-2.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-xl hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors font-medium">
+              Just Me
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -12971,6 +12981,7 @@ export default function KanbanBoard({ demoMode = false }) {
         onArchive={handleArchiveProject}
         loading={saving}
         onShowConfirm={setConfirmDialog}
+        user={user}
       />
       
       <SearchModal
