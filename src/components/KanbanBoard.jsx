@@ -3051,8 +3051,8 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                           <span>{project?.name}</span>
                           {category && (
                             <>
-                              <span>•</span>
-                              <span style={{ color: category.color }}>{category.label}</span>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="hidden sm:inline" style={{ color: category.color }}>{category.label}</span>
                             </>
                           )}
                           {task.assignee && (
