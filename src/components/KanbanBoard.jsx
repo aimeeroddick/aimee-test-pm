@@ -7824,7 +7824,7 @@ export default function KanbanBoard({ demoMode = false }) {
         fullScreenMobile
       >
         {!showExtractedTasks ? (
-          <div className="flex flex-col space-y-3 h-full">
+          <div className="flex flex-col space-y-3 pb-4">
             {error && (
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
                 {error}
@@ -7902,12 +7902,17 @@ export default function KanbanBoard({ demoMode = false }) {
               
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Date</label>
-                <input
-                  type="date"
-                  value={meetingNotesData.date}
-                  onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={meetingNotesData.date}
+                    onChange={(e) => setMeetingNotesData({ ...meetingNotesData, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm opacity-0 absolute inset-0 cursor-pointer"
+                  />
+                  <div className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl text-sm text-center">
+                    {meetingNotesData.date ? formatDate(meetingNotesData.date) : 'Select date'}
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -7926,7 +7931,7 @@ export default function KanbanBoard({ demoMode = false }) {
             </div>
             
             {/* Meeting Notes */}
-            <div className="flex-1 flex flex-col min-h-0">
+            <div>
               <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Meeting Notes</label>
               <textarea
                 value={meetingNotesData.notes}
@@ -7941,7 +7946,7 @@ Or we can extract from:
 • Action items like 'John to send report by Friday'
 • Email requests like 'Can you send me the report?'
 • TODO: Review the proposal`}
-                className="flex-1 min-h-[120px] sm:min-h-[180px] w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-xs leading-relaxed resize-none"
+                className="min-h-[100px] sm:min-h-[180px] w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-mono text-xs leading-relaxed resize-y"
               />
             </div>
             
