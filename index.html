@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://dtjgpvzrhedbntsepgkv.supabase.co" />
+    <link rel="dns-prefetch" href="https://dtjgpvzrhedbntsepgkv.supabase.co" />
+    
     <!-- Preload critical assets -->
     <link rel="preload" href="/screenshots/board.png" as="image" fetchpriority="high" />
     
@@ -43,9 +47,103 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Trackli" />
     <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Inline Critical CSS for instant loading skeleton -->
+    <style>
+      /* Instant loading skeleton - shows before JS loads */
+      .loading-skeleton {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #eef2ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        .loading-skeleton {
+          background: linear-gradient(135deg, #111827 0%, #111827 50%, #1f2937 100%);
+        }
+        .loading-skeleton .brand-text {
+          background: linear-gradient(90deg, #818cf8, #a78bfa, #f472b6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .loading-skeleton .loading-text {
+          color: #9ca3af;
+        }
+      }
+      .loading-content {
+        text-align: center;
+      }
+      .logo-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+      }
+      .logo-svg {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+      }
+      .pulse-ring {
+        position: absolute;
+        inset: 0;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        opacity: 0.2;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.2; transform: scale(1); }
+        50% { opacity: 0.1; transform: scale(1.05); }
+      }
+      .brand-text {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed, #db2777);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+      }
+      .loading-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant loading skeleton - replaced by React -->
+      <div class="loading-skeleton">
+        <div class="loading-content">
+          <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 56 56" fill="none">
+              <defs>
+                <linearGradient id="lg-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#4F46E5"/>
+                  <stop offset="100%" stop-color="#7C3AED"/>
+                </linearGradient>
+                <linearGradient id="lg-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#9333EA"/>
+                  <stop offset="100%" stop-color="#EC4899"/>
+                </linearGradient>
+              </defs>
+              <path d="M6 18L28 6L28 38L6 26Z" fill="url(#lg-left)"/>
+              <path d="M28 6L50 18L50 46L28 38Z" fill="url(#lg-right)"/>
+              <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+              <path d="M18 20L25 27L38 14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="pulse-ring"></div>
+          </div>
+          <h1 class="brand-text">Trackli</h1>
+          <p class="loading-text">Loading your tasks...</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

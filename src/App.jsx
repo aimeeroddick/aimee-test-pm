@@ -4,13 +4,13 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
-import LandingPage from './components/LandingPage'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
 import UpdateNotification from './components/UpdateNotification'
 
 // Lazy load heavy components
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
+const LandingPage = lazy(() => import('./components/LandingPage'))
 const OutlookAddin = lazy(() => import('./components/OutlookAddin'))
 
 // Loading spinner for lazy components
@@ -75,7 +75,9 @@ function App() {
           path="/welcome" 
           element={
             <PublicRoute>
-              <LandingPage />
+              <Suspense fallback={<LoadingSpinner />}>
+                <LandingPage />
+              </Suspense>
             </PublicRoute>
           } 
         />
