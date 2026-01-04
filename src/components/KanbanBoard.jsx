@@ -3390,7 +3390,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <SectionCard index={2} title="Task Card Indicators">
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border Colors:</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border {L.Colors}:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-red-500"></div><span>Red = Overdue or Critical</span></div>
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-orange-500"></div><span>Orange = Blocked or Due Today</span></div>
