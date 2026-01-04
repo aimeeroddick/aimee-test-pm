@@ -9,8 +9,19 @@ const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 // Locale detection and localization
 const getUserLocale = () => {
   const lang = navigator.language || navigator.userLanguage || 'en-US'
-  // Check if UK/AU/NZ or other British English variants
-  return /^en-(GB|AU|NZ|IE|ZA|IN)$/i.test(lang) ? 'en-GB' : 'en-US'
+  
+  // Check if UK/AU/NZ or other British English variants by language code
+  if (/^en-(GB|AU|NZ|IE|ZA|IN)$/i.test(lang)) return 'en-GB'
+  
+  // Fallback: check timezone for UK/Commonwealth regions
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    if (/^Europe\/(London|Dublin|Belfast)|Australia|Pacific\/(Auckland|Wellington)/i.test(tz)) {
+      return 'en-GB'
+    }
+  } catch (e) {}
+  
+  return 'en-US'
 }
 
 const LOCALE = getUserLocale()
