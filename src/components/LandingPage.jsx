@@ -1212,6 +1212,85 @@ Examples we can extract from:
       </section>
       */}
 
+      {/* FAQ Section */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Frequently Asked Questions</h2>
+          
+          <div className="space-y-6">
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                Is Trackli free?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Yes! Trackli is completely free to use. We're focused on building the best task management experience first. Premium features for teams may be added in the future.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                How does the AI task extraction work?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Paste your meeting notes, emails, or even attach an image of handwritten notes. Our AI analyzes the content and automatically identifies action items, assignees, and due dates - turning chaos into organized tasks in seconds.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                Can I use Trackli on mobile?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Absolutely! Trackli works great on mobile browsers. You can also install it as an app on your phone - just tap "Add to Home Screen" in your browser menu for quick access with voice-to-task support.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                Is my data secure?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Yes. Your data is encrypted and stored securely. We use industry-standard security practices and never share your information with third parties. Your tasks and notes remain private to you.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                Can I share projects with my team?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Team collaboration features are coming soon! Currently Trackli is designed for individual productivity, but shared projects and team workflows are on our roadmap. Join the waitlist above to be notified when it launches.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                Does Trackli integrate with my calendar?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                Calendar integration is coming soon! You'll be able to see your tasks alongside calendar events and schedule tasks directly. Sign up for the waitlist to get notified when it's ready.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                How do I import tasks from other apps?
+                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </summary>
+              <div className="px-6 pb-6 text-gray-600">
+                You can use the Notes feature to paste tasks from anywhere - just copy your task list from another app and our AI will parse it into individual tasks. Dedicated import from popular apps like Todoist and Asana is on our roadmap.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
       </main>
 
       {/* Footer */}
