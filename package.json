@@ -2,7 +2,7 @@
   "name": "trackli",
   "productName": "Trackli",
   "private": true,
-  "version": "2.11.38",
+  "version": "2.11.39",
   "type": "module",
   "description": "Modern task management for busy professionals",
   "author": "Trackli <hello@gettrackli.com>",
