@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { L } from '../lib/locale'
@@ -8804,8 +8805,8 @@ Or we can extract from:
         <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
           <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-500 transition-colors">Trackli</a>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
-          <a href="https://gettrackli.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Privacy</a>
-          <a href="https://gettrackli.com/terms" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Terms</a>
+          <Link to="/privacy" className="hover:text-indigo-500 transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-indigo-500 transition-colors">Terms</Link>
           <a href="mailto:support@gettrackli.com" className="hover:text-indigo-500 transition-colors">Contact</a>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
           <span className="text-gray-400 dark:text-gray-500">© {new Date().getFullYear()}</span>
