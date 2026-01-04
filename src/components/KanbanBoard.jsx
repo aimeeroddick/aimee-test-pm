@@ -585,6 +585,63 @@ const ColumnEmptyIcons = {
   ),
 }
 
+// Task Card Icons - SVG replacements for emojis (cross-platform consistency)
+const TaskCardIcons = {
+  // My Day sun - replaces sun emoji
+  sun: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        <line key={i} x1="12" y1="2" x2="12" y2="5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
+      ))}
+    </svg>
+  ),
+  // Critical flag - replaces flag emoji
+  flag: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <path d="M4 21V4" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 4h12l-3 4 3 4H4" fill="#EF4444" />
+    </svg>
+  ),
+  // Blocked lock - replaces lock emoji
+  lock: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <rect x="5" y="11" width="14" height="10" rx="2" fill="#F97316" />
+      <path d="M8 11V7a4 4 0 018 0v4" stroke="#EA580C" strokeWidth="2" fill="none" />
+      <circle cx="12" cy="16" r="1.5" fill="#FED7AA" />
+    </svg>
+  ),
+  // Recurring - replaces repeat emoji
+  repeat: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <path d="M17 2l4 4-4 4" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M3 11V9a4 4 0 014-4h14" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <path d="M7 22l-4-4 4-4" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M21 13v2a4 4 0 01-4 4H3" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" fill="none" />
+    </svg>
+  ),
+  // Timer - replaces timer emoji
+  timer: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="13" r="8" fill="#E0E7FF" stroke="#6366F1" strokeWidth="1.5" />
+      <path d="M12 9v4l2.5 2.5" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M10 2h4" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 2v2" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+  // Calendar - replaces calendar emoji
+  calendar: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="#FEE2E2" />
+      <rect x="3" y="5" width="18" height="5" rx="2" fill="#EF4444" />
+      <circle cx="7" cy="3" r="1.5" fill="#DC2626" />
+      <circle cx="17" cy="3" r="1.5" fill="#DC2626" />
+      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+    </svg>
+  ),
+}
+
 // Toast Component for undo actions
 const Toast = ({ message, action, actionLabel, onClose, duration = 5000, type = 'info' }) => {
   useEffect(() => {
@@ -2248,7 +2305,7 @@ const AddToMyDayAnimation = () => (
       <circle cx="108" cy="52" r="10" fill="#FEF3C7">
         <animate attributeName="r" values="10;12;10" dur="1.5s" repeatCount="indefinite" />
       </circle>
-      <text x="108" y="56" textAnchor="middle" fontSize="12">☀️</text>
+      <text x="108" y="56" textAnchor="middle" fontSize="10" fill="#F59E0B">✦</text>
       {/* Click ripple effect */}
       <circle cx="108" cy="52" r="10" fill="none" stroke="#F59E0B" strokeWidth="2">
         <animate attributeName="r" values="10;20;20" dur="1.5s" repeatCount="indefinite" />
@@ -2263,7 +2320,7 @@ const AddToMyDayAnimation = () => (
     
     {/* My Day area */}
     <rect x="150" y="10" width="120" height="100" rx="8" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="2" />
-    <text x="210" y="26" textAnchor="middle" fontSize="10" fill="#D97706" fontWeight="bold">☀️ My Day</text>
+    <text x="210" y="26" textAnchor="middle" fontSize="10" fill="#D97706" fontWeight="bold">✦ My Day</text>
     
     {/* Task appearing in My Day */}
     <rect x="158" y="36" width="104" height="32" rx="6" fill="#FDE68A">
@@ -3033,7 +3090,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   const tabs = [
     { id: 'tasks', label: 'Tasks', icon: '✨', color: 'from-pink-500 to-rose-500' },
     { id: 'board', label: 'Board', icon: '📋', color: 'from-orange-500 to-amber-500' },
-    { id: 'myday', label: 'My Day', icon: '☀️', color: 'from-yellow-500 to-orange-500' },
+    { id: 'myday', label: 'My Day', icon: 'sun', color: 'from-yellow-500 to-orange-500' },
     { id: 'calendar', label: 'Calendar', icon: '🗓', color: 'from-green-500 to-emerald-500' },
     { id: 'alltasks', label: 'All Tasks', icon: '🗃️', color: 'from-blue-500 to-cyan-500' },
     { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️', color: 'from-purple-500 to-indigo-500' },
@@ -3153,7 +3210,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                       { name: 'Customer', desc: 'Client/customer for the task' },
                       { name: 'Assignee', desc: "Who's responsible" },
                       { name: 'Category', desc: 'Type of work' },
-                      { name: '🚩 Critical', desc: 'Flag as high priority' },
+                      { name: 'Critical', desc: 'Flag as high priority', icon: 'flag' },
                     ].map((field, i) => (
                       <div key={i} className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                         <p className="font-semibold text-gray-700 dark:text-gray-200">{field.name}</p>
@@ -3174,7 +3231,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <SectionCard index={3} title="Dependencies (Blocking)">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• In the task editor, use "Blocked By" to select tasks that must be completed first</p>
-                    <p>• Blocked tasks show with 🔒 and an orange border</p>
+                    <p className="flex items-center gap-1">• Blocked tasks show with {TaskCardIcons.lock("w-4 h-4 inline")} and an orange border</p>
                     <p>• When the blocking task is completed, the blocked task becomes "ready to start"</p>
                   </div>
                 </SectionCard>
@@ -3183,7 +3240,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• Set a recurrence pattern: Daily, Weekly, Bi-weekly, Monthly</p>
                     <p>• When completed, a new instance is automatically created</p>
-                    <p>• Recurring tasks show 🔁 on the card</p>
+                    <p className="flex items-center gap-1">• Recurring tasks show {TaskCardIcons.repeat("w-4 h-4 inline")} on the card</p>
                   </div>
                 </SectionCard>
                 
@@ -3255,8 +3312,8 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                       <div className="flex flex-wrap gap-2 text-sm">
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-700 rounded-lg font-medium">▶ Start</span>
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg font-medium">✓ Done</span>
-                        <span className="px-2.5 py-1.5 bg-gradient-to-r from-red-100 to-orange-100 text-red-700 rounded-lg font-medium">🚩 Critical</span>
-                        <span className="px-2.5 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 rounded-lg font-medium">☀️ My Day</span>
+                        <span className="px-2.5 py-1.5 bg-gradient-to-r from-red-100 to-orange-100 text-red-700 rounded-lg font-medium flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} Critical</span>
+                        <span className="px-2.5 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 rounded-lg font-medium flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} My Day</span>
                       </div>
                     </div>
                   </div>
@@ -3276,13 +3333,13 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Icons & Badges:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-300">
-                        <div>🚩 = Critical/Flagged</div>
-                        <div>🔒 = Blocked by another task</div>
-                        <div>🔁 = Recurring task</div>
-                        <div>☀️ = In My Day</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} = Critical/Flagged</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.lock("w-4 h-4")} = Blocked by another task</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.repeat("w-4 h-4")} = Recurring task</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} = In My Day</div>
                         <div>▶ = Start date</div>
                         <div>🗓 = Due date</div>
-                        <div>⏱ = Time estimate</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.timer("w-4 h-4")} = Time estimate</div>
                         <div>📎 = Has attachments</div>
                       </div>
                     </div>
@@ -3295,10 +3352,10 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
                       <p className="text-sm text-gray-700 mb-2">Click any stat in the summary bar to filter:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <div><span className="text-red-600 font-medium">🚩 Critical</span> – Flagged tasks</div>
+                        <div className="flex items-center gap-1"><span className="text-red-600 font-medium flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} Critical</span> – Flagged tasks</div>
                         <div><span className="text-orange-600 font-medium">Due Today</span> – Due today</div>
                         <div><span className="text-red-600 font-medium">Overdue</span> – Past due date</div>
-                        <div><span className="text-amber-600 font-medium">☀️ My Day</span> – Daily focus tasks</div>
+                        <div className="flex items-center gap-1"><span className="text-amber-600 font-medium flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} My Day</span> – Daily focus tasks</div>
                       </div>
                     </div>
                     <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
@@ -3313,7 +3370,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {/* My Day Tab */}
             {activeTab === 'myday' && (
               <>
-                <SectionCard index={0} title="What is My Day?" icon="☀️">
+                <SectionCard index={0} title="What is My Day?" icon="sun">
                   <p className="text-gray-800 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
                 </SectionCard>
                 
@@ -3325,14 +3382,14 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     </div>
                     <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
                       <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Manually added:</p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the ☀️ button on any task in Recommendations to add it to your focus list</p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the sun button on any task in Recommendations to add it to your focus list</p>
                     </div>
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={2} title="Sun Icon on Cards (☀️)">
+                <SectionCard index={2} title="Sun Icon on Cards">
                   <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
-                    <p className="text-gray-700 dark:text-gray-300">Tasks in your My Day list show a <span className="text-lg">☀️</span> sun icon on their card in the board view. This helps you quickly identify your daily focus tasks while browsing the board.</p>
+                    <p className="text-gray-700 dark:text-gray-300">Tasks in your My Day list show a sun icon on their card in the board view. This helps you quickly identify your daily focus tasks while browsing the board.</p>
                   </div>
                 </SectionCard>
                 
@@ -3449,7 +3506,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               <>
                 <SectionCard index={0} title="Navigation Shortcuts" icon="🧭">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <KeyboardShortcut label="My Day View" keys={`${shortcutModifier}D`} icon="☀️" />
+                    <KeyboardShortcut label="My Day View" keys={`${shortcutModifier}D`} icon="sun" />
                     <KeyboardShortcut label="Board View" keys={`${shortcutModifier}B`} icon="📋" />
                     <KeyboardShortcut label="Calendar View" keys={`${shortcutModifier}L`} icon="🗓" />
                     <KeyboardShortcut label="All Tasks View" keys={`${shortcutModifier}A`} icon="🗃️" />
@@ -3725,10 +3782,10 @@ const CalendarSidebarTaskCard = ({ task, highlight, onSelectForScheduling, onEdi
         />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-            {task.critical && '🚩 '}{task.title}
+            {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
           </p>
           <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-300">
-            {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
+            {task.time_estimate && <span className="flex items-center gap-0.5">{TaskCardIcons.timer("w-3 h-3")}{formatTimeEstimate(task.time_estimate)}</span>}
             {task.due_date && (
               <span className="flex items-center gap-0.5">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -4352,7 +4409,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                   }`}
                   title={task.title}
                 >
-                  {task.critical && '🚩 '}{task.title}
+                  {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
                 </div>
               )
             })}
@@ -4730,10 +4787,10 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-              {task.critical && '🚩 '}{task.title}
+              {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-500 dark:text-gray-300">
-              {task.time_estimate && <span>⏱{formatTimeEstimate(task.time_estimate)}</span>}
+              {task.time_estimate && <span className="flex items-center gap-0.5">{TaskCardIcons.timer("w-3 h-3")}{formatTimeEstimate(task.time_estimate)}</span>}
               {task.due_date && <span>🗓{formatDate(task.due_date)}</span>}
             </div>
           </div>
@@ -4746,7 +4803,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
           style={{ left: touchPos.x - 100, top: touchPos.y - 30 }}
         >
           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-            {task.critical && '🚩 '}{task.title}
+            {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
           </p>
         </div>
       )}
@@ -4901,7 +4958,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             <div className="flex items-start justify-between gap-1">
                               <div className="truncate text-[11px]">
                                 {isOverlapping && <span title="Time conflict">⚠️ </span>}
-                                {task.critical && '🚩 '}{task.title}
+                                {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
                               </div>
                               {/* Quick action buttons - grouped on right */}
                               <div className="flex items-center gap-0.5 shrink-0">
@@ -4967,7 +5024,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 <p className="text-sm text-gray-400 dark:text-gray-300 text-center py-8">All caught up!</p>
               ) : (
                 <>
-                  <Section title="My Day" icon="☀️" tasks={schedulable.myDay} highlight="amber" />
+                  <Section title="My Day" icon="sun" tasks={schedulable.myDay} highlight="amber" />
                   <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
                   <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
                   <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
@@ -5078,7 +5135,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               title={task.title}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="truncate">{task.critical && '🚩'}{task.title}</span>
+                                <span className="truncate">{task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")}</>}{task.title}</span>
                                 {/* Quick action buttons - grouped on right */}
                                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   {/* Start button - only show if not started */}
@@ -5261,7 +5318,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         <h4 className={`font-medium ${
                           task.status === 'done' ? 'text-gray-400 line-through' : 'text-gray-800'
                         }`}>
-                          {task.critical && '🚩 '}{task.title}
+                          {task.critical && <>{TaskCardIcons.flag("w-3 h-3 inline mr-0.5")} </>}{task.title}
                         </h4>
                         <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                           {project && <span>{project.name}</span>}
@@ -5457,8 +5514,8 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
             <h4 className={`font-medium text-sm leading-tight ${
               isCompleted ? 'text-gray-400 dark:text-gray-300 line-through' : 'text-gray-800 dark:text-gray-100'
             }`}>
-              {task.critical && !isCompleted && <span className="text-red-500 mr-1">🚩</span>}
-              {blocked && !isCompleted && <span className="text-orange-500 mr-1">🔒</span>}
+              {task.critical && !isCompleted && <span className="mr-1">{TaskCardIcons.flag("w-3.5 h-3.5")}</span>}
+              {blocked && !isCompleted && <span className="mr-1">{TaskCardIcons.lock("w-3.5 h-3.5")}</span>}
               {task.title}
             </h4>
             
@@ -6939,13 +6996,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           <div className="flex items-center gap-1">
             {/* My Day sun at start of title */}
             {inMyDay && !isDone && (
-              <span className="text-xs flex-shrink-0" title="In My Day">☀️</span>
+              <span title="In My Day" className="flex-shrink-0">{TaskCardIcons.sun("w-3.5 h-3.5")}</span>
             )}
             {isOverdue && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-red-100 dark:bg-red-500/80 text-red-700 dark:text-white flex-shrink-0">OVERDUE</span>}
             {isDueToday && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-100 dark:bg-amber-500/80 text-amber-700 dark:text-white flex-shrink-0">TODAY</span>}
-            {blocked && <span title="Blocked" className="text-xs flex-shrink-0">🔒</span>}
-            {task.critical && <span title="Critical" className="text-xs flex-shrink-0">🚩</span>}
-            {recurrence && <span title={recurrence.label} className="text-xs flex-shrink-0">🔁</span>}
+            {blocked && <span title="Blocked" className="flex-shrink-0">{TaskCardIcons.lock()}</span>}
+            {task.critical && <span title="Critical" className="flex-shrink-0">{TaskCardIcons.flag()}</span>}
+            {recurrence && <span title={recurrence.label} className="flex-shrink-0">{TaskCardIcons.repeat()}</span>}
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
@@ -6990,7 +7047,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
             {task.time_estimate && (
               <span className="flex items-center gap-0.5">
-                <span>⏱</span> {formatTimeEstimate(task.time_estimate)}
+                {TaskCardIcons.timer("w-3 h-3")} {formatTimeEstimate(task.time_estimate)}
               </span>
             )}
             {energyStyle && (
@@ -8063,8 +8120,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 ring-2 ring-red-300 dark:ring-red-700'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
-              >
-                🚩 Critical
+               className="flex items-center gap-1.5">
+                {TaskCardIcons.flag("w-4 h-4")} Critical
               </button>
               
               <button
@@ -8075,8 +8132,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-300 dark:ring-blue-700'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
-              >
-                🔁 Recurring
+               className="flex items-center gap-1.5">
+                {TaskCardIcons.repeat("w-4 h-4")} Recurring
               </button>
             </div>
             
@@ -8575,7 +8632,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                             {COLUMNS.find(c => c.id === depTask.status)?.title}
                           </span>
                           {depTask.critical && (
-                            <span className="text-xs text-red-500 dark:text-red-400">🚩</span>
+                            <span className="text-red-500 dark:text-red-400">{TaskCardIcons.flag("w-3 h-3")}</span>
                           )}
                         </div>
                       </div>
@@ -10887,7 +10944,7 @@ export default function KanbanBoard({ demoMode = false }) {
       
       // Show notification
       if (myDayDate && new Date(myDayDate).toDateString() === new Date().toDateString()) {
-        showNotification(`☀️ Added "${task?.title}" to My Day`)
+        showNotification(`Added "${task?.title}" to My Day`)
       }
     } catch (error) {
       console.error('Error updating my_day_date:', error)
@@ -10984,7 +11041,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (error) throw error
       
       setTasks(tasks.map(t => t.id === taskId ? { ...t, critical } : t))
-      showNotification(critical ? "🚩 Marked as critical" : "✓ Critical flag removed")
+      showNotification(critical ? "Marked as critical" : "Critical flag removed")
     } catch (err) {
       console.error('Error toggling critical:', err)
       setError(err.message)
@@ -11904,7 +11961,7 @@ export default function KanbanBoard({ demoMode = false }) {
                           filterCritical ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
-                        🚩 Critical ({criticalCount})
+                        <span className="flex items-center gap-1">{TaskCardIcons.flag("w-3.5 h-3.5")} Critical ({criticalCount})</span>
                       </button>
                       <button
                         onClick={() => setFilterDueToday(!filterDueToday)}
@@ -11928,7 +11985,7 @@ export default function KanbanBoard({ demoMode = false }) {
                           filterMyDay ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
-                        ☀️ My Day ({myDayCount})
+                        <span className="flex items-center gap-1">{TaskCardIcons.sun("w-3.5 h-3.5")} My Day ({myDayCount})</span>
                       </button>
                     </div>
                   </div>
@@ -12032,7 +12089,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
-                  <span>🚩</span>
+                  {TaskCardIcons.flag("w-4 h-4")}
                   <span className="hidden sm:inline">Critical</span>
                   {(filterCritical || criticalCount > 0) && (
                     <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterCritical ? 'bg-white/20' : 'bg-red-100 dark:bg-red-900/50'}`}>{criticalCount}</span>
@@ -12085,7 +12142,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
                   }`}
                 >
-                  <span>☀️</span>
+                  {TaskCardIcons.sun("w-4 h-4")}
                   <span className="hidden sm:inline">My Day</span>
                   {(filterMyDay || myDayCount > 0) && (
                     <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterMyDay ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-900/50'}`}>{myDayCount}</span>
@@ -12323,8 +12380,8 @@ export default function KanbanBoard({ demoMode = false }) {
                       onClick={handleBulkToggleCritical}
                       className="px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white rounded-lg text-sm font-medium transition-colors"
                       title="Toggle critical flag"
-                    >
-                      🚩 Critical
+                     className="flex items-center gap-1.5">
+                      {TaskCardIcons.flag("w-4 h-4")} Critical
                     </button>
                     <button
                       onClick={handleBulkDelete}
@@ -12910,7 +12967,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                <span className="text-xl">☀️</span>
+                {TaskCardIcons.sun("w-6 h-6")}
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Your daily focus list - some tasks are already there!</p>
@@ -12977,7 +13034,7 @@ export default function KanbanBoard({ demoMode = false }) {
           <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <span className="text-xl">🔁</span>
+                {TaskCardIcons.repeat("w-6 h-6")}
               </div>
               <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Delete Recurring Task</h3>
             </div>
@@ -13564,7 +13621,7 @@ Or we can extract from:
           <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl sm:mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800">
               <div>
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">☀️ Plan Your Day</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">{TaskCardIcons.sun("w-6 h-6")} Plan Your Day</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Pick tasks to focus on today</p>
               </div>
               <button
@@ -13631,7 +13688,7 @@ Or we can extract from:
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            {task.critical && <span className="text-red-500">🚩</span>}
+                            {task.critical && <span className="text-red-500">{TaskCardIcons.flag("w-3.5 h-3.5")}</span>}
                             {isReady && <span className="text-green-500">✓</span>}
                             <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{task.title}</span>
                           </div>
