@@ -3199,13 +3199,13 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Viewing Attachments:</p>
-                      <div className="space-y-1 text-sm text-gray-500">
+                      <div className="space-y-1 text-sm text-gray-700">
                         <p>• Click any attachment to open the viewer</p>
                         <p>• PDFs display inline with page navigation</p>
                         <p>• Use ← → arrow keys to navigate</p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">💡 Tasks with attachments show a 📎 icon with count</p>
+                    <p className="text-sm text-gray-700">💡 Tasks with attachments show a 📎 icon with count</p>
                   </div>
                 </SectionCard>
               </>
@@ -3215,23 +3215,23 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {activeTab === 'board' && (
               <>
                 <SectionCard index={0} title="Kanban Columns">
-                  <p className="text-gray-600 dark:text-gray-300 mb-3">Tasks flow through four columns representing their status:</p>
+                  <p className="text-gray-800 dark:text-gray-300 mb-3">Tasks flow through four columns representing their status:</p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div className="p-3 rounded-xl border-l-4 border-gray-400 bg-gray-100 dark:bg-gray-800">
                       <span className="font-semibold text-gray-700 dark:text-gray-200">Backlog</span>
-                      <p className="text-xs text-gray-500">Future work</p>
+                      <p className="text-xs text-gray-700">Future work</p>
                     </div>
                     <div className="p-3 rounded-xl border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30">
                       <span className="font-semibold text-blue-700 dark:text-blue-300">To Do</span>
-                      <p className="text-xs text-gray-500">Ready to start</p>
+                      <p className="text-xs text-gray-700">Ready to start</p>
                     </div>
                     <div className="p-3 rounded-xl border-l-4 border-pink-500 bg-pink-50 dark:bg-pink-900/30">
                       <span className="font-semibold text-pink-700 dark:text-pink-300">In Progress</span>
-                      <p className="text-xs text-gray-500">Active work</p>
+                      <p className="text-xs text-gray-700">Active work</p>
                     </div>
                     <div className="p-3 rounded-xl border-l-4 border-slate-500 bg-slate-100 dark:bg-slate-800">
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Done</span>
-                      <p className="text-xs text-gray-500">Completed</p>
+                      <p className="text-xs text-gray-700">Completed</p>
                     </div>
                   </div>
                   <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
@@ -3243,7 +3243,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click Actions:</p>
-                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                      <div className="space-y-1 text-sm text-gray-800 dark:text-gray-300">
                         <p>• <strong>Click card</strong> – Open task to edit all details</p>
                         <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
                         <p>• <strong>Double-click title</strong> – Edit title inline (desktop)</p>
@@ -3251,7 +3251,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Hover Actions (Desktop):</p>
-                      <p className="text-sm text-gray-500 mb-2">Hover over a card to reveal quick action buttons:</p>
+                      <p className="text-sm text-gray-700 mb-2">Hover over a card to reveal quick action buttons:</p>
                       <div className="flex flex-wrap gap-2 text-sm">
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-700 rounded-lg font-medium">▶ Start</span>
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg font-medium">✓ Done</span>
@@ -3275,7 +3275,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Icons & Badges:</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-300">
                         <div>🚩 = Critical/Flagged</div>
                         <div>🔒 = Blocked by another task</div>
                         <div>🔁 = Recurring task</div>
@@ -3293,7 +3293,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
-                      <p className="text-sm text-gray-500 mb-2">Click any stat in the summary bar to filter:</p>
+                      <p className="text-sm text-gray-700 mb-2">Click any stat in the summary bar to filter:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div><span className="text-red-600 font-medium">🚩 Critical</span> – Flagged tasks</div>
                         <div><span className="text-orange-600 font-medium">Due Today</span> – Due today</div>
@@ -3314,18 +3314,18 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {activeTab === 'myday' && (
               <>
                 <SectionCard index={0} title="What is My Day?" icon="☀️">
-                  <p className="text-gray-600 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
+                  <p className="text-gray-800 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
                 </SectionCard>
                 
                 <SectionCard index={1} title="How Tasks Appear in My Day">
                   <div className="space-y-3">
                     <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200 dark:border-green-700">
                       <p className="font-semibold text-green-600 dark:text-green-400 mb-1">Auto-included:</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Tasks with a start date of today or earlier automatically appear in My Day</p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Tasks with a start date of today or earlier automatically appear in My Day</p>
                     </div>
                     <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
                       <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Manually added:</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Click the ☀️ button on any task in Recommendations to add it to your focus list</p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the ☀️ button on any task in Recommendations to add it to your focus list</p>
                     </div>
                   </div>
                 </SectionCard>
@@ -3337,17 +3337,17 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </SectionCard>
                 
                 <SectionCard index={3} title="Recommendations & All Tasks">
-                  <p className="text-gray-600 dark:text-gray-300 mb-3">The Recommendations section shows tasks organized by urgency:</p>
+                  <p className="text-gray-800 dark:text-gray-300 mb-3">The Recommendations section shows tasks organized by urgency:</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><span className="font-semibold text-red-600">🔴 Overdue</span><p className="text-sm text-gray-500">Past due date</p></div>
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl"><span className="font-semibold text-orange-600">🟠 Due Today</span><p className="text-sm text-gray-500">Due today</p></div>
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl"><span className="font-semibold text-yellow-600">🟡 Due Soon</span><p className="text-sm text-gray-500">Due in next 3 days</p></div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><span className="font-semibold text-green-600">🟢 Quick Wins</span><p className="text-sm text-gray-500">Low effort tasks</p></div>
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><span className="font-semibold text-red-600">🔴 Overdue</span><p className="text-sm text-gray-700">Past due date</p></div>
+                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl"><span className="font-semibold text-orange-600">🟠 Due Today</span><p className="text-sm text-gray-700">Due today</p></div>
+                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl"><span className="font-semibold text-yellow-600">🟡 Due Soon</span><p className="text-sm text-gray-700">Due in next 3 days</p></div>
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><span className="font-semibold text-green-600">🟢 Quick Wins</span><p className="text-sm text-gray-700">Low effort tasks</p></div>
                   </div>
                 </SectionCard>
                 
                 <SectionCard index={4} title="Daily Reset">
-                  <p className="text-gray-600 dark:text-gray-300">Manually added tasks clear from My Day at midnight, giving you a fresh start each day.</p>
+                  <p className="text-gray-800 dark:text-gray-300">Manually added tasks clear from My Day at midnight, giving you a fresh start each day.</p>
                 </SectionCard>
               </>
             )}
@@ -3356,7 +3356,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {activeTab === 'calendar' && (
               <>
                 <SectionCard index={0} title="Calendar View" icon="🗓">
-                  <p className="text-gray-600 dark:text-gray-300">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}L</kbd>.</p>
+                  <p className="text-gray-800 dark:text-gray-300">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}L</kbd>.</p>
                 </SectionCard>
                 
                 <SectionCard index={1} title="View Modes">
@@ -3364,17 +3364,17 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
                       <span className="text-3xl">📅</span>
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Daily</p>
-                      <p className="text-xs text-gray-500">Single day view</p>
+                      <p className="text-xs text-gray-700">Single day view</p>
                     </div>
                     <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
                       <span className="text-3xl">📆</span>
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Weekly</p>
-                      <p className="text-xs text-gray-500">7-day overview</p>
+                      <p className="text-xs text-gray-700">7-day overview</p>
                     </div>
                     <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
                       <span className="text-3xl">🗓️</span>
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Monthly</p>
-                      <p className="text-xs text-gray-500">Full month grid</p>
+                      <p className="text-xs text-gray-700">Full month grid</p>
                     </div>
                   </div>
                 </SectionCard>
@@ -3383,11 +3383,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click the Calendar Button:</p>
-                      <p className="text-sm text-gray-500">Click the 🗓 button on any task to schedule it.</p>
+                      <p className="text-sm text-gray-700">Click the 🗓 button on any task to schedule it.</p>
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Duration:</p>
-                      <p className="text-sm text-gray-500">Set the Time Estimate to control how tall tasks appear on the calendar.</p>
+                      <p className="text-sm text-gray-700">Set the Time Estimate to control how tall tasks appear on the calendar.</p>
                     </div>
                   </div>
                 </SectionCard>
@@ -3396,15 +3396,15 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl text-center">
                       <span className="text-xl">▶</span>
-                      <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Start task</p>
+                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Start task</p>
                     </div>
                     <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl text-center">
                       <span className="text-xl">✓</span>
-                      <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Mark done</p>
+                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Mark done</p>
                     </div>
                     <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 rounded-xl text-center">
                       <span className="text-xl">✕</span>
-                      <p className="text-gray-600 dark:text-gray-300 text-xs mt-1">Remove</p>
+                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Remove</p>
                     </div>
                   </div>
                 </SectionCard>
@@ -3415,15 +3415,15 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {activeTab === 'alltasks' && (
               <>
                 <SectionCard index={0} title="All Tasks View" icon="🗃️">
-                  <p className="text-gray-600 dark:text-gray-300">Access all your tasks in a powerful table format. Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}A</kbd>.</p>
+                  <p className="text-gray-800 dark:text-gray-300">Access all your tasks in a powerful table format. Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}A</kbd>.</p>
                 </SectionCard>
                 
                 <SectionCard index={1} title="Sorting">
-                  <p className="text-gray-600 dark:text-gray-300">Click any column header to sort. Click again to reverse order.</p>
+                  <p className="text-gray-800 dark:text-gray-300">Click any column header to sort. Click again to reverse order.</p>
                 </SectionCard>
                 
                 <SectionCard index={2} title="Filtering">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                  <div className="space-y-2 text-gray-800 dark:text-gray-300">
                     <p>• Click <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium">Filters</span> to show filter inputs</p>
                     <p>• Type to filter any column</p>
                     <p>• Click <span className="text-red-600 font-medium">Clear Filters</span> to reset</p>
@@ -3469,7 +3469,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </SectionCard>
                 
                 <SectionCard index={2} title="Quick Actions" icon="🖱️">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                  <div className="space-y-2 text-gray-800 dark:text-gray-300">
                     <p>• <strong>Click task</strong> – Open task editor</p>
                     <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
                     <p>• <strong>Drag task</strong> – Move between columns on board</p>
@@ -3484,7 +3484,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         
         {/* Footer */}
         <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-850 dark:to-gray-800 flex justify-between items-center gap-2">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-700">
             Need more help? <a href="mailto:support@gettrackli.com" className="text-indigo-500 hover:text-indigo-600 hover:underline font-medium">Contact support</a>
           </p>
           <button
@@ -11518,7 +11518,7 @@ export default function KanbanBoard({ demoMode = false }) {
       <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-3 items-center">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -11670,8 +11670,9 @@ export default function KanbanBoard({ demoMode = false }) {
             </div>
             
             {/* Center: Logo */}
+            <div className="justify-self-center">
             {/* Mobile: Small icon + name */}
-            <div className="flex xl:hidden items-center gap-2">
+              <div className="flex xl:hidden items-center gap-2">
               <div className="w-9 h-9">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
@@ -11695,7 +11696,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </span>
             </div>
             {/* Desktop: Centered logo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 hidden xl:flex items-center gap-2.5">
+              <div className="hidden xl:flex items-center gap-2.5">
               <div className="w-9 h-9 sm:w-10 sm:h-10">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
@@ -11719,8 +11720,9 @@ export default function KanbanBoard({ demoMode = false }) {
               </h1>
             </div>
             
+            </div>
             {/* Right: Action Buttons */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 justify-self-end">
               {/* Utility buttons - icon only */}
               
               
