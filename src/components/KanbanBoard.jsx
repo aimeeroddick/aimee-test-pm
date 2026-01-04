@@ -6913,8 +6913,8 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       }`}
       style={{ borderLeftWidth: '2px', borderLeftColor: accentColor }}
     >
-      {/* Hover Popup Bubble - Hidden on mobile and during drag */}
-      {hasExtraInfo && !anyDragging && (
+      {/* Hover Popup Bubble - Hidden on mobile, during drag, and for done tasks */}
+      {hasExtraInfo && !anyDragging && !isDone && (
         <div className={`hidden md:block absolute top-0 z-[200] w-52 p-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
           task.status === 'done' ? 'right-full mr-2' : 'left-full ml-2'
         }`}>
