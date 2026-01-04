@@ -3370,7 +3370,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {/* My Day Tab */}
             {activeTab === 'myday' && (
               <>
-                <SectionCard index={0} title="What is My Day?" icon="sun">
+                <SectionCard index={0} title="What is My Day?" icon={TaskCardIcons.sun("w-4 h-4")}>
                   <p className="text-gray-800 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
                 </SectionCard>
                 
@@ -3506,7 +3506,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               <>
                 <SectionCard index={0} title="Navigation Shortcuts" icon="🧭">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <KeyboardShortcut label="My Day View" keys={`${shortcutModifier}D`} icon="sun" />
+                    <KeyboardShortcut label="My Day View" keys={`${shortcutModifier}D`} icon={TaskCardIcons.sun("w-4 h-4")} />
                     <KeyboardShortcut label="Board View" keys={`${shortcutModifier}B`} icon="📋" />
                     <KeyboardShortcut label="Calendar View" keys={`${shortcutModifier}L`} icon="🗓" />
                     <KeyboardShortcut label="All Tasks View" keys={`${shortcutModifier}A`} icon="🗃️" />
@@ -5024,7 +5024,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 <p className="text-sm text-gray-400 dark:text-gray-300 text-center py-8">All caught up!</p>
               ) : (
                 <>
-                  <Section title="My Day" icon="sun" tasks={schedulable.myDay} highlight="amber" />
+                  <Section title="My Day" icon={TaskCardIcons.sun("w-3.5 h-3.5")} tasks={schedulable.myDay} highlight="amber" />
                   <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
                   <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
                   <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
