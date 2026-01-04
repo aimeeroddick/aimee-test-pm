@@ -2122,6 +2122,12 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'bottom',
     },
     {
+      target: 'quick-add',
+      title: 'Quick Add ⚡',
+      description: `Press Q (or ${shortcut.replace('T', 'Q')}) for instant task creation! Type naturally like "Call mom tomorrow" and dates are parsed automatically. Includes voice input - just click the mic.`,
+      position: 'bottom',
+    },
+    {
       target: 'notes',
       title: 'Meeting Notes → Tasks',
       description: 'Click Notes to quickly capture meeting notes - type, paste, or even speak! AI extracts action items as tasks automatically.',
@@ -2150,9 +2156,10 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
           step === 3 ? 'top-24 left-8' :
-          step === 4 ? 'top-20 right-48' :
-          step === 5 ? 'top-20 right-32' :
-          'top-20 right-24'
+          step === 4 ? 'top-20 right-[180px]' :
+          step === 5 ? 'top-20 right-[100px]' :
+          step === 6 ? 'top-20 right-[40px]' :
+          'top-20 right-0'
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
@@ -3685,7 +3692,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Quick Add Task</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Q</kbd>
+                    <div className="flex gap-1 items-center">
+                      <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Q</kbd>
+                      <span className="text-gray-400 text-xs">or</span>
+                      <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}Q</kbd>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
@@ -9606,8 +9617,8 @@ export default function KanbanBoard({ demoMode = false }) {
         return
       }
       
-      // q for quick add (no modifier needed)
-      if (e.key === 'q') {
+      // q for quick add (no modifier needed) OR Cmd/Ctrl/Alt + Q
+      if (e.key === 'q' || (modifier && e.key === 'q')) {
         e.preventDefault()
         if (projects.length > 0) {
           setQuickAddProject(projects[0]?.id || '')
@@ -12007,6 +12018,23 @@ export default function KanbanBoard({ demoMode = false }) {
               
               <button
                 onClick={() => {
+                  if (projects.length > 0) {
+                    setQuickAddProject(projects[0]?.id || '')
+                    setQuickAddOpen(true)
+                  }
+                }}
+                disabled={projects.length === 0}
+                className="hidden sm:flex px-2 py-1.5 sm:py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg sm:rounded-xl hover:from-cyan-600 hover:to-blue-600 active:from-cyan-700 active:to-blue-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-cyan-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                title={`Quick Add (Q or ${shortcutModifier}Q) - with voice support`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="hidden lg:inline"><u>Q</u>uick</span>
+              </button>
+              
+              <button
+                onClick={() => {
                   setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
                   setExtractedTasks([])
                   setShowExtractedTasks(false)
@@ -12019,7 +12047,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <span className="hidden sm:inline">Notes</span>
+                <span className="hidden sm:inline"><u>N</u>otes</span>
               </button>
               
               <button
@@ -13155,6 +13183,13 @@ export default function KanbanBoard({ demoMode = false }) {
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Your daily focus list - some tasks are already there!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <span className="text-xl">⚡</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Press Q for Quick Add</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Add tasks instantly with voice or type naturally like "Call mom tomorrow"</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
