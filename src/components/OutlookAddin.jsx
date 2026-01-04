@@ -232,6 +232,7 @@ export default function OutlookAddin() {
     const { data: projectsData } = await supabase
       .from('projects')
       .select('*')
+      .neq('archived', true)
       .order('created_at', { ascending: false })
     
     if (projectsData && projectsData.length > 0) {

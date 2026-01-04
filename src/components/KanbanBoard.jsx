@@ -7664,6 +7664,10 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         recurrence_end_date: task.recurrence_end_date || '',
       })
       setAttachments(task.attachments || [])
+      // Auto-expand notes/attachments section if task has attachments or notes
+      if ((task.attachments && task.attachments.length > 0) || task.notes) {
+        setExpandedSections(prev => ({ ...prev, more: true }))
+      }
       setSelectedDependencies(task.dependencies?.map(d => d.depends_on_id) || [])
       setUseCustomAssignee(isCustomAssignee)
       setCustomAssignee(isCustomAssignee ? task.assignee : '')
