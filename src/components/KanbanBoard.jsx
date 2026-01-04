@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { L } from '../lib/locale'
@@ -3277,10 +3278,10 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
       )}
       
       {/* Card Content */}
-      <div className="flex flex-col">
+      <div className={`flex flex-col ${bulkSelectMode ? 'pl-5' : ''}`}>
         {/* Bulk select checkbox */}
         {bulkSelectMode && (
-          <div className="absolute top-1 left-1 z-10">
+          <div className="absolute top-2 left-1.5 z-10">
             <button onClick={(e) => { e.stopPropagation(); onToggleSelect?.(task.id) }}
               className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800'}`}>
               {isSelected && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -6459,7 +6460,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
                 className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-emerald-600 active:from-teal-700 active:to-emerald-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-teal-500/25 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-                title="⌘P"
+                title={`${shortcutModifier}P`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -8804,8 +8805,8 @@ Or we can extract from:
         <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
           <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-500 transition-colors">Trackli</a>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
-          <a href="https://gettrackli.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Privacy</a>
-          <a href="https://gettrackli.com/terms" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">Terms</a>
+          <Link to="/privacy" className="hover:text-indigo-500 transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-indigo-500 transition-colors">Terms</Link>
           <a href="mailto:support@gettrackli.com" className="hover:text-indigo-500 transition-colors">Contact</a>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
           <span className="text-gray-400 dark:text-gray-500">© {new Date().getFullYear()}</span>

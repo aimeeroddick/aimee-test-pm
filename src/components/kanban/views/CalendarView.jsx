@@ -1304,9 +1304,9 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
         <div className="w-full lg:w-72 lg:shrink-0">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2">
-              <span>🗓</span> Schedule Tasks
+                            {TaskCardIcons.calendar("w-5 h-5")} Schedule Tasks
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-300 mb-4">Click 🗓 to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-4 flex items-center gap-1 flex-wrap">Click {TaskCardIcons.calendar("w-3.5 h-3.5 inline")} to set date & time{isToday ? ' • Auto-adds to My Day' : ''}</p>
             
             <div className="max-h-[600px] overflow-y-auto pr-1">
               {totalSchedulable === 0 ? (
@@ -1314,13 +1314,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               ) : (
                 <>
                   <Section title="My Day" icon={TaskCardIcons.sun("w-3.5 h-3.5")} tasks={schedulable.myDay} highlight="amber" />
-                  <Section title="In Progress" icon="🟣" tasks={schedulable.inProgress} highlight="pink" />
-                  <Section title="To Do" icon="📋" tasks={schedulable.todo} highlight="blue" />
-                  <Section title="Backlog" icon="📦" tasks={schedulable.backlog} highlight="gray" />
-                  <Section title="Overdue" icon="🔴" tasks={schedulable.overdue} highlight="red" />
-                  <Section title="Due Today" icon="🟠" tasks={schedulable.dueToday} highlight="orange" />
-                  <Section title="Due Soon" icon="🟡" tasks={schedulable.dueSoon} highlight="yellow" />
-                  <Section title="Quick Wins" icon="⚡" tasks={schedulable.quickWins} highlight="green" />
+                  <Section title="In Progress" icon={TaskCardIcons.inProgress("w-3.5 h-3.5")} tasks={schedulable.inProgress} highlight="pink" />
+                  <Section title="To Do" icon={TaskCardIcons.todo("w-3.5 h-3.5")} tasks={schedulable.todo} highlight="blue" />
+                  <Section title="Backlog" icon={TaskCardIcons.backlog("w-3.5 h-3.5")} tasks={schedulable.backlog} highlight="gray" />
+                  <Section title="Overdue" icon={TaskCardIcons.overdue("w-3.5 h-3.5")} tasks={schedulable.overdue} highlight="red" />
+                  <Section title="Due Today" icon={TaskCardIcons.dueToday("w-3.5 h-3.5")} tasks={schedulable.dueToday} highlight="orange" />
+                  <Section title="Due Soon" icon={TaskCardIcons.dueSoon("w-3.5 h-3.5")} tasks={schedulable.dueSoon} highlight="yellow" />
+                  <Section title="Quick Wins" icon={TaskCardIcons.quickWins("w-3.5 h-3.5")} tasks={schedulable.quickWins} highlight="green" />
                 </>
               )}
             </div>

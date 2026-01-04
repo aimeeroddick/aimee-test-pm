@@ -104,12 +104,57 @@ export const TaskCardIcons = {
   ),
   calendar: (className = "w-3.5 h-3.5") => (
     <svg viewBox="0 0 24 24" className={className}>
-      <rect x="3" y="5" width="18" height="16" rx="2" fill="#FEE2E2" />
-      <rect x="3" y="5" width="18" height="5" rx="2" fill="#EF4444" />
-      <circle cx="7" cy="3" r="1.5" fill="#DC2626" />
-      <circle cx="17" cy="3" r="1.5" fill="#DC2626" />
-      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
-      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="#FCA5A5" />
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
+      <rect x="3" y="5" width="18" height="5" fill="#3B82F6" />
+      <path d="M7 3v4M17 3v4" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
+      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="#93C5FD" />
+      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="#93C5FD" />
+      <rect x="15" y="12" width="3" height="2" rx="0.5" fill="#93C5FD" />
+      <rect x="6" y="16" width="3" height="2" rx="0.5" fill="#93C5FD" />
+    </svg>
+  ),
+  inProgress: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="9" fill="#FCE7F3" stroke="#EC4899" strokeWidth="1.5" />
+      <path d="M12 7v5l3 3" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  todo: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <rect x="4" y="3" width="16" height="18" rx="2" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
+      <path d="M8 8h8M8 12h6M8 16h4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  backlog: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <rect x="3" y="6" width="18" height="14" rx="2" fill="#F3F4F6" stroke="#9CA3AF" strokeWidth="1.5" />
+      <rect x="3" y="6" width="18" height="4" fill="#D1D5DB" />
+      <path d="M8 12h8M8 15h5" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  overdue: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="9" fill="#FEE2E2" stroke="#EF4444" strokeWidth="1.5" />
+      <path d="M12 7v5" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="16" r="1.5" fill="#EF4444" />
+    </svg>
+  ),
+  dueToday: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="9" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
+      <path d="M12 7v5l3 2" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  dueSoon: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="9" fill="#FEF9C3" stroke="#EAB308" strokeWidth="1.5" />
+      <path d="M12 8v4l2 2" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  ),
+  quickWins: (className = "w-3.5 h-3.5") => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="9" fill="#D1FAE5" stroke="#10B981" strokeWidth="1.5" />
+      <path d="M13 6l-4 6h6l-4 6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   ),
 }
