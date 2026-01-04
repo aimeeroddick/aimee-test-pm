@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -12,6 +12,9 @@ import UpdateNotification from './components/UpdateNotification'
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
 const LandingPage = lazy(() => import('./components/LandingPage'))
 const OutlookAddin = lazy(() => import('./components/OutlookAddin'))
+
+// Prefetch KanbanBoard in background after initial render
+const prefetchKanbanBoard = () => import('./components/KanbanBoard')
 
 // Loading spinner for lazy components
 const LoadingSpinner = () => (
@@ -67,6 +70,12 @@ function PublicRoute({ children }) {
 }
 
 function App() {
+  // Prefetch KanbanBoard after initial paint for faster navigation
+  useEffect(() => {
+    const timer = setTimeout(prefetchKanbanBoard, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <>
       <Routes>
