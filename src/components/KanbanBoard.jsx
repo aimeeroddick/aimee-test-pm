@@ -3266,7 +3266,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border Colors:</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-red-500"></div><span>Red = Overdue or Critical</span></div>
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-orange-500"></div><span>Orange = Blocked or Due Today</span></div>
                         <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-green-500"></div><span>Green = Ready to Start</span></div>
@@ -3294,7 +3294,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
                       <p className="text-sm text-gray-700 mb-2">Click any stat in the summary bar to filter:</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
                         <div><span className="text-red-600 font-medium">🚩 Critical</span> – Flagged tasks</div>
                         <div><span className="text-orange-600 font-medium">Due Today</span> – Due today</div>
                         <div><span className="text-red-600 font-medium">Overdue</span> – Past due date</div>
