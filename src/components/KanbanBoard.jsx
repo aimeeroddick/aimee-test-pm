@@ -7377,7 +7377,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer }) => {
   const fileInputRef = useRef(null)
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -7414,6 +7414,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [customAssignee, setCustomAssignee] = useState('')
   const [useCustomCustomer, setUseCustomCustomer] = useState(false)
   const [customCustomer, setCustomCustomer] = useState('')
+  const [isAddingNewCustomer, setIsAddingNewCustomer] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState('')
   const [pasteMessage, setPasteMessage] = useState('')
   const [subtasks, setSubtasks] = useState([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
@@ -7553,6 +7555,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setCustomAssignee('')
       setUseCustomCustomer(false)
       setCustomCustomer('')
+      setIsAddingNewCustomer(false)
+      setNewCustomerName('')
       setSubtasks([])
       setComments([])
     }
@@ -7758,13 +7762,60 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Customer/Client</label>
-                {!useCustomCustomer ? (
+                {isAddingNewCustomer ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCustomerName}
+                      onChange={(e) => setNewCustomerName(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter' && newCustomerName.trim()) {
+                          e.preventDefault()
+                          const savedName = await onAddCustomer(formData.project_id, newCustomerName)
+                          if (savedName) {
+                            setFormData({ ...formData, customer: savedName })
+                            setIsAddingNewCustomer(false)
+                            setNewCustomerName('')
+                          }
+                        }
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="New customer name"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (newCustomerName.trim()) {
+                          const savedName = await onAddCustomer(formData.project_id, newCustomerName)
+                          if (savedName) {
+                            setFormData({ ...formData, customer: savedName })
+                            setIsAddingNewCustomer(false)
+                            setNewCustomerName('')
+                          }
+                        }
+                      }}
+                      className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingNewCustomer(false); setNewCustomerName('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : !useCustomCustomer ? (
                   <select
                     value={formData.customer}
                     onChange={(e) => {
                       if (e.target.value === '__other__') {
                         setUseCustomCustomer(true)
                         setFormData({ ...formData, customer: '' })
+                      } else if (e.target.value === '__add_new__') {
+                        setIsAddingNewCustomer(true)
                       } else {
                         setFormData({ ...formData, customer: e.target.value })
                       }
@@ -7775,7 +7826,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     {selectedProject?.customers?.map((cust) => (
                       <option key={cust} value={cust}>{cust}</option>
                     ))}
-                    <option value="__other__">Other (enter name)</option>
+                    <option value="__other__">Other (one-time name)</option>
+                    <option value="__add_new__">+ Add new customer</option>
                   </select>
                 ) : (
                   <div className="flex gap-2">
@@ -7784,7 +7836,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       value={customCustomer}
                       onChange={(e) => setCustomCustomer(e.target.value)}
                       className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      placeholder="Customer name"
+                      placeholder="Customer name (one-time)"
                     />
                     <button
                       type="button"
@@ -10664,6 +10716,38 @@ export default function KanbanBoard({ demoMode = false }) {
     setSelectedTaskIds(new Set())
   }
 
+  // Add customer to project
+  const handleAddCustomerToProject = async (projectId, customerName) => {
+    if (!projectId || !customerName.trim()) return null
+    
+    try {
+      // Check if customer already exists in this project
+      const project = projects.find(p => p.id === projectId)
+      if (project?.customers?.includes(customerName.trim())) {
+        return customerName.trim() // Already exists, just return it
+      }
+      
+      // Insert into database
+      const { error } = await supabase
+        .from('project_customers')
+        .insert({ project_id: projectId, name: customerName.trim() })
+      
+      if (error) throw error
+      
+      // Update local state
+      setProjects(projects.map(p => 
+        p.id === projectId 
+          ? { ...p, customers: [...(p.customers || []), customerName.trim()] }
+          : p
+      ))
+      
+      return customerName.trim()
+    } catch (err) {
+      console.error('Error adding customer:', err)
+      return null
+    }
+  }
+
   // Task CRUD
   const handleSaveTask = async (taskData, newFiles = [], existingAttachments = []) => {
     setSaving(true)
@@ -13017,6 +13101,7 @@ export default function KanbanBoard({ demoMode = false }) {
         onDelete={handleDeleteTask}
         loading={saving}
         onShowConfirm={setConfirmDialog}
+        onAddCustomer={handleAddCustomerToProject}
       />
       
       <ProjectModal
