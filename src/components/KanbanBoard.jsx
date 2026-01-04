@@ -11999,6 +11999,23 @@ export default function KanbanBoard({ demoMode = false }) {
               
               <button
                 onClick={() => {
+                  if (projects.length > 0) {
+                    setQuickAddProject(projects[0]?.id || '')
+                    setQuickAddOpen(true)
+                  }
+                }}
+                disabled={projects.length === 0}
+                className="hidden sm:flex px-2 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg sm:rounded-xl hover:from-yellow-500 hover:to-orange-600 active:from-yellow-600 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-orange-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                title="Quick Add (Q) - with voice support"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="hidden lg:inline">Quick</span>
+              </button>
+              
+              <button
+                onClick={() => {
                   setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
                   setExtractedTasks([])
                   setShowExtractedTasks(false)
@@ -13147,6 +13164,13 @@ export default function KanbanBoard({ demoMode = false }) {
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Your daily focus list - some tasks are already there!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <span className="text-xl">⚡</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Press Q for Quick Add</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Add tasks instantly with voice or type naturally like "Call mom tomorrow"</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
