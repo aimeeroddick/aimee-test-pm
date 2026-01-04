@@ -3088,12 +3088,12 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   ]
   
   const tabs = [
-    { id: 'tasks', label: 'Tasks', icon: '✨', color: 'from-pink-500 to-rose-500' },
-    { id: 'board', label: 'Board', icon: '📋', color: 'from-orange-500 to-amber-500' },
-    { id: 'myday', label: 'My Day', icon: 'sun', color: 'from-yellow-500 to-orange-500' },
-    { id: 'calendar', label: 'Calendar', icon: '🗓', color: 'from-green-500 to-emerald-500' },
-    { id: 'alltasks', label: 'All Tasks', icon: '🗃️', color: 'from-blue-500 to-cyan-500' },
-    { id: 'shortcuts', label: 'Shortcuts', icon: '⌨️', color: 'from-purple-500 to-indigo-500' },
+    { id: 'tasks', label: 'Tasks', icon: () => HelpTabIcons.tasks(), color: 'from-pink-500 to-rose-500' },
+    { id: 'board', label: 'Board', icon: () => HelpTabIcons.board(), color: 'from-orange-500 to-amber-500' },
+    { id: 'myday', label: 'My Day', icon: () => HelpTabIcons.myday(), color: 'from-yellow-500 to-orange-500' },
+    { id: 'calendar', label: 'Calendar', icon: () => HelpTabIcons.calendar(), color: 'from-green-500 to-emerald-500' },
+    { id: 'alltasks', label: 'All Tasks', icon: () => HelpTabIcons.alltasks(), color: 'from-blue-500 to-cyan-500' },
+    { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-purple-500 to-indigo-500' },
   ]
   
   const SectionCard = ({ index, title, children, icon }) => {
@@ -3176,7 +3176,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     : 'text-gray-600 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60'
                 }`}
               >
-                <span className="text-lg">{tab.icon}</span>
+                <span className="text-lg">{tab.icon()}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
