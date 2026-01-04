@@ -2124,7 +2124,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
     {
       target: 'quick-add',
       title: 'Quick Add ⚡',
-      description: 'Press Q anytime for instant task creation! Type naturally like "Call mom tomorrow" and dates are parsed automatically. Includes voice input - just click the mic.',
+      description: `Press Q (or ${shortcut.replace('T', 'Q')}) for instant task creation! Type naturally like "Call mom tomorrow" and dates are parsed automatically. Includes voice input - just click the mic.`,
       position: 'bottom',
     },
     {
@@ -2156,10 +2156,10 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
           step === 3 ? 'top-24 left-8' :
-          step === 4 ? 'top-20 right-64' :
-          step === 5 ? 'top-20 right-48' :
-          step === 6 ? 'top-20 right-32' :
-          'top-20 right-8'
+          step === 4 ? 'top-20 right-[340px]' :
+          step === 5 ? 'top-20 right-[260px]' :
+          step === 6 ? 'top-20 right-[180px]' :
+          'top-20 right-[100px]'
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
@@ -3692,7 +3692,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Quick Add Task</span>
-                    <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Q</kbd>
+                    <div className="flex gap-1 items-center">
+                      <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">Q</kbd>
+                      <span className="text-gray-400 text-xs">or</span>
+                      <kbd className="px-3 py-1 bg-white dark:bg-gray-700 rounded-lg text-sm font-mono shadow-sm">{shortcutModifier}Q</kbd>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <span className="text-gray-700 dark:text-gray-300">Help / Shortcuts</span>
@@ -9605,8 +9609,8 @@ export default function KanbanBoard({ demoMode = false }) {
         return
       }
       
-      // q for quick add (no modifier needed)
-      if (e.key === 'q') {
+      // q for quick add (no modifier needed) OR Cmd/Ctrl/Alt + Q
+      if (e.key === 'q' || (modifier && e.key === 'q')) {
         e.preventDefault()
         if (projects.length > 0) {
           setQuickAddProject(projects[0]?.id || '')
@@ -12013,7 +12017,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 }}
                 disabled={projects.length === 0}
                 className="hidden sm:flex px-2 py-1.5 sm:py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg sm:rounded-xl hover:from-cyan-600 hover:to-blue-600 active:from-cyan-700 active:to-blue-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-cyan-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
-                title="Quick Add (Q) - with voice support"
+                title={`Quick Add (Q or ${shortcutModifier}Q) - with voice support`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
