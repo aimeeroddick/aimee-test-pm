@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { supabase } from '../../../lib/supabase'
 import { COLUMNS, COLUMN_COLORS, CATEGORIES, SOURCES, ENERGY_LEVELS } from '../constants'
