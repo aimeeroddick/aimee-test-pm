@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
+import BetaTester from './components/BetaTester'
 import UpdateNotification from './components/UpdateNotification'
 
 // Scroll to top on route change
@@ -146,6 +147,7 @@ function App() {
         {/* Legal pages (public, no auth needed) */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/beta" element={<BetaTester />} />
         
         {/* Root redirect based on auth status */}
         <Route path="/" element={<RootRedirect />} />
