@@ -101,6 +101,22 @@ const CUSTOMER_COLORS = [
   { bg: '#CFFAFE', text: '#0891B2', border: '#67E8F9' },
 ]
 
+// Project folder colors
+const PROJECT_COLORS = [
+  { id: 'amber', color: '#F59E0B', label: 'Amber' },
+  { id: 'orange', color: '#F97316', label: 'Orange' },
+  { id: 'red', color: '#EF4444', label: 'Red' },
+  { id: 'pink', color: '#EC4899', label: 'Pink' },
+  { id: 'purple', color: '#A855F7', label: 'Purple' },
+  { id: 'indigo', color: '#6366F1', label: 'Indigo' },
+  { id: 'blue', color: '#3B82F6', label: 'Blue' },
+  { id: 'cyan', color: '#06B6D4', label: 'Cyan' },
+  { id: 'teal', color: '#14B8A6', label: 'Teal' },
+  { id: 'green', color: '#22C55E', label: 'Green' },
+]
+
+const DEFAULT_PROJECT_COLOR = '#F59E0B' // Amber
+
 const getCustomerColor = (customerName) => {
   if (!customerName) return null
   // Auto-assigned color based on name
@@ -7361,7 +7377,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 }
 
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer }) => {
   const fileInputRef = useRef(null)
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -7398,6 +7414,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const [customAssignee, setCustomAssignee] = useState('')
   const [useCustomCustomer, setUseCustomCustomer] = useState(false)
   const [customCustomer, setCustomCustomer] = useState('')
+  const [isAddingNewCustomer, setIsAddingNewCustomer] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState('')
   const [pasteMessage, setPasteMessage] = useState('')
   const [subtasks, setSubtasks] = useState([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
@@ -7537,6 +7555,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setCustomAssignee('')
       setUseCustomCustomer(false)
       setCustomCustomer('')
+      setIsAddingNewCustomer(false)
+      setNewCustomerName('')
       setSubtasks([])
       setComments([])
     }
@@ -7742,13 +7762,60 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Customer/Client</label>
-                {!useCustomCustomer ? (
+                {isAddingNewCustomer ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCustomerName}
+                      onChange={(e) => setNewCustomerName(e.target.value)}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter' && newCustomerName.trim()) {
+                          e.preventDefault()
+                          const savedName = await onAddCustomer(formData.project_id, newCustomerName)
+                          if (savedName) {
+                            setFormData({ ...formData, customer: savedName })
+                            setIsAddingNewCustomer(false)
+                            setNewCustomerName('')
+                          }
+                        }
+                      }}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="New customer name"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (newCustomerName.trim()) {
+                          const savedName = await onAddCustomer(formData.project_id, newCustomerName)
+                          if (savedName) {
+                            setFormData({ ...formData, customer: savedName })
+                            setIsAddingNewCustomer(false)
+                            setNewCustomerName('')
+                          }
+                        }
+                      }}
+                      className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingNewCustomer(false); setNewCustomerName('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : !useCustomCustomer ? (
                   <select
                     value={formData.customer}
                     onChange={(e) => {
                       if (e.target.value === '__other__') {
                         setUseCustomCustomer(true)
                         setFormData({ ...formData, customer: '' })
+                      } else if (e.target.value === '__add_new__') {
+                        setIsAddingNewCustomer(true)
                       } else {
                         setFormData({ ...formData, customer: e.target.value })
                       }
@@ -7759,7 +7826,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     {selectedProject?.customers?.map((cust) => (
                       <option key={cust} value={cust}>{cust}</option>
                     ))}
-                    <option value="__other__">Other (enter name)</option>
+                    <option value="__other__">Other (one-time name)</option>
+                    <option value="__add_new__">+ Add new customer</option>
                   </select>
                 ) : (
                   <div className="flex gap-2">
@@ -7768,7 +7836,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       value={customCustomer}
                       onChange={(e) => setCustomCustomer(e.target.value)}
                       className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      placeholder="Customer name"
+                      placeholder="Customer name (one-time)"
                     />
                     <button
                       type="button"
@@ -8849,20 +8917,21 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
 }
 
 // Project Modal Component
-const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm }) => {
-  const [formData, setFormData] = useState({ name: '', members: [], customers: [] })
+const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm, user }) => {
+  const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
   
   useEffect(() => {
     if (project) {
       setFormData({ 
-        name: project.name, 
+        name: project.name,
+        color: project.color || DEFAULT_PROJECT_COLOR,
         members: [...(project.members || [])],
         customers: [...(project.customers || [])],
       })
     } else {
-      setFormData({ name: '', members: [], customers: [] })
+      setFormData({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
     }
     setNewMember('')
     setNewCustomer('')
@@ -8889,6 +8958,13 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
   
   const removeMember = (member) => {
     setFormData({ ...formData, members: formData.members.filter((m) => m !== member) })
+  }
+  
+  const addJustMe = () => {
+    const myName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Me'
+    if (!formData.members.includes(myName)) {
+      setFormData({ ...formData, members: [...formData.members, myName] })
+    }
   }
   
   const addCustomer = () => {
@@ -8924,6 +9000,22 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
         </div>
         
         <div>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project Color</label>
+          <div className="flex flex-wrap gap-2">
+            {PROJECT_COLORS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setFormData({ ...formData, color: c.color })}
+                className={`w-8 h-8 rounded-lg transition-all ${formData.color === c.color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-105'}`}
+                style={{ backgroundColor: c.color }}
+                title={c.label}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div>
           <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Team Members</label>
           <div className="flex gap-2 mb-2">
             <input
@@ -8934,8 +9026,11 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add team member"
             />
-            <button type="button" onClick={addMember} className="px-4 py-2.5 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors">
+            <button type="button" onClick={addMember} className="px-3 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors text-sm">
               Add
+            </button>
+            <button type="button" onClick={addJustMe} className="px-3 py-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors text-sm font-medium">
+              Just Me
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -8963,7 +9058,7 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
               className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               placeholder="Add customer/client"
             />
-            <button type="button" onClick={addCustomer} className="px-4 py-2.5 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors">
+            <button type="button" onClick={addCustomer} className="px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm">
               Add
             </button>
           </div>
@@ -9229,6 +9324,7 @@ export default function KanbanBoard({ demoMode = false }) {
   })
   
   const [selectedProjectId, setSelectedProjectId] = useState('all')
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false)
   const [showArchivedProjects, setShowArchivedProjects] = useState(false)
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [projectModalOpen, setProjectModalOpen] = useState(false)
@@ -10353,7 +10449,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (projectData.id) {
         const { error: updateError } = await supabase
           .from('projects')
-          .update({ name: projectData.name })
+          .update({ name: projectData.name, color: projectData.color })
           .eq('id', projectData.id)
         
         if (updateError) throw updateError
@@ -10375,7 +10471,7 @@ export default function KanbanBoard({ demoMode = false }) {
       } else {
         const { data: newProject, error: insertError } = await supabase
           .from('projects')
-          .insert({ name: projectData.name, user_id: user.id })
+          .insert({ name: projectData.name, color: projectData.color, user_id: user.id })
           .select()
           .single()
         
@@ -10618,6 +10714,38 @@ export default function KanbanBoard({ demoMode = false }) {
   
   const deselectAllTasks = () => {
     setSelectedTaskIds(new Set())
+  }
+
+  // Add customer to project
+  const handleAddCustomerToProject = async (projectId, customerName) => {
+    if (!projectId || !customerName.trim()) return null
+    
+    try {
+      // Check if customer already exists in this project
+      const project = projects.find(p => p.id === projectId)
+      if (project?.customers?.includes(customerName.trim())) {
+        return customerName.trim() // Already exists, just return it
+      }
+      
+      // Insert into database
+      const { error } = await supabase
+        .from('project_customers')
+        .insert({ project_id: projectId, name: customerName.trim() })
+      
+      if (error) throw error
+      
+      // Update local state
+      setProjects(projects.map(p => 
+        p.id === projectId 
+          ? { ...p, customers: [...(p.customers || []), customerName.trim()] }
+          : p
+      ))
+      
+      return customerName.trim()
+    } catch (err) {
+      console.error('Error adding customer:', err)
+      return null
+    }
   }
 
   // Task CRUD
@@ -11800,7 +11928,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-teal-500 text-white rounded-lg sm:rounded-xl hover:bg-teal-600 active:bg-teal-700 transition-all text-sm font-medium items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 shadow-sm hover:shadow"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-emerald-600 active:from-teal-700 active:to-emerald-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-teal-500/25 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 title="⌘P"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11846,7 +11974,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-3 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 active:bg-amber-700 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 shadow-sm hover:shadow"
+                className="hidden sm:flex px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-amber-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                 title="Import Meeting Notes (⌘N)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12056,22 +12184,68 @@ export default function KanbanBoard({ demoMode = false }) {
             , document.body)}
             
             {/* Desktop Filter Bar */}
-            <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max overflow-x-auto">
-              {/* Project dropdown */}
-              <div className="relative">
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="appearance-none pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max">
+              {/* Project dropdown - custom component for colors */}
+              <div className="relative z-50">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setProjectDropdownOpen(!projectDropdownOpen); }}
+                  className="flex items-center gap-2 pl-3 pr-7 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                 >
-                  <option value="all">📁 All Projects</option>
-                  {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
-                    <option key={p.id} value={p.id}>{p.archived ? '📦 ' : '📁 '}{p.name}</option>
-                  ))}
-                </select>
+                  {selectedProjectId === 'all' ? (
+                    <>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#9CA3AF">
+                        <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                      </svg>
+                      <span>All Projects</span>
+                    </>
+                  ) : (() => {
+                    const p = projects.find(proj => proj.id === selectedProjectId)
+                    return p ? (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill={p.color || DEFAULT_PROJECT_COLOR}>
+                          <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                        </svg>
+                        <span className="truncate max-w-[120px]">{p.name}</span>
+                      </>
+                    ) : 'Select Project'
+                  })()}
+                </button>
                 <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
+                
+                {/* Dropdown menu */}
+                {projectDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProjectDropdownOpen(false)} />
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
+                      <button
+                        onClick={() => { setSelectedProjectId('all'); setProjectDropdownOpen(false) }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedProjectId === 'all' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'}`}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#9CA3AF">
+                          <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                        </svg>
+                        All Projects
+                        {selectedProjectId === 'all' && <svg className="w-4 h-4 ml-auto text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                      </button>
+                      {projects.filter(p => !p.archived || showArchivedProjects).map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedProjectId(p.id); setProjectDropdownOpen(false) }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${selectedProjectId === p.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-200'}`}
+                        >
+                          <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill={p.archived ? '#9CA3AF' : (p.color || DEFAULT_PROJECT_COLOR)}>
+                            <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                          </svg>
+                          <span className="truncate">{p.name}</span>
+                          {selectedProjectId === p.id && <svg className="w-4 h-4 ml-auto flex-shrink-0 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               
               <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
@@ -12468,7 +12642,12 @@ export default function KanbanBoard({ demoMode = false }) {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between sm:justify-start gap-2">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{project.name}</h4>
+                              <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill={project.color || DEFAULT_PROJECT_COLOR}>
+                                  <path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293L10.293 5.293A1 1 0 009.586 5H5a2 2 0 00-2 2z" />
+                                </svg>
+                                <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{project.name}</h4>
+                              </div>
                               {/* Mobile: Edit button inline with title */}
                               <button
                                 onClick={() => { setEditingProject(project); setProjectModalOpen(true) }}
@@ -12922,6 +13101,7 @@ export default function KanbanBoard({ demoMode = false }) {
         onDelete={handleDeleteTask}
         loading={saving}
         onShowConfirm={setConfirmDialog}
+        onAddCustomer={handleAddCustomerToProject}
       />
       
       <ProjectModal
@@ -12933,6 +13113,7 @@ export default function KanbanBoard({ demoMode = false }) {
         onArchive={handleArchiveProject}
         loading={saving}
         onShowConfirm={setConfirmDialog}
+        user={user}
       />
       
       <SearchModal
