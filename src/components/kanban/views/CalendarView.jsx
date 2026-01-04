@@ -1690,13 +1690,18 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                  style={{ fontSize: '16px' }}
-                />
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 opacity-0 absolute inset-0 cursor-pointer"
+                    style={{ fontSize: '16px' }}
+                  />
+                  <div className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-center">
+                    {scheduleDate ? formatDate(scheduleDate) : 'Select date'}
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Time</label>
