@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { track } from '@vercel/analytics'
+import { supabase } from '../lib/supabase'
 
 // Custom Landing Page Icons
 const LandingIcons = {
@@ -351,6 +353,10 @@ export default function LandingPage() {
   const [notes, setNotes] = useState('')
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
+  const [waitlistModal, setWaitlistModal] = useState({ open: false, feature: '' })
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false)
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false)
 
   // Full task extraction logic (copied from KanbanBoard)
   const isUSDateFormat = () => {
@@ -660,16 +666,69 @@ export default function LandingPage() {
     if (!notes.trim()) return
     setIsExtracting(true)
     
+    // Track extraction attempt
+    track('task_extractor_used', { source: 'landing_page' })
+    
     setTimeout(() => {
       const tasks = extractTasks(notes)
       setExtractedTasks(tasks)
       setIsExtracting(false)
+      
+      // Track extraction result
+      track('tasks_extracted', { 
+        count: tasks.length,
+        source: 'landing_page'
+      })
     }, 500)
   }
 
   const resetExtractor = () => {
     setNotes('')
     setExtractedTasks([])
+  }
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault()
+    if (!waitlistEmail.trim()) return
+    
+    setWaitlistSubmitting(true)
+    
+    try {
+      // Track waitlist signup
+      track('waitlist_signup', { feature: waitlistModal.feature })
+      
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('waitlist')
+        .insert([{ 
+          email: waitlistEmail.trim().toLowerCase(),
+          feature: waitlistModal.feature,
+          created_at: new Date().toISOString()
+        }])
+      
+      if (error) {
+        // If duplicate, still show success (they're already on the list)
+        if (error.code === '23505') {
+          setWaitlistSuccess(true)
+        } else {
+          console.error('Waitlist error:', error)
+          alert('Something went wrong. Please try again.')
+        }
+      } else {
+        setWaitlistSuccess(true)
+      }
+    } catch (err) {
+      console.error('Waitlist error:', err)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setWaitlistSubmitting(false)
+    }
+  }
+
+  const closeWaitlistModal = () => {
+    setWaitlistModal({ open: false, feature: '' })
+    setWaitlistEmail('')
+    setWaitlistSuccess(false)
   }
 
   useEffect(() => {
@@ -1256,10 +1315,21 @@ Examples we can extract from:
               <p className="text-gray-600 text-sm mb-4">
                 Connect Google Calendar or Outlook. See your meetings and tasks together, block time for deep work.
               </p>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                In development
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                  In development
+                </span>
+                <button
+                  onClick={() => setWaitlistModal({ open: true, feature: 'calendar_integration' })}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                  Notify me
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
@@ -1274,10 +1344,21 @@ Examples we can extract from:
               <p className="text-gray-600 text-sm mb-4">
                 Forward any email to your Trackli inbox and it becomes a task. Simple as that.
               </p>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                In development
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  In development
+                </span>
+                <button
+                  onClick={() => setWaitlistModal({ open: true, feature: 'email_to_task' })}
+                  className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
+                >
+                  Notify me
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
@@ -1292,9 +1373,20 @@ Examples we can extract from:
               <p className="text-gray-600 text-sm mb-4">
                 Get an AI-generated status report based on your completed tasks. Perfect for standups.
               </p>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
-                Planned
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
+                  Planned
+                </span>
+                <button
+                  onClick={() => setWaitlistModal({ open: true, feature: 'ai_weekly_summary' })}
+                  className="text-sm font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                >
+                  Notify me
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
@@ -1309,9 +1401,20 @@ Examples we can extract from:
               <p className="text-gray-600 text-sm mb-4">
                 Connect Trackli to 5,000+ apps. Automate task creation from Slack, Salesforce, and more.
               </p>
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
-                Planned
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                  Planned
+                </span>
+                <button
+                  onClick={() => setWaitlistModal({ open: true, feature: 'zapier_integration' })}
+                  className="text-sm font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                >
+                  Notify me
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           
@@ -1436,6 +1539,67 @@ Examples we can extract from:
           <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Trackli. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Waitlist Modal */}
+      {waitlistModal.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeWaitlistModal}>
+          <div 
+            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!waitlistSuccess ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Get notified</h3>
+                  <button onClick={closeWaitlistModal} className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  We'll send you one email when this feature launches. No spam, ever.
+                </p>
+                <form onSubmit={handleWaitlistSubmit}>
+                  <input
+                    type="email"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-4"
+                  />
+                  <button
+                    type="submit"
+                    disabled={waitlistSubmitting}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold disabled:opacity-50"
+                  >
+                    {waitlistSubmitting ? 'Adding...' : 'Notify me'}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">You're on the list!</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  We'll let you know as soon as this feature is ready.
+                </p>
+                <button
+                  onClick={closeWaitlistModal}
+                  className="px-6 py-2 text-indigo-600 font-medium hover:text-indigo-700"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
