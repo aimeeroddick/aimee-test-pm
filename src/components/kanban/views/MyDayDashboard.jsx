@@ -90,9 +90,21 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
               <button
                 onClick={(e) => {
                   e.stopPropagation()
+                  e.preventDefault()
+                  // Use currentTarget to check if already handled by touch
+                  if (e.currentTarget.dataset.touchHandled) {
+                    delete e.currentTarget.dataset.touchHandled
+                    return
+                  }
                   onAddToMyDay(task.id)
                 }}
-                className="p-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all touch-manipulation text-amber-500 hover:text-amber-600 dark:text-amber-400"
+                onTouchEnd={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  e.currentTarget.dataset.touchHandled = 'true'
+                  onAddToMyDay(task.id)
+                }}
+                className="p-2.5 sm:p-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 active:bg-amber-200 dark:active:bg-amber-800/40 transition-all touch-manipulation text-amber-500 hover:text-amber-600 dark:text-amber-400"
                 title="Add to My Day"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
