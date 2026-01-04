@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { COLUMN_COLORS, CATEGORIES, ENERGY_LEVELS, btn } from '../constants'
+import { COLUMN_COLORS, CATEGORIES, ENERGY_LEVELS, btn, COLUMNS } from '../constants'
 import { formatDate, formatTimeEstimate, parseFlexibleTime, getDueDateStatus, isBlocked } from '../utils'
 import { TaskCardIcons } from '../icons'
 
