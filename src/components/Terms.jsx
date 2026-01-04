@@ -27,7 +27,7 @@ export default function Terms() {
       {/* Content */}
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-        <p className="text-gray-500 mb-8">Last updated: December 31, 2024</p>
+        <p className="text-gray-500 mb-8">Last updated: December 31, 2025</p>
 
         <div className="prose prose-gray max-w-none">
           <section className="mb-8">
@@ -156,7 +156,7 @@ export default function Terms() {
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white/50 py-8">
         <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-gray-500 text-sm">© 2024 Trackli. All rights reserved.</p>
+          <p className="text-gray-500 text-sm">© 2025 Trackli. All rights reserved.</p>
           <div className="flex gap-6 text-sm">
             <Link to="/privacy" className="text-gray-600 hover:text-gray-900">Privacy Policy</Link>
             <Link to="/terms" className="text-indigo-600 hover:text-indigo-700">Terms of Service</Link>
