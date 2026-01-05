@@ -5994,6 +5994,15 @@ export default function KanbanBoard({ demoMode = false }) {
         if (field === 'due_date') {
           if (value === 'has_date' && !t.due_date) return false
         }
+        if (field === 'start_date') {
+          if (value === '__blank__' && t.start_date) return false
+          if (value === 'has_date' && !t.start_date) return false
+        }
+        if (field === 'time_estimate') {
+          if (value === '__blank__' && t.time_estimate) return false
+          const filterVal = parseInt(value)
+          if (!isNaN(filterVal) && t.time_estimate !== filterVal) return false
+        }
       }
     }
     
@@ -6080,6 +6089,14 @@ export default function KanbanBoard({ demoMode = false }) {
   const dueTodayCount = filteredTasks.filter((t) => getDueDateStatus(t.due_date, t.status) === 'today').length
   const blockedCount = filteredTasks.filter((t) => isBlocked(t, tasks) && t.status !== 'done').length
   const myDayCount = filteredTasks.filter((t) => isInMyDay(t)).length
+  const dueThisWeekCount = filteredTasks.filter((t) => {
+    if (!t.due_date || t.status === 'done') return false
+    const due = new Date(t.due_date)
+    const today = new Date()
+    const endOfWeek = new Date(today)
+    endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+    return due >= today && due <= endOfWeek
+  }).length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
   
   // Streak calculation - days in a row with at least one completed task
@@ -6904,6 +6921,24 @@ export default function KanbanBoard({ demoMode = false }) {
                   )}
                 </button>
                 
+                {/* This Week */}
+                <button
+                  onClick={() => setFilterDueThisWeek(!filterDueThisWeek)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    filterDueThisWeek
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : dueThisWeekCount > 0
+                        ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                        : 'text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-400'
+                  }`}
+                >
+                  <span className="hidden sm:inline">This Week</span>
+                  <span className="sm:hidden">Week</span>
+                  {(filterDueThisWeek || dueThisWeekCount > 0) && (
+                    <span className={`ml-0.5 px-1 py-0.5 text-[10px] rounded ${filterDueThisWeek ? 'bg-white/20' : 'bg-blue-100 dark:bg-blue-900/50'}`}>{dueThisWeekCount}</span>
+                  )}
+                </button>
+                
                 {/* My Day */}
                 <button
                   onClick={() => setFilterMyDay(!filterMyDay)}
@@ -6928,13 +6963,19 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Field Filters */}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {Object.entries(fieldFilters).map(([field, value]) => {
-                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', energy_level: 'Effort', due_date: 'Due Date' }
+                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', energy_level: 'Effort', due_date: 'Due Date', start_date: 'Start Date', time_estimate: 'Time Est.' }
                   let displayValue = value
                   if (value === '__blank__') displayValue = '(Blank)'
                   else if (field === 'category') displayValue = CATEGORIES.find(c => c.id === value)?.label || value
                   else if (field === 'energy_level') displayValue = value === 'high' ? 'High' : value === 'medium' ? 'Medium' : 'Low'
                   else if (field === 'source') displayValue = SOURCES.find(s => s.id === value)?.label || value
                   else if (field === 'due_date' && value === 'has_date') displayValue = 'Has Date'
+                  else if (field === 'start_date' && value === 'has_date') displayValue = 'Has Date'
+                  else if (field === 'time_estimate') {
+                    const mins = parseInt(value)
+                    if (mins >= 60) displayValue = `${mins / 60}h`
+                    else displayValue = `${mins}m`
+                  }
                   
                   return (
                     <span
@@ -6970,6 +7011,8 @@ export default function KanbanBoard({ demoMode = false }) {
                     {!fieldFilters.customer && <option value="customer">Customer</option>}
                     {!fieldFilters.energy_level && <option value="energy_level">Effort</option>}
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
+                    {!fieldFilters.start_date && <option value="start_date">Start Date</option>}
+                    {!fieldFilters.time_estimate && <option value="time_estimate">Time Estimate</option>}
                   </select>
                   <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -6990,12 +7033,18 @@ export default function KanbanBoard({ demoMode = false }) {
                       }}
                       className="appearance-none pl-2 pr-5 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors"
                     >
-                      <option value="">Select {pendingFilterField === 'energy_level' ? 'Effort' : pendingFilterField === 'due_date' ? 'Due Date' : pendingFilterField.charAt(0).toUpperCase() + pendingFilterField.slice(1)}...</option>
+                      <option value="">Select {pendingFilterField === 'energy_level' ? 'Effort' : pendingFilterField === 'due_date' ? 'Due Date' : pendingFilterField === 'start_date' ? 'Start Date' : pendingFilterField === 'time_estimate' ? 'Time' : pendingFilterField.charAt(0).toUpperCase() + pendingFilterField.slice(1)}...</option>
                       <option value="__blank__">(Blank)</option>
-                      {pendingFilterField === 'assignee' && [...new Set(tasks.map(t => t.assignee).filter(Boolean))].sort().map(a => (
+                      {pendingFilterField === 'assignee' && [...new Set(tasks.filter(t => {
+                        const proj = projects.find(p => p.id === t.project_id)
+                        return proj && (!proj.archived || showArchivedProjects)
+                      }).map(t => t.assignee).filter(Boolean))].sort().map(a => (
                         <option key={a} value={a}>{a}</option>
                       ))}
-                      {pendingFilterField === 'customer' && [...new Set(tasks.map(t => t.customer).filter(Boolean))].sort().map(c => (
+                      {pendingFilterField === 'customer' && [...new Set(tasks.filter(t => {
+                        const proj = projects.find(p => p.id === t.project_id)
+                        return proj && (!proj.archived || showArchivedProjects)
+                      }).map(t => t.customer).filter(Boolean))].sort().map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                       {pendingFilterField === 'energy_level' && (
@@ -7007,6 +7056,19 @@ export default function KanbanBoard({ demoMode = false }) {
                       )}
                       {pendingFilterField === 'due_date' && (
                         <option value="has_date">Has Due Date</option>
+                      )}
+                      {pendingFilterField === 'start_date' && (
+                        <option value="has_date">Has Start Date</option>
+                      )}
+                      {pendingFilterField === 'time_estimate' && (
+                        <>
+                          <option value="15">15 minutes</option>
+                          <option value="30">30 minutes</option>
+                          <option value="60">1 hour</option>
+                          <option value="120">2 hours</option>
+                          <option value="240">4 hours</option>
+                          <option value="480">8 hours</option>
+                        </>
                       )}
                     </select>
                     <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
