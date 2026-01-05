@@ -890,6 +890,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
   }
   
+  // Handle selecting a task for scheduling - uses currently viewed date
+  const handleSelectForScheduling = (task) => {
+    setTaskToSchedule(task)
+    setScheduleDate(currentDate.toISOString().split('T')[0])
+  }
+
   // Handle schedule task from modal
   const handleScheduleFromModal = async () => {
     if (!taskToSchedule) return
@@ -1134,7 +1140,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 key={task.id}
                 task={task}
                 highlight={highlight}
-                onSelectForScheduling={setTaskToSchedule}
+                onSelectForScheduling={handleSelectForScheduling}
                 onEditTask={onEditTask}
                 COLUMN_COLORS={COLUMN_COLORS}
                 formatTimeEstimate={formatTimeEstimate}
