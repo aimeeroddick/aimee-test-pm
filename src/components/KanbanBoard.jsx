@@ -3359,26 +3359,12 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
           </div>
           
-          {/* Customer - hidden on mobile */}
-          {task.customer && (
-            <div className="hidden sm:block mt-1.5">
-              <span 
-                className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full"
-                style={{
-                  backgroundColor: getCustomerColor(task.customer)?.bg || '#EDE9FE',
-                  color: getCustomerColor(task.customer)?.text || '#7C3AED',
-                  border: `1px solid ${getCustomerColor(task.customer)?.border || '#C4B5FD'}`
-                }}
-              >
-                {task.customer}
-              </span>
-            </div>
-          )}
-          
-          {/* Project at bottom - hidden on mobile */}
+          {/* Project and Customer at bottom - hidden on mobile */}
           {showProject && project && (
             <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-[10px] text-gray-500 dark:text-gray-300">{project.name}</span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-300">
+                {project.name}{task.customer && ` • ${task.customer}`}
+              </span>
             </div>
           )}
           
