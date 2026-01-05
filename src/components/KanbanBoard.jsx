@@ -8394,7 +8394,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
               
               {/* Summary Metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                 {/* Day Streak */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -8448,7 +8448,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   const daysCleared = last30Days.filter(d => d.cleared).length
                   const clearedPercent = daysWithMyDay > 0 ? Math.round((daysCleared / daysWithMyDay) * 100) : 0
                   return (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <div className="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">☀️</span>
                         <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{clearedPercent}%</span>
@@ -8463,7 +8463,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Task Summary - Clickable Cards */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Tasks Needing Attention</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   {/* Due Today */}
                   {(() => {
                     const dueTodayTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'today')
