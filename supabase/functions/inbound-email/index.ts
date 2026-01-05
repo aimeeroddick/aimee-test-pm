@@ -165,6 +165,44 @@ function extractUserNote(bodyText: string): string {
   return ''
 }
 
+// Strip email signatures from body text
+function stripEmailSignatures(bodyText: string): string {
+  if (!bodyText) return ''
+  
+  let cleaned = bodyText
+  
+  // Remove embedded image placeholders like [phone], [mail], [branding], [Visit Spicy Mango]
+  cleaned = cleaned.replace(/\[[^\]]{1,30}\]/g, '')
+  
+  // Remove tel: and mailto: link noise like <tel:+44...> or <mailto:email@...>
+  cleaned = cleaned.replace(/<tel:[^>]+>/g, '')
+  cleaned = cleaned.replace(/<mailto:[^>]+>/g, '')
+  
+  // Remove URL links like <https://...>
+  cleaned = cleaned.replace(/<https?:\/\/[^>]+>/g, '')
+  
+  // Detect signature blocks and remove them
+  // Common patterns: Name followed by Title on next line, then contact info
+  const signaturePatterns = [
+    // Pattern: Name + Title + contact info block
+    /\n[A-Z][a-z]+ [A-Z][a-z]+\n(Project Manager|Chief.*Officer|Director|Manager|CEO|CTO|CFO|COO|Founder|Partner|Consultant|Engineer|Developer|Designer|Analyst)[\s\S]*?(?=\nFrom:|$)/gi,
+    // Pattern: Just contact details (phone, email, website on consecutive lines)
+    /\n[+]?\d[\d\s()\-]{8,}[\s\S]*?(?=\nFrom:|$)/g,
+  ]
+  
+  for (const pattern of signaturePatterns) {
+    cleaned = cleaned.replace(pattern, '\n')
+  }
+  
+  // Remove multiple consecutive blank lines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
+  
+  // Remove lines that are just whitespace and pipe characters (often separators)
+  cleaned = cleaned.replace(/\n[\s|]+\n/g, '\n')
+  
+  return cleaned.trim()
+}
+
 // Match project name to project ID (case-insensitive, partial match)
 function matchProjectId(projectName: string | null, projects: any[]): string | null {
   if (!projectName || projects.length === 0) return null
@@ -349,13 +387,16 @@ serve(async (req) => {
     console.log('User projects:', projectNames)
     
     // Store the original email
+    // Clean email body by stripping signatures
+    const cleanedBodyText = stripEmailSignatures(text)
+    
     const { data: emailSource, error: emailError } = await supabase
       .from('email_sources')
       .insert({
         user_id: profile.id,
         from_address: from,
         subject: subject,
-        body_text: text,
+        body_text: cleanedBodyText,
         body_html: html,
         raw_payload: Object.fromEntries(formData.entries())
       })
