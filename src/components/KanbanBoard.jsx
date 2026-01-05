@@ -4615,6 +4615,42 @@ export default function KanbanBoard({ demoMode = false }) {
         .update({ status: 'approved' })
         .in('id', pendingIds)
       
+      // Log analytics for AI extraction accuracy
+      try {
+        const analyticsRows = []
+        for (const task of tasksToApprove) {
+          const original = task.ai_original_values || {}
+          const fields = [
+            { name: 'title', ai: original.title, final: task.title },
+            { name: 'due_date', ai: original.due_date, final: task.due_date },
+            { name: 'assignee', ai: original.assignee_text, final: task.assignee_text },
+            { name: 'customer', ai: original.customer, final: task.customer },
+            { name: 'energy_level', ai: original.energy_level, final: task.energy_level },
+            { name: 'critical', ai: String(original.critical || false), final: String(task.critical || false) },
+            { name: 'time_estimate', ai: String(original.time_estimate || ''), final: String(task.time_estimate || '') },
+            { name: 'project_id', ai: original.project_name, final: task.project_id }
+          ]
+          for (const f of fields) {
+            if (f.ai !== undefined || f.final !== undefined) {
+              analyticsRows.push({
+                user_id: user.id,
+                pending_task_id: task.id,
+                email_source_id: task.email_source_id,
+                field_name: f.name,
+                ai_value: f.ai || null,
+                final_value: f.final || null,
+                was_changed: f.ai !== f.final
+              })
+            }
+          }
+        }
+        if (analyticsRows.length > 0) {
+          await supabase.from('email_extraction_analytics').insert(analyticsRows)
+        }
+      } catch (analyticsErr) {
+        console.warn('Analytics logging failed (non-critical):', analyticsErr)
+      }
+      
       // If user chose to remove unchecked tasks, mark them as rejected
       if (removeUnchecked && uncheckedTasks.length > 0) {
         const uncheckedIds = uncheckedTasks.map(t => t.id)

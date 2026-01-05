@@ -428,6 +428,20 @@ serve(async (req) => {
       const emailContent = `\n\n---\n📧 **From email:** ${subject || '(no subject)'}\n**From:** ${from || 'Unknown'}\n\n${text?.substring(0, 2000) || '(no body)'}`
       fullDescription = fullDescription ? fullDescription + emailContent : emailContent.trim()
       
+      // Store original AI values for analytics tracking
+      const aiOriginalValues = {
+        title: task.title,
+        description: task.description,
+        due_date: task.due_date,
+        assignee_text: task.assignee_text,
+        project_name: task.project_name,
+        customer: task.customer,
+        energy_level: task.energy_level,
+        critical: task.critical,
+        time_estimate: task.time_estimate,
+        confidence: task.confidence
+      }
+      
       return {
         user_id: profile.id,
         email_source_id: emailSource.id,
@@ -441,6 +455,7 @@ serve(async (req) => {
         critical: task.critical || criticalFromNote || isHighPriority || false,
         time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,
+        ai_original_values: aiOriginalValues,
         status: 'pending'
       }
     })
