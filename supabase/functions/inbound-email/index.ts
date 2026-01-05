@@ -61,6 +61,8 @@ For each task, provide:
 - project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
 - time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120, "30 mins" → 30). Use null if not mentioned.
+- energy_level: If effort/complexity mentioned, use "low" (quick/easy/simple), "medium" (moderate), or "high" (complex/difficult/big). Use null if not mentioned.
+- customer: If a customer/client/company name is mentioned for the task, extract it. Use null if not mentioned.
 - confidence: Your confidence this is a real action item (0.7-1.0 for clear "[Name] to [action]" patterns, 0.5-0.7 for ambiguous items)
 
 IMPORTANT: 
@@ -75,7 +77,7 @@ Rules:
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "time_estimate": 30, "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "time_estimate": 30, "energy_level": "medium", "customer": "Acme Corp", "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 
@@ -372,13 +374,13 @@ serve(async (req) => {
       }
       console.log(`Project match: "${task.project_name}" -> ${matchedProjectId}`)
       
-      // Try to match customer from email domain
-      let matchedCustomer = null
-      if (matchedProjectId) {
+      // Try to match customer: first from AI extraction, then from email domain
+      let finalCustomer = task.customer || null
+      if (!finalCustomer && matchedProjectId) {
         const projectCustomerList = customersByProject[matchedProjectId] || []
-        matchedCustomer = matchCustomerFromEmail(from, projectCustomerList)
-        if (matchedCustomer) {
-          console.log(`Customer match from email: "${from}" -> "${matchedCustomer}"`)
+        finalCustomer = matchCustomerFromEmail(from, projectCustomerList)
+        if (finalCustomer) {
+          console.log(`Customer match from email: "${from}" -> "${finalCustomer}"`)
         }
       }
       
@@ -390,7 +392,8 @@ serve(async (req) => {
         due_date: task.due_date || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
-        customer: matchedCustomer,
+        customer: finalCustomer,
+        energy_level: task.energy_level || null,
         critical: task.critical || isHighPriority || false,
         time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,
