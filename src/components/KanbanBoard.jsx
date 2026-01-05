@@ -3891,6 +3891,58 @@ export default function KanbanBoard({ demoMode = false }) {
     }
   }
   
+  // Fetch Slack connection status
+  const fetchSlackConnection = async () => {
+    if (!user?.id) return
+    setSlackLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('slack_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+      if (!error && data) {
+        setSlackConnection(data)
+      }
+    } catch (err) {
+      console.error('Error fetching Slack connection:', err)
+    }
+    setSlackLoading(false)
+  }
+
+  // Disconnect Slack
+  const handleDisconnectSlack = async () => {
+    if (!slackConnection) return
+    setSlackLoading(true)
+    try {
+      const { error } = await supabase
+        .from('slack_connections')
+        .delete()
+        .eq('user_id', user.id)
+      if (!error) {
+        setSlackConnection(null)
+        setSlackSuccess('Slack disconnected successfully')
+        setTimeout(() => setSlackSuccess(''), 3000)
+      } else {
+        throw error
+      }
+    } catch (err) {
+      console.error('Error disconnecting Slack:', err)
+      setSlackError('Failed to disconnect Slack')
+      setTimeout(() => setSlackError(''), 3000)
+    }
+    setSlackLoading(false)
+  }
+
+  // Connect to Slack - OAuth URL
+  const getSlackOAuthUrl = () => {
+    const clientId = '27424537124.10220987954279'
+    const redirectUri = 'https://quzfljuvpvevvvdnsktd.supabase.co/functions/v1/slack-oauth'
+    const scopes = 'chat:write,commands,users:read,im:write'
+    const state = user?.id || ''
+    return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
+  }
+
   // Handle saving display name
   const handleSaveDisplayName = async () => {
     setSavingProfile(true)
@@ -3998,7 +4050,7 @@ export default function KanbanBoard({ demoMode = false }) {
     }
     setClearingTasks(false)
   }
-  
+
   // View state
   const [currentView, setCurrentView] = useState(() => localStorage.getItem('trackli-default-view') || 'board') // 'board', 'myday', 'calendar', or 'projects'
   const [calendarViewMode, setCalendarViewMode] = useState('monthly') // 'daily', 'weekly', 'monthly'
@@ -4032,6 +4084,10 @@ export default function KanbanBoard({ demoMode = false }) {
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [slackConnection, setSlackConnection] = useState(null)
+  const [slackLoading, setSlackLoading] = useState(false)
+  const [slackError, setSlackError] = useState('')
+  const [slackSuccess, setSlackSuccess] = useState('')
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -4048,6 +4104,7 @@ export default function KanbanBoard({ demoMode = false }) {
   // Settings - Data
   const [clearingTasks, setClearingTasks] = useState(false)
   const [clearTasksAge, setClearTasksAge] = useState('30')
+  
   const [helpModalTab, setHelpModalTab] = useState('board')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
@@ -4427,7 +4484,39 @@ export default function KanbanBoard({ demoMode = false }) {
     fetchData()
     fetchPendingEmailTasks()
   }, [])
-  
+
+  // Fetch Slack connection and handle URL params
+  useEffect(() => {
+    if (demoMode) return
+    
+    // Check for Slack callback params in URL
+    const params = new URLSearchParams(window.location.search)
+    const slackStatus = params.get('slack')
+    if (slackStatus === 'success') {
+      setSlackSuccess('Slack connected successfully!')
+      setSettingsModalOpen(true)
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (slackStatus === 'error') {
+      setSlackError(params.get('message') || 'Failed to connect Slack')
+      setSettingsModalOpen(true)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    
+    // Fetch current Slack connection
+    const fetchSlackConnection = async () => {
+      const { data, error } = await supabase
+        .from('slack_connections')
+        .select('*')
+        .single()
+      
+      if (!error && data) {
+        setSlackConnection(data)
+      }
+    }
+    fetchSlackConnection()
+  }, [demoMode])
+
   // Refresh pending tasks periodically (every 60 seconds)
   useEffect(() => {
     if (demoMode) return
@@ -10147,6 +10236,66 @@ Or we can extract from:
                   ) : (
                     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Email address not yet generated. Contact support.
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Integrations Section */}
+              <div>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  Integrations
+                </h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  {/* Slack */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#4A154B] rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Slack</div>
+                        {slackConnection ? (
+                          <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            Connected to {slackConnection.slack_team_name}
+                          </div>
+                        ) : (
+                          <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Create tasks via /trackli command
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {slackConnection ? (
+                      <button
+                        onClick={handleDisconnectSlack}
+                        disabled={slackLoading}
+                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        {slackLoading ? '...' : 'Disconnect'}
+                      </button>
+                    ) : (
+                      <a
+                        href={`https://slack.com/oauth/v2/authorize?client_id=27424537124.10220987954279&scope=chat:write,commands,users:read,im:write&redirect_uri=${encodeURIComponent('https://quzfljuvpvevvvdnsktd.supabase.co/functions/v1/slack-oauth')}&state=${user?.id}`}
+                        className="px-3 py-1.5 bg-[#4A154B] text-white text-sm font-medium rounded-lg hover:bg-[#3e1240] transition-colors"
+                      >
+                        Connect
+                      </a>
+                    )}
+                  </div>
+                  {slackSuccess && (
+                    <div className="mt-3 text-sm text-green-600 dark:text-green-400">
+                      ✓ {slackSuccess}
+                    </div>
+                  )}
+                  {slackError && (
+                    <div className="mt-3 text-sm text-red-600 dark:text-red-400">
+                      ✗ {slackError}
                     </div>
                   )}
                 </div>
