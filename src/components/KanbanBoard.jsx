@@ -2764,7 +2764,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Adding Attachments:</p>
-                      <div className="space-y-1 text-sm text-gray-500">
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                         <p>• Open a task and go to the Details tab</p>
                         <p>• Drag & drop files or click "Choose files"</p>
                         <p>• Supports images, PDFs, documents, and more</p>
@@ -2772,13 +2772,13 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                       <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Viewing Attachments:</p>
-                      <div className="space-y-1 text-sm text-gray-700">
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                         <p>• Click any attachment to open the viewer</p>
                         <p>• PDFs display inline with page navigation</p>
                         <p>• Use ← → arrow keys to navigate</p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700">💡 Tasks with attachments show a 📎 icon with count</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Tasks with attachments show a paperclip icon with count</p>
                   </div>
                 </SectionCard>
               </>

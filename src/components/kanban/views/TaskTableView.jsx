@@ -340,7 +340,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     { key: 'assignee', label: 'Assignee', width: 'min-w-[120px]' },
     { key: 'customer', label: 'Customer', width: 'min-w-[120px]' },
     { key: 'energy_level', label: 'Effort', width: 'min-w-[100px]' },
-    { key: 'time_estimate', label: 'Est. Time', width: 'min-w-[90px]' },
+    { key: 'time_estimate', label: 'Est. Time', width: 'min-w-[85px]' },
     { key: 'created_at', label: 'Created', width: 'min-w-[100px]' },
   ]
   
@@ -520,7 +520,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                 >
                   <button
                     onClick={() => handleSort(col.key)}
-                    className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors whitespace-nowrap"
                   >
                     {col.label}
                     {sortField === col.key && (
