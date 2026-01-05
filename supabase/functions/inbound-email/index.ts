@@ -10,7 +10,11 @@ const corsHeaders = {
 }
 
 // Extract tasks using Claude AI
-async function extractTasksWithAI(subject: string, bodyText: string, userNote: string, anthropicKey: string) {
+async function extractTasksWithAI(subject: string, bodyText: string, userNote: string, projectNames: string[], anthropicKey: string) {
+  const projectList = projectNames.length > 0 
+    ? `Available projects: ${projectNames.join(', ')}`
+    : 'No projects available'
+
   const prompt = `You are a task extraction assistant. Extract ONLY clear action items from this email.
 
 USER'S NOTE (instructions from the person forwarding):
@@ -21,6 +25,8 @@ ${subject || '(No subject)'}
 
 EMAIL BODY:
 ${bodyText || '(No body)'}
+
+${projectList}
 
 WHAT TO EXTRACT (action items):
 - "[Name] will [action]" → Task assigned to Name
@@ -47,17 +53,20 @@ For each task, provide:
 - description: Brief context if needed (max 200 chars, or null)
 - due_date: In YYYY-MM-DD format if mentioned (or null)
 - assignee_text: Person responsible if mentioned (or null)
+- project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
 - confidence: Your confidence this is a real action item (0.5-1.0)
 
+IMPORTANT: If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
+
 Rules:
 - Extract up to 20 tasks maximum
-- If user's note specifies dates/assignees, apply to all tasks
+- If user's note specifies dates/assignees/project, apply to all tasks
 - If NO clear action items found, return empty array []
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "2025-01-15", "assignee_text": "Chris", "critical": false, "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "2025-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 
@@ -142,6 +151,26 @@ function extractUserNote(bodyText: string): string {
   return ''
 }
 
+// Match project name to project ID (case-insensitive, partial match)
+function matchProjectId(projectName: string | null, projects: any[]): string | null {
+  if (!projectName || projects.length === 0) return null
+  
+  const searchName = projectName.toLowerCase().trim()
+  
+  // Try exact match first
+  const exactMatch = projects.find(p => p.name.toLowerCase() === searchName)
+  if (exactMatch) return exactMatch.id
+  
+  // Try partial match (project name contains search or vice versa)
+  const partialMatch = projects.find(p => 
+    p.name.toLowerCase().includes(searchName) || 
+    searchName.includes(p.name.toLowerCase())
+  )
+  if (partialMatch) return partialMatch.id
+  
+  return null
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -205,6 +234,15 @@ serve(async (req) => {
     
     console.log('Found user:', profile.id)
     
+    // Fetch user's projects for matching
+    const { data: userProjects } = await supabase
+      .from('projects')
+      .select('id, name')
+      .eq('user_id', profile.id)
+    
+    const projectNames = userProjects?.map(p => p.name) || []
+    console.log('User projects:', projectNames)
+    
     // Store the original email
     const { data: emailSource, error: emailError } = await supabase
       .from('email_sources')
@@ -237,50 +275,55 @@ serve(async (req) => {
     let extractedTasks = null
     if (anthropicKey) {
       console.log('Attempting AI extraction...')
-      extractedTasks = await extractTasksWithAI(subject, text, userNote, anthropicKey)
+      extractedTasks = await extractTasksWithAI(subject, text, userNote, projectNames, anthropicKey)
       console.log('AI extracted tasks:', extractedTasks?.length || 0)
     } else {
       console.log('No ANTHROPIC_API_KEY, skipping AI extraction')
     }
     
     // If AI extraction failed or returned null, create a single fallback task
-    // But if AI returned empty array [], that means no tasks found - still create one from subject
     if (extractedTasks === null) {
-      // AI failed - create fallback
       extractedTasks = [{
         title: subject || 'Task from email',
         description: text?.substring(0, 500) || null,
         due_date: null,
         assignee_text: null,
+        project_name: null,
         critical: false,
         confidence: 0.3
       }]
       console.log('AI failed, using fallback single task')
     } else if (extractedTasks.length === 0) {
-      // AI found no tasks - create one from subject so email isn't lost
       extractedTasks = [{
         title: subject || 'Review forwarded email',
         description: 'No specific action items extracted. Please review the original email.',
         due_date: null,
         assignee_text: null,
+        project_name: null,
         critical: false,
         confidence: 0.2
       }]
       console.log('AI found no tasks, creating review task')
     }
     
-    // Create pending tasks
-    const pendingTasksToInsert = extractedTasks.map(task => ({
-      user_id: profile.id,
-      email_source_id: emailSource.id,
-      title: task.title?.substring(0, 200) || 'Untitled task',
-      description: task.description?.substring(0, 1000) || null,
-      due_date: task.due_date || null,
-      assignee_text: task.assignee_text || null,
-      critical: task.critical || false,
-      ai_confidence: task.confidence || 0.5,
-      status: 'pending'
-    }))
+    // Create pending tasks with project matching
+    const pendingTasksToInsert = extractedTasks.map(task => {
+      const matchedProjectId = matchProjectId(task.project_name, userProjects || [])
+      console.log(`Project match: "${task.project_name}" -> ${matchedProjectId}`)
+      
+      return {
+        user_id: profile.id,
+        email_source_id: emailSource.id,
+        title: task.title?.substring(0, 200) || 'Untitled task',
+        description: task.description?.substring(0, 1000) || null,
+        due_date: task.due_date || null,
+        assignee_text: task.assignee_text || null,
+        project_id: matchedProjectId,
+        critical: task.critical || false,
+        ai_confidence: task.confidence || 0.5,
+        status: 'pending'
+      }
+    })
     
     const { data: pendingTasks, error: taskError } = await supabase
       .from('pending_tasks')
