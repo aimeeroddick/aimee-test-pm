@@ -921,49 +921,39 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
       
       if (taskError) throw taskError
       
-      // Copy images as attachments if any
+      // Link existing feedback images as task attachments
+      // Images are already in Supabase storage - just create attachment records
       if (item.images && item.images.length > 0 && taskData) {
-        console.log('Copying images:', item.images)
-        
-        // Get current user for file path
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        const userFolder = currentUser?.id || 'anonymous'
+        console.log('Linking images:', item.images)
         
         for (let i = 0; i < item.images.length; i++) {
           const imageUrl = item.images[i]
-          const fileName = `task-attachments/${userFolder}/${Date.now()}-${i}.jpg`
           
           try {
-            console.log('Fetching image:', imageUrl)
-            // Fetch the image
-            const response = await fetch(imageUrl)
-            if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`)
-            const blob = await response.blob()
-            console.log('Got blob, size:', blob.size)
-            
-            // Upload to storage
-            const { error: uploadError } = await supabase.storage
-              .from('attachments')
-              .upload(fileName, blob, { contentType: 'image/jpeg' })
-            
-            if (uploadError) {
-              console.error('Upload error:', uploadError)
-            } else {
-              console.log('Uploaded, inserting attachment record')
-              // Create attachment record
+            // Extract file path from the Supabase URL
+            // URL format: https://xxx.supabase.co/storage/v1/object/public/attachments/feedback/...
+            const urlParts = imageUrl.split('/storage/v1/object/public/attachments/')
+            if (urlParts.length === 2) {
+              const filePath = urlParts[1]
+              console.log('Extracted file path:', filePath)
+              
+              // Create attachment record pointing to existing file
               const { error: attachError } = await supabase.from('attachments').insert({
                 task_id: taskData.id,
-                file_path: fileName,
+                file_path: filePath,
                 file_name: `screenshot-${i + 1}.jpg`,
               })
+              
               if (attachError) {
                 console.error('Attachment record error:', attachError)
               } else {
-                console.log('Attachment saved successfully')
+                console.log('Attachment linked successfully')
               }
+            } else {
+              console.error('Could not parse image URL:', imageUrl)
             }
           } catch (imgErr) {
-            console.error('Error copying image:', imgErr)
+            console.error('Error linking image:', imgErr)
           }
         }
       }
