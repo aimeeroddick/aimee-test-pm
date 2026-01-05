@@ -832,10 +832,11 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
 // Admin Feedback Panel Component
 const ADMIN_EMAIL = 'roddickaimee@gmail.com'
 
-const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
+const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated }) => {
   const [feedback, setFeedback] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all') // all, new, read, resolved
+  const [filter, setFilter] = useState('all') // all, new, read, resolved, converted
+  const [converting, setConverting] = useState(null) // Track which item is being converted
   
   const isAdmin = userEmail === ADMIN_EMAIL
   
@@ -876,6 +877,79 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
     }
   }
   
+  // Convert feedback to a backlog task
+  const convertToTask = async (item) => {
+    if (!userId) return
+    setConverting(item.id)
+    
+    try {
+      // Create title: "[Type]: Summary"
+      const typeLabels = { bug: 'Bug', suggestion: 'Suggestion', question: 'Question', other: 'Feedback' }
+      const typeLabel = typeLabels[item.type] || 'Feedback'
+      const firstLine = item.message.split('\n')[0].slice(0, 100)
+      const title = `${typeLabel}: ${firstLine}${item.message.length > 100 ? '...' : ''}`
+      
+      // Create task in backlog
+      const { data: taskData, error: taskError } = await supabase
+        .from('tasks')
+        .insert({
+          user_id: userId,
+          title,
+          description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
+          status: 'backlog',
+          position: 0,
+        })
+        .select()
+        .single()
+      
+      if (taskError) throw taskError
+      
+      // Copy images as attachments if any
+      if (item.images && item.images.length > 0 && taskData) {
+        for (const imageUrl of item.images) {
+          // Extract file path from URL or create new path
+          const fileName = `task-attachments/${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+          
+          try {
+            // Fetch the image and re-upload to task attachments
+            const response = await fetch(imageUrl)
+            const blob = await response.blob()
+            
+            const { error: uploadError } = await supabase.storage
+              .from('attachments')
+              .upload(fileName, blob)
+            
+            if (!uploadError) {
+              await supabase.from('attachments').insert({
+                task_id: taskData.id,
+                file_path: fileName,
+                file_name: `screenshot-${Date.now()}.jpg`,
+              })
+            }
+          } catch (imgErr) {
+            console.error('Error copying image:', imgErr)
+          }
+        }
+      }
+      
+      // Update feedback status to converted
+      await supabase
+        .from('feedback')
+        .update({ status: 'converted', task_id: taskData.id })
+        .eq('id', item.id)
+      
+      setFeedback(prev => prev.map(f => f.id === item.id ? { ...f, status: 'converted', task_id: taskData.id } : f))
+      
+      // Notify parent to refresh tasks
+      if (onTaskCreated) onTaskCreated()
+      
+    } catch (err) {
+      console.error('Error converting to task:', err)
+    } finally {
+      setConverting(null)
+    }
+  }
+  
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
@@ -900,7 +974,8 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
   const statusColors = {
     new: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     read: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-    resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+    resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    converted: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
   }
   
   return (
@@ -923,7 +998,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
           </div>
           
           <div className="flex gap-2 mt-4">
-            {['all', 'new', 'read', 'resolved'].map(f => (
+            {['all', 'new', 'read', 'resolved', 'converted'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -1019,6 +1094,25 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail }) => {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
+                        </button>
+                      )}
+                      {item.status !== 'converted' && (
+                        <button
+                          onClick={() => convertToTask(item)}
+                          disabled={converting === item.id}
+                          className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors disabled:opacity-50"
+                          title="Convert to backlog task"
+                        >
+                          {converting === item.id ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
                         </button>
                       )}
                     </div>
@@ -8621,6 +8715,8 @@ Or we can extract from:
         isOpen={adminPanelOpen}
         onClose={() => setAdminPanelOpen(false)}
         userEmail={user?.email}
+        userId={user?.id}
+        onTaskCreated={fetchData}
       />
       
       {/* Settings Modal */}
