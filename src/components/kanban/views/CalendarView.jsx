@@ -1185,6 +1185,24 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               
               {/* Day column */}
               <div className="relative">
+                {/* Resize preview ghost - rendered at column level to avoid overflow issues */}
+                {resizingTask && resizePreviewHeight && (() => {
+                  const taskStartTime = resizingTask.task.start_time
+                  if (!taskStartTime) return null
+                  const [h, m] = taskStartTime.split(':').map(Number)
+                  const startMinutes = h * 60 + m
+                  const topPosition = (startMinutes / 30) * 32
+                  return (
+                    <div 
+                      className="absolute left-1 right-1 bg-indigo-300/50 dark:bg-indigo-500/50 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-50"
+                      style={{ top: `${topPosition}px`, height: `${resizePreviewHeight}px` }}
+                    >
+                      <div className="absolute bottom-1 right-1 text-[9px] font-bold text-indigo-700 dark:text-indigo-200 bg-white/90 dark:bg-gray-800/90 px-1.5 py-0.5 rounded shadow">
+                        {Math.round((resizePreviewHeight + 2) / 32 * 30)}m
+                      </div>
+                    </div>
+                  )
+                })()}
                 {/* Current time indicator */}
                 {isToday && (() => {
                   const now = new Date()
@@ -1205,16 +1223,15 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 {timeSlots.map(({ slotIndex, isHour }) => {
                   const slotTasks = getTasksForSlot(currentDate, slotIndex)
                   const isHoverTarget = hoverSlot && hoverSlot.date === dateStr && hoverSlot.slotIndex === slotIndex
-                  const hasResizingTask = slotTasks.some(t => resizingTask?.task?.id === t.id)
                   return (
                     <div
                       key={slotIndex}
                       data-dropzone="calendar-slot"
                       data-date={currentDate}
                       data-slot-index={slotIndex}
-                      className={`h-8 border-b relative overflow-visible transition-all duration-150 ${
+                      className={`h-8 border-b relative transition-all duration-150 ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
-                      } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} ${hasResizingTask ? 'z-40' : ''} cursor-pointer`}
+                      } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} cursor-pointer`}
                       onDragOver={(e) => { 
                         e.preventDefault()
                         e.dataTransfer.dropEffect = 'move'
@@ -1242,25 +1259,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         const heightSlots = Math.ceil(duration / 30)
                         const projectColor = getProjectColor(task.project_id)
                         const isOverlapping = hasOverlap(task, currentDate)
-                        const isBeingResized = resizingTask?.task?.id === task.id
                         const originalHeight = heightSlots * 32 - 2
                         return (
                           <div
                             key={task.id}
-                            className={`absolute left-1 right-1 overflow-visible ${isBeingResized ? 'z-50' : ''}`}
+                            className="absolute left-1 right-1"
                             style={{ top: '1px' }}
                           >
-                            {/* Resize preview ghost */}
-                            {isBeingResized && resizePreviewHeight && (
-                              <div 
-                                className="absolute inset-x-0 top-0 bg-indigo-300/40 dark:bg-indigo-500/40 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-50"
-                                style={{ height: `${resizePreviewHeight}px` }}
-                              >
-                                <div className="absolute bottom-1 right-1 text-[9px] font-medium text-indigo-600 dark:text-indigo-300 bg-white/80 dark:bg-gray-800/80 px-1 rounded">
-                                  {Math.round((resizePreviewHeight + 2) / 32 * 30)}m
-                                </div>
-                              </div>
-                            )}
                             {/* Actual task */}
                             <div
                               draggable={!resizingTask}
@@ -1272,7 +1277,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                                 task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                                 task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                                 `${projectColor.bg} ${projectColor.text}`
-                              } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''} ${isBeingResized ? 'ring-2 ring-indigo-500' : ''}`}
+                              } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''}`}
                               style={{ height: `${originalHeight}px` }}
                               title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
                             >
