@@ -15,8 +15,18 @@ export default function Login() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   
-  const { signIn, signUp, resetPassword } = useAuth()
+  const { signIn, signUp, resetPassword, resendConfirmation, user } = useAuth()
   const navigate = useNavigate()
+  
+  // Check if user is logged in but unconfirmed
+  const isUnconfirmed = searchParams.get('unconfirmed') === 'true'
+  
+  // Show message for unconfirmed users
+  useEffect(() => {
+    if (isUnconfirmed && user && !user.email_confirmed_at) {
+      setMessage('Please check your email and click the confirmation link to access Trackli.')
+    }
+  }, [isUnconfirmed, user])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -216,11 +226,32 @@ export default function Login() {
             )}
 
             {message && (
-              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {message}
+              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl text-sm text-green-600 dark:text-green-400">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {message}
+                </div>
+                {isUnconfirmed && user && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setLoading(true)
+                      const { error } = await resendConfirmation(user.email)
+                      if (error) {
+                        setError(error.message)
+                      } else {
+                        setMessage('Confirmation email resent! Check your inbox.')
+                      }
+                      setLoading(false)
+                    }}
+                    disabled={loading}
+                    className="mt-3 w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Resend Confirmation Email'}
+                  </button>
+                )}
               </div>
             )}
 

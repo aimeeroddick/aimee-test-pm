@@ -180,6 +180,14 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
+  const resendConfirmation = async (email) => {
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    })
+    return { data, error }
+  }
+
   const value = {
     user,
     profile,
@@ -191,6 +199,7 @@ export function AuthProvider({ children }) {
     signIn,
     signOut,
     resetPassword,
+    resendConfirmation,
     updateProfile,
     uploadAvatar,
     fetchProfile,

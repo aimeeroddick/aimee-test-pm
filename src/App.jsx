@@ -80,6 +80,11 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/welcome" replace />
   }
 
+  // Block users who haven't confirmed their email
+  if (!user.email_confirmed_at) {
+    return <Navigate to="/login?unconfirmed=true" replace />
+  }
+
   return children
 }
 
@@ -90,8 +95,8 @@ function PublicRoute({ children }) {
     return <LoadingSpinner />
   }
 
-  // If user is logged in, redirect to app
-  if (user) {
+  // If user is logged in AND email is confirmed, redirect to app
+  if (user && user.email_confirmed_at) {
     return <Navigate to="/app" replace />
   }
 
