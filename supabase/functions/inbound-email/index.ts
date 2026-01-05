@@ -254,13 +254,33 @@ serve(async (req) => {
     const text = formData.get('text') as string || ''
     const html = formData.get('html') as string || ''
     const headersRaw = formData.get('headers') as string || ''
+    const attachmentInfo = formData.get('attachment-info') as string || '{}'
     
     // Check for high priority email (X-Priority: 1 or 2, or Importance: high)
     const isHighPriority = /X-Priority:\s*[12]\b/i.test(headersRaw) || 
                            /Importance:\s*high/i.test(headersRaw) ||
                            /X-MSMail-Priority:\s*High/i.test(headersRaw)
     
-    console.log('Received email:', { to, from, subject: subject.substring(0, 50), isHighPriority })
+    // Parse attachment info
+    let attachments: { name: string, type: string, content: Blob }[] = []
+    try {
+      const attachInfo = JSON.parse(attachmentInfo)
+      for (const key of Object.keys(attachInfo)) {
+        const file = formData.get(key) as File
+        if (file) {
+          attachments.push({
+            name: attachInfo[key].filename || file.name,
+            type: attachInfo[key]['content-type'] || file.type,
+            content: file
+          })
+        }
+      }
+      console.log('Found attachments:', attachments.length)
+    } catch (e) {
+      console.log('No attachments or parse error:', e)
+    }
+    
+    console.log('Received email:', { to, from, subject: subject.substring(0, 50), isHighPriority, attachmentCount: attachments.length })
     
     // Extract token from email address (tasks+TOKEN@inbound.gettrackli.com)
     const tokenMatch = to.match(/tasks\+([a-zA-Z0-9]+)@/)
@@ -352,6 +372,46 @@ serve(async (req) => {
     
     console.log('Stored email source:', emailSource.id)
     
+    // Upload email attachments to storage
+    const uploadedAttachments: { name: string, path: string, size: number, type: string }[] = []
+    for (const att of attachments) {
+      try {
+        const filePath = `email-attachments/${emailSource.id}/${att.name}`
+        const arrayBuffer = await att.content.arrayBuffer()
+        const { error: uploadError } = await supabase.storage
+          .from('attachments')
+          .upload(filePath, arrayBuffer, { contentType: att.type })
+        
+        if (!uploadError) {
+          uploadedAttachments.push({
+            name: att.name,
+            path: filePath,
+            size: att.content.size,
+            type: att.type
+          })
+          console.log('Uploaded attachment:', att.name)
+        } else {
+          console.error('Failed to upload attachment:', att.name, uploadError)
+        }
+      } catch (e) {
+        console.error('Error uploading attachment:', att.name, e)
+      }
+    }
+    
+    // Store attachment records
+    if (uploadedAttachments.length > 0) {
+      await supabase.from('email_attachments').insert(
+        uploadedAttachments.map(att => ({
+          email_source_id: emailSource.id,
+          file_name: att.name,
+          file_path: att.path,
+          file_size: att.size,
+          file_type: att.type
+        }))
+      )
+      console.log('Stored attachment records:', uploadedAttachments.length)
+    }
+    
     // Extract user's note (text they added before forwarding)
     const userNote = extractUserNote(text)
     console.log('User note:', userNote ? userNote.substring(0, 100) : '(none)')
@@ -422,11 +482,6 @@ serve(async (req) => {
           console.log(`Customer match from email: "${from}" -> "${finalCustomer}"`)
         }
       }
-      
-      // Build description with full email content
-      let fullDescription = task.description || ''
-      const emailContent = `\n\n---\n📧 **From email:** ${subject || '(no subject)'}\n**From:** ${from || 'Unknown'}\n\n${text?.substring(0, 2000) || '(no body)'}`
-      fullDescription = fullDescription ? fullDescription + emailContent : emailContent.trim()
       
       // Store original AI values for analytics tracking
       const aiOriginalValues = {

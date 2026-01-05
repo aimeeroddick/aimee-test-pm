@@ -4433,13 +4433,36 @@ export default function KanbanBoard({ demoMode = false }) {
     try {
       const { data, error } = await supabase
         .from('pending_tasks')
-        .select('*, email_sources(subject, from_address)')
+        .select('*, email_sources(id, subject, from_address, body_text, body_html)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
       
       if (error) throw error
-      setPendingEmailTasks(data || [])
-      setPendingEmailCount(data?.length || 0)
+      
+      // Fetch email attachments for each email source
+      const emailSourceIds = [...new Set(data?.map(t => t.email_source_id).filter(Boolean))]
+      let emailAttachments = {}
+      if (emailSourceIds.length > 0) {
+        const { data: attData } = await supabase
+          .from('email_attachments')
+          .select('*')
+          .in('email_source_id', emailSourceIds)
+        
+        // Group by email_source_id
+        attData?.forEach(att => {
+          if (!emailAttachments[att.email_source_id]) emailAttachments[att.email_source_id] = []
+          emailAttachments[att.email_source_id].push(att)
+        })
+      }
+      
+      // Attach email attachments to each pending task
+      const enrichedData = (data || []).map(t => ({
+        ...t,
+        email_attachments: emailAttachments[t.email_source_id] || []
+      }))
+      
+      setPendingEmailTasks(enrichedData)
+      setPendingEmailCount(enrichedData.length)
       // Only auto-select on initial load (when no selections exist)
       setSelectedPendingIds(prev => {
         if (prev.size === 0 && data?.length > 0) {
@@ -4567,8 +4590,10 @@ export default function KanbanBoard({ demoMode = false }) {
     setApprovingTaskId('bulk')
     
     try {
-      // Create all tasks in parallel without refreshing after each
-      const taskInserts = tasksToApprove.map(task => {
+      // Create all tasks and handle attachments
+      const createdTaskIds = []
+      
+      for (const task of tasksToApprove) {
         const targetColumn = getTargetColumn(task.due_date, task.critical)
         
         // Auto-set effort based on time estimate
@@ -4579,18 +4604,19 @@ export default function KanbanBoard({ demoMode = false }) {
           else energyLevel = 'high'
         }
         
-        // Build description with email info
-        let description = task.description || ''
+        // Build notes with full email body
+        let notes = ''
         if (task.email_sources) {
-          const emailInfo = `\n\n---\n📧 **From email:** ${task.email_sources.subject || '(no subject)'}\n**From:** ${task.email_sources.from_address || 'Unknown'}`
-          description = description ? description + emailInfo : emailInfo.trim()
+          notes = `📧 **Email from:** ${task.email_sources.from_address || 'Unknown'}\n**Subject:** ${task.email_sources.subject || '(no subject)'}\n\n---\n\n${task.email_sources.body_text || task.email_sources.body_html || '(no body)'}`
         }
         
-        return supabase
+        // Insert task
+        const { data: newTask, error: insertError } = await supabase
           .from('tasks')
           .insert({
             title: task.title,
-            description: description || null,
+            description: task.description || null,
+            notes: notes || null,
             due_date: task.due_date,
             start_date: task.start_date,
             assignee: task.assignee_text,
@@ -4603,10 +4629,44 @@ export default function KanbanBoard({ demoMode = false }) {
             subtasks: [],
             comments: []
           })
-      })
-      
-      // Execute all inserts
-      await Promise.all(taskInserts)
+          .select()
+          .single()
+        
+        if (insertError) {
+          console.error('Error creating task:', insertError)
+          continue
+        }
+        
+        createdTaskIds.push(newTask.id)
+        
+        // Copy email attachments to task
+        if (task.email_attachments && task.email_attachments.length > 0) {
+          for (const att of task.email_attachments) {
+            try {
+              // Copy file in storage to task attachments folder
+              const newPath = `${newTask.id}/${att.file_name}`
+              const { error: copyError } = await supabase.storage
+                .from('attachments')
+                .copy(att.file_path, newPath)
+              
+              if (!copyError) {
+                // Create attachment record
+                await supabase.from('attachments').insert({
+                  task_id: newTask.id,
+                  file_name: att.file_name,
+                  file_path: newPath,
+                  file_size: att.file_size,
+                  file_type: att.file_type
+                })
+              } else {
+                console.error('Error copying attachment:', copyError)
+              }
+            } catch (attErr) {
+              console.error('Error processing attachment:', attErr)
+            }
+          }
+        }
+      }
       
       // Update all pending tasks to approved
       const pendingIds = tasksToApprove.map(t => t.id)
