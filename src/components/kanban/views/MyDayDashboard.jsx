@@ -69,6 +69,7 @@ const getTaskPriorityScore = (task) => {
 const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) => {
   const [availableMinutes, setAvailableMinutes] = useState(240) // 4 hours default
   const [suggestedTasks, setSuggestedTasks] = useState([])
+  const [overflowTasks, setOverflowTasks] = useState([])
   const [step, setStep] = useState(1) // 1 = input time, 2 = review plan
   
   // Get all eligible tasks (not done, including those already in My Day)
@@ -89,18 +90,22 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
     // Pick tasks that fit within available time
     let remainingMinutes = availableMinutes
     const selected = []
+    const overflow = []
     
     for (const task of sorted) {
       const taskMins = getTaskMinutes(task)
-      if (taskMins <= remainingMinutes) {
+      if (taskMins <= remainingMinutes && selected.length < 10) {
         selected.push({ ...task, estimatedMinutes: taskMins })
         remainingMinutes -= taskMins
+      } else if (overflow.length < 5) {
+        // Capture next 5 tasks that didn't fit
+        overflow.push({ ...task, estimatedMinutes: taskMins })
       }
-      // Stop if we've filled the time or have enough tasks
-      if (remainingMinutes <= 0 || selected.length >= 10) break
+      if (selected.length >= 10 && overflow.length >= 5) break
     }
     
     setSuggestedTasks(selected)
+    setOverflowTasks(overflow)
     setStep(2)
   }
   
@@ -114,6 +119,12 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
   
   const removeTask = (index) => {
     setSuggestedTasks(prev => prev.filter((_, i) => i !== index))
+  }
+  
+  const addFromOverflow = (index) => {
+    const task = overflowTasks[index]
+    setSuggestedTasks(prev => [...prev, task])
+    setOverflowTasks(prev => prev.filter((_, i) => i !== index))
   }
   
   const totalMinutes = suggestedTasks.reduce((sum, t) => sum + t.estimatedMinutes, 0)
@@ -138,6 +149,7 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
     onClose()
     setStep(1)
     setSuggestedTasks([])
+    setOverflowTasks([])
   }
   
   if (!isOpen) return null
@@ -293,6 +305,43 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
                   })}
                 </>
               )}
+            </div>
+          )}
+          
+          {/* Overflow section - tasks that didn't fit */}
+          {step === 2 && overflowTasks.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                If you have more time...
+              </h4>
+              <div className="space-y-2">
+                {overflowTasks.map((task, index) => {
+                  const project = projects.find(p => p.id === task.project_id)
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          {task.critical && <span className="text-red-500">{TaskCardIcons.flag('w-3 h-3')}</span>}
+                          <span className="text-gray-700 dark:text-gray-300 truncate">{task.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          {project && <span>{project.name}</span>}
+                          <span>~{formatTime(task.estimatedMinutes)}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => addFromOverflow(index)}
+                        className="px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded font-medium"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
