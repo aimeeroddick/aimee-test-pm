@@ -8390,19 +8390,19 @@ export default function KanbanBoard({ demoMode = false }) {
           )}
           
           {currentView === 'progress' && (
-            <main className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fadeIn overflow-x-hidden">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
               
               {/* Summary Metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
                 {/* Day Streak */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
                     {MenuIcons.fire()}
-                    <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
+                    <span className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">Day Streak</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Consecutive days completing tasks</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">Day Streak</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-1 hidden sm:block">Consecutive days completing tasks</p>
                 </div>
                 
                 {/* On-Time Completion Rate */}
@@ -8416,13 +8416,13 @@ export default function KanbanBoard({ demoMode = false }) {
                   })
                   const onTimePercent = completedWithDue.length > 0 ? Math.round((onTime.length / completedWithDue.length) * 100) : 0
                   return (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">✅</span>
-                        <span className="text-3xl font-bold text-green-600 dark:text-green-400">{onTimePercent}%</span>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                        <span className="text-lg sm:text-xl">✅</span>
+                        <span className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">{onTimePercent}%</span>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-300">On-Time Rate</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{onTime.length}/{completedWithDue.length} completed before due</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">On-Time Rate</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-1 hidden sm:block">{onTime.length}/{completedWithDue.length} completed before due</p>
                     </div>
                   )
                 })()}
@@ -8448,38 +8448,37 @@ export default function KanbanBoard({ demoMode = false }) {
                   const daysCleared = last30Days.filter(d => d.cleared).length
                   const clearedPercent = daysWithMyDay > 0 ? Math.round((daysCleared / daysWithMyDay) * 100) : 0
                   return (
-                    <div className="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">☀️</span>
-                        <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{clearedPercent}%</span>
+                    <div className="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                        <span className="text-lg sm:text-xl">☀️</span>
+                        <span className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{clearedPercent}%</span>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-300">My Day Cleared</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{daysCleared}/{daysWithMyDay} days (last 30 days)</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">My Day Cleared</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-1 hidden sm:block">{daysCleared}/{daysWithMyDay} days (last 30 days)</p>
                     </div>
                   )
                 })()}
               </div>
               
               {/* Task Summary - Clickable Cards */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Tasks Needing Attention</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Tasks Needing Attention</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                   {/* Due Today */}
                   {(() => {
                     const dueTodayTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'today')
                     const dueTodayHours = dueTodayTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
                     return (
                       <button
-                        onClick={() => { clearFilters(); setCurrentView('board'); setFilterDueToday(true); }}
-                        className="p-4 rounded-xl border-2 border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all text-left group"
+                        onClick={() => { clearFilters(); setCurrentView('board'); setTimeout(() => setFilterDueToday(true), 0); }}
+                        className="p-2 sm:p-4 rounded-xl border-2 border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all text-left group"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-2xl">📅</span>
-                          <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">{dueTodayTasks.length}</span>
+                        <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                          <span className="text-lg sm:text-2xl">📅</span>
+                          <span className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{dueTodayTasks.length}</span>
                         </div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Due Today</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(dueTodayHours) || '0h'} estimated</p>
-                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Due Today</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">{formatTimeEstimate(dueTodayHours) || '0h'} estimated</p>
                       </button>
                     )
                   })()}
@@ -8490,16 +8489,15 @@ export default function KanbanBoard({ demoMode = false }) {
                     const overdueHours = overdueTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
                     return (
                       <button
-                        onClick={() => { setCurrentView('board'); clearFilters(); setFilterOverdue(true); }}
-                        className="p-4 rounded-xl border-2 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:border-red-400 dark:hover:border-red-500 transition-all text-left group"
+                        onClick={() => { clearFilters(); setCurrentView('board'); setTimeout(() => setFilterOverdue(true), 0); }}
+                        className="p-2 sm:p-4 rounded-xl border-2 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:border-red-400 dark:hover:border-red-500 transition-all text-left group"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-2xl">⚠️</span>
-                          <span className="text-2xl font-bold text-red-600 dark:text-red-400">{overdueTasks.length}</span>
+                        <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                          <span className="text-lg sm:text-2xl">⚠️</span>
+                          <span className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{overdueTasks.length}</span>
                         </div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Overdue</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(overdueHours) || '0h'} estimated</p>
-                        <p className="text-xs text-red-600 dark:text-red-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Overdue</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">{formatTimeEstimate(overdueHours) || '0h'} estimated</p>
                       </button>
                     )
                   })()}
@@ -8519,16 +8517,15 @@ export default function KanbanBoard({ demoMode = false }) {
                     const dueThisWeekHours = dueThisWeekTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
                     return (
                       <button
-                        onClick={() => { setCurrentView('board'); clearFilters(); setFilterDueThisWeek(true); }}
-                        className="p-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 transition-all text-left group"
+                        onClick={() => { clearFilters(); setCurrentView('board'); setTimeout(() => setFilterDueThisWeek(true), 0); }}
+                        className="p-2 sm:p-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 transition-all text-left group col-span-2 sm:col-span-1"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-2xl">📆</span>
-                          <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dueThisWeekTasks.length}</span>
+                        <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                          <span className="text-lg sm:text-2xl">📆</span>
+                          <span className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{dueThisWeekTasks.length}</span>
                         </div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Due This Week</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(dueThisWeekHours) || '0h'} estimated</p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Due This Week</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">{formatTimeEstimate(dueThisWeekHours) || '0h'} estimated</p>
                       </button>
                     )
                   })()}
