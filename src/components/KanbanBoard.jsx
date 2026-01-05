@@ -7357,8 +7357,12 @@ export default function KanbanBoard({ demoMode = false }) {
                 <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Filters</h3>
-                    <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button 
+                      onClick={() => setMobileFiltersOpen(false)} 
+                      onTouchEnd={(e) => { e.preventDefault(); setMobileFiltersOpen(false); }}
+                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -7454,40 +7458,108 @@ export default function KanbanBoard({ demoMode = false }) {
                       </select>
                       
                       {/* Due Date */}
-                      <select
-                        value={fieldFilters.due_date || ''}
-                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, due_date: e.target.value } : (({ due_date, ...rest }) => rest)(fieldFilters))}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
-                      >
-                        <option value="">Due Date: All</option>
-                        <option value="has_date">Has Due Date</option>
-                        <option value="__blank__">No Due Date</option>
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={fieldFilters.due_date?.startsWith('=') || fieldFilters.due_date?.startsWith('<') || fieldFilters.due_date?.startsWith('>') ? fieldFilters.due_date[0] : fieldFilters.due_date || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '' || val === 'has_date' || val === '__blank__') {
+                              setFieldFilters(val ? { ...fieldFilters, due_date: val } : (({ due_date, ...rest }) => rest)(fieldFilters))
+                            } else {
+                              // Operator selected, show date picker
+                              setFieldFilters({ ...fieldFilters, due_date: val + new Date().toISOString().split('T')[0] })
+                            }
+                          }}
+                          className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                        >
+                          <option value="">Due Date: All</option>
+                          <option value="has_date">Has Due Date</option>
+                          <option value="__blank__">No Due Date</option>
+                          <option value="=">On specific date...</option>
+                          <option value="<">Before date...</option>
+                          <option value=">">After date...</option>
+                        </select>
+                        {fieldFilters.due_date && (fieldFilters.due_date.startsWith('=') || fieldFilters.due_date.startsWith('<') || fieldFilters.due_date.startsWith('>')) && (
+                          <input
+                            type="date"
+                            value={fieldFilters.due_date.slice(1)}
+                            onChange={(e) => setFieldFilters({ ...fieldFilters, due_date: fieldFilters.due_date[0] + e.target.value })}
+                            className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                          />
+                        )}
+                      </div>
                       
                       {/* Start Date */}
-                      <select
-                        value={fieldFilters.start_date || ''}
-                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, start_date: e.target.value } : (({ start_date, ...rest }) => rest)(fieldFilters))}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
-                      >
-                        <option value="">Start Date: All</option>
-                        <option value="has_date">Has Start Date</option>
-                        <option value="__blank__">No Start Date</option>
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={fieldFilters.start_date?.startsWith('=') || fieldFilters.start_date?.startsWith('<') || fieldFilters.start_date?.startsWith('>') ? fieldFilters.start_date[0] : fieldFilters.start_date || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '' || val === 'has_date' || val === '__blank__') {
+                              setFieldFilters(val ? { ...fieldFilters, start_date: val } : (({ start_date, ...rest }) => rest)(fieldFilters))
+                            } else {
+                              setFieldFilters({ ...fieldFilters, start_date: val + new Date().toISOString().split('T')[0] })
+                            }
+                          }}
+                          className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                        >
+                          <option value="">Start Date: All</option>
+                          <option value="has_date">Has Start Date</option>
+                          <option value="__blank__">No Start Date</option>
+                          <option value="=">On specific date...</option>
+                          <option value="<">Before date...</option>
+                          <option value=">">After date...</option>
+                        </select>
+                        {fieldFilters.start_date && (fieldFilters.start_date.startsWith('=') || fieldFilters.start_date.startsWith('<') || fieldFilters.start_date.startsWith('>')) && (
+                          <input
+                            type="date"
+                            value={fieldFilters.start_date.slice(1)}
+                            onChange={(e) => setFieldFilters({ ...fieldFilters, start_date: fieldFilters.start_date[0] + e.target.value })}
+                            className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                          />
+                        )}
+                      </div>
                       
                       {/* Time Estimate */}
-                      <select
-                        value={fieldFilters.time_estimate || ''}
-                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, time_estimate: e.target.value } : (({ time_estimate, ...rest }) => rest)(fieldFilters))}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
-                      >
-                        <option value="">Time Estimate: All</option>
-                        <option value="<31">Quick (&lt;30 min)</option>
-                        <option value="<61">Under 1 hour</option>
-                        <option value="<121">Under 2 hours</option>
-                        <option value=">120">2+ hours</option>
-                        <option value="__blank__">No Estimate</option>
-                      </select>
+                      <div className="space-y-2">
+                        <select
+                          value={fieldFilters.time_estimate?.startsWith('=') || fieldFilters.time_estimate?.startsWith('<') || fieldFilters.time_estimate?.startsWith('>') ? fieldFilters.time_estimate[0] : fieldFilters.time_estimate || ''}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '' || val === '__blank__') {
+                              setFieldFilters(val ? { ...fieldFilters, time_estimate: val } : (({ time_estimate, ...rest }) => rest)(fieldFilters))
+                            } else if (['=', '<', '>'].includes(val)) {
+                              setFieldFilters({ ...fieldFilters, time_estimate: val + '30' })
+                            } else {
+                              setFieldFilters({ ...fieldFilters, time_estimate: val })
+                            }
+                          }}
+                          className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                        >
+                          <option value="">Time Estimate: All</option>
+                          <option value="__blank__">No Estimate</option>
+                          <option value="=">Exactly...</option>
+                          <option value="<">Less than...</option>
+                          <option value=">">More than...</option>
+                        </select>
+                        {fieldFilters.time_estimate && (fieldFilters.time_estimate.startsWith('=') || fieldFilters.time_estimate.startsWith('<') || fieldFilters.time_estimate.startsWith('>')) && (
+                          <select
+                            value={fieldFilters.time_estimate.slice(1)}
+                            onChange={(e) => setFieldFilters({ ...fieldFilters, time_estimate: fieldFilters.time_estimate[0] + e.target.value })}
+                            className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                          >
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="90">1.5 hours</option>
+                            <option value="120">2 hours</option>
+                            <option value="180">3 hours</option>
+                            <option value="240">4 hours</option>
+                            <option value="480">8 hours</option>
+                          </select>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
