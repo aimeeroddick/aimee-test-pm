@@ -442,12 +442,16 @@ serve(async (req) => {
         confidence: task.confidence
       }
       
-      // Auto-set effort from time if not already set
-      let finalEffort = task.energy_level || effortFromNote || null
-      if (!finalEffort && task.time_estimate) {
+      // Auto-set effort from time (takes priority over AI extraction)
+      let finalEffort = null
+      if (task.time_estimate) {
+        // Time-based effort always wins
         if (task.time_estimate <= 30) finalEffort = 'low'
         else if (task.time_estimate <= 120) finalEffort = 'medium'
         else finalEffort = 'high'
+      } else {
+        // Fall back to AI or user note
+        finalEffort = task.energy_level || effortFromNote || null
       }
       
       return {
