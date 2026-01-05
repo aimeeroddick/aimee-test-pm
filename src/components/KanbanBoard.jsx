@@ -3800,9 +3800,12 @@ export default function KanbanBoard({ demoMode = false }) {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false) // First-time profile setup
   
   // Show welcome modal for new users without a profile
+  // Only show if user is logged in AND has confirmed email
   useEffect(() => {
-    if (!demoMode && user && !loading && profile === null) {
+    if (!demoMode && user && user.email_confirmed_at && !loading && profile === null) {
       setShowWelcomeModal(true)
+    } else {
+      setShowWelcomeModal(false)
     }
   }, [demoMode, user, loading, profile])
   
