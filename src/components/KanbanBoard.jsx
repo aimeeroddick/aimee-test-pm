@@ -4546,9 +4546,45 @@ export default function KanbanBoard({ demoMode = false }) {
     setApprovingTaskId('bulk')
     
     try {
-      for (const task of tasksToApprove) {
-        await handleApprovePendingTask(task, task.project_id)
-      }
+      // Create all tasks in parallel without refreshing after each
+      const taskInserts = tasksToApprove.map(task => {
+        const targetColumn = getTargetColumn(task.due_date, task.critical)
+        return supabase
+          .from('tasks')
+          .insert({
+            title: task.title,
+            description: task.description,
+            due_date: task.due_date,
+            start_date: task.start_date,
+            assignee: task.assignee_text,
+            project_id: task.project_id,
+            status: targetColumn,
+            critical: task.critical || false,
+            energy_level: task.energy_level || 'medium',
+            time_estimate: task.time_estimate || 0,
+            customer: task.customer || null,
+            subtasks: [],
+            comments: []
+          })
+      })
+      
+      // Execute all inserts
+      await Promise.all(taskInserts)
+      
+      // Update all pending tasks to approved
+      const pendingIds = tasksToApprove.map(t => t.id)
+      await supabase
+        .from('pending_tasks')
+        .update({ status: 'approved' })
+        .in('id', pendingIds)
+      
+      // Refresh once at the end
+      await fetchData()
+      await fetchPendingEmailTasks()
+      
+    } catch (err) {
+      console.error('Error bulk approving tasks:', err)
+      alert('Failed to create some tasks: ' + err.message)
     } finally {
       setApprovingTaskId(null)
     }
@@ -6846,11 +6882,18 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Pending Email Tasks Badge */}
               {pendingEmailCount > 0 && (
                 <button
-                  onClick={() => { setCurrentView('board'); setPendingReviewExpanded(true); }}
-                  className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer z-10"
+                  type="button"
+                  onClick={(e) => { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentView('board'); 
+                    setPendingReviewExpanded(true); 
+                  }}
+                  className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
                   title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
+                  style={{ position: 'relative', zIndex: 100 }}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
