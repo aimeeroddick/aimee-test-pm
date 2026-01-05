@@ -70,7 +70,8 @@ export default function Login() {
         setError('An account with this email already exists. Please sign in instead.')
       } else {
         // Redirect to login with confirmation pending state
-        navigate(`/login?awaiting_confirmation=true&email=${encodeURIComponent(email)}`)
+        // Use window.location for full page reload to ensure clean auth state
+        window.location.href = `/login?awaiting_confirmation=true&email=${encodeURIComponent(email)}`
         return
       }
     } else {
