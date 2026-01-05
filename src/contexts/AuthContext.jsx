@@ -189,11 +189,13 @@ export function AuthProvider({ children }) {
   }
 
   const verifyOtp = async (email, token) => {
+    console.log('Verifying OTP:', { email, token, type: 'signup' })
     const { data, error } = await supabase.auth.verifyOtp({
       email: email,
       token: token,
       type: 'signup',
     })
+    console.log('Verify OTP response:', { data, error })
     return { data, error }
   }
 

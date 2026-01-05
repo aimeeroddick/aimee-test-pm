@@ -304,13 +304,22 @@ export default function Login() {
                       }
                       setLoading(true)
                       setError('')
-                      const { data, error } = await verifyOtp(emailFromParams || email, code)
-                      if (error) {
-                        setError(error.message)
+                      setMessage('')
+                      try {
+                        const { data, error } = await verifyOtp(emailFromParams || email, code)
+                        console.log('OTP verification result:', { data, error })
+                        if (error) {
+                          setError(error.message)
+                          setLoading(false)
+                        } else {
+                          // Success - navigate to app
+                          setLoading(false)
+                          navigate('/app')
+                        }
+                      } catch (err) {
+                        console.error('OTP verification error:', err)
+                        setError('Verification failed. Please try again.')
                         setLoading(false)
-                      } else {
-                        // Success - user will be redirected by auth state change
-                        navigate('/app')
                       }
                     }}
                     disabled={loading || otpCode.join('').length !== 8}
