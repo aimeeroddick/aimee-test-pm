@@ -305,11 +305,24 @@ export default function Login() {
                       setLoading(true)
                       setError('')
                       setMessage('')
+                      
+                      // Add timeout for slow requests
+                      const timeoutId = setTimeout(() => {
+                        setError('Verification is taking too long. Please refresh the page and try again.')
+                        setLoading(false)
+                      }, 15000) // 15 second timeout
+                      
                       try {
                         const { data, error } = await verifyOtp(emailFromParams || email, code)
+                        clearTimeout(timeoutId)
                         console.log('OTP verification result:', { data, error })
                         if (error) {
-                          setError(error.message)
+                          // Make error messages more user-friendly
+                          if (error.message.includes('expired') || error.message.includes('invalid')) {
+                            setError('Invalid or expired code. Please request a new code and try again.')
+                          } else {
+                            setError(error.message)
+                          }
                           setLoading(false)
                         } else {
                           // Success - navigate to app
@@ -317,8 +330,9 @@ export default function Login() {
                           navigate('/app')
                         }
                       } catch (err) {
+                        clearTimeout(timeoutId)
                         console.error('OTP verification error:', err)
-                        setError('Verification failed. Please try again.')
+                        setError('Verification failed. Please refresh the page and try again.')
                         setLoading(false)
                       }
                     }}
