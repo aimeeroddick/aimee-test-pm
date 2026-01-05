@@ -21,6 +21,7 @@ import { MyDayDashboard, MyDayTaskCard } from './kanban/views/MyDayDashboard'
 import { TaskTableView } from './kanban/views/TaskTableView'
 import TaskModal from './kanban/modals/TaskModal'
 import ProjectModal from './kanban/modals/ProjectModal'
+import WelcomeModal from './kanban/modals/WelcomeModal'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
@@ -3646,7 +3647,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 
 // Task Modal Component
 export default function KanbanBoard({ demoMode = false }) {
-  const { user: authUser, signOut } = useAuth()
+  const { user: authUser, signOut, profile, updateProfile, uploadAvatar } = useAuth()
   
   // Use demo user if in demo mode, otherwise use authenticated user
   const user = demoMode ? DEMO_USER : authUser
@@ -3667,6 +3668,22 @@ export default function KanbanBoard({ demoMode = false }) {
   const [undoToast, setUndoToast] = useState(null) // { taskId, previousStatus, message }
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
   const [breakdownTask, setBreakdownTask] = useState(null) // Task to break down with AI
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false) // First-time profile setup
+  
+  // Show welcome modal for new users without a profile
+  useEffect(() => {
+    if (!demoMode && user && !loading && profile === null) {
+      setShowWelcomeModal(true)
+    }
+  }, [demoMode, user, loading, profile])
+  
+  // Handle welcome modal completion
+  const handleWelcomeComplete = async (profileData) => {
+    const { error } = await updateProfile(profileData)
+    if (!error) {
+      setShowWelcomeModal(false)
+    }
+  }
 
   // Track online/offline status
   useEffect(() => {
@@ -3878,7 +3895,6 @@ export default function KanbanBoard({ demoMode = false }) {
   const [showSaveViewModal, setShowSaveViewModal] = useState(false)
   const [newViewName, setNewViewName] = useState('')
   
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const welcomeProjectCreating = useRef(false)
   
   // Meeting Notes Import
@@ -4292,7 +4308,6 @@ export default function KanbanBoard({ demoMode = false }) {
       }
       
       // Refresh data to show the new project and tasks
-      setShowWelcomeModal(true)
       await fetchData()
       
     } catch (err) {
@@ -7103,6 +7118,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 onUpdateMyDayDate={handleUpdateMyDayDate}
                 showConfettiPref={showConfetti}
                 onToggleSubtask={handleToggleSubtask}
+                displayName={profile?.display_name}
               />
             </div>
           )}
@@ -7650,58 +7666,13 @@ export default function KanbanBoard({ demoMode = false }) {
       
 
       
-      {/* Welcome Modal for New Users */}
-      {showWelcomeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-lg rounded-2xl shadow-2xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                <span className="text-3xl">🚀</span>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Trackli!</h2>
-              <p className="text-gray-600 dark:text-gray-300">We've created a starter project with sample tasks to help you learn the app.</p>
-            </div>
-            
-            <div className="space-y-3 mb-6">
-              <div className="flex items-start gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
-                <span className="text-xl">👆</span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Click on any task</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Each task has tips on features to explore</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                {TaskCardIcons.sun("w-6 h-6")}
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Try My Day view</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Your daily focus list - some tasks are already there!</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                <span className="text-xl">⚡</span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Press Q for Quick Add</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Add tasks instantly with voice or type naturally like "Call mom tomorrow"</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-900/20 rounded-xl">
-                <span className="text-xl">✅</span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">Complete tasks to see them move</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Complete all My Day tasks for a celebration!</p>
-                </div>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => setShowWelcomeModal(false)}
-              className="w-full py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-            >
-              Let's Go! 🎉
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Welcome Modal for Profile Setup */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onComplete={handleWelcomeComplete}
+        onUploadAvatar={uploadAvatar}
+        initialEmail={user?.email}
+      />
 
       <HelpModal
         isOpen={helpModalOpen}
