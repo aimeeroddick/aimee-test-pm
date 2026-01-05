@@ -159,6 +159,22 @@ const BetaTester = () => {
             </svg>
             Watch the Demos
           </button>
+          
+          {/* App Preview GIF */}
+          <div className="mt-12 flex justify-center">
+            <div className="relative">
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-3xl blur-2xl opacity-30 scale-105"></div>
+              {/* GIF with phone-like frame */}
+              <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                <img 
+                  src="/trackli-demo.gif" 
+                  alt="Trackli app demo" 
+                  className="w-64 sm:w-72 rounded-[2rem]"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
