@@ -71,16 +71,10 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
   const [suggestedTasks, setSuggestedTasks] = useState([])
   const [step, setStep] = useState(1) // 1 = input time, 2 = review plan
   
-  // Get all eligible tasks (not done, not already in my day today)
+  // Get all eligible tasks (not done, including those already in My Day)
   const eligibleTasks = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayStr = today.toISOString().split('T')[0]
-    
     return allTasks.filter(task => {
       if (task.status === 'done') return false
-      // Don't include tasks already explicitly in My Day today
-      if (task.my_day_date === todayStr) return false
       // Don't include tasks from archived projects
       const project = projects.find(p => p.id === task.project_id)
       if (project?.archived) return false
@@ -214,7 +208,7 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
               <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
                 <h4 className="text-sm font-medium text-indigo-900 dark:text-indigo-300 mb-2">How it works</h4>
                 <ul className="text-xs text-indigo-700 dark:text-indigo-400 space-y-1">
-                  <li>• Prioritizes critical and overdue tasks first</li>
+                  <li>• Prioritises critical and overdue tasks first</li>
                   <li>• Considers start dates and due dates</li>
                   <li>• Estimates time based on your effort levels</li>
                   <li>• You can rearrange or remove tasks before accepting</li>
@@ -326,7 +320,7 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
                 disabled={suggestedTasks.length === 0}
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-purple-600 transition-all disabled:opacity-50"
               >
-                Add to My Day ({suggestedTasks.length})
+                Plan My Day
               </button>
             </div>
           )}
@@ -774,10 +768,32 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   }
   
   const handleAcceptPlan = (taskIds) => {
-    // Add all selected tasks to My Day
-    taskIds.forEach(taskId => {
-      onUpdateMyDayDate(taskId, todayStr)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStr = today.toISOString().split('T')[0]
+    
+    // Get current My Day tasks
+    const currentMyDayTaskIds = tasks
+      .filter(t => t.status !== 'done' && t.my_day_date === todayStr)
+      .map(t => t.id)
+    
+    // Remove tasks from My Day that aren't in the new plan
+    currentMyDayTaskIds.forEach(taskId => {
+      if (!taskIds.includes(taskId)) {
+        onUpdateMyDayDate(taskId, null) // Remove from My Day
+      }
     })
+    
+    // Add tasks to My Day that are in the plan
+    taskIds.forEach(taskId => {
+      if (!currentMyDayTaskIds.includes(taskId)) {
+        onUpdateMyDayDate(taskId, todayStr)
+      }
+    })
+    
+    // Update the custom order in localStorage to match the plan order
+    const orderKey = `trackli-myday-order-${todayStr}`
+    localStorage.setItem(orderKey, JSON.stringify(taskIds))
   }
   
   const RecommendationSection = ({ title, emoji, color, tasks, id }) => {
