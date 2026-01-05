@@ -18,8 +18,24 @@ export default function Login() {
   const { signIn, signUp, resetPassword, resendConfirmation, user } = useAuth()
   const navigate = useNavigate()
   
-  // Check if user is logged in but unconfirmed
+  // Check URL parameters for confirmation states
   const isUnconfirmed = searchParams.get('unconfirmed') === 'true'
+  const isAwaitingConfirmation = searchParams.get('awaiting_confirmation') === 'true'
+  const emailFromParams = searchParams.get('email') || ''
+  
+  // Set email from URL params if present
+  useEffect(() => {
+    if (emailFromParams && !email) {
+      setEmail(emailFromParams)
+    }
+  }, [emailFromParams])
+  
+  // Switch to sign-in mode if awaiting confirmation
+  useEffect(() => {
+    if (isAwaitingConfirmation) {
+      setIsSignUp(false)
+    }
+  }, [isAwaitingConfirmation])
   
   // Show message for unconfirmed users
   useEffect(() => {
@@ -52,7 +68,9 @@ export default function Login() {
         // Email already exists - Supabase returns empty/missing identities array
         setError('An account with this email already exists. Please sign in instead.')
       } else {
-        setMessage('Check your email for the confirmation link!')
+        // Redirect to login with confirmation pending state
+        navigate(`/login?awaiting_confirmation=true&email=${encodeURIComponent(email)}`)
+        return
       }
     } else {
       const { error } = await signIn(email, password)
@@ -210,11 +228,61 @@ export default function Login() {
           {/* Form Card */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 p-8 border border-gray-100 dark:border-gray-700">
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              {isAwaitingConfirmation ? 'Check Your Email' : (isSignUp ? 'Create Account' : 'Welcome Back')}
             </h2>
             <p className="text-gray-500 dark:text-gray-300 text-sm mb-6">
-              {isSignUp ? `Start ${L.organizing} your tasks today` : 'Sign in to continue to Trackli'}
+              {isAwaitingConfirmation 
+                ? 'We sent a confirmation link to your email' 
+                : (isSignUp ? `Start ${L.organizing} your tasks today` : 'Sign in to continue to Trackli')}
             </p>
+
+            {/* Awaiting Confirmation State */}
+            {isAwaitingConfirmation && (
+              <div className="mb-6">
+                <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-indigo-100 dark:bg-indigo-800 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 mb-2">
+                    We sent a confirmation email to:
+                  </p>
+                  <p className="font-semibold text-gray-900 dark:text-white mb-4">
+                    {emailFromParams || email}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Click the link in the email to activate your account.
+                    Check your spam folder if you don't see it.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setLoading(true)
+                      setError('')
+                      const { error } = await resendConfirmation(emailFromParams || email)
+                      if (error) {
+                        setError(error.message)
+                      } else {
+                        setMessage('Confirmation email resent! Check your inbox.')
+                      }
+                      setLoading(false)
+                    }}
+                    disabled={loading}
+                    className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Resend Confirmation Email'}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="mt-4 w-full text-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ← Back to Sign In
+                </button>
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -255,6 +323,7 @@ export default function Login() {
               </div>
             )}
 
+            {!isAwaitingConfirmation && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -354,8 +423,9 @@ export default function Login() {
                 )}
               </button>
             </form>
+            )}
 
-            {!isSignUp && (
+            {!isSignUp && !isAwaitingConfirmation && (
               <button
                 type="button"
                 onClick={handleResetPassword}
@@ -366,21 +436,23 @@ export default function Login() {
               </button>
             )}
 
-            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp)
-                  setError('')
-                  setMessage('')
-                }}
-                className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                {isSignUp
-                  ? 'Already have an account? Sign in'
-                  : "Don't have an account? Sign up"}
-              </button>
-            </div>
+            {!isAwaitingConfirmation && (
+              <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp)
+                    setError('')
+                    setMessage('')
+                  }}
+                  className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  {isSignUp
+                    ? 'Already have an account? Sign in'
+                    : "Don't have an account? Sign up"}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Footer links (mobile) */}
