@@ -513,7 +513,7 @@ serve(async (req) => {
         user_id: profile.id,
         email_source_id: emailSource.id,
         title: task.title?.substring(0, 200) || 'Untitled task',
-        description: fullDescription.substring(0, 3000) || null,
+        description: task.description?.substring(0, 1000) || null,
         due_date: task.due_date || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
