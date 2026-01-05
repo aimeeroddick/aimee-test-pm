@@ -168,6 +168,7 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
+    setUser(null)  // Clear user first to prevent welcome modal flash
     setProfile(null)
     const { error } = await supabase.auth.signOut()
     return { error }

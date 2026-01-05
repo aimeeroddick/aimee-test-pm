@@ -3798,17 +3798,16 @@ export default function KanbanBoard({ demoMode = false }) {
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
   const [breakdownTask, setBreakdownTask] = useState(null) // Task to break down with AI
   const [showWelcomeModal, setShowWelcomeModal] = useState(false) // First-time profile setup
-  const [isSigningOut, setIsSigningOut] = useState(false) // Prevent flashes during signout
   
   // Show welcome modal for new users without a profile
-  // Only show if user is logged in AND has confirmed email AND not signing out
+  // Only show if user is logged in AND has confirmed email
   useEffect(() => {
-    if (!demoMode && user && user.email_confirmed_at && !loading && profile === null && !isSigningOut) {
+    if (!demoMode && user && user.email_confirmed_at && !loading && profile === null) {
       setShowWelcomeModal(true)
     } else {
       setShowWelcomeModal(false)
     }
-  }, [demoMode, user, loading, profile, isSigningOut])
+  }, [demoMode, user, loading, profile])
   
   // Handle welcome modal completion
   const handleWelcomeComplete = async (profileData) => {
@@ -6180,15 +6179,6 @@ export default function KanbanBoard({ demoMode = false }) {
   return (
     <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200 flex flex-col">
-      {/* Signing Out Overlay */}
-      {isSigningOut && (
-        <div className="fixed inset-0 z-[200] bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400">Signing out...</p>
-          </div>
-        </div>
-      )}
       {/* Offline Banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
@@ -6420,7 +6410,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         </button>
                         <button
                           onClick={async () => { 
-                            setIsSigningOut(true)  // Shows overlay, prevents flash
+                            setNavMenuOpen(false)
                             await signOut()
                             window.location.href = '/welcome'
                           }}
