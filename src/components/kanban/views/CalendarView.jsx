@@ -585,10 +585,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const handleResizeStart = (e, task) => {
     e.stopPropagation()
     e.preventDefault()
+    const duration = task.time_estimate || 30
+    const heightSlots = Math.ceil(duration / 30)
+    setResizePreviewHeight(heightSlots * 32 - 2) // Set initial height immediately
     setResizingTask({
       task,
       startY: e.clientY,
-      originalDuration: task.time_estimate || 30
+      originalDuration: duration
     })
   }
   
@@ -1247,11 +1250,15 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                             style={{ top: '1px' }}
                           >
                             {/* Resize preview ghost */}
-                            {isBeingResized && resizePreviewHeight && resizePreviewHeight !== originalHeight && (
+                            {isBeingResized && resizePreviewHeight && (
                               <div 
-                                className="absolute inset-x-0 top-0 bg-indigo-200/50 dark:bg-indigo-700/30 border-2 border-dashed border-indigo-400 rounded pointer-events-none z-20"
+                                className="absolute inset-x-0 top-0 bg-indigo-300/40 dark:bg-indigo-500/40 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-20"
                                 style={{ height: `${resizePreviewHeight}px` }}
-                              />
+                              >
+                                <div className="absolute bottom-1 right-1 text-[9px] font-medium text-indigo-600 dark:text-indigo-300 bg-white/80 dark:bg-gray-800/80 px-1 rounded">
+                                  {Math.round((resizePreviewHeight + 2) / 32 * 30)}m
+                                </div>
+                              </div>
                             )}
                             {/* Actual task */}
                             <div
