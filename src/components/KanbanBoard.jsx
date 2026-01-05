@@ -3151,7 +3151,15 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               placeholder="Search tasks by title, description, assignee, customer..."
               className="flex-1 text-lg outline-none placeholder-gray-400 bg-transparent dark:text-white"
             />
-            <kbd className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded">ESC</kbd>
+            <button
+              onClick={() => setShowSearch(false)}
+              className="md:hidden p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <kbd className="hidden md:block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded">ESC</kbd>
           </div>
         </div>
         
