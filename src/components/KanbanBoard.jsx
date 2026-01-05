@@ -7373,36 +7373,71 @@ export default function KanbanBoard({ demoMode = false }) {
             <main className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
               
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              {/* Summary Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                {/* Day Streak */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {MenuIcons.fire()}
                     <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{currentStreak}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-300">Day Streak</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Consecutive days completing tasks</p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    {MenuIcons.checkSquare()}
-                    <span className="text-3xl font-bold text-green-600 dark:text-green-400">{completedToday}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">Completed Today</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    {MenuIcons.calendarWeek()}
-                    <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{weeklyStats.count}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">This Week</p>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    {MenuIcons.stopwatch()}
-                    <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{formatTimeEstimate(weeklyStats.time) || '0h'}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">Time This Week</p>
-                </div>
+                
+                {/* On-Time Completion Rate */}
+                {(() => {
+                  const completedWithDue = tasks.filter(t => t.status === 'done' && t.due_date && t.completed_at)
+                  const onTime = completedWithDue.filter(t => {
+                    const dueDate = new Date(t.due_date)
+                    dueDate.setHours(23, 59, 59, 999)
+                    const completedDate = new Date(t.completed_at)
+                    return completedDate <= dueDate
+                  })
+                  const onTimePercent = completedWithDue.length > 0 ? Math.round((onTime.length / completedWithDue.length) * 100) : 0
+                  return (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">✅</span>
+                        <span className="text-3xl font-bold text-green-600 dark:text-green-400">{onTimePercent}%</span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">On-Time Rate</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{onTime.length}/{completedWithDue.length} completed before due</p>
+                    </div>
+                  )
+                })()}
+                
+                {/* My Day Cleared Rate */}
+                {(() => {
+                  // Check last 30 days for days where user had My Day tasks and cleared them all
+                  const last30Days = []
+                  for (let i = 0; i < 30; i++) {
+                    const date = new Date()
+                    date.setDate(date.getDate() - i)
+                    date.setHours(0, 0, 0, 0)
+                    const dateStr = date.toISOString().split('T')[0]
+                    
+                    // Tasks that were in My Day for this date
+                    const myDayTasks = tasks.filter(t => t.my_day_date === dateStr)
+                    if (myDayTasks.length > 0) {
+                      const allCompleted = myDayTasks.every(t => t.status === 'done')
+                      last30Days.push({ date: dateStr, cleared: allCompleted, count: myDayTasks.length })
+                    }
+                  }
+                  const daysWithMyDay = last30Days.length
+                  const daysCleared = last30Days.filter(d => d.cleared).length
+                  const clearedPercent = daysWithMyDay > 0 ? Math.round((daysCleared / daysWithMyDay) * 100) : 0
+                  return (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">☀️</span>
+                        <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{clearedPercent}%</span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">My Day Cleared</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{daysCleared}/{daysWithMyDay} days (last 30 days)</p>
+                    </div>
+                  )
+                })()}
               </div>
               
               {/* Task Summary - Clickable Cards */}
