@@ -14,7 +14,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', ''])
+  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '', '', ''])
   
   const { signIn, signUp, resetPassword, resendConfirmation, verifyOtp, user } = useAuth()
   const navigate = useNavigate()
@@ -247,7 +247,7 @@ export default function Login() {
                     </svg>
                   </div>
                   <p className="text-gray-700 dark:text-gray-300 mb-2">
-                    We sent a 6-digit code to:
+                    We sent a verification code to:
                   </p>
                   <p className="font-semibold text-gray-900 dark:text-white mb-4">
                     {emailFromParams || email}
@@ -267,7 +267,7 @@ export default function Login() {
                           newOtp[index] = value
                           setOtpCode(newOtp)
                           // Auto-focus next input
-                          if (value && index < 5) {
+                          if (value && index < 7) {
                             const nextInput = document.getElementById(`otp-${index + 1}`)
                             nextInput?.focus()
                           }
@@ -281,7 +281,7 @@ export default function Login() {
                         }}
                         onPaste={(e) => {
                           e.preventDefault()
-                          const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6)
+                          const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 8)
                           const newOtp = [...otpCode]
                           for (let i = 0; i < pastedData.length; i++) {
                             newOtp[i] = pastedData[i]
@@ -289,7 +289,7 @@ export default function Login() {
                           setOtpCode(newOtp)
                         }}
                         id={`otp-${index}`}
-                        className="w-11 h-12 text-center text-xl font-bold border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-9 h-11 text-center text-lg font-bold border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     ))}
                   </div>
@@ -298,8 +298,8 @@ export default function Login() {
                     type="button"
                     onClick={async () => {
                       const code = otpCode.join('')
-                      if (code.length !== 6) {
-                        setError('Please enter the 6-digit code')
+                      if (code.length !== 8) {
+                        setError('Please enter the 8-digit code')
                         return
                       }
                       setLoading(true)
@@ -313,7 +313,7 @@ export default function Login() {
                         navigate('/app')
                       }
                     }}
-                    disabled={loading || otpCode.join('').length !== 6}
+                    disabled={loading || otpCode.join('').length !== 8}
                     className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 mb-3"
                   >
                     {loading ? 'Verifying...' : 'Verify Email'}
@@ -332,7 +332,7 @@ export default function Login() {
                         setError(error.message)
                       } else {
                         setMessage('Code resent! Check your inbox.')
-                        setOtpCode(['', '', '', '', '', ''])
+                        setOtpCode(['', '', '', '', '', '', '', ''])
                       }
                       setLoading(false)
                     }}
