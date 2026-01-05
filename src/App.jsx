@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useAuth } from './contexts/AuthContext'
-import Login from './components/Login'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
 import BetaTester from './components/BetaTester'
@@ -20,7 +19,8 @@ function ScrollToTop() {
   return null
 }
 
-// Lazy load heavy components
+// Lazy load components for better code splitting
+const Login = lazy(() => import('./components/Login'))
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
 const LandingPage = lazy(() => import('./components/LandingPage'))
 const OutlookAddin = lazy(() => import('./components/OutlookAddin'))
@@ -82,9 +82,9 @@ function PublicRoute({ children }) {
 }
 
 function App() {
-  // Prefetch KanbanBoard after initial paint for faster navigation
+  // Prefetch KanbanBoard after page is idle - don't compete with initial load
   useEffect(() => {
-    const timer = setTimeout(prefetchKanbanBoard, 1000)
+    const timer = setTimeout(prefetchKanbanBoard, 3000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -107,7 +107,9 @@ function App() {
           path="/login" 
           element={
             <PublicRoute>
-              <Login />
+              <Suspense fallback={<LoadingSpinner />}>
+                <Login />
+              </Suspense>
             </PublicRoute>
           } 
         />

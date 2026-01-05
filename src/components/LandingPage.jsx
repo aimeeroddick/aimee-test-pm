@@ -562,7 +562,7 @@ export default function LandingPage() {
             
             {/* Screenshot */}
             <img 
-            src="/screenshots/board.png" 
+            src="/screenshots/board.webp" 
             alt="Trackli Kanban Board"
             className="relative w-full rounded-2xl shadow-2xl"
               fetchpriority="high"
@@ -831,7 +831,7 @@ Examples we can extract from:
             </div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 overflow-hidden">
               <img 
-                src="/screenshots/my-day.png" 
+                src="/screenshots/my-day.webp" 
                 alt="Trackli My Day View" 
                 className="w-full rounded-xl shadow-lg"
               />
@@ -901,7 +901,7 @@ Examples we can extract from:
             </div>
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 overflow-hidden">
               <img 
-                src="/screenshots/calendar.png" 
+                src="/screenshots/calendar.webp" 
                 alt="Trackli Calendar View" 
                 className="w-full rounded-xl shadow-lg"
               />
