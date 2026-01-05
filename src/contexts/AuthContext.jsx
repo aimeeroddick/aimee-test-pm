@@ -188,6 +188,15 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
+  const verifyOtp = async (email, token) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email,
+      token: token,
+      type: 'signup',
+    })
+    return { data, error }
+  }
+
   const value = {
     user,
     profile,
@@ -200,6 +209,7 @@ export function AuthProvider({ children }) {
     signOut,
     resetPassword,
     resendConfirmation,
+    verifyOtp,
     updateProfile,
     uploadAvatar,
     fetchProfile,

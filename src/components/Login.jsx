@@ -14,8 +14,9 @@ export default function Login() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [otpCode, setOtpCode] = useState(['', '', '', '', '', ''])
   
-  const { signIn, signUp, resetPassword, resendConfirmation, user } = useAuth()
+  const { signIn, signUp, resetPassword, resendConfirmation, verifyOtp, user } = useAuth()
   const navigate = useNavigate()
   
   // Check URL parameters for confirmation states
@@ -246,14 +247,80 @@ export default function Login() {
                     </svg>
                   </div>
                   <p className="text-gray-700 dark:text-gray-300 mb-2">
-                    We sent a confirmation email to:
+                    We sent a 6-digit code to:
                   </p>
                   <p className="font-semibold text-gray-900 dark:text-white mb-4">
                     {emailFromParams || email}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Click the link in the email to activate your account.
-                    Check your spam folder if you don't see it.
+                  
+                  {/* OTP Input */}
+                  <div className="flex justify-center gap-2 mb-4">
+                    {otpCode.map((digit, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '')
+                          const newOtp = [...otpCode]
+                          newOtp[index] = value
+                          setOtpCode(newOtp)
+                          // Auto-focus next input
+                          if (value && index < 5) {
+                            const nextInput = document.getElementById(`otp-${index + 1}`)
+                            nextInput?.focus()
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          // Handle backspace to go to previous input
+                          if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
+                            const prevInput = document.getElementById(`otp-${index - 1}`)
+                            prevInput?.focus()
+                          }
+                        }}
+                        onPaste={(e) => {
+                          e.preventDefault()
+                          const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6)
+                          const newOtp = [...otpCode]
+                          for (let i = 0; i < pastedData.length; i++) {
+                            newOtp[i] = pastedData[i]
+                          }
+                          setOtpCode(newOtp)
+                        }}
+                        id={`otp-${index}`}
+                        className="w-11 h-12 text-center text-xl font-bold border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    ))}
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const code = otpCode.join('')
+                      if (code.length !== 6) {
+                        setError('Please enter the 6-digit code')
+                        return
+                      }
+                      setLoading(true)
+                      setError('')
+                      const { data, error } = await verifyOtp(emailFromParams || email, code)
+                      if (error) {
+                        setError(error.message)
+                        setLoading(false)
+                      } else {
+                        // Success - user will be redirected by auth state change
+                        navigate('/app')
+                      }
+                    }}
+                    disabled={loading || otpCode.join('').length !== 6}
+                    className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 mb-3"
+                  >
+                    {loading ? 'Verifying...' : 'Verify Email'}
+                  </button>
+                  
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Didn't receive the code? Check your spam folder or
                   </p>
                   <button
                     type="button"
@@ -264,14 +331,15 @@ export default function Login() {
                       if (error) {
                         setError(error.message)
                       } else {
-                        setMessage('Confirmation email resent! Check your inbox.')
+                        setMessage('Code resent! Check your inbox.')
+                        setOtpCode(['', '', '', '', '', ''])
                       }
                       setLoading(false)
                     }}
                     disabled={loading}
-                    className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
                   >
-                    {loading ? 'Sending...' : 'Resend Confirmation Email'}
+                    Resend Code
                   </button>
                 </div>
                 <button
