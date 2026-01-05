@@ -4010,6 +4010,8 @@ export default function KanbanBoard({ demoMode = false }) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
+  const [pendingEmailTasks, setPendingEmailTasks] = useState([])
+  const [pendingEmailCount, setPendingEmailCount] = useState(0)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -4407,7 +4409,34 @@ export default function KanbanBoard({ demoMode = false }) {
   // Fetch data on mount
   useEffect(() => {
     fetchData()
+    fetchPendingEmailTasks()
   }, [])
+  
+  // Refresh pending tasks periodically (every 60 seconds)
+  useEffect(() => {
+    if (demoMode) return
+    const interval = setInterval(fetchPendingEmailTasks, 60000)
+    return () => clearInterval(interval)
+  }, [demoMode])
+
+  
+  // Fetch pending email tasks
+  const fetchPendingEmailTasks = async () => {
+    if (demoMode) return
+    try {
+      const { data, error } = await supabase
+        .from('pending_tasks')
+        .select('*, email_sources(subject, from_address)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setPendingEmailTasks(data || [])
+      setPendingEmailCount(data?.length || 0)
+    } catch (err) {
+      console.error('Error fetching pending email tasks:', err)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -6668,6 +6697,22 @@ export default function KanbanBoard({ demoMode = false }) {
                 </svg>
                 <span className="hidden sm:inline"><u>N</u>otes</span>
               </button>
+              
+              {/* Pending Email Tasks Badge */}
+              {pendingEmailCount > 0 && (
+                <button
+                  onClick={() => setActiveView('board')}
+                  className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400"
+                  title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {pendingEmailCount > 9 ? '9+' : pendingEmailCount}
+                  </span>
+                </button>
+              )}
               
               <button
                 onClick={() => setHelpModalOpen(true)}
