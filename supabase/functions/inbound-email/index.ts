@@ -60,6 +60,7 @@ For each task, provide:
 - assignee_text: Person responsible if mentioned (or null)
 - project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
+- time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120, "30 mins" → 30). Use null if not mentioned.
 - confidence: Your confidence this is a real action item (0.5-1.0)
 
 IMPORTANT: 
@@ -74,7 +75,7 @@ Rules:
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "time_estimate": 30, "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 
@@ -195,8 +196,14 @@ serve(async (req) => {
     const subject = formData.get('subject') as string || ''
     const text = formData.get('text') as string || ''
     const html = formData.get('html') as string || ''
+    const headersRaw = formData.get('headers') as string || ''
     
-    console.log('Received email:', { to, from, subject: subject.substring(0, 50) })
+    // Check for high priority email (X-Priority: 1 or 2, or Importance: high)
+    const isHighPriority = /X-Priority:\s*[12]\b/i.test(headersRaw) || 
+                           /Importance:\s*high/i.test(headersRaw) ||
+                           /X-MSMail-Priority:\s*High/i.test(headersRaw)
+    
+    console.log('Received email:', { to, from, subject: subject.substring(0, 50), isHighPriority })
     
     // Extract token from email address (tasks+TOKEN@inbound.gettrackli.com)
     const tokenMatch = to.match(/tasks\+([a-zA-Z0-9]+)@/)
@@ -327,7 +334,8 @@ serve(async (req) => {
         due_date: task.due_date || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
-        critical: task.critical || false,
+        critical: task.critical || isHighPriority || false,
+        time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,
         status: 'pending'
       }

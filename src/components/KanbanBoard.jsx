@@ -6894,15 +6894,15 @@ export default function KanbanBoard({ demoMode = false }) {
               {pendingEmailCount > 0 && (
                 <button
                   type="button"
-                  onClick={(e) => { 
+                  onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setCurrentView('board'); 
-                    setPendingReviewExpanded(true); 
+                    console.log('Email badge clicked!');
+                    setCurrentView('board');
+                    setPendingReviewExpanded(true);
                   }}
                   className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
                   title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
-                  style={{ position: 'relative', zIndex: 100 }}
                 >
                   <svg className="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
