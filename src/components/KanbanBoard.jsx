@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { L } from '../lib/locale'
@@ -3776,6 +3776,7 @@ const Column = ({ column, tasks, projects, onEditTask, onDragStart, onDragOver, 
 // Task Modal Component
 export default function KanbanBoard({ demoMode = false }) {
   const { user: authUser, signOut, profile, updateProfile, uploadAvatar } = useAuth()
+  const navigate = useNavigate()
   
   // Use demo user if in demo mode, otherwise use authenticated user
   const user = demoMode ? DEMO_USER : authUser
@@ -6174,7 +6175,7 @@ export default function KanbanBoard({ demoMode = false }) {
 
   return (
     <PullToRefresh onRefresh={fetchData}>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200 flex flex-col">
       {/* Offline Banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
@@ -6405,7 +6406,11 @@ export default function KanbanBoard({ demoMode = false }) {
                           <span className="font-medium">Settings</span>
                         </button>
                         <button
-                          onClick={() => { signOut(); setNavMenuOpen(false) }}
+                          onClick={async () => { 
+                            setNavMenuOpen(false)
+                            await signOut()
+                            navigate('/welcome')
+                          }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
                           {MenuIcons.signOut()}
