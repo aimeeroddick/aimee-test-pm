@@ -4437,11 +4437,17 @@ export default function KanbanBoard({ demoMode = false }) {
       if (error) throw error
       setPendingEmailTasks(data || [])
       setPendingEmailCount(data?.length || 0)
-      // Auto-select high confidence tasks
-      const highConfidenceIds = new Set(
-        (data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7).map(t => t.id)
-      )
-      setSelectedPendingIds(highConfidenceIds)
+      // Only auto-select on initial load (when no selections exist)
+      setSelectedPendingIds(prev => {
+        if (prev.size === 0 && data?.length > 0) {
+          // Initial load - select high confidence tasks
+          return new Set((data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7).map(t => t.id))
+        }
+        // Keep existing selections, but remove any that no longer exist
+        const validIds = new Set((data || []).map(t => t.id))
+        const filtered = new Set([...prev].filter(id => validIds.has(id)))
+        return filtered
+      })
     } catch (err) {
       console.error('Error fetching pending email tasks:', err)
     }
@@ -4537,6 +4543,9 @@ export default function KanbanBoard({ demoMode = false }) {
 
   // Bulk approve selected pending tasks
   const handleBulkApprovePendingTasks = async () => {
+    // Prevent double-clicks
+    if (approvingTaskId === 'bulk') return
+    
     const tasksToApprove = pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id)
     if (tasksToApprove.length === 0) {
       alert('Please select tasks and ensure they have projects assigned')
@@ -4581,6 +4590,8 @@ export default function KanbanBoard({ demoMode = false }) {
       // Refresh once at the end
       await fetchData()
       await fetchPendingEmailTasks()
+      // Clear selections for fresh start
+      setSelectedPendingIds(new Set())
       
     } catch (err) {
       console.error('Error bulk approving tasks:', err)
@@ -8359,65 +8370,73 @@ export default function KanbanBoard({ demoMode = false }) {
                             </div>
                             
                             {/* Expanded Row - Additional Fields */}
-                            {isExpanded && (
-                              <div className="flex items-center gap-3 px-4 py-2 pl-14 bg-amber-50/50 dark:bg-amber-900/10 border-t border-amber-200/20 dark:border-amber-800/20">
-                                <div className="flex items-center gap-1.5">
-                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Start</label>
-                                  <input
-                                    type="date"
-                                    value={task.start_date || ''}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
-                                    className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
-                                  />
+                            {isExpanded && (() => {
+                              const selectedProject = projects.find(p => p.id === task.project_id)
+                              const projectCustomers = selectedProject?.customers || []
+                              return (
+                                <div className="flex items-center gap-3 px-4 py-2 pl-14 bg-amber-50/50 dark:bg-amber-900/10 border-t border-amber-200/20 dark:border-amber-800/20">
+                                  <div className="flex items-center gap-1.5">
+                                    <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Start</label>
+                                    <input
+                                      type="text"
+                                      value={task.start_date || ''}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
+                                      placeholder="YYYY-MM-DD"
+                                      className="w-28 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                                    />
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1.5">
+                                    <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Effort</label>
+                                    <select
+                                      value={task.energy_level || 'medium'}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
+                                      className="text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                    >
+                                      <option value="low">Low</option>
+                                      <option value="medium">Medium</option>
+                                      <option value="high">High</option>
+                                    </select>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1.5">
+                                    <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={task.time_estimate || ''}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
+                                      placeholder="mins"
+                                      className="w-16 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                                    />
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1.5">
+                                    <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</label>
+                                    <select
+                                      value={task.customer || ''}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
+                                      className="w-28 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                    >
+                                      <option value="">Select...</option>
+                                      {projectCustomers.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  
+                                  <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto">
+                                    <input
+                                      type="checkbox"
+                                      checked={task.critical || false}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
+                                      className="w-3.5 h-3.5 rounded border-red-400 dark:border-red-600 text-red-500 focus:ring-red-500"
+                                    />
+                                    <span className="text-red-600 dark:text-red-400 font-medium">Critical</span>
+                                  </label>
                                 </div>
-                                
-                                <div className="flex items-center gap-1.5">
-                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Effort</label>
-                                  <select
-                                    value={task.energy_level || 'medium'}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
-                                    className="text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
-                                  >
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                  </select>
-                                </div>
-                                
-                                <div className="flex items-center gap-1.5">
-                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</label>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    value={task.time_estimate || ''}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
-                                    placeholder="mins"
-                                    className="w-16 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
-                                  />
-                                </div>
-                                
-                                <div className="flex items-center gap-1.5">
-                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</label>
-                                  <input
-                                    type="text"
-                                    value={task.customer || ''}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
-                                    placeholder="Tag"
-                                    className="w-24 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
-                                  />
-                                </div>
-                                
-                                <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto">
-                                  <input
-                                    type="checkbox"
-                                    checked={task.critical || false}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
-                                    className="w-3.5 h-3.5 rounded border-red-400 dark:border-red-600 text-red-500 focus:ring-red-500"
-                                  />
-                                  <span className="text-red-600 dark:text-red-400 font-medium">Critical</span>
-                                </label>
-                              </div>
-                            )}
+                              )
+                            })()}
                           </div>
                         )
                       })}
