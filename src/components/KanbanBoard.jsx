@@ -4570,9 +4570,20 @@ export default function KanbanBoard({ demoMode = false }) {
       
       // Create welcome project for NEW users only (first time ever)
       // Check user metadata to see if they've already been welcomed
+      // IMPORTANT: Only do this if we successfully fetched data and user is authenticated
       const currentUser = userRes.data?.user
+      if (!currentUser) {
+        console.warn('No authenticated user found - skipping welcome project check')
+        setLoading(false)
+        return
+      }
+      
       const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
       
+      // Only create welcome project if:
+      // 1. User hasn't been welcomed before
+      // 2. Fetches succeeded (no errors) but returned empty
+      // 3. Not already creating
       if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0 && !welcomeProjectCreating.current) {
         welcomeProjectCreating.current = true
         await createWelcomeProject()
