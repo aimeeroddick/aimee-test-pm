@@ -163,19 +163,31 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       }
       setComments(task.comments || [])
     } else {
-      // New task - may have prefilled status
+      // New task - may have prefilled data from calendar double-click
+      // Calculate time_estimate if start_time and end_time are provided
+      let timeEstimate = ''
+      if (task?.start_time && task?.end_time) {
+        const [startH, startM] = task.start_time.split(':').map(Number)
+        const [endH, endM] = task.end_time.split(':').map(Number)
+        const startMinutes = startH * 60 + startM
+        const endMinutes = endH * 60 + endM
+        if (endMinutes > startMinutes) {
+          timeEstimate = endMinutes - startMinutes
+        }
+      }
+      
       setFormData({
         title: task?.title || '',
         description: '',
         project_id: task?.project_id || projects[0]?.id || '',
         status: task?.status || 'backlog',
         critical: false,
-        start_date: '',
-        start_time: '',
-        end_time: '',
+        start_date: task?.start_date || '',
+        start_time: task?.start_time || '',
+        end_time: task?.end_time || '',
         due_date: task?.due_date || '',
         assignee: '',
-        time_estimate: '',
+        time_estimate: timeEstimate,
         energy_level: 'medium',
         category: 'deliverable',
         source: 'ad_hoc',
