@@ -4012,6 +4012,8 @@ export default function KanbanBoard({ demoMode = false }) {
   const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [pendingEmailTasks, setPendingEmailTasks] = useState([])
   const [pendingEmailCount, setPendingEmailCount] = useState(0)
+  const [pendingReviewExpanded, setPendingReviewExpanded] = useState(true)
+  const [approvingTaskId, setApprovingTaskId] = useState(null)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -4435,6 +4437,102 @@ export default function KanbanBoard({ demoMode = false }) {
       setPendingEmailCount(data?.length || 0)
     } catch (err) {
       console.error('Error fetching pending email tasks:', err)
+    }
+  }
+
+  // Determine target column based on due date
+  const getTargetColumn = (dueDate, isCritical) => {
+    if (isCritical) return 'todo'
+    if (!dueDate) return 'backlog'
+    
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const due = new Date(dueDate)
+    due.setHours(0, 0, 0, 0)
+    
+    const daysUntilDue = Math.ceil((due - today) / (1000 * 60 * 60 * 24))
+    
+    if (daysUntilDue <= 7) return 'todo'
+    return 'backlog'
+  }
+
+  // Approve pending email task
+  const handleApprovePendingTask = async (pendingTask, projectId) => {
+    if (!projectId) {
+      alert('Please select a project first')
+      return
+    }
+    
+    setApprovingTaskId(pendingTask.id)
+    
+    try {
+      const targetColumn = getTargetColumn(pendingTask.due_date, pendingTask.critical)
+      
+      // Create the actual task
+      const { data: newTask, error: taskError } = await supabase
+        .from('tasks')
+        .insert({
+          title: pendingTask.title,
+          description: pendingTask.description,
+          due_date: pendingTask.due_date,
+          start_date: pendingTask.start_date,
+          assignee: pendingTask.assignee_text,
+          project_id: projectId,
+          status: targetColumn,
+          critical: pendingTask.critical,
+          energy_level: pendingTask.energy_level,
+          user_id: user.id
+        })
+        .select()
+        .single()
+      
+      if (taskError) throw taskError
+      
+      // Update pending task status
+      await supabase
+        .from('pending_tasks')
+        .update({ status: 'approved' })
+        .eq('id', pendingTask.id)
+      
+      // Refresh data
+      await fetchData()
+      await fetchPendingEmailTasks()
+      
+    } catch (err) {
+      console.error('Error approving pending task:', err)
+      alert('Failed to create task: ' + err.message)
+    } finally {
+      setApprovingTaskId(null)
+    }
+  }
+
+  // Reject pending email task
+  const handleRejectPendingTask = async (pendingTaskId) => {
+    try {
+      await supabase
+        .from('pending_tasks')
+        .update({ status: 'rejected' })
+        .eq('id', pendingTaskId)
+      
+      await fetchPendingEmailTasks()
+    } catch (err) {
+      console.error('Error rejecting pending task:', err)
+    }
+  }
+
+  // Update pending task field
+  const handleUpdatePendingTask = async (taskId, field, value) => {
+    try {
+      await supabase
+        .from('pending_tasks')
+        .update({ [field]: value })
+        .eq('id', taskId)
+      
+      setPendingEmailTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, [field]: value } : t
+      ))
+    } catch (err) {
+      console.error('Error updating pending task:', err)
     }
   }
 
@@ -8037,6 +8135,139 @@ export default function KanbanBoard({ demoMode = false }) {
                     </div>
                   </div>
                 )}
+              
+              {/* Pending Email Tasks Review Section */}
+              {pendingEmailTasks.length > 0 && (
+                <div className="mb-4 sm:mb-6">
+                  <button
+                    onClick={() => setPendingReviewExpanded(!pendingReviewExpanded)}
+                    className="w-full flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-xl hover:border-amber-300 dark:hover:border-amber-600 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-sm sm:text-base">
+                          Pending Email Tasks
+                        </h3>
+                        <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400">
+                          {pendingEmailTasks.length} task{pendingEmailTasks.length !== 1 ? 's' : ''} to review
+                        </p>
+                      </div>
+                    </div>
+                    <svg 
+                      className={`w-5 h-5 text-amber-600 dark:text-amber-400 transition-transform ${pendingReviewExpanded ? 'rotate-180' : ''}`} 
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {pendingReviewExpanded && (
+                    <div className="mt-3 space-y-3">
+                      {pendingEmailTasks.map(task => (
+                        <div 
+                          key={task.id}
+                          className="p-3 sm:p-4 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700/50 rounded-xl shadow-sm"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              {/* Task Title - Editable */}
+                              <input
+                                type="text"
+                                value={task.title}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
+                                className="w-full font-medium text-gray-900 dark:text-white bg-transparent border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-indigo-500 focus:outline-none transition-colors"
+                              />
+                              
+                              {/* Email Source */}
+                              {task.email_sources && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                  From: {task.email_sources.from_address}
+                                </p>
+                              )}
+                              
+                              {/* Task Details Row */}
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
+                                {/* Due Date */}
+                                <div className="flex items-center gap-1.5">
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <input
+                                    type="date"
+                                    value={task.due_date || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                    className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                  />
+                                </div>
+                                
+                                {/* Assignee */}
+                                {task.assignee_text && (
+                                  <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                                    {task.assignee_text}
+                                  </span>
+                                )}
+                                
+                                {/* Critical Badge */}
+                                {task.critical && (
+                                  <span className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded font-medium">
+                                    Critical
+                                  </span>
+                                )}
+                                
+                                {/* Confidence Badge */}
+                                {task.ai_confidence && task.ai_confidence < 0.7 && (
+                                  <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded">
+                                    Unsure
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                              {/* Project Selector */}
+                              <select
+                                value={task.project_id || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
+                                className="text-xs px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent max-w-[140px]"
+                              >
+                                <option value="">Select project...</option>
+                                {projects.map(p => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                              
+                              {/* Approve/Reject Buttons */}
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => handleApprovePendingTask(task, task.project_id)}
+                                  disabled={!task.project_id || approvingTaskId === task.id}
+                                  className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  title={!task.project_id ? 'Select a project first' : 'Approve and create task'}
+                                >
+                                  {approvingTaskId === task.id ? '...' : '✓'}
+                                </button>
+                                <button
+                                  onClick={() => handleRejectPendingTask(task.id)}
+                                  className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                  title="Reject task"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Desktop: All columns | Mobile: Single column */}
               <div className={isMobile ? '' : 'flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto overflow-y-visible pb-4 sm:pb-6 justify-center'}>
