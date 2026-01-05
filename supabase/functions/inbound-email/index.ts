@@ -1,5 +1,5 @@
 // Supabase Edge Function: Receive inbound emails and create pending tasks
-// Deploy with: supabase functions deploy inbound-email
+// Deploy with: supabase functions deploy inbound-email --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
@@ -28,7 +28,7 @@ serve(async (req) => {
     
     console.log('Received email:', { to, from, subject: subject.substring(0, 50) })
     
-    // Extract token from email address (tasks+TOKEN@inbound.trackli.app)
+    // Extract token from email address (tasks+TOKEN@inbound.gettrackli.com)
     const tokenMatch = to.match(/tasks\+([a-zA-Z0-9]+)@/)
     if (!tokenMatch) {
       console.error('Invalid email format - no token found:', to)
@@ -39,20 +39,29 @@ serve(async (req) => {
     }
     
     const token = tokenMatch[1]
+    console.log('Extracted token:', token)
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    // Find user by token
+    // Find user by token - only select id (email is in auth.users, not profiles)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id')
       .eq('inbound_email_token', token)
       .single()
     
-    if (profileError || !profile) {
+    if (profileError) {
+      console.error('Profile lookup error:', profileError)
+      return new Response(JSON.stringify({ error: 'Database error', details: profileError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    
+    if (!profile) {
       console.error('User not found for token:', token)
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 404,
@@ -60,7 +69,7 @@ serve(async (req) => {
       })
     }
     
-    console.log('Found user:', profile.email)
+    console.log('Found user:', profile.id)
     
     // Store the original email
     const { data: emailSource, error: emailError } = await supabase
@@ -78,7 +87,7 @@ serve(async (req) => {
     
     if (emailError) {
       console.error('Failed to store email:', emailError)
-      return new Response(JSON.stringify({ error: 'Failed to store email' }), {
+      return new Response(JSON.stringify({ error: 'Failed to store email', details: emailError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -105,7 +114,7 @@ serve(async (req) => {
     
     if (taskError) {
       console.error('Failed to create pending task:', taskError)
-      return new Response(JSON.stringify({ error: 'Failed to create pending task' }), {
+      return new Response(JSON.stringify({ error: 'Failed to create pending task', details: taskError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
