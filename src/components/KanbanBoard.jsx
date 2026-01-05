@@ -4078,12 +4078,30 @@ export default function KanbanBoard({ demoMode = false }) {
   const [voiceTranscript, setVoiceTranscript] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)
   const recognitionRef = useRef(null)
+  const projectDropdownRef = useRef(null)
   
   // Check for Speech Recognition support
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
     setVoiceSupported(!!SpeechRecognition)
   }, [])
+
+  // Click outside handler for project dropdown (Windows PWA fix)
+  useEffect(() => {
+    if (!projectDropdownOpen) return
+    const handleClickOutside = (e) => {
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(e.target)) {
+        setProjectDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [projectDropdownOpen])
+
   
   // Voice recognition handlers
   const startListening = (onTranscript, continuous = false) => {
@@ -6770,7 +6788,7 @@ export default function KanbanBoard({ demoMode = false }) {
             {/* Desktop Filter Bar */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3 min-w-max">
               {/* Project dropdown - custom component for colors */}
-              <div className="relative z-50">
+              <div className="relative z-50" ref={projectDropdownRef}>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setProjectDropdownOpen(!projectDropdownOpen); }}
@@ -6801,8 +6819,6 @@ export default function KanbanBoard({ demoMode = false }) {
                 
                 {/* Dropdown menu */}
                 {projectDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProjectDropdownOpen(false)} />
                     <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
                       <button
                         onClick={() => { setSelectedProjectId('all'); setProjectDropdownOpen(false) }}
@@ -6828,7 +6844,6 @@ export default function KanbanBoard({ demoMode = false }) {
                         </button>
                       ))}
                     </div>
-                  </>
                 )}
               </div>
               
