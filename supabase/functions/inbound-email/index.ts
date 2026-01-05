@@ -207,6 +207,36 @@ function matchCustomerFromEmail(fromAddress: string, customers: string[]): strin
   return null
 }
 
+// Parse user note for effort level
+function parseEffortFromNote(note: string): string | null {
+  if (!note) return null
+  const lower = note.toLowerCase()
+  if (/\b(quick|easy|simple|small|minor|fast)\b/.test(lower)) return 'low'
+  if (/\b(complex|big|difficult|hard|large|major|extensive)\b/.test(lower)) return 'high'
+  return null
+}
+
+// Parse user note for customer name ("for [Customer]" pattern)
+function parseCustomerFromNote(note: string): string | null {
+  if (!note) return null
+  // Match "for [Customer Name]" - captures words after "for" until common stop words
+  const match = note.match(/\bfor\s+([A-Z][a-zA-Z0-9\s]+?)(?:\s+(?:for|in|on|by|to|project|tasks?)\b|$)/i)
+  if (match) {
+    const customer = match[1].trim()
+    // Filter out project-related words
+    if (!/^(demo|feedback|test|the|this|my|our)$/i.test(customer)) {
+      return customer
+    }
+  }
+  return null
+}
+
+// Check if note mentions high priority
+function parseHighPriorityFromNote(note: string): boolean {
+  if (!note) return false
+  return /\b(high\s*priority|urgent|critical|asap|important)\b/i.test(note)
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -332,6 +362,12 @@ serve(async (req) => {
       console.log('Project from user note:', projectFromNote)
     }
     
+    // Parse user note for attributes to apply to all tasks
+    const effortFromNote = parseEffortFromNote(userNote)
+    const customerFromNote = parseCustomerFromNote(userNote)
+    const criticalFromNote = parseHighPriorityFromNote(userNote)
+    console.log('Parsed from user note:', { effortFromNote, customerFromNote, criticalFromNote })
+    
     // Try AI extraction if API key is available
     let extractedTasks = null
     if (anthropicKey) {
@@ -377,8 +413,8 @@ serve(async (req) => {
       }
       console.log(`Project match: "${task.project_name}" -> ${matchedProjectId}`)
       
-      // Try to match customer: first from AI extraction, then from email domain
-      let finalCustomer = task.customer || null
+      // Try to match customer: first from AI, then from user note, then from email domain
+      let finalCustomer = task.customer || customerFromNote || null
       if (!finalCustomer && matchedProjectId) {
         const projectCustomerList = customersByProject[matchedProjectId] || []
         finalCustomer = matchCustomerFromEmail(from, projectCustomerList)
@@ -387,17 +423,22 @@ serve(async (req) => {
         }
       }
       
+      // Build description with full email content
+      let fullDescription = task.description || ''
+      const emailContent = `\n\n---\n📧 **From email:** ${subject || '(no subject)'}\n**From:** ${from || 'Unknown'}\n\n${text?.substring(0, 2000) || '(no body)'}`
+      fullDescription = fullDescription ? fullDescription + emailContent : emailContent.trim()
+      
       return {
         user_id: profile.id,
         email_source_id: emailSource.id,
         title: task.title?.substring(0, 200) || 'Untitled task',
-        description: task.description?.substring(0, 1000) || null,
+        description: fullDescription.substring(0, 3000) || null,
         due_date: task.due_date || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
         customer: finalCustomer,
-        energy_level: task.energy_level || null,
-        critical: task.critical || isHighPriority || false,
+        energy_level: task.energy_level || effortFromNote || null,
+        critical: task.critical || criticalFromNote || isHighPriority || false,
         time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,
         status: 'pending'
