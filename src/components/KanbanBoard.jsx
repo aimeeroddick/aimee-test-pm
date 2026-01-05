@@ -4045,6 +4045,7 @@ export default function KanbanBoard({ demoMode = false }) {
   // Field filters - supports multiple (e.g., { assignee: 'John', customer: 'Acme' })
   const [fieldFilters, setFieldFilters] = useState({})
   const [pendingFilterField, setPendingFilterField] = useState('')
+  const [pendingFilterOperator, setPendingFilterOperator] = useState('')
   
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
@@ -5993,15 +5994,46 @@ export default function KanbanBoard({ demoMode = false }) {
         if (field === 'source' && t.source !== value) return false
         if (field === 'due_date') {
           if (value === 'has_date' && !t.due_date) return false
+          else if (value.startsWith('=') || value.startsWith('<') || value.startsWith('>')) {
+            const op = value[0]
+            const dateStr = value.slice(1)
+            const filterDate = new Date(dateStr)
+            const taskDate = t.due_date ? new Date(t.due_date) : null
+            if (!taskDate) return false
+            // Normalize to compare just dates
+            filterDate.setHours(0,0,0,0)
+            taskDate.setHours(0,0,0,0)
+            if (op === '=' && taskDate.getTime() !== filterDate.getTime()) return false
+            if (op === '<' && taskDate >= filterDate) return false
+            if (op === '>' && taskDate <= filterDate) return false
+          }
         }
         if (field === 'start_date') {
           if (value === '__blank__' && t.start_date) return false
           if (value === 'has_date' && !t.start_date) return false
+          else if (value.startsWith('=') || value.startsWith('<') || value.startsWith('>')) {
+            const op = value[0]
+            const dateStr = value.slice(1)
+            const filterDate = new Date(dateStr)
+            const taskDate = t.start_date ? new Date(t.start_date) : null
+            if (!taskDate) return false
+            filterDate.setHours(0,0,0,0)
+            taskDate.setHours(0,0,0,0)
+            if (op === '=' && taskDate.getTime() !== filterDate.getTime()) return false
+            if (op === '<' && taskDate >= filterDate) return false
+            if (op === '>' && taskDate <= filterDate) return false
+          }
         }
         if (field === 'time_estimate') {
           if (value === '__blank__' && t.time_estimate) return false
-          const filterVal = parseInt(value)
-          if (!isNaN(filterVal) && t.time_estimate !== filterVal) return false
+          else if (value.startsWith('=') || value.startsWith('<') || value.startsWith('>')) {
+            const op = value[0]
+            const filterVal = parseInt(value.slice(1))
+            const taskVal = t.time_estimate || 0
+            if (op === '=' && taskVal !== filterVal) return false
+            if (op === '<' && taskVal >= filterVal) return false
+            if (op === '>' && taskVal <= filterVal) return false
+          }
         }
       }
     }
@@ -6970,11 +7002,33 @@ export default function KanbanBoard({ demoMode = false }) {
                   else if (field === 'energy_level') displayValue = value === 'high' ? 'High' : value === 'medium' ? 'Medium' : 'Low'
                   else if (field === 'source') displayValue = SOURCES.find(s => s.id === value)?.label || value
                   else if (field === 'due_date' && value === 'has_date') displayValue = 'Has Date'
+                  else if (field === 'due_date' && (value.startsWith('=') || value.startsWith('<') || value.startsWith('>'))) {
+                    const op = value[0]
+                    const dateStr = value.slice(1)
+                    const date = new Date(dateStr)
+                    const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
+                  }
                   else if (field === 'start_date' && value === 'has_date') displayValue = 'Has Date'
+                  else if (field === 'start_date' && (value.startsWith('=') || value.startsWith('<') || value.startsWith('>'))) {
+                    const op = value[0]
+                    const dateStr = value.slice(1)
+                    const date = new Date(dateStr)
+                    const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
+                  }
+                  else if (field === 'time_estimate' && (value.startsWith('=') || value.startsWith('<') || value.startsWith('>'))) {
+                    const op = value[0]
+                    const mins = parseInt(value.slice(1))
+                    let timeStr = mins >= 60 ? `${mins / 60}h` : `${mins}m`
+                    displayValue = `${op} ${timeStr}`
+                  }
                   else if (field === 'time_estimate') {
                     const mins = parseInt(value)
-                    if (mins >= 60) displayValue = `${mins / 60}h`
-                    else displayValue = `${mins}m`
+                    if (!isNaN(mins)) {
+                      if (mins >= 60) displayValue = `${mins / 60}h`
+                      else displayValue = `${mins}m`
+                    }
                   }
                   
                   return (
@@ -7020,63 +7074,152 @@ export default function KanbanBoard({ demoMode = false }) {
                 </div>
                 
                 {/* Value selector - appears when field is selected */}
-                {pendingFilterField && (
-                  <div className="relative">
-                    <select
-                      autoFocus
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
-                          setPendingFilterField('')
-                        }
-                      }}
-                      className="appearance-none pl-2 pr-5 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors"
-                    >
-                      <option value="">Select {pendingFilterField === 'energy_level' ? 'Effort' : pendingFilterField === 'due_date' ? 'Due Date' : pendingFilterField === 'start_date' ? 'Start Date' : pendingFilterField === 'time_estimate' ? 'Time' : pendingFilterField.charAt(0).toUpperCase() + pendingFilterField.slice(1)}...</option>
-                      <option value="__blank__">(Blank)</option>
-                      {pendingFilterField === 'assignee' && [...new Set(tasks.filter(t => {
-                        const proj = projects.find(p => p.id === t.project_id)
-                        return proj && (!proj.archived || showArchivedProjects)
-                      }).map(t => t.assignee).filter(Boolean))].sort().map(a => (
-                        <option key={a} value={a}>{a}</option>
-                      ))}
-                      {pendingFilterField === 'customer' && [...new Set(tasks.filter(t => {
-                        const proj = projects.find(p => p.id === t.project_id)
-                        return proj && (!proj.archived || showArchivedProjects)
-                      }).map(t => t.customer).filter(Boolean))].sort().map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                      {pendingFilterField === 'energy_level' && (
-                        <>
-                          <option value="high">High Effort</option>
-                          <option value="medium">Medium Effort</option>
-                          <option value="low">Low Effort</option>
-                        </>
-                      )}
-                      {pendingFilterField === 'due_date' && (
-                        <option value="has_date">Has Due Date</option>
-                      )}
-                      {pendingFilterField === 'start_date' && (
-                        <option value="has_date">Has Start Date</option>
-                      )}
-                      {pendingFilterField === 'time_estimate' && (
-                        <>
-                          <option value="15">15 minutes</option>
-                          <option value="30">30 minutes</option>
-                          <option value="60">1 hour</option>
-                          <option value="120">2 hours</option>
-                          <option value="240">4 hours</option>
-                          <option value="480">8 hours</option>
-                        </>
-                      )}
-                    </select>
-                    <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                {pendingFilterField && !pendingFilterOperator && (
+                  <div className="flex items-center gap-1">
+                    {/* Simple fields - direct value selection */}
+                    {['assignee', 'customer', 'energy_level'].includes(pendingFilterField) && (
+                      <div className="relative">
+                        <select
+                          autoFocus
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
+                              setPendingFilterField('')
+                            }
+                          }}
+                          className="appearance-none pl-2 pr-5 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors"
+                        >
+                          <option value="">Select {pendingFilterField.charAt(0).toUpperCase() + pendingFilterField.slice(1)}...</option>
+                          <option value="__blank__">(Blank)</option>
+                          {pendingFilterField === 'assignee' && [...new Set(tasks.filter(t => {
+                            const proj = projects.find(p => p.id === t.project_id)
+                            return proj && (!proj.archived || showArchivedProjects)
+                          }).map(t => t.assignee).filter(Boolean))].sort().map(a => (
+                            <option key={a} value={a}>{a}</option>
+                          ))}
+                          {pendingFilterField === 'customer' && [...new Set(tasks.filter(t => {
+                            const proj = projects.find(p => p.id === t.project_id)
+                            return proj && (!proj.archived || showArchivedProjects)
+                          }).map(t => t.customer).filter(Boolean))].sort().map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                          {pendingFilterField === 'energy_level' && (
+                            <>
+                              <option value="high">High Effort</option>
+                              <option value="medium">Medium Effort</option>
+                              <option value="low">Low Effort</option>
+                            </>
+                          )}
+                        </select>
+                        <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    )}
+                    
+                    {/* Date and time fields - operator selection first */}
+                    {['due_date', 'start_date', 'time_estimate'].includes(pendingFilterField) && (
+                      <div className="relative">
+                        <select
+                          autoFocus
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value === '__blank__' || e.target.value === 'has_date') {
+                              setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
+                              setPendingFilterField('')
+                            } else if (e.target.value) {
+                              setPendingFilterOperator(e.target.value)
+                            }
+                          }}
+                          className="appearance-none pl-2 pr-5 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors"
+                        >
+                          <option value="">Select condition...</option>
+                          <option value="__blank__">(Blank)</option>
+                          {(pendingFilterField === 'due_date' || pendingFilterField === 'start_date') && (
+                            <option value="has_date">Has Date</option>
+                          )}
+                          <option value="=">= Equals</option>
+                          <option value="<">&lt; Before{pendingFilterField === 'time_estimate' ? ' / Less than' : ''}</option>
+                          <option value=">">&gt; After{pendingFilterField === 'time_estimate' ? ' / More than' : ''}</option>
+                        </select>
+                        <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    )}
+                    
                     <button
                       onClick={() => setPendingFilterField('')}
-                      className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                
+                {/* Date input - appears after operator selected for date fields */}
+                {pendingFilterField && pendingFilterOperator && (pendingFilterField === 'due_date' || pendingFilterField === 'start_date') && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                      {pendingFilterField === 'due_date' ? 'Due' : 'Start'} {pendingFilterOperator === '=' ? '=' : pendingFilterOperator === '<' ? 'before' : 'after'}
+                    </span>
+                    <input
+                      type="date"
+                      autoFocus
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${e.target.value}` })
+                          setPendingFilterField('')
+                          setPendingFilterOperator('')
+                        }
+                      }}
+                      className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => { setPendingFilterField(''); setPendingFilterOperator(''); }}
+                      className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                
+                {/* Time input - appears after operator selected for time estimate */}
+                {pendingFilterField === 'time_estimate' && pendingFilterOperator && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                      Time {pendingFilterOperator === '=' ? '=' : pendingFilterOperator === '<' ? '<' : '>'}
+                    </span>
+                    <input
+                      type="number"
+                      autoFocus
+                      placeholder="mins"
+                      min="1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.target.value) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${e.target.value}` })
+                          setPendingFilterField('')
+                          setPendingFilterOperator('')
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${e.target.value}` })
+                          setPendingFilterField('')
+                          setPendingFilterOperator('')
+                        }
+                      }}
+                      className="w-16 px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                    <span className="text-xs text-gray-500">min</span>
+                    <button
+                      onClick={() => { setPendingFilterField(''); setPendingFilterOperator(''); }}
+                      className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
