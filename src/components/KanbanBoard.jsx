@@ -9142,6 +9142,47 @@ Or we can extract from:
                 </div>
               </div>
               
+              {/* Email to Tasks Section */}
+              <div>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email to Tasks
+                </h3>
+                <div className={`p-4 rounded-xl space-y-3 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div>
+                    <div className={`text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Your Trackli Email Address</div>
+                    <div className={`text-xs mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Forward emails here to create tasks automatically</div>
+                  </div>
+                  {profile?.inbound_email_token ? (
+                    <div className="flex items-center gap-2">
+                      <code className={`flex-1 px-3 py-2 rounded-lg text-sm font-mono truncate ${darkMode ? 'bg-gray-800 text-indigo-400' : 'bg-white text-indigo-600 border border-gray-200'}`}>
+                        tasks+{profile.inbound_email_token}@inbound.gettrackli.com
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`tasks+${profile.inbound_email_token}@inbound.gettrackli.com`)
+                          // Show brief feedback
+                          const btn = document.activeElement
+                          const originalText = btn.innerHTML
+                          btn.innerHTML = '✓'
+                          setTimeout(() => { btn.innerHTML = originalText }, 1500)
+                        }}
+                        className="px-3 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors shrink-0"
+                        title="Copy to clipboard"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Email address not yet generated. Contact support.
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               {/* Data Section */}
               <div>
                 <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
