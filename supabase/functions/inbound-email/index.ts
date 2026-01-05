@@ -442,6 +442,14 @@ serve(async (req) => {
         confidence: task.confidence
       }
       
+      // Auto-set effort from time if not already set
+      let finalEffort = task.energy_level || effortFromNote || null
+      if (!finalEffort && task.time_estimate) {
+        if (task.time_estimate <= 30) finalEffort = 'low'
+        else if (task.time_estimate <= 120) finalEffort = 'medium'
+        else finalEffort = 'high'
+      }
+      
       return {
         user_id: profile.id,
         email_source_id: emailSource.id,
@@ -451,7 +459,7 @@ serve(async (req) => {
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
         customer: finalCustomer,
-        energy_level: task.energy_level || effortFromNote || null,
+        energy_level: finalEffort,
         critical: task.critical || criticalFromNote || isHighPriority || false,
         time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,

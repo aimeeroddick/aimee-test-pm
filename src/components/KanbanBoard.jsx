@@ -4693,13 +4693,23 @@ export default function KanbanBoard({ demoMode = false }) {
   // Update pending task field
   const handleUpdatePendingTask = async (taskId, field, value) => {
     try {
+      let updates = { [field]: value }
+      
+      // Auto-set effort when time estimate changes
+      if (field === 'time_estimate' && value) {
+        const mins = parseInt(value)
+        if (mins <= 30) updates.energy_level = 'low'
+        else if (mins <= 120) updates.energy_level = 'medium'
+        else updates.energy_level = 'high'
+      }
+      
       await supabase
         .from('pending_tasks')
-        .update({ [field]: value })
+        .update(updates)
         .eq('id', taskId)
       
       setPendingEmailTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, [field]: value } : t
+        t.id === taskId ? { ...t, ...updates } : t
       ))
     } catch (err) {
       console.error('Error updating pending task:', err)
@@ -7134,16 +7144,19 @@ export default function KanbanBoard({ demoMode = false }) {
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <label className="text-[10px] text-gray-500 uppercase">Customer</label>
-                                      <select
+                                      <input
+                                        type="text"
+                                        list={`customers-${task.id}`}
                                         value={task.customer || ''}
                                         onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
-                                        className="w-24 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
-                                      >
-                                        <option value="">Select...</option>
+                                        placeholder="Type or select..."
+                                        className="w-28 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                                      />
+                                      <datalist id={`customers-${task.id}`}>
                                         {projectCustomers.map(c => (
-                                          <option key={c} value={c}>{c}</option>
+                                          <option key={c} value={c} />
                                         ))}
-                                      </select>
+                                      </datalist>
                                     </div>
                                     <label className="flex items-center gap-1 text-xs cursor-pointer ml-auto">
                                       <input
@@ -8676,16 +8689,19 @@ export default function KanbanBoard({ demoMode = false }) {
                                   
                                   <div className="flex items-center gap-1.5">
                                     <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</label>
-                                    <select
+                                    <input
+                                      type="text"
+                                      list={`board-customers-${task.id}`}
                                       value={task.customer || ''}
                                       onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
-                                      className="w-28 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
-                                    >
-                                      <option value="">Select...</option>
+                                      placeholder="Type or select..."
+                                      className="w-28 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                                    />
+                                    <datalist id={`board-customers-${task.id}`}>
                                       {projectCustomers.map(c => (
-                                        <option key={c} value={c}>{c}</option>
+                                        <option key={c} value={c} />
                                       ))}
-                                    </select>
+                                    </datalist>
                                   </div>
                                   
                                   <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto">
