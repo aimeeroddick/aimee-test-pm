@@ -22,6 +22,8 @@ async function extractTasksWithAI(subject: string, bodyText: string, userNote: s
 
 TODAY'S DATE: ${today} (Current year is ${currentYear})
 
+DATE FORMAT: When you encounter dates in DD/MM/YYYY or DD/MM/YY format (e.g., "10/01/26"), interpret them as day/month/year (UK/European format). So "10/01/26" means January 10, 2026, NOT October 1, 2026. Only use MM/DD/YYYY interpretation if the email explicitly indicates US format or the month name is written out.
+
 USER'S NOTE (instructions from the person forwarding):
 ${userNote || '(No specific instructions)'}
 
