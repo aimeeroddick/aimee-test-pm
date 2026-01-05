@@ -166,7 +166,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
 }
 
 // My Day Dashboard Component - Redesigned
-const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref, onToggleSubtask }) => {
+const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref, onToggleSubtask, displayName }) => {
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
   const prevActiveCountRef = useRef(null)
@@ -187,6 +187,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
   
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const greetingWithName = displayName ? `${greeting}, ${displayName}` : greeting
 
   // Compute subtasks due today from all tasks
   const subtasksDueToday = useMemo(() => {
@@ -493,7 +494,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
       <div className="mb-4 sm:mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 sm:gap-3">
-            <GreetingIcon hour={hour} /> {greeting}
+            <GreetingIcon hour={hour} /> {greetingWithName}
           </h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 mt-0.5 sm:mt-1">
             {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
