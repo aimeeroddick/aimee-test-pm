@@ -67,6 +67,9 @@ For each task, provide:
 
 IMPORTANT: 
 - If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
+- If the user's note mentions "high priority", "urgent", or "critical", set critical=true for ALL tasks.
+- If the user's note mentions effort like "quick", "easy", "simple" set energy_level="low" for ALL tasks. If "complex", "big", "difficult" set energy_level="high".
+- If the user's note mentions a customer/client name, set customer for ALL tasks.
 - Convert ALL dates to YYYY-MM-DD format using the current year (${currentYear}) or next year if the date has already passed this year.
 - "January 8" in ${currentYear} → "${currentYear}-01-08". If January 8 has passed, use "${currentYear + 1}-01-08".
 
