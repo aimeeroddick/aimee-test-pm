@@ -894,10 +894,14 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
       const firstLine = item.message.split('\n')[0].slice(0, 100)
       const title = `${typeLabel}: ${firstLine}${item.message.length > 100 ? '...' : ''}`
       
-      // Create task in backlog
+      // Create task in backlog - get current user from Supabase auth
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) throw new Error('Not authenticated')
+      
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert({
+          user_id: currentUser.id,
           title,
           description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
           status: 'backlog',
