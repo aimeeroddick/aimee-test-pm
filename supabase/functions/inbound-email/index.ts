@@ -61,7 +61,7 @@ For each task, provide:
 - project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
 - time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120, "30 mins" → 30). Use null if not mentioned.
-- confidence: Your confidence this is a real action item (0.5-1.0)
+- confidence: Your confidence this is a real action item (0.7-1.0 for clear "[Name] to [action]" patterns, 0.5-0.7 for ambiguous items)
 
 IMPORTANT: 
 - If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
@@ -180,6 +180,28 @@ function matchProjectId(projectName: string | null, projects: any[]): string | n
   return null
 }
 
+// Match customer from email domain
+function matchCustomerFromEmail(fromAddress: string, customers: string[]): string | null {
+  if (!fromAddress || customers.length === 0) return null
+  
+  // Extract domain from email (e.g., "ABC@Fifa.org" -> "fifa")
+  const emailMatch = fromAddress.match(/@([^.]+)/i)
+  if (!emailMatch) return null
+  
+  const emailDomain = emailMatch[1].toLowerCase()
+  
+  // Try to match domain to customer name
+  for (const customer of customers) {
+    const customerLower = customer.toLowerCase()
+    // Match if domain contains customer name or customer name contains domain
+    if (emailDomain.includes(customerLower) || customerLower.includes(emailDomain)) {
+      return customer
+    }
+  }
+  
+  return null
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -255,6 +277,19 @@ serve(async (req) => {
       .select('id, name')
       .eq('user_id', profile.id)
     
+    // Fetch project customers
+    const { data: projectCustomers } = await supabase
+      .from('project_customers')
+      .select('project_id, name')
+      .in('project_id', userProjects?.map(p => p.id) || [])
+    
+    // Group customers by project
+    const customersByProject: { [key: string]: string[] } = {}
+    projectCustomers?.forEach(c => {
+      if (!customersByProject[c.project_id]) customersByProject[c.project_id] = []
+      customersByProject[c.project_id].push(c.name)
+    })
+    
     const projectNames = userProjects?.map(p => p.name) || []
     console.log('User projects:', projectNames)
     
@@ -326,6 +361,16 @@ serve(async (req) => {
       const matchedProjectId = matchProjectId(task.project_name, userProjects || [])
       console.log(`Project match: "${task.project_name}" -> ${matchedProjectId}`)
       
+      // Try to match customer from email domain
+      let matchedCustomer = null
+      if (matchedProjectId) {
+        const projectCustomerList = customersByProject[matchedProjectId] || []
+        matchedCustomer = matchCustomerFromEmail(from, projectCustomerList)
+        if (matchedCustomer) {
+          console.log(`Customer match from email: "${from}" -> "${matchedCustomer}"`)
+        }
+      }
+      
       return {
         user_id: profile.id,
         email_source_id: emailSource.id,
@@ -334,6 +379,7 @@ serve(async (req) => {
         due_date: task.due_date || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
+        customer: matchedCustomer,
         critical: task.critical || isHighPriority || false,
         time_estimate: task.time_estimate || null,
         ai_confidence: task.confidence || 0.5,

@@ -4559,18 +4559,34 @@ export default function KanbanBoard({ demoMode = false }) {
       // Create all tasks in parallel without refreshing after each
       const taskInserts = tasksToApprove.map(task => {
         const targetColumn = getTargetColumn(task.due_date, task.critical)
+        
+        // Auto-set effort based on time estimate
+        let energyLevel = task.energy_level || 'medium'
+        if (task.time_estimate) {
+          if (task.time_estimate <= 30) energyLevel = 'low'
+          else if (task.time_estimate <= 120) energyLevel = 'medium'
+          else energyLevel = 'high'
+        }
+        
+        // Build description with email info
+        let description = task.description || ''
+        if (task.email_sources) {
+          const emailInfo = `\n\n---\n📧 **From email:** ${task.email_sources.subject || '(no subject)'}\n**From:** ${task.email_sources.from_address || 'Unknown'}`
+          description = description ? description + emailInfo : emailInfo.trim()
+        }
+        
         return supabase
           .from('tasks')
           .insert({
             title: task.title,
-            description: task.description,
+            description: description || null,
             due_date: task.due_date,
             start_date: task.start_date,
             assignee: task.assignee_text,
             project_id: task.project_id,
             status: targetColumn,
             critical: task.critical || false,
-            energy_level: task.energy_level || 'medium',
+            energy_level: energyLevel,
             time_estimate: task.time_estimate || 0,
             customer: task.customer || null,
             subtasks: [],
@@ -4593,6 +4609,8 @@ export default function KanbanBoard({ demoMode = false }) {
       await fetchPendingEmailTasks()
       // Clear selections for fresh start
       setSelectedPendingIds(new Set())
+      // Close dropdown after successful create
+      setPendingDropdownOpen(false)
       
     } catch (err) {
       console.error('Error bulk approving tasks:', err)
