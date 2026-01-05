@@ -4015,6 +4015,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [pendingReviewExpanded, setPendingReviewExpanded] = useState(true)
   const [approvingTaskId, setApprovingTaskId] = useState(null)
   const [selectedPendingIds, setSelectedPendingIds] = useState(new Set())
+  const [expandedPendingIds, setExpandedPendingIds] = useState(new Set())
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -4485,9 +4486,12 @@ export default function KanbanBoard({ demoMode = false }) {
           assignee: pendingTask.assignee_text,
           project_id: projectId,
           status: targetColumn,
-          critical: pendingTask.critical,
-          energy_level: pendingTask.energy_level,
-          user_id: user.id
+          critical: pendingTask.critical || false,
+          energy_level: pendingTask.energy_level || 'medium',
+          time_estimate: pendingTask.time_estimate || 0,
+          customer: pendingTask.customer || null,
+          subtasks: [],
+          comments: []
         })
         .select()
         .single()
@@ -6849,7 +6853,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
                     {pendingEmailCount > 9 ? '9+' : pendingEmailCount}
                   </span>
                 </button>
@@ -8222,76 +8226,155 @@ export default function KanbanBoard({ demoMode = false }) {
                     <div className="divide-y divide-amber-200/30 dark:divide-amber-800/30">
                       {pendingEmailTasks.map(task => {
                         const isSelected = selectedPendingIds.has(task.id)
+                        const isExpanded = expandedPendingIds.has(task.id)
                         const isLowConfidence = task.ai_confidence && task.ai_confidence < 0.7
                         return (
                           <div 
                             key={task.id}
-                            className={`flex items-center gap-3 px-4 py-2 transition-colors ${
-                              isSelected ? 'bg-white/50 dark:bg-gray-900/30' : 'opacity-50'
-                            }`}
+                            className={`transition-colors ${isSelected ? 'bg-white/50 dark:bg-gray-900/30' : 'opacity-50'}`}
                           >
-                            {/* Checkbox */}
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => togglePendingTaskSelection(task.id)}
-                              className="w-4 h-4 rounded border-amber-400 dark:border-amber-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-0"
-                            />
+                            {/* Main Row */}
+                            <div className="flex items-center gap-3 px-4 py-2">
+                              {/* Checkbox */}
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => togglePendingTaskSelection(task.id)}
+                                className="w-4 h-4 rounded border-amber-400 dark:border-amber-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-0"
+                              />
+                              
+                              {/* Expand toggle */}
+                              <button
+                                onClick={() => setExpandedPendingIds(prev => {
+                                  const next = new Set(prev)
+                                  if (next.has(task.id)) next.delete(task.id)
+                                  else next.add(task.id)
+                                  return next
+                                })}
+                                className="p-0.5 text-amber-500 hover:text-amber-600 dark:text-amber-400 transition-colors"
+                                title={isExpanded ? 'Collapse' : 'More options'}
+                              >
+                                <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </button>
+                              
+                              {/* Title */}
+                              <input
+                                type="text"
+                                value={task.title}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
+                                className="flex-1 min-w-0 text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0 truncate"
+                              />
+                              
+                              {/* Unsure badge */}
+                              {isLowConfidence && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 font-medium">?</span>
+                              )}
+                              
+                              {/* Due Date */}
+                              <input
+                                type="date"
+                                value={task.due_date || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                              />
+                              
+                              {/* Assignee */}
+                              <input
+                                type="text"
+                                value={task.assignee_text || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
+                                placeholder="@who"
+                                className="w-20 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                              />
+                              
+                              {/* Project */}
+                              <select
+                                value={task.project_id || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
+                                className={`w-32 text-xs px-2 py-1 border rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 ${
+                                  !task.project_id ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-700'
+                                }`}
+                              >
+                                <option value="">Project *</option>
+                                {projects.filter(p => !p.archived).map(p => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                              
+                              {/* Remove */}
+                              <button
+                                onClick={() => handleRejectPendingTask(task.id)}
+                                className="p-1 text-amber-400 hover:text-red-500 dark:text-amber-500 dark:hover:text-red-400 transition-colors"
+                                title="Remove"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
                             
-                            {/* Title */}
-                            <input
-                              type="text"
-                              value={task.title}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
-                              className="flex-1 min-w-0 text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0 truncate"
-                            />
-                            
-                            {/* Unsure badge */}
-                            {isLowConfidence && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 font-medium">?</span>
+                            {/* Expanded Row - Additional Fields */}
+                            {isExpanded && (
+                              <div className="flex items-center gap-3 px-4 py-2 pl-14 bg-amber-50/50 dark:bg-amber-900/10 border-t border-amber-200/20 dark:border-amber-800/20">
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Start</label>
+                                  <input
+                                    type="date"
+                                    value={task.start_date || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
+                                    className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Effort</label>
+                                  <select
+                                    value={task.energy_level || 'medium'}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
+                                    className="text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                  >
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                  </select>
+                                </div>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={task.time_estimate || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
+                                    placeholder="mins"
+                                    className="w-16 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Customer</label>
+                                  <input
+                                    type="text"
+                                    value={task.customer || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
+                                    placeholder="Tag"
+                                    className="w-24 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
+                                  />
+                                </div>
+                                
+                                <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto">
+                                  <input
+                                    type="checkbox"
+                                    checked={task.critical || false}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
+                                    className="w-3.5 h-3.5 rounded border-red-400 dark:border-red-600 text-red-500 focus:ring-red-500"
+                                  />
+                                  <span className="text-red-600 dark:text-red-400 font-medium">Critical</span>
+                                </label>
+                              </div>
                             )}
-                            
-                            {/* Due Date */}
-                            <input
-                              type="date"
-                              value={task.due_date || ''}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                              className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
-                            />
-                            
-                            {/* Assignee */}
-                            <input
-                              type="text"
-                              value={task.assignee_text || ''}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
-                              placeholder="@who"
-                              className="w-20 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 placeholder:text-gray-400"
-                            />
-                            
-                            {/* Project */}
-                            <select
-                              value={task.project_id || ''}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
-                              className={`w-32 text-xs px-2 py-1 border rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 ${
-                                !task.project_id ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-700'
-                              }`}
-                            >
-                              <option value="">Project *</option>
-                              {projects.filter(p => !p.archived).map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                              ))}
-                            </select>
-                            
-                            {/* Remove */}
-                            <button
-                              onClick={() => handleRejectPendingTask(task.id)}
-                              className="p-1 text-amber-400 hover:text-red-500 dark:text-amber-500 dark:hover:text-red-400 transition-colors"
-                              title="Remove"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
                           </div>
                         )
                       })}
