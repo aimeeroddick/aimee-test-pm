@@ -6667,7 +6667,7 @@ export default function KanbanBoard({ demoMode = false }) {
 
   return (
     <PullToRefresh onRefresh={fetchData}>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200 flex flex-col overflow-x-hidden">
       {/* Offline Banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
@@ -8390,7 +8390,7 @@ export default function KanbanBoard({ demoMode = false }) {
           )}
           
           {currentView === 'progress' && (
-            <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fadeIn overflow-x-hidden">
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 animate-fadeIn w-full overflow-hidden">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
               
               {/* Summary Metrics */}
@@ -8533,9 +8533,9 @@ export default function KanbanBoard({ demoMode = false }) {
               </div>
               
               {/* Weekly Activity Chart */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Last 7 Days</h3>
-                <div className="flex items-end justify-between gap-2 h-32">
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Last 7 Days</h3>
+                <div className="flex items-end justify-between gap-1 sm:gap-2 h-24 sm:h-32">
                   {(() => {
                     const days = []
                     for (let i = 6; i >= 0; i--) {
@@ -8582,7 +8582,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </div>
               
               {/* Project Progress */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-4 sm:mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Project Progress</h3>
                 <div className="space-y-3 sm:space-y-4">
                   {projects.filter(p => !p.archived).map(project => {
@@ -8609,8 +8609,8 @@ export default function KanbanBoard({ demoMode = false }) {
               </div>
               
               {/* Recent Completions */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Recently Completed</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Recently Completed</h3>
                 <div className="space-y-3">
                   {tasks
                     .filter(t => t.status === 'done' && t.completed_at)
