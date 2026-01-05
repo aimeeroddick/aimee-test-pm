@@ -4889,7 +4889,8 @@ export default function KanbanBoard({ demoMode = false }) {
           assignee: task.assignee || '',
           dueDate: task.dueDate || meetingNotesData.date,
           critical: task.isCritical || false,
-          selected: true,
+          confidence: task.confidence || 0.7,
+          selected: (task.confidence || 0.7) >= 0.7, // Auto-select high confidence tasks
         }))
         
         setExtractedTasks(extracted)
@@ -8475,6 +8476,11 @@ Or we can extract from:
                             />
                             <span className="text-red-600 dark:text-red-400">Critical</span>
                           </label>
+                          {task.confidence && task.confidence < 0.7 && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400" title="Low confidence - review carefully">
+                              Unsure
+                            </span>
+                          )}
                         </div>
                       </div>
                       <button

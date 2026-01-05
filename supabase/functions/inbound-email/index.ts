@@ -11,7 +11,7 @@ const corsHeaders = {
 
 // Extract tasks using Claude AI
 async function extractTasksWithAI(subject: string, bodyText: string, userNote: string, anthropicKey: string) {
-  const prompt = `You are a task extraction assistant. Analyze the following email and extract action items as tasks.
+  const prompt = `You are a task extraction assistant. Extract ONLY clear action items from this email.
 
 USER'S NOTE (instructions from the person forwarding):
 ${userNote || '(No specific instructions)'}
@@ -22,22 +22,44 @@ ${subject || '(No subject)'}
 EMAIL BODY:
 ${bodyText || '(No body)'}
 
-Extract tasks from this email. For each task, provide:
-- title: A clear, actionable task title (max 100 chars)
+WHAT TO EXTRACT (action items):
+- "[Name] will [action]" → Task assigned to Name
+- "[Name] to [action]" → Task assigned to Name  
+- "Please [action]" or "Can you [action]" → Task for recipient
+- Clear commitments with a person and action verb
+
+WHAT NOT TO EXTRACT:
+- Future agenda items ("will discuss next time", "will have on agenda")
+- Status updates ("project is on track", "going well")
+- Meeting summaries ("met with Dave to discuss")
+- Informational statements without a clear task
+- Signature blocks, contact info, disclaimers
+
+EXAMPLES:
+✅ "Chris will forward the PPT to Aimee" → Extract as task
+✅ "Please review the budget by Friday" → Extract as task
+❌ "Will determine the date next meeting" → NOT a task (future discussion)
+❌ "Project status: on track" → NOT a task (status update)
+❌ "Great meeting today" → NOT a task (commentary)
+
+For each task, provide:
+- title: Clear, actionable task title (max 100 chars)
 - description: Brief context if needed (max 200 chars, or null)
-- due_date: If mentioned, in YYYY-MM-DD format (or null)
-- assignee_text: Name of person responsible if mentioned (or null)
-- critical: true if marked urgent/ASAP/critical, false otherwise
-- confidence: Your confidence in this extraction (0.0 to 1.0)
+- due_date: In YYYY-MM-DD format if mentioned (or null)
+- assignee_text: Person responsible if mentioned (or null)
+- critical: true ONLY if explicitly marked urgent/ASAP/critical
+- confidence: Your confidence this is a real action item (0.5-1.0)
 
 Rules:
 - Extract up to 20 tasks maximum
-- If the user's note specifies dates, assignees, or urgency, apply them to all tasks
-- If no clear tasks are found, create ONE task with the email subject as title
-- Focus on actionable items, not informational content
+- If user's note specifies dates/assignees, apply to all tasks
+- If NO clear action items found, return empty array []
+- Be conservative - when in doubt, don't extract
 
-Respond ONLY with a JSON array, no other text:
-[{"title": "...", "description": "...", "due_date": "...", "assignee_text": "...", "critical": false, "confidence": 0.9}]`
+Respond ONLY with a JSON array:
+[{"title": "...", "description": null, "due_date": "2025-01-15", "assignee_text": "Chris", "critical": false, "confidence": 0.9}]
+
+If no tasks found, respond with: []`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -221,8 +243,10 @@ serve(async (req) => {
       console.log('No ANTHROPIC_API_KEY, skipping AI extraction')
     }
     
-    // If AI extraction failed or no tasks found, create a single task from subject
-    if (!extractedTasks || extractedTasks.length === 0) {
+    // If AI extraction failed or returned null, create a single fallback task
+    // But if AI returned empty array [], that means no tasks found - still create one from subject
+    if (extractedTasks === null) {
+      // AI failed - create fallback
       extractedTasks = [{
         title: subject || 'Task from email',
         description: text?.substring(0, 500) || null,
@@ -231,7 +255,18 @@ serve(async (req) => {
         critical: false,
         confidence: 0.3
       }]
-      console.log('Using fallback single task')
+      console.log('AI failed, using fallback single task')
+    } else if (extractedTasks.length === 0) {
+      // AI found no tasks - create one from subject so email isn't lost
+      extractedTasks = [{
+        title: subject || 'Review forwarded email',
+        description: 'No specific action items extracted. Please review the original email.',
+        due_date: null,
+        assignee_text: null,
+        critical: false,
+        confidence: 0.2
+      }]
+      console.log('AI found no tasks, creating review task')
     }
     
     // Create pending tasks
