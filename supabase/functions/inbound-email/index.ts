@@ -1,4 +1,4 @@
-// Supabase Edge Function: Receive inbound emails and create pending tasks
+// Supabase Edge Function: Receive inbound emails and create pending tasks with AI extraction
 // Deploy with: supabase functions deploy inbound-email --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -7,6 +7,117 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Extract tasks using Claude AI
+async function extractTasksWithAI(subject: string, bodyText: string, userNote: string, anthropicKey: string) {
+  const prompt = `You are a task extraction assistant. Analyze the following email and extract action items as tasks.
+
+USER'S NOTE (instructions from the person forwarding):
+${userNote || '(No specific instructions)'}
+
+EMAIL SUBJECT:
+${subject || '(No subject)'}
+
+EMAIL BODY:
+${bodyText || '(No body)'}
+
+Extract tasks from this email. For each task, provide:
+- title: A clear, actionable task title (max 100 chars)
+- description: Brief context if needed (max 200 chars, or null)
+- due_date: If mentioned, in YYYY-MM-DD format (or null)
+- assignee_text: Name of person responsible if mentioned (or null)
+- critical: true if marked urgent/ASAP/critical, false otherwise
+- confidence: Your confidence in this extraction (0.0 to 1.0)
+
+Rules:
+- Extract up to 20 tasks maximum
+- If the user's note specifies dates, assignees, or urgency, apply them to all tasks
+- If no clear tasks are found, create ONE task with the email subject as title
+- Focus on actionable items, not informational content
+
+Respond ONLY with a JSON array, no other text:
+[{"title": "...", "description": "...", "due_date": "...", "assignee_text": "...", "critical": false, "confidence": 0.9}]`
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Claude API error:', response.status, errorText)
+      return null
+    }
+
+    const data = await response.json()
+    const content = data.content?.[0]?.text
+
+    if (!content) {
+      console.error('No content in Claude response')
+      return null
+    }
+
+    // Parse JSON from response (handle potential markdown code blocks)
+    let jsonStr = content.trim()
+    if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
+    }
+
+    const tasks = JSON.parse(jsonStr)
+    
+    if (!Array.isArray(tasks)) {
+      console.error('Claude response is not an array')
+      return null
+    }
+
+    return tasks.slice(0, 20) // Enforce max 20 tasks
+  } catch (error) {
+    console.error('AI extraction error:', error)
+    return null
+  }
+}
+
+// Extract user's note from forwarded email (text before the forwarded content)
+function extractUserNote(bodyText: string): string {
+  if (!bodyText) return ''
+  
+  // Common forward markers
+  const forwardMarkers = [
+    '---------- Forwarded message ---------',
+    '-------- Original Message --------',
+    'Begin forwarded message:',
+    '-----Original Message-----',
+    'From:',
+    '________________________________'
+  ]
+  
+  let earliestIndex = bodyText.length
+  for (const marker of forwardMarkers) {
+    const idx = bodyText.indexOf(marker)
+    if (idx > 0 && idx < earliestIndex) {
+      earliestIndex = idx
+    }
+  }
+  
+  if (earliestIndex < bodyText.length) {
+    return bodyText.substring(0, earliestIndex).trim()
+  }
+  
+  return ''
 }
 
 serve(async (req) => {
@@ -44,9 +155,10 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    // Find user by token - only select id (email is in auth.users, not profiles)
+    // Find user by token
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
@@ -95,37 +207,66 @@ serve(async (req) => {
     
     console.log('Stored email source:', emailSource.id)
     
-    // For now, create a single pending task from the email
-    // (AI extraction will be added in Chunk 3)
-    const taskTitle = subject || 'Task from email'
+    // Extract user's note (text they added before forwarding)
+    const userNote = extractUserNote(text)
+    console.log('User note:', userNote ? userNote.substring(0, 100) : '(none)')
     
-    const { data: pendingTask, error: taskError } = await supabase
+    // Try AI extraction if API key is available
+    let extractedTasks = null
+    if (anthropicKey) {
+      console.log('Attempting AI extraction...')
+      extractedTasks = await extractTasksWithAI(subject, text, userNote, anthropicKey)
+      console.log('AI extracted tasks:', extractedTasks?.length || 0)
+    } else {
+      console.log('No ANTHROPIC_API_KEY, skipping AI extraction')
+    }
+    
+    // If AI extraction failed or no tasks found, create a single task from subject
+    if (!extractedTasks || extractedTasks.length === 0) {
+      extractedTasks = [{
+        title: subject || 'Task from email',
+        description: text?.substring(0, 500) || null,
+        due_date: null,
+        assignee_text: null,
+        critical: false,
+        confidence: 0.3
+      }]
+      console.log('Using fallback single task')
+    }
+    
+    // Create pending tasks
+    const pendingTasksToInsert = extractedTasks.map(task => ({
+      user_id: profile.id,
+      email_source_id: emailSource.id,
+      title: task.title?.substring(0, 200) || 'Untitled task',
+      description: task.description?.substring(0, 1000) || null,
+      due_date: task.due_date || null,
+      assignee_text: task.assignee_text || null,
+      critical: task.critical || false,
+      ai_confidence: task.confidence || 0.5,
+      status: 'pending'
+    }))
+    
+    const { data: pendingTasks, error: taskError } = await supabase
       .from('pending_tasks')
-      .insert({
-        user_id: profile.id,
-        email_source_id: emailSource.id,
-        title: taskTitle,
-        description: text?.substring(0, 1000) || null,
-        ai_confidence: 0.5, // Low confidence since no AI yet
-        status: 'pending'
-      })
+      .insert(pendingTasksToInsert)
       .select()
-      .single()
     
     if (taskError) {
-      console.error('Failed to create pending task:', taskError)
-      return new Response(JSON.stringify({ error: 'Failed to create pending task', details: taskError.message }), {
+      console.error('Failed to create pending tasks:', taskError)
+      return new Response(JSON.stringify({ error: 'Failed to create pending tasks', details: taskError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
     
-    console.log('Created pending task:', pendingTask.id)
+    console.log('Created pending tasks:', pendingTasks.length)
     
     return new Response(JSON.stringify({ 
       success: true, 
       email_source_id: emailSource.id,
-      pending_task_id: pendingTask.id
+      pending_tasks_count: pendingTasks.length,
+      pending_task_ids: pendingTasks.map(t => t.id)
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
