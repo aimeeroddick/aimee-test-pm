@@ -7393,6 +7393,14 @@ export default function KanbanBoard({ demoMode = false }) {
                         Overdue ({overdueCount})
                       </button>
                       <button
+                        onClick={() => setFilterDueThisWeek(!filterDueThisWeek)}
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+                          filterDueThisWeek ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        This Week ({dueThisWeekCount})
+                      </button>
+                      <button
                         onClick={() => setFilterMyDay(!filterMyDay)}
                         className={`flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
                           filterMyDay ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
