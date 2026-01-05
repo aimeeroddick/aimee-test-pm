@@ -6975,6 +6975,53 @@ export default function KanbanBoard({ demoMode = false }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
+                
+                {/* Value selector - appears when field is selected */}
+                {pendingFilterField && (
+                  <div className="relative">
+                    <select
+                      autoFocus
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
+                          setPendingFilterField('')
+                        }
+                      }}
+                      className="appearance-none pl-2 pr-5 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent cursor-pointer transition-colors"
+                    >
+                      <option value="">Select {pendingFilterField === 'energy_level' ? 'Effort' : pendingFilterField === 'due_date' ? 'Due Date' : pendingFilterField.charAt(0).toUpperCase() + pendingFilterField.slice(1)}...</option>
+                      <option value="__blank__">(Blank)</option>
+                      {pendingFilterField === 'assignee' && [...new Set(tasks.map(t => t.assignee).filter(Boolean))].sort().map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                      {pendingFilterField === 'customer' && [...new Set(tasks.map(t => t.customer).filter(Boolean))].sort().map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      {pendingFilterField === 'energy_level' && (
+                        <>
+                          <option value="high">High Effort</option>
+                          <option value="medium">Medium Effort</option>
+                          <option value="low">Low Effort</option>
+                        </>
+                      )}
+                      {pendingFilterField === 'due_date' && (
+                        <option value="has_date">Has Due Date</option>
+                      )}
+                    </select>
+                    <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <button
+                      onClick={() => setPendingFilterField('')}
+                      className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div className="flex-1" />
