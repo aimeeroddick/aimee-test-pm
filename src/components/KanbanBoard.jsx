@@ -832,11 +832,12 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
 // Admin Feedback Panel Component
 const ADMIN_EMAIL = 'roddickaimee@gmail.com'
 
-const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated }) => {
+const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated, projects = [] }) => {
   const [feedback, setFeedback] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, new, read, resolved, converted
   const [converting, setConverting] = useState(null) // Track which item is being converted
+  const [selectedProject, setSelectedProject] = useState(null) // Project to create tasks in
   
   const isAdmin = userEmail === ADMIN_EMAIL
   
@@ -879,12 +880,15 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
   
   // Convert feedback to a backlog task
   const convertToTask = async (item) => {
-    console.log('Converting to task:', item, 'userId:', userId)
-    if (!userId) {
-      console.error('No userId provided')
-      alert('Error: No user ID. Please refresh and try again.')
+    console.log('Converting to task:', item, 'userId:', userId, 'selectedProject:', selectedProject)
+    
+    // Use selected project or first available project
+    const projectId = selectedProject || projects[0]?.id
+    if (!projectId) {
+      alert('No project available. Please create a project first.')
       return
     }
+    
     setConverting(item.id)
     
     try {
@@ -894,18 +898,19 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
       const firstLine = item.message.split('\n')[0].slice(0, 100)
       const title = `${typeLabel}: ${firstLine}${item.message.length > 100 ? '...' : ''}`
       
-      // Create task in backlog - match the same insert pattern as handleSaveTask
+      // Create task in backlog - must include project_id for RLS
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert({
           title,
           description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
           status: 'backlog',
+          project_id: projectId,
           critical: false,
           time_estimate: 0,
           energy_level: 'medium',
           category: null,
-          source: null,
+          source: 'feedback',
           subtasks: [],
           comments: [],
         })
@@ -1010,7 +1015,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
             </button>
           </div>
           
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-4 flex-wrap items-center">
             {['all', 'new', 'read', 'resolved', 'converted'].map(f => (
               <button
                 key={f}
@@ -1029,6 +1034,20 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
                 )}
               </button>
             ))}
+            
+            {/* Project selector for task creation */}
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Create in:</span>
+              <select
+                value={selectedProject || projects[0]?.id || ''}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                className="px-2 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+              >
+                {projects.filter(p => !p.archived).map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         
@@ -8730,6 +8749,7 @@ Or we can extract from:
         userEmail={user?.email}
         userId={user?.id}
         onTaskCreated={fetchData}
+        projects={projects}
       />
       
       {/* Settings Modal */}
