@@ -2201,8 +2201,13 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         iconComponent: 'sun',
       },
       {
+        title: 'Plan My Day',
+        description: 'Click the Plan My Day button to get an AI-prioritised task list based on your available time. Critical and overdue tasks are suggested first!',
+        iconComponent: 'sparkle',
+      },
+      {
         title: 'Add Tasks to My Day',
-        description: 'Tasks with today\'s start date appear automatically. Click the sun button on any recommended task to add it to your day!',
+        description: 'Tasks with today\'s start date or due date appear automatically. Click the sun button on any recommended task to add it manually.',
         iconComponent: 'addTask',
         animation: 'addToMyDay',
       },
@@ -2885,7 +2890,26 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   <p className="text-gray-800 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
                 </SectionCard>
                 
-                <SectionCard index={1} title="How Tasks Appear in My Day">
+                <SectionCard index={1} title="Plan My Day">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Click the <span className="font-semibold text-indigo-600 dark:text-indigo-400">Plan My Day</span> button to get an intelligent task plan based on your available time.</p>
+                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                      <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-2">How it works:</p>
+                      <ul className="text-sm text-gray-800 dark:text-gray-300 space-y-1">
+                        <li>1. Enter how much time you have available</li>
+                        <li>2. Get a prioritised list of tasks that fit your time</li>
+                        <li>3. Rearrange or remove tasks as needed</li>
+                        <li>4. Accept to set your day</li>
+                      </ul>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Priority order:</p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Critical tasks, overdue items, and tasks due today are prioritised first. Tasks with no dates appear last.</p>
+                    </div>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={2} title="How Tasks Appear in My Day">
                   <div className="space-y-3">
                     <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200 dark:border-green-700">
                       <p className="font-semibold text-green-600 dark:text-green-400 mb-1">Auto-included:</p>
@@ -2898,13 +2922,13 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={2} title="Sun Icon on Cards">
+                <SectionCard index={3} title="Sun Icon on Cards">
                   <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
                     <p className="text-gray-700 dark:text-gray-300">Tasks in your My Day list show a sun icon on their card in the board view. This helps you quickly identify your daily focus tasks while browsing the board.</p>
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={3} title="Recommendations & All Tasks">
+                <SectionCard index={4} title="Recommendations & All Tasks">
                   <p className="text-gray-800 dark:text-gray-300 mb-3">The Recommendations section shows tasks organized by urgency:</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><span className="font-semibold text-red-600">🔴 Overdue</span><p className="text-sm text-gray-700">Past due date</p></div>
@@ -2914,7 +2938,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={4} title="Daily Reset">
+                <SectionCard index={5} title="Daily Reset">
                   <p className="text-gray-800 dark:text-gray-300">Manually added tasks clear from My Day at midnight, giving you a fresh start each day.</p>
                 </SectionCard>
               </>
