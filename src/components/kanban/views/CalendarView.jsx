@@ -105,6 +105,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [draggedTask, setDraggedTask] = useState(null)
   const [hoverSlot, setHoverSlot] = useState(null) // { date, slotIndex } for drop zone highlighting
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
+  const [resizePreviewHeight, setResizePreviewHeight] = useState(null) // Preview height in pixels during resize
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
   const [taskToSchedule, setTaskToSchedule] = useState(null) // For schedule modal
@@ -595,12 +596,20 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const handleResizeMove = (e) => {
     if (!resizingTask) return
     e.preventDefault()
+    
+    const deltaY = e.clientY - resizingTask.startY
+    // Each 32px = 30 minutes in daily view
+    const slotsDelta = Math.round(deltaY / 32)
+    const newDuration = Math.max(15, resizingTask.originalDuration + (slotsDelta * 30))
+    const heightSlots = Math.ceil(newDuration / 30)
+    setResizePreviewHeight(heightSlots * 32 - 2)
   }
   
   // Handle resize end
   const handleResizeEnd = async (e) => {
     if (!resizingTask || !onUpdateTask) {
       setResizingTask(null)
+      setResizePreviewHeight(null)
       return
     }
     
@@ -622,6 +631,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     setResizingTask(null)
+    setResizePreviewHeight(null)
   }
   
   const renderCalendarDays = () => {
@@ -1228,6 +1238,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         const heightSlots = Math.ceil(duration / 30)
                         const projectColor = getProjectColor(task.project_id)
                         const isOverlapping = hasOverlap(task, currentDate)
+                        const isBeingResized = resizingTask?.task?.id === task.id
+                        const displayHeight = isBeingResized && resizePreviewHeight ? resizePreviewHeight : heightSlots * 32 - 2
                         return (
                           <div
                             key={task.id}
@@ -1240,8 +1252,8 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
                               task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                               `${projectColor.bg} ${projectColor.text}`
-                            } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''}`}
-                            style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
+                            } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''} ${isBeingResized ? 'ring-2 ring-indigo-500 shadow-lg' : ''}`}
+                            style={{ height: `${displayHeight}px`, top: '1px' }}
                             title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
                           >
                             <div className="flex items-start justify-between gap-1">
