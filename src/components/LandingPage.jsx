@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { track } from '@vercel/analytics'
 import { supabase } from '../lib/supabase'
@@ -351,7 +351,6 @@ const DownloadButtons = () => {
 }
 
 export default function LandingPage() {
-  const [searchParams] = useSearchParams()
   const [scrolled, setScrolled] = useState(false)
   const [notes, setNotes] = useState('')
   const [extractedTasks, setExtractedTasks] = useState([])

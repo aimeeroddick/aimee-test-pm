@@ -90,15 +90,9 @@ function ProtectedRoute({ children }) {
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth()
-  const isSigningOut = new URLSearchParams(window.location.search).get('signout') === 'true'
   
   if (loading) {
     return <LoadingSpinner />
-  }
-
-  // Don't redirect if signing out - let the page handle it
-  if (isSigningOut) {
-    return children
   }
 
   // If user is logged in AND email is confirmed, redirect to app

@@ -6180,6 +6180,15 @@ export default function KanbanBoard({ demoMode = false }) {
   return (
     <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 transition-colors duration-200 flex flex-col">
+      {/* Signing Out Overlay */}
+      {isSigningOut && (
+        <div className="fixed inset-0 z-[200] bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400">Signing out...</p>
+          </div>
+        </div>
+      )}
       {/* Offline Banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium shadow-lg">
@@ -6410,10 +6419,10 @@ export default function KanbanBoard({ demoMode = false }) {
                           <span className="font-medium">Settings</span>
                         </button>
                         <button
-                          onClick={() => { 
-                            setIsSigningOut(true)  // Prevent any flashes
-                            // Redirect immediately, signout happens via URL param
-                            window.location.href = '/welcome?signout=true'
+                          onClick={async () => { 
+                            setIsSigningOut(true)  // Shows overlay, prevents flash
+                            await signOut()
+                            window.location.href = '/welcome'
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
