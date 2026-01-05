@@ -4548,9 +4548,19 @@ export default function KanbanBoard({ demoMode = false }) {
     if (approvingTaskId === 'bulk') return
     
     const tasksToApprove = pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id)
+    const uncheckedTasks = pendingEmailTasks.filter(t => !selectedPendingIds.has(t.id))
+    
     if (tasksToApprove.length === 0) {
       alert('Please select tasks and ensure they have projects assigned')
       return
+    }
+    
+    // If there are unchecked tasks, ask what to do with them
+    let removeUnchecked = false
+    if (uncheckedTasks.length > 0) {
+      removeUnchecked = window.confirm(
+        `You have ${uncheckedTasks.length} unchecked task${uncheckedTasks.length !== 1 ? 's' : ''}. \n\nClick OK to remove them, or Cancel to keep for later.`
+      )
     }
     
     setApprovingTaskId('bulk')
@@ -4603,6 +4613,15 @@ export default function KanbanBoard({ demoMode = false }) {
         .from('pending_tasks')
         .update({ status: 'approved' })
         .in('id', pendingIds)
+      
+      // If user chose to remove unchecked tasks, mark them as rejected
+      if (removeUnchecked && uncheckedTasks.length > 0) {
+        const uncheckedIds = uncheckedTasks.map(t => t.id)
+        await supabase
+          .from('pending_tasks')
+          .update({ status: 'rejected' })
+          .in('id', uncheckedIds)
+      }
       
       // Refresh once at the end
       await fetchData()
