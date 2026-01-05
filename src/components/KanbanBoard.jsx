@@ -4013,6 +4013,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [pendingEmailTasks, setPendingEmailTasks] = useState([])
   const [pendingEmailCount, setPendingEmailCount] = useState(0)
   const [pendingReviewExpanded, setPendingReviewExpanded] = useState(true)
+  const [pendingDropdownOpen, setPendingDropdownOpen] = useState(false)
   const [approvingTaskId, setApprovingTaskId] = useState(null)
   const [selectedPendingIds, setSelectedPendingIds] = useState(new Set())
   const [expandedPendingIds, setExpandedPendingIds] = useState(new Set())
@@ -4440,8 +4441,8 @@ export default function KanbanBoard({ demoMode = false }) {
       // Only auto-select on initial load (when no selections exist)
       setSelectedPendingIds(prev => {
         if (prev.size === 0 && data?.length > 0) {
-          // Initial load - select high confidence tasks
-          return new Set((data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7).map(t => t.id))
+          // Initial load - select high confidence tasks AND critical tasks
+          return new Set((data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7 || t.critical).map(t => t.id))
         }
         // Keep existing selections, but remove any that no longer exist
         const validIds = new Set((data || []).map(t => t.id))
@@ -6890,27 +6891,214 @@ export default function KanbanBoard({ demoMode = false }) {
                 <span className="hidden sm:inline"><u>N</u>otes</span>
               </button>
               
-              {/* Pending Email Tasks Badge */}
+              {/* Pending Email Tasks Badge + Dropdown */}
               {pendingEmailCount > 0 && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Email badge clicked!');
-                    setCurrentView('board');
-                    setPendingReviewExpanded(true);
-                  }}
-                  className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
-                  title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
-                >
-                  <svg className="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
-                    {pendingEmailCount > 9 ? '9+' : pendingEmailCount}
-                  </span>
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setPendingDropdownOpen(!pendingDropdownOpen)}
+                    className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
+                    title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
+                      {pendingEmailCount > 9 ? '9+' : pendingEmailCount}
+                    </span>
+                  </button>
+                  
+                  {/* Dropdown Panel */}
+                  {pendingDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setPendingDropdownOpen(false)} />
+                      <div className="absolute right-0 top-full mt-2 w-[600px] max-w-[90vw] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b border-amber-200/50 dark:border-amber-800/50">
+                          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm font-semibold">{pendingEmailTasks.length} from email</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-amber-600 dark:text-amber-400">
+                              {pendingEmailTasks.filter(t => selectedPendingIds.has(t.id)).length} selected
+                            </span>
+                            <button
+                              onClick={async () => {
+                                await handleBulkApprovePendingTasks()
+                                if (pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length > 0) {
+                                  setPendingDropdownOpen(false)
+                                }
+                              }}
+                              disabled={approvingTaskId === 'bulk' || pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length === 0}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                            >
+                              {approvingTaskId === 'bulk' ? (
+                                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                              ) : (
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                              )}
+                              Create Tasks
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Task List */}
+                        <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                          {pendingEmailTasks.map(task => {
+                            const isSelected = selectedPendingIds.has(task.id)
+                            const isExpanded = expandedPendingIds.has(task.id)
+                            const isLowConfidence = task.ai_confidence && task.ai_confidence < 0.7
+                            const selectedProject = projects.find(p => p.id === task.project_id)
+                            const projectCustomers = selectedProject?.customers || []
+                            return (
+                              <div key={task.id} className={`transition-colors ${isSelected ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50 opacity-60'}`}>
+                                {/* Main Row */}
+                                <div className="flex items-center gap-2 px-4 py-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => togglePendingTaskSelection(task.id)}
+                                    className="w-4 h-4 rounded border-amber-400 dark:border-amber-600 text-amber-500 focus:ring-amber-500"
+                                  />
+                                  <button
+                                    onClick={() => setExpandedPendingIds(prev => {
+                                      const next = new Set(prev)
+                                      if (next.has(task.id)) next.delete(task.id)
+                                      else next.add(task.id)
+                                      return next
+                                    })}
+                                    className="p-0.5 text-gray-400 hover:text-amber-500 transition-colors"
+                                  >
+                                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                  </button>
+                                  <input
+                                    type="text"
+                                    value={task.title}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
+                                    className="flex-1 min-w-0 text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0 truncate"
+                                  />
+                                  {isLowConfidence && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-300 font-medium">?</span>
+                                  )}
+                                  {task.critical && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 font-medium">!</span>
+                                  )}
+                                  <input
+                                    type="text"
+                                    value={task.due_date || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                    placeholder="YYYY-MM-DD"
+                                    className="w-28 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={task.assignee_text || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
+                                    placeholder="@who"
+                                    className="w-20 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                                  />
+                                  <select
+                                    value={task.project_id || ''}
+                                    onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
+                                    className={`w-28 text-xs px-2 py-1 border rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 ${!task.project_id ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'}`}
+                                  >
+                                    <option value="">Project *</option>
+                                    {projects.filter(p => !p.archived).map(p => (
+                                      <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => handleRejectPendingTask(task.id)}
+                                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                {/* Expanded Row */}
+                                {isExpanded && (
+                                  <div className="flex items-center gap-3 px-4 py-2 pl-12 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+                                    <div className="flex items-center gap-1">
+                                      <label className="text-[10px] text-gray-500 uppercase">Start</label>
+                                      <input
+                                        type="text"
+                                        value={task.start_date || ''}
+                                        onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
+                                        placeholder="YYYY-MM-DD"
+                                        className="w-24 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <label className="text-[10px] text-gray-500 uppercase">Effort</label>
+                                      <select
+                                        value={task.energy_level || 'medium'}
+                                        onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
+                                        className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                                      >
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                      </select>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <label className="text-[10px] text-gray-500 uppercase">Time</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={task.time_estimate || ''}
+                                        onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
+                                        placeholder="mins"
+                                        className="w-14 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <label className="text-[10px] text-gray-500 uppercase">Customer</label>
+                                      <select
+                                        value={task.customer || ''}
+                                        onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
+                                        className="w-24 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                                      >
+                                        <option value="">Select...</option>
+                                        {projectCustomers.map(c => (
+                                          <option key={c} value={c}>{c}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <label className="flex items-center gap-1 text-xs cursor-pointer ml-auto">
+                                      <input
+                                        type="checkbox"
+                                        checked={task.critical || false}
+                                        onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
+                                        className="w-3.5 h-3.5 rounded border-red-400 text-red-500 focus:ring-red-500"
+                                      />
+                                      <span className="text-red-600 dark:text-red-400 font-medium">Critical</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        
+                        {/* Footer link to Board */}
+                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                          <button
+                            onClick={() => { setCurrentView('board'); setPendingReviewExpanded(true); setPendingDropdownOpen(false); }}
+                            className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+                          >
+                            View on Board →
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
               
               <button
