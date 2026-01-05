@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ENERGY_LEVELS } from '../constants'
 import { getDueDateStatus, isBlocked, formatDate } from '../utils'
 import { TaskCardIcons, MenuIcons } from '../icons'
@@ -6,6 +7,335 @@ import { GreetingIcon, EmptyState } from '../ui/EmptyState'
 
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
+
+// Get estimated minutes for a task
+const getTaskMinutes = (task) => {
+  if (task.time_estimate) return task.time_estimate
+  // Default based on energy level
+  switch (task.energy_level) {
+    case 'high': return 240 // 4 hours
+    case 'medium': return 120 // 2 hours
+    case 'low': return 30 // 30 minutes
+    default: return 60 // 1 hour default
+  }
+}
+
+// Calculate priority score for a task (higher = more urgent)
+const getTaskPriorityScore = (task) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const endOfWeek = new Date(today)
+  endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+  
+  const dueDate = task.due_date ? new Date(task.due_date) : null
+  const startDate = task.start_date ? new Date(task.start_date) : null
+  if (dueDate) dueDate.setHours(0, 0, 0, 0)
+  if (startDate) startDate.setHours(0, 0, 0, 0)
+  
+  const isOverdue = dueDate && dueDate < today
+  const isDueToday = dueDate && dueDate.getTime() === today.getTime()
+  const isDueSoon = dueDate && dueDate > today && dueDate <= endOfWeek
+  const isDueAfterWeek = dueDate && dueDate > endOfWeek
+  const hasStartedOrPast = startDate && startDate <= today
+  const startsThisWeek = startDate && startDate > today && startDate <= endOfWeek
+  
+  let score = 0
+  
+  if (task.critical) {
+    if (isOverdue) score = 110 // Critical + overdue (highest)
+    else if (hasStartedOrPast && isDueToday) score = 100 // Critical + started + due today
+    else if (hasStartedOrPast && isDueSoon) score = 90 // Critical + started + due soon
+    else if (isDueToday) score = 80 // Critical + due today
+    else if (isDueSoon) score = 70 // Critical + due soon
+    else if (hasStartedOrPast) score = 60 // Critical + started
+    else score = 50 // Critical without dates
+  } else {
+    if (isOverdue) score = 45 // Overdue
+    else if (hasStartedOrPast && isDueToday) score = 40 // Started + due today
+    else if (hasStartedOrPast && isDueSoon) score = 35 // Started + due soon
+    else if (isDueToday) score = 30 // Due today
+    else if (isDueSoon) score = 25 // Due this week
+    else if (startsThisWeek) score = 20 // Starts this week
+    else if (isDueAfterWeek) score = 15 // Due after this week
+    else if (hasStartedOrPast) score = 10 // Started but no due date
+    else score = 5 // No dates
+  }
+  
+  return score
+}
+
+// Plan My Day Modal
+const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) => {
+  const [availableMinutes, setAvailableMinutes] = useState(240) // 4 hours default
+  const [suggestedTasks, setSuggestedTasks] = useState([])
+  const [step, setStep] = useState(1) // 1 = input time, 2 = review plan
+  
+  // Get all eligible tasks (not done, not already in my day today)
+  const eligibleTasks = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStr = today.toISOString().split('T')[0]
+    
+    return allTasks.filter(task => {
+      if (task.status === 'done') return false
+      // Don't include tasks already explicitly in My Day today
+      if (task.my_day_date === todayStr) return false
+      // Don't include tasks from archived projects
+      const project = projects.find(p => p.id === task.project_id)
+      if (project?.archived) return false
+      return true
+    })
+  }, [allTasks, projects])
+  
+  const generatePlan = () => {
+    // Sort tasks by priority score
+    const sorted = [...eligibleTasks].sort((a, b) => getTaskPriorityScore(b) - getTaskPriorityScore(a))
+    
+    // Pick tasks that fit within available time
+    let remainingMinutes = availableMinutes
+    const selected = []
+    
+    for (const task of sorted) {
+      const taskMins = getTaskMinutes(task)
+      if (taskMins <= remainingMinutes) {
+        selected.push({ ...task, estimatedMinutes: taskMins })
+        remainingMinutes -= taskMins
+      }
+      // Stop if we've filled the time or have enough tasks
+      if (remainingMinutes <= 0 || selected.length >= 10) break
+    }
+    
+    setSuggestedTasks(selected)
+    setStep(2)
+  }
+  
+  const moveTask = (index, direction) => {
+    const newTasks = [...suggestedTasks]
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= newTasks.length) return
+    [newTasks[index], newTasks[newIndex]] = [newTasks[newIndex], newTasks[index]]
+    setSuggestedTasks(newTasks)
+  }
+  
+  const removeTask = (index) => {
+    setSuggestedTasks(prev => prev.filter((_, i) => i !== index))
+  }
+  
+  const totalMinutes = suggestedTasks.reduce((sum, t) => sum + t.estimatedMinutes, 0)
+  
+  const formatTime = (mins) => {
+    if (mins >= 60) {
+      const hours = Math.floor(mins / 60)
+      const remaining = mins % 60
+      return remaining > 0 ? `${hours}h ${remaining}m` : `${hours}h`
+    }
+    return `${mins}m`
+  }
+  
+  const handleAccept = () => {
+    onAcceptPlan(suggestedTasks.map(t => t.id))
+    onClose()
+    setStep(1)
+    setSuggestedTasks([])
+  }
+  
+  const handleClose = () => {
+    onClose()
+    setStep(1)
+    setSuggestedTasks([])
+  }
+  
+  if (!isOpen) return null
+  
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Plan My Day</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {step === 1 ? 'How much time do you have?' : 'Review your suggested plan'}
+                </p>
+              </div>
+            </div>
+            <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {step === 1 ? (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Available time today
+                </label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {[60, 120, 240, 480].map(mins => (
+                    <button
+                      key={mins}
+                      onClick={() => setAvailableMinutes(mins)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        availableMinutes === mins
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {formatTime(mins)}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={availableMinutes}
+                    onChange={(e) => setAvailableMinutes(Math.max(15, parseInt(e.target.value) || 0))}
+                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm"
+                    min="15"
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">minutes</span>
+                </div>
+              </div>
+              
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+                <h4 className="text-sm font-medium text-indigo-900 dark:text-indigo-300 mb-2">How it works</h4>
+                <ul className="text-xs text-indigo-700 dark:text-indigo-400 space-y-1">
+                  <li>• Prioritizes critical and overdue tasks first</li>
+                  <li>• Considers start dates and due dates</li>
+                  <li>• Estimates time based on your effort levels</li>
+                  <li>• You can rearrange or remove tasks before accepting</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {suggestedTasks.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">No tasks found to suggest.</p>
+                  <button onClick={() => setStep(1)} className="mt-2 text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+                    Try with more time
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <span>{suggestedTasks.length} tasks</span>
+                    <span className={totalMinutes > availableMinutes ? 'text-red-500' : ''}>
+                      {formatTime(totalMinutes)} / {formatTime(availableMinutes)}
+                    </span>
+                  </div>
+                  {suggestedTasks.map((task, index) => {
+                    const project = projects.find(p => p.id === task.project_id)
+                    return (
+                      <div
+                        key={task.id}
+                        className={`p-3 rounded-xl border transition-all ${
+                          task.critical
+                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              onClick={() => moveTask(index, -1)}
+                              disabled={index === 0}
+                              className={`p-0.5 rounded ${index === 0 ? 'text-gray-300 dark:text-gray-600' : 'text-gray-400 hover:text-indigo-500'}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => moveTask(index, 1)}
+                              disabled={index === suggestedTasks.length - 1}
+                              className={`p-0.5 rounded ${index === suggestedTasks.length - 1 ? 'text-gray-300 dark:text-gray-600' : 'text-gray-400 hover:text-indigo-500'}`}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              {task.critical && <span className="text-red-500">{TaskCardIcons.flag('w-3.5 h-3.5')}</span>}
+                              <span className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              {project && <span>{project.name}</span>}
+                              {task.due_date && (
+                                <span className={getDueDateStatus(task.due_date, task.status) === 'overdue' ? 'text-red-500' : ''}>
+                                  Due {formatDate(task.due_date)}
+                                </span>
+                              )}
+                              <span>~{formatTime(task.estimatedMinutes)}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeTask(index)}
+                            className="p-1 text-gray-400 hover:text-red-500 rounded"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          {step === 1 ? (
+            <button
+              onClick={generatePlan}
+              disabled={availableMinutes < 15}
+              className="w-full px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-purple-600 transition-all disabled:opacity-50"
+            >
+              Generate Plan
+            </button>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setStep(1)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleAccept}
+                disabled={suggestedTasks.length === 0}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-purple-600 transition-all disabled:opacity-50"
+              >
+                Add to My Day ({suggestedTasks.length})
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
 
 
 const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false, blocked, dueDateStatus, energyStyle, onEditTask, onQuickStatusChange, onRemoveFromMyDay, onAddToMyDay, showReorder = false, isFirst = false, isLast = false, onMoveUp, onMoveDown }) => {
@@ -161,6 +491,15 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
           </div>
         </div>
       </div>
+      
+      {/* Plan My Day Modal */}
+      <PlanMyDayModal
+        isOpen={planModalOpen}
+        onClose={() => setPlanModalOpen(false)}
+        allTasks={allTasks}
+        projects={projects}
+        onAcceptPlan={handleAcceptPlan}
+      />
     </div>
   )
 }
@@ -169,6 +508,7 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
 const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusChange, onUpdateMyDayDate, showConfettiPref, onToggleSubtask, displayName }) => {
   const [expandedSection, setExpandedSection] = useState('overdue')
   const [confettiShown, setConfettiShown] = useState(false)
+  const [planModalOpen, setPlanModalOpen] = useState(false)
   const prevActiveCountRef = useRef(null)
   
   // Custom order for My Day tasks (stored in localStorage)
@@ -442,6 +782,13 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
     onUpdateMyDayDate(task.id, yesterdayStr)
   }
   
+  const handleAcceptPlan = (taskIds) => {
+    // Add all selected tasks to My Day
+    taskIds.forEach(taskId => {
+      onUpdateMyDayDate(taskId, todayStr)
+    })
+  }
+  
   const RecommendationSection = ({ title, emoji, color, tasks, id }) => {
     if (tasks.length === 0) return null
     const isExpanded = expandedSection === id
@@ -501,7 +848,17 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           </p>
         </div>
         
-        
+        {/* Plan My Day Button */}
+        <button
+          onClick={() => setPlanModalOpen(true)}
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium text-sm shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <span className="hidden sm:inline">Plan My Day</span>
+          <span className="sm:hidden">Plan</span>
+        </button>
       </div>
       
       {myDayTasks.length > 0 && (
@@ -723,6 +1080,15 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
           </div>
         </div>
       </div>
+      
+      {/* Plan My Day Modal */}
+      <PlanMyDayModal
+        isOpen={planModalOpen}
+        onClose={() => setPlanModalOpen(false)}
+        allTasks={allTasks}
+        projects={projects}
+        onAcceptPlan={handleAcceptPlan}
+      />
     </div>
   )
 }
