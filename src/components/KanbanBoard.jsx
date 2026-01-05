@@ -5646,21 +5646,31 @@ export default function KanbanBoard({ demoMode = false }) {
   const handleUpdateMyDayDate = async (taskId, myDayDate) => {
     try {
       const task = tasks.find(t => t.id === taskId)
+      const today = new Date().toISOString().split('T')[0]
+      
+      // If removing from My Day, track the removal date
+      // If adding to My Day, clear the removal tracking
+      const updateData = myDayDate 
+        ? { my_day_date: myDayDate, removed_from_myday_at: null }
+        : { my_day_date: null, removed_from_myday_at: today }
+      
       const { error } = await supabase
         .from('tasks')
-        .update({ my_day_date: myDayDate })
+        .update(updateData)
         .eq('id', taskId)
       
       if (error) throw error
       
       // Update local state
       setTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, my_day_date: myDayDate } : t
+        t.id === taskId ? { ...t, ...updateData } : t
       ))
       
       // Show notification
       if (myDayDate && new Date(myDayDate).toDateString() === new Date().toDateString()) {
         showNotification(`Added "${task?.title}" to My Day`)
+      } else if (!myDayDate) {
+        showNotification(`Removed "${task?.title}" from My Day`)
       }
     } catch (error) {
       console.error('Error updating my_day_date:', error)

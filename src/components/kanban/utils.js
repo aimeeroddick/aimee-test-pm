@@ -55,6 +55,17 @@ export const isInMyDay = (task) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
+  // Check if user manually removed from My Day today
+  if (task.removed_from_myday_at) {
+    const removedDate = new Date(task.removed_from_myday_at)
+    removedDate.setHours(0, 0, 0, 0)
+    if (removedDate.getTime() === today.getTime()) {
+      // User removed it today - don't auto-add back
+      return false
+    }
+  }
+  
+  // Explicitly added to My Day today
   if (task.my_day_date) {
     const myDayDate = new Date(task.my_day_date)
     myDayDate.setHours(0, 0, 0, 0)
@@ -62,10 +73,18 @@ export const isInMyDay = (task) => {
     if (myDayDate.getTime() === today.getTime()) return true
   }
   
+  // Auto-add: Start date is today or in the past
   if (task.start_date) {
     const startDate = new Date(task.start_date)
     startDate.setHours(0, 0, 0, 0)
     if (startDate <= today) return true
+  }
+  
+  // Auto-add: Due date is today or in the past (overdue)
+  if (task.due_date) {
+    const dueDate = new Date(task.due_date)
+    dueDate.setHours(0, 0, 0, 0)
+    if (dueDate <= today) return true
   }
   
   return false
