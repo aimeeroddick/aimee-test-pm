@@ -3730,9 +3730,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const handleSaveDisplayName = async () => {
     setSavingProfile(true)
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { display_name: displayName }
-      })
+      const { error } = await updateProfile({ display_name: displayName })
       if (error) throw error
       setEditingDisplayName(false)
       showNotification('Display name saved')
@@ -3741,6 +3739,39 @@ export default function KanbanBoard({ demoMode = false }) {
       setError('Failed to save display name')
     }
     setSavingProfile(false)
+  }
+  
+  // Handle avatar upload from settings
+  const avatarInputRef = useRef(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showNotification('Please select an image file', 'error')
+      return
+    }
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showNotification('Image must be less than 2MB', 'error')
+      return
+    }
+    
+    setUploadingAvatar(true)
+    try {
+      const { error } = await uploadAvatar(file)
+      if (error) throw error
+      showNotification('Profile photo updated')
+    } catch (err) {
+      console.error('Error uploading avatar:', err)
+      showNotification('Failed to upload photo', 'error')
+    }
+    setUploadingAvatar(false)
+    // Clear the input so the same file can be selected again
+    if (avatarInputRef.current) avatarInputRef.current.value = ''
   }
   
   // Handle password reset email
@@ -8504,10 +8535,48 @@ Or we can extract from:
                 </h3>
                 <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-                      {(displayName || user?.user_metadata?.display_name || user?.email)?.charAt(0).toUpperCase()}
+                    {/* Avatar with upload button */}
+                    <div className="relative group">
+                      {profile?.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt="Profile" 
+                          className="w-14 h-14 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+                          {(profile?.display_name || user?.email)?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="absolute inset-0 w-14 h-14 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        {uploadingAvatar ? (
+                          <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        )}
+                      </button>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
                     </div>
                     <div className="flex-1">
+                      <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {profile?.display_name || 'No name set'}
+                      </div>
                       <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{user?.email}</div>
                       <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                         {user?.app_metadata?.provider === 'google' ? 'Google Account' : 'Email Account'}
@@ -8536,7 +8605,7 @@ Or we can extract from:
                           {savingProfile ? '...' : 'Save'}
                         </button>
                         <button
-                          onClick={() => { setEditingDisplayName(false); setDisplayName(user?.user_metadata?.display_name || ''); }}
+                          onClick={() => { setEditingDisplayName(false); setDisplayName(profile?.display_name || ''); }}
                           className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${darkMode ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                         >
                           Cancel
@@ -8545,10 +8614,10 @@ Or we can extract from:
                     ) : (
                       <div className="flex items-center justify-between">
                         <span className={`${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {user?.user_metadata?.display_name || <span className="text-gray-400 italic">Not set</span>}
+                          {profile?.display_name || <span className="text-gray-400 italic">Not set</span>}
                         </span>
                         <button
-                          onClick={() => { setDisplayName(user?.user_metadata?.display_name || ''); setEditingDisplayName(true); }}
+                          onClick={() => { setDisplayName(profile?.display_name || ''); setEditingDisplayName(true); }}
                           className="text-indigo-500 hover:text-indigo-600 text-sm font-medium"
                         >
                           Edit
