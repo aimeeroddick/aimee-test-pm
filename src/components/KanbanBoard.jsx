@@ -3906,6 +3906,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [filterActive, setFilterActive] = useState(false)
   const [filterBacklog, setFilterBacklog] = useState(false)
   const [filterDueToday, setFilterDueToday] = useState(false)
+  const [filterDueThisWeek, setFilterDueThisWeek] = useState(false)
   const [filterMyDay, setFilterMyDay] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   
@@ -5851,7 +5852,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
   // Check if any filters are active
-  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || filterMyDay || searchQuery.trim() || Object.keys(fieldFilters).length > 0
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || filterDueThisWeek || filterMyDay || searchQuery.trim() || Object.keys(fieldFilters).length > 0
   
   // Clear all filters
   const clearFilters = () => {
@@ -5861,6 +5862,7 @@ export default function KanbanBoard({ demoMode = false }) {
     setFilterActive(false)
     setFilterBacklog(false)
     setFilterDueToday(false)
+    setFilterDueThisWeek(false)
     setFilterMyDay(false)
     setSearchQuery('')
     setFieldFilters({})
@@ -5933,6 +5935,16 @@ export default function KanbanBoard({ demoMode = false }) {
     if (filterActive && !['todo', 'in_progress'].includes(t.status)) return false
     if (filterBacklog && t.status !== 'backlog') return false
     if (filterDueToday && getDueDateStatus(t.due_date, t.status) !== 'today') return false
+    if (filterDueThisWeek) {
+      if (!t.due_date || t.status === 'done') return false
+      const dueDate = new Date(t.due_date)
+      const today = new Date()
+      const endOfWeek = new Date(today)
+      endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+      endOfWeek.setHours(23, 59, 59, 999)
+      today.setHours(0, 0, 0, 0)
+      if (dueDate < today || dueDate > endOfWeek) return false
+    }
     if (filterMyDay && !isInMyDay(t)) return false
     
     // Search filter
@@ -6356,7 +6368,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         className={`w-full flex items-center gap-3 px-4 py-3 sm:py-2.5 text-left transition-colors ${currentView === 'progress' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         {MenuIcons.progress()}
-                        <span className="font-medium">Progress</span>
+                        <span className="font-medium">Dashboard</span>
                       </button>
                       
                       {/* Settings section */}
@@ -6419,7 +6431,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 {currentView === 'board' && <>{MenuIcons.board()} Board</>}
                 {currentView === 'calendar' && <>{MenuIcons.calendar()} Calendar</>}
                 {currentView === 'tasks' && <>{MenuIcons.alltasks()} All Tasks</>}
-                {currentView === 'progress' && <>{MenuIcons.progress()} Progress</>}
+                {currentView === 'progress' && <>{MenuIcons.progress()} Dashboard</>}
                 {currentView === 'projects' && <>{MenuIcons.projects()} Projects</>}
               </span>
             </div>
@@ -7359,7 +7371,7 @@ export default function KanbanBoard({ demoMode = false }) {
           
           {currentView === 'progress' && (
             <main className="max-w-4xl mx-auto px-6 py-8 animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Progress Dashboard</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">{MenuIcons.chartBar()} Dashboard</h2>
               
               {/* Stats Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -7390,6 +7402,81 @@ export default function KanbanBoard({ demoMode = false }) {
                     <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">{formatTimeEstimate(weeklyStats.time) || '0h'}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-300">Time This Week</p>
+                </div>
+              </div>
+              
+              {/* Task Summary - Clickable Cards */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Tasks Needing Attention</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Due Today */}
+                  {(() => {
+                    const dueTodayTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'today')
+                    const dueTodayHours = dueTodayTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+                    return (
+                      <button
+                        onClick={() => { clearFilters(); setCurrentView('board'); setFilterDueToday(true); }}
+                        className="p-4 rounded-xl border-2 border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 hover:border-orange-400 dark:hover:border-orange-500 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-2xl">📅</span>
+                          <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">{dueTodayTasks.length}</span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Due Today</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(dueTodayHours) || '0h'} estimated</p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                      </button>
+                    )
+                  })()}
+                  
+                  {/* Overdue */}
+                  {(() => {
+                    const overdueTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'overdue')
+                    const overdueHours = overdueTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+                    return (
+                      <button
+                        onClick={() => { setCurrentView('board'); clearFilters(); setFilterOverdue(true); }}
+                        className="p-4 rounded-xl border-2 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:border-red-400 dark:hover:border-red-500 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-2xl">⚠️</span>
+                          <span className="text-2xl font-bold text-red-600 dark:text-red-400">{overdueTasks.length}</span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Overdue</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(overdueHours) || '0h'} estimated</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                      </button>
+                    )
+                  })()}
+                  
+                  {/* Due This Week */}
+                  {(() => {
+                    const today = new Date()
+                    const endOfWeek = new Date(today)
+                    endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+                    endOfWeek.setHours(23, 59, 59, 999)
+                    today.setHours(0, 0, 0, 0)
+                    const dueThisWeekTasks = tasks.filter(t => {
+                      if (t.status === 'done' || !t.due_date) return false
+                      const dueDate = new Date(t.due_date)
+                      return dueDate >= today && dueDate <= endOfWeek
+                    })
+                    const dueThisWeekHours = dueThisWeekTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
+                    return (
+                      <button
+                        onClick={() => { setCurrentView('board'); clearFilters(); setFilterDueThisWeek(true); }}
+                        className="p-4 rounded-xl border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-2xl">📆</span>
+                          <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{dueThisWeekTasks.length}</span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Due This Week</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeEstimate(dueThisWeekHours) || '0h'} estimated</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to view →</p>
+                      </button>
+                    )
+                  })()}
                 </div>
               </div>
               
