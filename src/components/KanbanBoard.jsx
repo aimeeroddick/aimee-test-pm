@@ -898,7 +898,6 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
         .insert({
-          user_id: userId,
           title,
           description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
           status: 'backlog',
