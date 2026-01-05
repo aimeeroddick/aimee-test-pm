@@ -1647,7 +1647,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               <div className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/50" />
               <span>Completed</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <span className="text-xs">📌</span>
               <span>Drag tasks to reschedule</span>
             </div>
@@ -1670,7 +1670,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
             <div className="w-3 h-3 rounded bg-green-100 dark:bg-green-900/50" />
             <span>Completed</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <span className="text-xs">📌</span>
             <span>Drag tasks to schedule time</span>
           </div>
