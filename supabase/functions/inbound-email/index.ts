@@ -16,10 +16,11 @@ async function extractTasksWithAI(subject: string, bodyText: string, userNote: s
     : 'No projects available'
 
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  const currentYear = new Date().getFullYear()
   
   const prompt = `You are a task extraction assistant. Extract ONLY clear action items from this email.
 
-TODAY'S DATE: ${today}
+TODAY'S DATE: ${today} (Current year is ${currentYear})
 
 USER'S NOTE (instructions from the person forwarding):
 ${userNote || '(No specific instructions)'}
@@ -63,7 +64,8 @@ For each task, provide:
 
 IMPORTANT: 
 - If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
-- Convert ALL dates to YYYY-MM-DD format. If only a day is mentioned (e.g., "Monday", "January 8"), assume the nearest future occurrence.
+- Convert ALL dates to YYYY-MM-DD format using the current year (${currentYear}) or next year if the date has already passed this year.
+- "January 8" in ${currentYear} → "${currentYear}-01-08". If January 8 has passed, use "${currentYear + 1}-01-08".
 
 Rules:
 - Extract up to 20 tasks maximum
@@ -72,7 +74,7 @@ Rules:
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "2026-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 

@@ -3496,7 +3496,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 {formatDate(task.due_date)}
               </span>
             )}
-            {task.time_estimate && (
+            {task.time_estimate > 0 && (
               <span className="flex items-center gap-0.5">
                 {TaskCardIcons.timer("w-3 h-3")} {formatTimeEstimate(task.time_estimate)}
               </span>
