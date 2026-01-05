@@ -105,6 +105,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const [draggedTask, setDraggedTask] = useState(null)
   const [hoverSlot, setHoverSlot] = useState(null) // { date, slotIndex } for drop zone highlighting
   const [resizingTask, setResizingTask] = useState(null) // { task, startY, originalDuration }
+  const [resizePreviewHeight, setResizePreviewHeight] = useState(null) // Preview height in pixels during resize
   const [contextMenu, setContextMenu] = useState(null) // { x, y, task }
   const [selectedTaskForScheduling, setSelectedTaskForScheduling] = useState(null) // For mobile tap-to-schedule
   const [taskToSchedule, setTaskToSchedule] = useState(null) // For schedule modal
@@ -167,6 +168,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     const handleMouseMove = (e) => {
       e.preventDefault()
+      // Update preview height based on drag distance
+      const deltaY = e.clientY - resizingTask.startY
+      const slotsDelta = Math.round(deltaY / 32)
+      const newDuration = Math.max(15, resizingTask.originalDuration + (slotsDelta * 30))
+      const heightSlots = Math.ceil(newDuration / 30)
+      setResizePreviewHeight(heightSlots * 32 - 2)
     }
     
     const handleMouseUp = (e) => {
@@ -584,10 +591,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const handleResizeStart = (e, task) => {
     e.stopPropagation()
     e.preventDefault()
+    const duration = task.time_estimate || 30
+    const heightSlots = Math.ceil(duration / 30)
+    setResizePreviewHeight(heightSlots * 32 - 2) // Set initial height immediately
     setResizingTask({
       task,
       startY: e.clientY,
-      originalDuration: task.time_estimate || 30
+      originalDuration: duration
     })
   }
   
@@ -595,12 +605,20 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   const handleResizeMove = (e) => {
     if (!resizingTask) return
     e.preventDefault()
+    
+    const deltaY = e.clientY - resizingTask.startY
+    // Each 32px = 30 minutes in daily view
+    const slotsDelta = Math.round(deltaY / 32)
+    const newDuration = Math.max(15, resizingTask.originalDuration + (slotsDelta * 30))
+    const heightSlots = Math.ceil(newDuration / 30)
+    setResizePreviewHeight(heightSlots * 32 - 2)
   }
   
   // Handle resize end
   const handleResizeEnd = async (e) => {
     if (!resizingTask || !onUpdateTask) {
       setResizingTask(null)
+      setResizePreviewHeight(null)
       return
     }
     
@@ -622,6 +640,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     }
     
     setResizingTask(null)
+    setResizePreviewHeight(null)
   }
   
   const renderCalendarDays = () => {
@@ -1172,6 +1191,24 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
               
               {/* Day column */}
               <div className="relative">
+                {/* Resize preview ghost - rendered at column level to avoid overflow issues */}
+                {resizingTask && resizePreviewHeight && (() => {
+                  const taskStartTime = resizingTask.task.start_time
+                  if (!taskStartTime) return null
+                  const [h, m] = taskStartTime.split(':').map(Number)
+                  const startMinutes = h * 60 + m
+                  const topPosition = (startMinutes / 30) * 32
+                  return (
+                    <div 
+                      className="absolute left-1 right-1 bg-indigo-300/50 dark:bg-indigo-500/50 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-50"
+                      style={{ top: `${topPosition}px`, height: `${resizePreviewHeight}px` }}
+                    >
+                      <div className="absolute bottom-1 right-1 text-[9px] font-bold text-indigo-700 dark:text-indigo-200 bg-white/90 dark:bg-gray-800/90 px-1.5 py-0.5 rounded shadow">
+                        {Math.round((resizePreviewHeight + 2) / 32 * 30)}m
+                      </div>
+                    </div>
+                  )
+                })()}
                 {/* Current time indicator */}
                 {isToday && (() => {
                   const now = new Date()
@@ -1228,22 +1265,28 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         const heightSlots = Math.ceil(duration / 30)
                         const projectColor = getProjectColor(task.project_id)
                         const isOverlapping = hasOverlap(task, currentDate)
+                        const originalHeight = heightSlots * 32 - 2
                         return (
                           <div
                             key={task.id}
-                            draggable={!resizingTask}
-                            onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
-                            onDragEnd={handleDragEnd}
-                            onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
-                            onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
-                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
-                              task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
-                              task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                              `${projectColor.bg} ${projectColor.text}`
-                            } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''}`}
-                            style={{ height: `${heightSlots * 32 - 2}px`, top: '1px' }}
-                            title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
+                            className="absolute left-1 right-1"
+                            style={{ top: '1px' }}
                           >
+                            {/* Actual task */}
+                            <div
+                              draggable={!resizingTask}
+                              onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
+                              onDragEnd={handleDragEnd}
+                              onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                              onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                              className={`relative px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
+                                task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                                task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                                `${projectColor.bg} ${projectColor.text}`
+                              } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''}`}
+                              style={{ height: `${originalHeight}px` }}
+                              title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
+                            >
                             <div className="flex items-start justify-between gap-1">
                               <div className="truncate text-[11px]">
                                 {isOverlapping && <span title="Time conflict">⚠️ </span>}
@@ -1289,6 +1332,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-transparent hover:bg-indigo-300/50 dark:hover:bg-indigo-600/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-b"
                               onMouseDown={(e) => handleResizeStart(e, task)}
                             />
+                          </div>
                           </div>
                         )
                       })}
