@@ -15,7 +15,11 @@ async function extractTasksWithAI(subject: string, bodyText: string, userNote: s
     ? `Available projects: ${projectNames.join(', ')}`
     : 'No projects available'
 
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  
   const prompt = `You are a task extraction assistant. Extract ONLY clear action items from this email.
+
+TODAY'S DATE: ${today}
 
 USER'S NOTE (instructions from the person forwarding):
 ${userNote || '(No specific instructions)'}
@@ -51,13 +55,15 @@ EXAMPLES:
 For each task, provide:
 - title: Clear, actionable task title (max 100 chars)
 - description: Brief context if needed (max 200 chars, or null)
-- due_date: In YYYY-MM-DD format if mentioned (or null)
+- due_date: Convert any date mentioned to YYYY-MM-DD format (e.g., "January 8" → "2026-01-08", "tomorrow" → calculate from today). Use null if no date.
 - assignee_text: Person responsible if mentioned (or null)
 - project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
 - confidence: Your confidence this is a real action item (0.5-1.0)
 
-IMPORTANT: If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
+IMPORTANT: 
+- If the user's note mentions a project name (e.g., "Add to Feedback project"), match it to the available projects list.
+- Convert ALL dates to YYYY-MM-DD format. If only a day is mentioned (e.g., "Monday", "January 8"), assume the nearest future occurrence.
 
 Rules:
 - Extract up to 20 tasks maximum
@@ -66,7 +72,7 @@ Rules:
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "2025-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "2026-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 
