@@ -4014,6 +4014,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [pendingEmailCount, setPendingEmailCount] = useState(0)
   const [pendingReviewExpanded, setPendingReviewExpanded] = useState(true)
   const [approvingTaskId, setApprovingTaskId] = useState(null)
+  const [selectedPendingIds, setSelectedPendingIds] = useState(new Set())
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [adminPanelOpen, setAdminPanelOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -4435,6 +4436,11 @@ export default function KanbanBoard({ demoMode = false }) {
       if (error) throw error
       setPendingEmailTasks(data || [])
       setPendingEmailCount(data?.length || 0)
+      // Auto-select high confidence tasks
+      const highConfidenceIds = new Set(
+        (data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7).map(t => t.id)
+      )
+      setSelectedPendingIds(highConfidenceIds)
     } catch (err) {
       console.error('Error fetching pending email tasks:', err)
     }
@@ -4514,10 +4520,47 @@ export default function KanbanBoard({ demoMode = false }) {
         .update({ status: 'rejected' })
         .eq('id', pendingTaskId)
       
+      setSelectedPendingIds(prev => {
+        const next = new Set(prev)
+        next.delete(pendingTaskId)
+        return next
+      })
       await fetchPendingEmailTasks()
     } catch (err) {
       console.error('Error rejecting pending task:', err)
     }
+  }
+
+  // Bulk approve selected pending tasks
+  const handleBulkApprovePendingTasks = async () => {
+    const tasksToApprove = pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id)
+    if (tasksToApprove.length === 0) {
+      alert('Please select tasks and ensure they have projects assigned')
+      return
+    }
+    
+    setApprovingTaskId('bulk')
+    
+    try {
+      for (const task of tasksToApprove) {
+        await handleApprovePendingTask(task, task.project_id)
+      }
+    } finally {
+      setApprovingTaskId(null)
+    }
+  }
+
+  // Toggle pending task selection
+  const togglePendingTaskSelection = (taskId) => {
+    setSelectedPendingIds(prev => {
+      const next = new Set(prev)
+      if (next.has(taskId)) {
+        next.delete(taskId)
+      } else {
+        next.add(taskId)
+      }
+      return next
+    })
   }
 
   // Update pending task field
@@ -6799,7 +6842,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Pending Email Tasks Badge */}
               {pendingEmailCount > 0 && (
                 <button
-                  onClick={() => { setActiveView('board'); setPendingReviewExpanded(true); }}
+                  onClick={() => { setCurrentView('board'); setPendingReviewExpanded(true); }}
                   className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400"
                   title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
                 >
@@ -8153,73 +8196,101 @@ export default function KanbanBoard({ demoMode = false }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
+                    {pendingReviewExpanded && selectedPendingIds.size > 0 && (
+                      <button
+                        onClick={handleBulkApprovePendingTasks}
+                        disabled={approvingTaskId === 'bulk' || pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length === 0}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {approvingTaskId === 'bulk' ? 'Creating...' : `Create ${pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length} Task${pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length !== 1 ? 's' : ''}`}
+                      </button>
+                    )}
                   </div>
                   
                   {/* Compact Cards Row */}
                   {pendingReviewExpanded && (
                     <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 snap-x">
-                      {pendingEmailTasks.map(task => (
-                        <div 
-                          key={task.id}
-                          className="flex-shrink-0 w-64 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg snap-start"
-                        >
-                          {/* Title */}
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1" title={task.title}>
-                            {task.title}
-                          </p>
-                          
-                          {/* Meta row */}
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                            {task.due_date && (
-                              <span className="flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      {pendingEmailTasks.map(task => {
+                        const isSelected = selectedPendingIds.has(task.id)
+                        const isLowConfidence = task.ai_confidence && task.ai_confidence < 0.7
+                        return (
+                          <div 
+                            key={task.id}
+                            className={`flex-shrink-0 w-72 p-3 border rounded-lg snap-start transition-all ${
+                              isSelected 
+                                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-600' 
+                                : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60'
+                            }`}
+                          >
+                            {/* Checkbox + Title Row */}
+                            <div className="flex items-start gap-2 mb-2">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => togglePendingTaskSelection(task.id)}
+                                className="mt-0.5 w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-amber-500 focus:ring-amber-500"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <input
+                                  type="text"
+                                  value={task.title}
+                                  onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
+                                  className="w-full text-sm font-medium text-gray-900 dark:text-white bg-transparent border-none p-0 focus:ring-0 focus:outline-none"
+                                />
+                                {isLowConfidence && (
+                                  <span className="inline-flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Unsure
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleRejectPendingTask(task.id)}
+                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                title="Remove"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                                {new Date(task.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                              </span>
-                            )}
-                            {task.assignee_text && (
-                              <span className="truncate max-w-[60px]" title={task.assignee_text}>@{task.assignee_text}</span>
-                            )}
-                            {task.ai_confidence && task.ai_confidence < 0.7 && (
-                              <span className="text-amber-600 dark:text-amber-400">?</span>
-                            )}
+                              </button>
+                            </div>
+                            
+                            {/* Editable Fields Row */}
+                            <div className="flex items-center gap-2 text-xs">
+                              <input
+                                type="date"
+                                value={task.due_date || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                className="w-28 px-1.5 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                              />
+                              <input
+                                type="text"
+                                value={task.assignee_text || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
+                                placeholder="Assignee"
+                                className="w-20 px-1.5 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
+                              />
+                              <select
+                                value={task.project_id || ''}
+                                onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
+                                className={`flex-1 px-1.5 py-1 border rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 ${
+                                  !task.project_id ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
+                                }`}
+                              >
+                                <option value="">Project*</option>
+                                {projects.map(p => (
+                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
-                          
-                          {/* Actions row */}
-                          <div className="flex items-center gap-1.5">
-                            <select
-                              value={task.project_id || ''}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
-                              className="flex-1 text-xs px-2 py-1 border border-amber-300 dark:border-amber-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
-                            >
-                              <option value="">Project...</option>
-                              {projects.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={() => handleApprovePendingTask(task, task.project_id)}
-                              disabled={!task.project_id || approvingTaskId === task.id}
-                              className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              title={!task.project_id ? 'Select project first' : 'Approve'}
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleRejectPendingTask(task.id)}
-                              className="p-1.5 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                              title="Reject"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>
