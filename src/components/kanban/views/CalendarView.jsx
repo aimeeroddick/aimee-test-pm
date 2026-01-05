@@ -1239,23 +1239,35 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         const projectColor = getProjectColor(task.project_id)
                         const isOverlapping = hasOverlap(task, currentDate)
                         const isBeingResized = resizingTask?.task?.id === task.id
-                        const displayHeight = isBeingResized && resizePreviewHeight ? resizePreviewHeight : heightSlots * 32 - 2
+                        const originalHeight = heightSlots * 32 - 2
                         return (
                           <div
                             key={task.id}
-                            draggable={!resizingTask}
-                            onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
-                            onDragEnd={handleDragEnd}
-                            onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
-                            onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
-                            className={`absolute left-1 right-1 px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
-                              task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
-                              task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
-                              `${projectColor.bg} ${projectColor.text}`
-                            } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''} ${isBeingResized ? 'ring-2 ring-indigo-500 shadow-lg' : ''}`}
-                            style={{ height: `${displayHeight}px`, top: '1px' }}
-                            title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
+                            className="absolute left-1 right-1"
+                            style={{ top: '1px' }}
                           >
+                            {/* Resize preview ghost */}
+                            {isBeingResized && resizePreviewHeight && resizePreviewHeight !== originalHeight && (
+                              <div 
+                                className="absolute inset-x-0 top-0 bg-indigo-200/50 dark:bg-indigo-700/30 border-2 border-dashed border-indigo-400 rounded pointer-events-none z-20"
+                                style={{ height: `${resizePreviewHeight}px` }}
+                              />
+                            )}
+                            {/* Actual task */}
+                            <div
+                              draggable={!resizingTask}
+                              onDragStart={(e) => !resizingTask && handleDragStart(e, task)}
+                              onDragEnd={handleDragEnd}
+                              onClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                              onDoubleClick={(e) => { e.stopPropagation(); handleTaskClick(task) }}
+                              className={`relative px-2 py-0.5 rounded text-xs font-medium cursor-grab active:cursor-grabbing shadow-sm transition-all hover:shadow-md z-10 overflow-hidden group ${
+                                task.status === 'done' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 line-through' :
+                                task.critical ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                                `${projectColor.bg} ${projectColor.text}`
+                              } ${isOverlapping ? 'ring-2 ring-orange-400 dark:ring-orange-500' : ''} ${isBeingResized ? 'ring-2 ring-indigo-500' : ''}`}
+                              style={{ height: `${originalHeight}px` }}
+                              title={`${task.title}${task.start_time ? ` (${formatTimeDisplay(task.start_time)}${task.end_time ? ' - ' + formatTimeDisplay(task.end_time) : ''})` : ''}${isOverlapping ? ' ⚠️ Overlaps with another task' : ''}`}
+                            >
                             <div className="flex items-start justify-between gap-1">
                               <div className="truncate text-[11px]">
                                 {isOverlapping && <span title="Time conflict">⚠️ </span>}
@@ -1301,6 +1313,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                               className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-transparent hover:bg-indigo-300/50 dark:hover:bg-indigo-600/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-b"
                               onMouseDown={(e) => handleResizeStart(e, task)}
                             />
+                          </div>
                           </div>
                         )
                       })}
