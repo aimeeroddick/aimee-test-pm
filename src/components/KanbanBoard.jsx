@@ -4055,7 +4055,6 @@ export default function KanbanBoard({ demoMode = false }) {
   const [showSaveViewModal, setShowSaveViewModal] = useState(false)
   const [newViewName, setNewViewName] = useState('')
   
-  const welcomeProjectCreating = useRef(false)
   
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
@@ -4358,123 +4357,6 @@ export default function KanbanBoard({ demoMode = false }) {
     setViewTourStep(0)
   }
   
-  // Create welcome project for new users
-  const createWelcomeProject = async () => {
-    try {
-      // Double-check: prevent duplicate creation at database level
-      const { data: existingProject } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('name', 'Getting Started with Trackli')
-        .maybeSingle()
-      
-      if (existingProject) {
-        console.log('Welcome project already exists, skipping creation')
-        return
-      }
-      
-      const today = new Date().toISOString().split('T')[0]
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-      const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
-      
-      // Create the Getting Started project
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: 'Getting Started with Trackli',
-          user_id: user.id,
-        })
-        .select()
-        .single()
-      
-      if (projectError) {
-        console.error('Project creation error:', projectError)
-        throw projectError
-      }
-      
-      // Create sample tasks
-      const sampleTasks = [
-        {
-          title: 'Welcome! Click me to see task details',
-          description: 'This is the task editor. Here you can:\n\n• Set due dates and start dates\n• Add time estimates\n• Assign to team members\n• Add subtasks\n• Attach files\n• Set up recurring schedules\n\nTry editing this task, then mark it complete!',
-          status: 'todo',
-          project_id: project.id,
-          my_day_date: today,
-          energy_level: 'low',
-          time_estimate: 5,
-        },
-        {
-          title: 'Check out My Day view',
-          description: 'My Day is your daily focus list. Tasks appear here if:\n\n• Their start date is today or earlier\n• You manually add them via the sun icon\n\nTry switching to My Day view in the menu!',
-          status: 'todo',
-          project_id: project.id,
-          start_date: today,
-          energy_level: 'medium',
-          time_estimate: 10,
-        },
-        {
-          title: 'Explore the Calendar view',
-          description: 'The Calendar view lets you:\n\n• See tasks on their due dates\n• Drag tasks to reschedule them\n• Switch between daily, weekly, and monthly views\n\nThis task is due tomorrow!',
-          status: 'todo',
-          project_id: project.id,
-          due_date: tomorrow,
-          energy_level: 'medium',
-          time_estimate: 15,
-        },
-        {
-          title: 'Try the Notes feature for meetings',
-          description: 'Click the Notes button in the header to:\n\n• Paste meeting notes\n• Use voice-to-text (speak your notes!)\n• AI extracts action items automatically\n\nPerfect for turning meetings into tasks!',
-          status: 'todo',
-          project_id: project.id,
-          energy_level: 'high',
-          time_estimate: 20,
-        },
-        {
-          title: 'Learn keyboard shortcuts',
-          description: 'Speed up your workflow with shortcuts:\n\n• ⌘/Ctrl + ⌃ + T — New task\n• ⌘/Ctrl + S — Save\n• Escape — Close modal\n• ? — Help menu\n\nClick the ? icon anytime for more!',
-          status: 'backlog',
-          project_id: project.id,
-          due_date: nextWeek,
-          energy_level: 'low',
-          time_estimate: 10,
-        },
-        {
-          title: 'Complete this task to see the celebration!',
-          description: 'When you complete all your My Day tasks, you get a confetti celebration!\n\nTry completing this task by clicking the circle on the left.',
-          status: 'todo',
-          project_id: project.id,
-          my_day_date: today,
-          energy_level: 'low',
-          time_estimate: 1,
-        },
-      ]
-      
-      const { data: tasks, error: tasksError } = await supabase
-        .from('tasks')
-        .insert(sampleTasks)
-        .select()
-      
-      if (tasksError) throw tasksError
-      
-      // Add subtasks to the first task to demonstrate the feature
-      const welcomeTask = tasks.find(t => t.title.includes('Welcome!'))
-      if (welcomeTask) {
-        await supabase.from('subtasks').insert([
-          { task_id: welcomeTask.id, title: 'Read this task description', completed: false, position: 0 },
-          { task_id: welcomeTask.id, title: 'Check out the different views (My Day, Calendar, etc.)', completed: false, position: 1 },
-          { task_id: welcomeTask.id, title: 'Complete a task to see it move to Done', completed: false, position: 2 },
-        ])
-      }
-      
-      // Refresh data to show the new project and tasks
-      await fetchData()
-      
-    } catch (err) {
-      console.error('Error creating welcome project:', err)
-    }
-  }
-
   // Fetch data on mount
   useEffect(() => {
     fetchData()
@@ -4568,33 +4450,6 @@ export default function KanbanBoard({ demoMode = false }) {
       setProjects(projectsWithRelations)
       setTasks(tasksWithRelations)
       
-      // Create welcome project for NEW users only (first time ever)
-      // Check user metadata to see if they've already been welcomed
-      // IMPORTANT: Only do this if we successfully fetched data and user is authenticated
-      const currentUser = userRes.data?.user
-      if (!currentUser) {
-        console.warn('No authenticated user found - skipping welcome project check')
-        setLoading(false)
-        return
-      }
-      
-      const hasBeenWelcomed = currentUser?.user_metadata?.has_been_welcomed
-      
-      // Only create welcome project if:
-      // 1. User hasn't been welcomed before
-      // 2. Fetches succeeded (no errors) but returned empty
-      // 3. Not already creating
-      if (!hasBeenWelcomed && projectsWithRelations.length === 0 && tasksWithRelations.length === 0 && !welcomeProjectCreating.current) {
-        welcomeProjectCreating.current = true
-        await createWelcomeProject()
-        
-        // Mark user as welcomed so this never happens again
-        await supabase.auth.updateUser({
-          data: { has_been_welcomed: true }
-        })
-        
-        return // fetchData will be called again after welcome project creation
-      }
       
       // Auto-move backlog tasks to todo if start date is today or past (do this without blocking UI)
       const today = new Date()
