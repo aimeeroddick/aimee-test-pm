@@ -1205,15 +1205,16 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                 {timeSlots.map(({ slotIndex, isHour }) => {
                   const slotTasks = getTasksForSlot(currentDate, slotIndex)
                   const isHoverTarget = hoverSlot && hoverSlot.date === dateStr && hoverSlot.slotIndex === slotIndex
+                  const hasResizingTask = slotTasks.some(t => resizingTask?.task?.id === t.id)
                   return (
                     <div
                       key={slotIndex}
                       data-dropzone="calendar-slot"
                       data-date={currentDate}
                       data-slot-index={slotIndex}
-                      className={`h-8 border-b relative transition-all duration-150 ${
+                      className={`h-8 border-b relative overflow-visible transition-all duration-150 ${
                         isHour ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800'
-                      } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} cursor-pointer`}
+                      } ${isHoverTarget && draggedTask ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20'} ${hasResizingTask ? 'z-40' : ''} cursor-pointer`}
                       onDragOver={(e) => { 
                         e.preventDefault()
                         e.dataTransfer.dropEffect = 'move'
@@ -1246,13 +1247,13 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
                         return (
                           <div
                             key={task.id}
-                            className="absolute left-1 right-1"
+                            className={`absolute left-1 right-1 overflow-visible ${isBeingResized ? 'z-50' : ''}`}
                             style={{ top: '1px' }}
                           >
                             {/* Resize preview ghost */}
                             {isBeingResized && resizePreviewHeight && (
                               <div 
-                                className="absolute inset-x-0 top-0 bg-indigo-300/40 dark:bg-indigo-500/40 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-20"
+                                className="absolute inset-x-0 top-0 bg-indigo-300/40 dark:bg-indigo-500/40 border-2 border-dashed border-indigo-500 dark:border-indigo-400 rounded pointer-events-none z-50"
                                 style={{ height: `${resizePreviewHeight}px` }}
                               >
                                 <div className="absolute bottom-1 right-1 text-[9px] font-medium text-indigo-600 dark:text-indigo-300 bg-white/80 dark:bg-gray-800/80 px-1 rounded">
