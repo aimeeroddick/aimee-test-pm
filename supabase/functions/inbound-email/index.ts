@@ -372,12 +372,16 @@ serve(async (req) => {
     
     console.log('Stored email source:', emailSource.id)
     
-    // Upload email attachments to storage (filter out small signature images)
+    // Upload email attachments to storage (filter out signature images)
     const uploadedAttachments: { name: string, path: string, size: number, type: string }[] = []
     for (const att of attachments) {
-      // Skip tiny images (likely email signature elements like logos, social icons)
-      if (att.type?.startsWith('image/') && att.content.size < 5000) {
-        console.log('Skipping small signature image:', att.name, att.content.size, 'bytes')
+      // Skip embedded email images (typically signature elements)
+      // These have generic names like "image001.png" from Outlook/email clients
+      const isEmbeddedImage = att.type?.startsWith('image/') && 
+        /^image\d+\.(png|jpg|jpeg|gif)$/i.test(att.name)
+      
+      if (isEmbeddedImage) {
+        console.log('Skipping embedded signature image:', att.name, att.content.size, 'bytes')
         continue
       }
       
