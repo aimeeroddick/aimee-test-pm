@@ -96,16 +96,29 @@ export function AuthProvider({ children }) {
       return
     }
 
+    // Safety timeout - never stay loading forever
+    const timeout = setTimeout(() => {
+      console.warn('Auth loading timeout - forcing complete')
+      setLoading(false)
+    }, 5000)
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
       
       if (currentUser) {
-        const profileData = await fetchProfile(currentUser.id)
-        setProfile(profileData)
+        // Fetch profile but don't block on it
+        fetchProfile(currentUser.id).then(profileData => {
+          setProfile(profileData)
+        })
       }
       
+      clearTimeout(timeout)
+      setLoading(false)
+    }).catch(err => {
+      console.error('Auth session error:', err)
+      clearTimeout(timeout)
       setLoading(false)
     })
 
@@ -115,16 +128,19 @@ export function AuthProvider({ children }) {
       setUser(currentUser)
       
       if (currentUser) {
-        const profileData = await fetchProfile(currentUser.id)
-        setProfile(profileData)
+        // Fetch profile in background, don't block
+        fetchProfile(currentUser.id).then(profileData => {
+          setProfile(profileData)
+        })
       } else {
         setProfile(null)
       }
-      
-      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const enterDemoMode = () => {
