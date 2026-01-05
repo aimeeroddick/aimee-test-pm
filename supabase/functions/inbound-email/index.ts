@@ -372,9 +372,15 @@ serve(async (req) => {
     
     console.log('Stored email source:', emailSource.id)
     
-    // Upload email attachments to storage
+    // Upload email attachments to storage (filter out small signature images)
     const uploadedAttachments: { name: string, path: string, size: number, type: string }[] = []
     for (const att of attachments) {
+      // Skip tiny images (likely email signature elements like logos, social icons)
+      if (att.type?.startsWith('image/') && att.content.size < 5000) {
+        console.log('Skipping small signature image:', att.name, att.content.size, 'bytes')
+        continue
+      }
+      
       try {
         const filePath = `email-attachments/${emailSource.id}/${att.name}`
         const arrayBuffer = await att.content.arrayBuffer()

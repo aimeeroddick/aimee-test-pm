@@ -4463,16 +4463,27 @@ export default function KanbanBoard({ demoMode = false }) {
       
       setPendingEmailTasks(enrichedData)
       setPendingEmailCount(enrichedData.length)
-      // Only auto-select on initial load (when no selections exist)
+      // Auto-select high confidence and critical tasks, including newly arrived ones
       setSelectedPendingIds(prev => {
-        if (prev.size === 0 && data?.length > 0) {
-          // Initial load - select high confidence tasks AND critical tasks
-          return new Set((data || []).filter(t => (t.ai_confidence || 0.7) >= 0.7 || t.critical).map(t => t.id))
+        const highConfidenceOrCritical = new Set(
+          (enrichedData || []).filter(t => (t.ai_confidence || 0) >= 0.7 || t.critical).map(t => t.id)
+        )
+        
+        if (prev.size === 0) {
+          // Initial load - select all high confidence/critical tasks
+          return highConfidenceOrCritical
         }
-        // Keep existing selections, but remove any that no longer exist
-        const validIds = new Set((data || []).map(t => t.id))
-        const filtered = new Set([...prev].filter(id => validIds.has(id)))
-        return filtered
+        
+        // Keep existing selections, remove invalid, and ADD newly arrived high-confidence tasks
+        const validIds = new Set((enrichedData || []).map(t => t.id))
+        const existingValid = new Set([...prev].filter(id => validIds.has(id)))
+        
+        // Find new tasks that weren't in prev
+        const previousIds = prev
+        const newHighConfidence = [...highConfidenceOrCritical].filter(id => !previousIds.has(id))
+        
+        // Merge: existing valid selections + new high confidence tasks
+        return new Set([...existingValid, ...newHighConfidence])
       })
     } catch (err) {
       console.error('Error fetching pending email tasks:', err)
