@@ -837,7 +837,9 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, new, read, resolved, converted
   const [converting, setConverting] = useState(null) // Track which item is being converted
-  const [selectedProject, setSelectedProject] = useState(null) // Project to create tasks in
+  
+  // Hardcoded project for feedback tasks
+  const FEEDBACK_PROJECT_NAME = 'Feedback'
   
   const isAdmin = userEmail === ADMIN_EMAIL
   
@@ -880,12 +882,12 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
   
   // Convert feedback to a backlog task
   const convertToTask = async (item) => {
-    console.log('Converting to task:', item, 'userId:', userId, 'selectedProject:', selectedProject)
+    console.log('Converting to task:', item)
     
-    // Use selected project or first available project
-    const projectId = selectedProject || projects[0]?.id
-    if (!projectId) {
-      alert('No project available. Please create a project first.')
+    // Find the Feedback project
+    const feedbackProject = projects.find(p => p.name === FEEDBACK_PROJECT_NAME)
+    if (!feedbackProject) {
+      alert(`Project "${FEEDBACK_PROJECT_NAME}" not found. Please create it first.`)
       return
     }
     
@@ -905,7 +907,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
           title,
           description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
           status: 'backlog',
-          project_id: projectId,
+          project_id: feedbackProject.id,
           critical: false,
           time_estimate: 0,
           energy_level: 'medium',
@@ -921,25 +923,44 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
       
       // Copy images as attachments if any
       if (item.images && item.images.length > 0 && taskData) {
-        for (const imageUrl of item.images) {
-          // Extract file path from URL or create new path
-          const fileName = `task-attachments/${userId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+        console.log('Copying images:', item.images)
+        
+        // Get current user for file path
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        const userFolder = currentUser?.id || 'anonymous'
+        
+        for (let i = 0; i < item.images.length; i++) {
+          const imageUrl = item.images[i]
+          const fileName = `task-attachments/${userFolder}/${Date.now()}-${i}.jpg`
           
           try {
-            // Fetch the image and re-upload to task attachments
+            console.log('Fetching image:', imageUrl)
+            // Fetch the image
             const response = await fetch(imageUrl)
+            if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`)
             const blob = await response.blob()
+            console.log('Got blob, size:', blob.size)
             
+            // Upload to storage
             const { error: uploadError } = await supabase.storage
               .from('attachments')
-              .upload(fileName, blob)
+              .upload(fileName, blob, { contentType: 'image/jpeg' })
             
-            if (!uploadError) {
-              await supabase.from('attachments').insert({
+            if (uploadError) {
+              console.error('Upload error:', uploadError)
+            } else {
+              console.log('Uploaded, inserting attachment record')
+              // Create attachment record
+              const { error: attachError } = await supabase.from('attachments').insert({
                 task_id: taskData.id,
                 file_path: fileName,
-                file_name: `screenshot-${Date.now()}.jpg`,
+                file_name: `screenshot-${i + 1}.jpg`,
               })
+              if (attachError) {
+                console.error('Attachment record error:', attachError)
+              } else {
+                console.log('Attachment saved successfully')
+              }
             }
           } catch (imgErr) {
             console.error('Error copying image:', imgErr)
@@ -1035,18 +1056,9 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
               </button>
             ))}
             
-            {/* Project selector for task creation */}
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Create in:</span>
-              <select
-                value={selectedProject || projects[0]?.id || ''}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="px-2 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
-              >
-                {projects.filter(p => !p.archived).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+            {/* Show which project tasks go to */}
+            <div className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+              Tasks → <span className="font-medium text-purple-600 dark:text-purple-400">{FEEDBACK_PROJECT_NAME}</span> project
             </div>
           </div>
         </div>
