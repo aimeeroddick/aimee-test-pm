@@ -5556,6 +5556,12 @@ export default function KanbanBoard({ demoMode = false }) {
     const targetProject = projectId || projects[0]?.id
     if (!targetProject) return
     
+    // Determine status and start_date based on due date
+    const today = new Date().toISOString().split('T')[0]
+    const hasDate = !!dueDate
+    const status = hasDate ? 'todo' : 'backlog'
+    const startDate = dueDate || null
+    
     try {
       setSaving(true)
       const { data, error } = await supabase
@@ -5563,7 +5569,8 @@ export default function KanbanBoard({ demoMode = false }) {
         .insert({
           title: title.trim(),
           project_id: targetProject,
-          status: 'backlog',
+          status: status,
+          start_date: startDate,
           due_date: dueDate,
           energy_level: 'medium',
           category: 'deliverable',
