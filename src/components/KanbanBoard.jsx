@@ -3798,16 +3798,17 @@ export default function KanbanBoard({ demoMode = false }) {
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'info' }
   const [breakdownTask, setBreakdownTask] = useState(null) // Task to break down with AI
   const [showWelcomeModal, setShowWelcomeModal] = useState(false) // First-time profile setup
+  const [isSigningOut, setIsSigningOut] = useState(false) // Prevent flashes during signout
   
   // Show welcome modal for new users without a profile
-  // Only show if user is logged in AND has confirmed email
+  // Only show if user is logged in AND has confirmed email AND not signing out
   useEffect(() => {
-    if (!demoMode && user && user.email_confirmed_at && !loading && profile === null) {
+    if (!demoMode && user && user.email_confirmed_at && !loading && profile === null && !isSigningOut) {
       setShowWelcomeModal(true)
     } else {
       setShowWelcomeModal(false)
     }
-  }, [demoMode, user, loading, profile])
+  }, [demoMode, user, loading, profile, isSigningOut])
   
   // Handle welcome modal completion
   const handleWelcomeComplete = async (profileData) => {
@@ -6409,11 +6410,10 @@ export default function KanbanBoard({ demoMode = false }) {
                           <span className="font-medium">Settings</span>
                         </button>
                         <button
-                          onClick={async () => { 
-                            setNavMenuOpen(false)
-                            setShowWelcomeModal(false)
-                            await signOut()
-                            window.location.href = '/welcome'  // Full reload to clear all state
+                          onClick={() => { 
+                            setIsSigningOut(true)  // Prevent any flashes
+                            // Redirect immediately, signout happens via URL param
+                            window.location.href = '/welcome?signout=true'
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
