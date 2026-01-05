@@ -491,15 +491,6 @@ const MyDayTaskCard = ({ task, project, showRemove = false, isCompleted = false,
           </div>
         </div>
       </div>
-      
-      {/* Plan My Day Modal */}
-      <PlanMyDayModal
-        isOpen={planModalOpen}
-        onClose={() => setPlanModalOpen(false)}
-        allTasks={allTasks}
-        projects={projects}
-        onAcceptPlan={handleAcceptPlan}
-      />
     </div>
   )
 }
