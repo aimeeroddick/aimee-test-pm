@@ -168,6 +168,12 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
     
     const handleMouseMove = (e) => {
       e.preventDefault()
+      // Update preview height based on drag distance
+      const deltaY = e.clientY - resizingTask.startY
+      const slotsDelta = Math.round(deltaY / 32)
+      const newDuration = Math.max(15, resizingTask.originalDuration + (slotsDelta * 30))
+      const heightSlots = Math.ceil(newDuration / 30)
+      setResizePreviewHeight(heightSlots * 32 - 2)
     }
     
     const handleMouseUp = (e) => {
