@@ -8283,7 +8283,7 @@ export default function KanbanBoard({ demoMode = false }) {
                                 }`}
                               >
                                 <option value="">Project*</option>
-                                {projects.map(p => (
+                                {projects.filter(p => !p.archived).map(p => (
                                   <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                               </select>
