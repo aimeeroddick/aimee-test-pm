@@ -321,6 +321,12 @@ serve(async (req) => {
     const userNote = extractUserNote(text)
     console.log('User note:', userNote ? userNote.substring(0, 100) : '(none)')
     
+    // Try to find project mentioned in user note
+    const projectFromNote = matchProjectId(userNote, userProjects || [])
+    if (projectFromNote) {
+      console.log('Project from user note:', projectFromNote)
+    }
+    
     // Try AI extraction if API key is available
     let extractedTasks = null
     if (anthropicKey) {
@@ -358,7 +364,12 @@ serve(async (req) => {
     
     // Create pending tasks with project matching
     const pendingTasksToInsert = extractedTasks.map(task => {
-      const matchedProjectId = matchProjectId(task.project_name, userProjects || [])
+      // First try to match project from task, then fall back to user note
+      let matchedProjectId = matchProjectId(task.project_name, userProjects || [])
+      if (!matchedProjectId && projectFromNote) {
+        matchedProjectId = projectFromNote
+        console.log(`Using project from user note for task: "${task.title}"`)
+      }
       console.log(`Project match: "${task.project_name}" -> ${matchedProjectId}`)
       
       // Try to match customer from email domain
