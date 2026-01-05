@@ -7452,6 +7452,42 @@ export default function KanbanBoard({ demoMode = false }) {
                         <option value="medium">Medium Effort</option>
                         <option value="low">Low Effort</option>
                       </select>
+                      
+                      {/* Due Date */}
+                      <select
+                        value={fieldFilters.due_date || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, due_date: e.target.value } : (({ due_date, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Due Date: All</option>
+                        <option value="has_date">Has Due Date</option>
+                        <option value="__blank__">No Due Date</option>
+                      </select>
+                      
+                      {/* Start Date */}
+                      <select
+                        value={fieldFilters.start_date || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, start_date: e.target.value } : (({ start_date, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Start Date: All</option>
+                        <option value="has_date">Has Start Date</option>
+                        <option value="__blank__">No Start Date</option>
+                      </select>
+                      
+                      {/* Time Estimate */}
+                      <select
+                        value={fieldFilters.time_estimate || ''}
+                        onChange={(e) => setFieldFilters(e.target.value ? { ...fieldFilters, time_estimate: e.target.value } : (({ time_estimate, ...rest }) => rest)(fieldFilters))}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                      >
+                        <option value="">Time Estimate: All</option>
+                        <option value="<31">Quick (&lt;30 min)</option>
+                        <option value="<61">Under 1 hour</option>
+                        <option value="<121">Under 2 hours</option>
+                        <option value=">120">2+ hours</option>
+                        <option value="__blank__">No Estimate</option>
+                      </select>
                     </div>
                   </div>
                   
