@@ -879,7 +879,12 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
   
   // Convert feedback to a backlog task
   const convertToTask = async (item) => {
-    if (!userId) return
+    console.log('Converting to task:', item, 'userId:', userId)
+    if (!userId) {
+      console.error('No userId provided')
+      alert('Error: No user ID. Please refresh and try again.')
+      return
+    }
     setConverting(item.id)
     
     try {
@@ -943,8 +948,11 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated 
       // Notify parent to refresh tasks
       if (onTaskCreated) onTaskCreated()
       
+      alert('Task created in Backlog!')
+      
     } catch (err) {
       console.error('Error converting to task:', err)
+      alert('Error creating task: ' + err.message)
     } finally {
       setConverting(null)
     }
