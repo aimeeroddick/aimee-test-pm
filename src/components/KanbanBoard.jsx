@@ -6411,8 +6411,9 @@ export default function KanbanBoard({ demoMode = false }) {
                         <button
                           onClick={async () => { 
                             setNavMenuOpen(false)
+                            setShowWelcomeModal(false)
                             await signOut()
-                            navigate('/welcome')
+                            window.location.href = '/welcome'  // Full reload to clear all state
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
