@@ -3149,7 +3149,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks by title, description, assignee, customer..."
-              className="flex-1 text-lg outline-none placeholder-gray-400 bg-transparent dark:text-white"
+              className="flex-1 text-lg outline-none placeholder-gray-400 bg-transparent text-gray-900 dark:text-white"
             />
             <button
               onClick={() => setShowSearch(false)}
