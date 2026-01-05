@@ -4014,6 +4014,8 @@ export default function KanbanBoard({ demoMode = false }) {
   const [pendingEmailCount, setPendingEmailCount] = useState(0)
   const [pendingReviewExpanded, setPendingReviewExpanded] = useState(true)
   const [pendingDropdownOpen, setPendingDropdownOpen] = useState(false)
+  const [uncheckedConfirmOpen, setUncheckedConfirmOpen] = useState(false)
+  const [pendingBulkAction, setPendingBulkAction] = useState(null) // stores { tasksToApprove, uncheckedTasks }
   const [approvingTaskId, setApprovingTaskId] = useState(null)
   const [selectedPendingIds, setSelectedPendingIds] = useState(new Set())
   const [expandedPendingIds, setExpandedPendingIds] = useState(new Set())
@@ -4543,7 +4545,7 @@ export default function KanbanBoard({ demoMode = false }) {
   }
 
   // Bulk approve selected pending tasks
-  const handleBulkApprovePendingTasks = async () => {
+  const handleBulkApprovePendingTasks = async (removeUnchecked = false) => {
     // Prevent double-clicks
     if (approvingTaskId === 'bulk') return
     
@@ -4555,12 +4557,11 @@ export default function KanbanBoard({ demoMode = false }) {
       return
     }
     
-    // If there are unchecked tasks, ask what to do with them
-    let removeUnchecked = false
-    if (uncheckedTasks.length > 0) {
-      removeUnchecked = window.confirm(
-        `You have ${uncheckedTasks.length} unchecked task${uncheckedTasks.length !== 1 ? 's' : ''}. \n\nClick OK to remove them, or Cancel to keep for later.`
-      )
+    // If there are unchecked tasks and we haven't decided yet, show confirmation
+    if (uncheckedTasks.length > 0 && !pendingBulkAction) {
+      setPendingBulkAction({ tasksToApprove, uncheckedTasks })
+      setUncheckedConfirmOpen(true)
+      return
     }
     
     setApprovingTaskId('bulk')
@@ -4626,8 +4627,9 @@ export default function KanbanBoard({ demoMode = false }) {
       // Refresh once at the end
       await fetchData()
       await fetchPendingEmailTasks()
-      // Clear selections for fresh start
+      // Clear selections and pending action for fresh start
       setSelectedPendingIds(new Set())
+      setPendingBulkAction(null)
       // Close dropdown after successful create
       setPendingDropdownOpen(false)
       
@@ -9601,6 +9603,45 @@ Or we can extract from:
         onClose={() => setFeedbackModalOpen(false)}
         user={user}
       />
+      
+      {/* Unchecked Tasks Confirmation Modal */}
+      {uncheckedConfirmOpen && pendingBulkAction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Unchecked Tasks</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              You have <span className="font-semibold">{pendingBulkAction.uncheckedTasks.length}</span> unchecked task{pendingBulkAction.uncheckedTasks.length !== 1 ? 's' : ''}. What would you like to do with them?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setUncheckedConfirmOpen(false)
+                  handleBulkApprovePendingTasks(false)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors"
+              >
+                Keep for Later
+              </button>
+              <button
+                onClick={() => {
+                  setUncheckedConfirmOpen(false)
+                  handleBulkApprovePendingTasks(true)
+                }}
+                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Admin Feedback Panel */}
       <AdminFeedbackPanel
