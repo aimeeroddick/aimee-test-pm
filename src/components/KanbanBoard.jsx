@@ -5304,8 +5304,9 @@ export default function KanbanBoard({ demoMode = false }) {
     const today = new Date()
     
     // Check user's explicit preference first, then fall back to browser detection
-    const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
-    const isUSLocale = dateFormatPref === 'MM/DD/YYYY' || (dateFormatPref === 'auto' && isUSDateFormat())
+    const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : null
+    const isUSLocale = (dateFormatPref && dateFormatPref.includes('MM/DD')) || 
+                       ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
     
     if (cleaned === 'today' || cleaned === 'eod') {
       return today.toISOString().split('T')[0]
@@ -5465,8 +5466,9 @@ export default function KanbanBoard({ demoMode = false }) {
         let dueDate = meetingNotesData.date
         
         // Check user's date format preference
-        const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
-        const isUSLocale = dateFormatPref === 'MM/DD/YYYY' || (dateFormatPref === 'auto' && isUSDateFormat())
+        const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : null
+        const isUSLocale = (dateFormatPref && dateFormatPref.includes('MM/DD')) || 
+                           ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
         
         const datePatterns = [
           /by\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,

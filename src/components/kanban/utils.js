@@ -368,8 +368,12 @@ export const parseNaturalLanguageDate = (text) => {
   
   // Parse numeric dates
   // Check user's explicit preference first, then fall back to browser detection
-  const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
-  const isUSLocale = dateFormatPref === 'MM/DD/YYYY' || (dateFormatPref === 'auto' && isUSDateFormat())
+  const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : null
+  // Use includes for more robust matching
+  const isUSLocale = (dateFormatPref && dateFormatPref.includes('MM/DD')) || 
+                     ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
+  
+  console.log('Date parsing:', { text, dateFormatPref, isUSLocale })
   
   // Full date with year
   let numericMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
