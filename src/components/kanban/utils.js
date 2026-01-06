@@ -373,7 +373,6 @@ export const parseNaturalLanguageDate = (text) => {
   const isUSLocale = (dateFormatPref && dateFormatPref.includes('MM/DD')) || 
                      ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
   
-  console.log('Date parsing:', { text, dateFormatPref, isUSLocale })
   
   // Full date with year
   let numericMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)

@@ -5507,18 +5507,20 @@ export default function KanbanBoard({ demoMode = false }) {
               const parts = hint.split('/')
               let day, month, year = today.getFullYear()
               if (isUSLocale) {
-                month = parseInt(parts[0]) - 1
+                month = parseInt(parts[0])
                 day = parseInt(parts[1])
               } else {
                 day = parseInt(parts[0])
-                month = parseInt(parts[1]) - 1
+                month = parseInt(parts[1])
               }
               if (parts[2]) {
                 year = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2])
               }
-              const parsedDate = new Date(year, month, day)
-              if (!isNaN(parsedDate.getTime())) {
-                dueDate = parsedDate.toISOString().split('T')[0]
+              // Validate date
+              const parsedDate = new Date(year, month - 1, day)
+              if (!isNaN(parsedDate.getTime()) && parsedDate.getDate() === day) {
+                // Format directly to avoid timezone issues
+                dueDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
               }
             }
             taskTitle = taskTitle.replace(datePattern, '').trim()

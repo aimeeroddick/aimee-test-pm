@@ -59,6 +59,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [editingStartDate, setEditingStartDate] = useState(false)
+  const [editingDueDate, setEditingDueDate] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -280,6 +282,32 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       return date.toLocaleDateString(getDateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' })
     } catch {
       return dateStr
+    }
+  }
+  
+  // Format ISO date (YYYY-MM-DD) for input display in user's format
+  const formatDateForInput = (isoDate) => {
+    if (!isoDate) return ''
+    // If it doesn't look like ISO format, return as-is (user is typing)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate
+    
+    const [year, month, day] = isoDate.split('-')
+    const locale = getDateLocale()
+    
+    if (locale === 'en-US') {
+      return `${month}/${day}/${year}`
+    } else if (locale === 'en-GB') {
+      return `${day}/${month}/${year}`
+    } else {
+      // Auto-detect
+      const testDate = new Date(2000, 0, 15)
+      const formatted = testDate.toLocaleDateString()
+      const firstNum = parseInt(formatted.split(/[\/\-\.]/)[0])
+      if (firstNum === 1) {
+        return `${month}/${day}/${year}` // US format
+      } else {
+        return `${day}/${month}/${year}` // UK format
+      }
     }
   }
   
@@ -696,12 +724,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 <div className="relative flex">
                   <input
                     type="text"
-                    value={formData.start_date}
+                    value={editingStartDate ? formData.start_date : formatDateForInput(formData.start_date)}
+                    onFocus={() => setEditingStartDate(true)}
                     onChange={(e) => {
-                      const val = e.target.value.trim()
+                      const val = e.target.value
                       setFormData({ ...formData, start_date: val })
                     }}
                     onBlur={(e) => {
+                      setEditingStartDate(false)
                       const val = e.target.value.trim()
                       if (!val) return
                       const parsed = parseNaturalLanguageDate(val)
@@ -781,28 +811,30 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 </div>
                 <div className="relative flex">
                   <input
-                    type="text"
-                    value={formData.due_date}
-                    onChange={(e) => {
-                      const val = e.target.value.trim()
-                      setFormData({ ...formData, due_date: val })
-                    }}
-                    onBlur={(e) => {
-                      const val = e.target.value.trim()
-                      if (!val) return
-                      const parsed = parseNaturalLanguageDate(val)
-                      if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
-                    }}
-                    placeholder={getDatePlaceholder(true)}
-                    className={`w-full px-3 py-2 border rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-sm ${
-                      isOverdue 
-                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
-                        : !formData.due_date 
-                          ? 'border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-300 dark:border-l-amber-500 text-gray-900 dark:text-gray-100' 
+                  type="text"
+                  value={editingDueDate ? formData.due_date : formatDateForInput(formData.due_date)}
+                  onFocus={() => setEditingDueDate(true)}
+                  onChange={(e) => {
+                  const val = e.target.value
+                    setFormData({ ...formData, due_date: val })
+                  }}
+                  onBlur={(e) => {
+                  setEditingDueDate(false)
+                  const val = e.target.value.trim()
+                  if (!val) return
+                    const parsed = parseNaturalLanguageDate(val)
+                    if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
+                  }}
+                  placeholder={getDatePlaceholder(true)}
+                  className={`w-full px-3 py-2 border rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-sm ${
+                  isOverdue 
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
+                  : !formData.due_date
+                        ? 'border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-300 dark:border-l-amber-500 text-gray-900 dark:text-gray-100'
                           : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
                     }`}
                   />
-                  <label 
+                  <label
                     className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
                     isOverdue
                       ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
