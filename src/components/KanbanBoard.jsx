@@ -4490,7 +4490,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (modifier && e.key === 't') {
         e.preventDefault()
         if (projects.length > 0) {
-          setEditingTask(null)
+          setEditingTask(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : null)
           setTaskModalOpen(true)
         }
         return
@@ -7321,7 +7321,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </button>
               
               <button
-                onClick={() => { setEditingTask(null); setTaskModalOpen(true) }}
+                onClick={() => { setEditingTask(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
                 className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 title={`${shortcutModifier}T`}
@@ -9265,7 +9265,7 @@ export default function KanbanBoard({ demoMode = false }) {
                       setSelectedTaskIds(newSet)
                     }}
                     onAddTask={(status) => {
-                      setEditingTask({ status })
+                      setEditingTask({ status, ...(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : {}) })
                       setTaskModalOpen(true)
                     }}
                     onToggleMyDay={(taskId, addToMyDay) => {
@@ -9307,7 +9307,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         setSelectedTaskIds(newSet)
                       }}
                       onAddTask={(status) => {
-                        setEditingTask({ status })
+                        setEditingTask({ status, ...(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : {}) })
                         setTaskModalOpen(true)
                       }}
                       onToggleMyDay={(taskId, addToMyDay) => {
