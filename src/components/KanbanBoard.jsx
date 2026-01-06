@@ -7465,9 +7465,16 @@ export default function KanbanBoard({ demoMode = false }) {
                                   )}
                                   <input
                                     type="text"
-                                    value={task.due_date || ''}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                                    placeholder="YYYY-MM-DD"
+                                    value={formatDateForInput(task.due_date)}
+                                    onChange={(e) => {
+                                      const parsed = parseNaturalLanguageDate(e.target.value)
+                                      if (parsed) handleUpdatePendingTask(task.id, 'due_date', parsed)
+                                    }}
+                                    onBlur={(e) => {
+                                      const parsed = parseNaturalLanguageDate(e.target.value)
+                                      handleUpdatePendingTask(task.id, 'due_date', parsed || null)
+                                    }}
+                                    placeholder="MM/DD/YYYY"
                                     className="w-28 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
                                   />
                                   <input
@@ -9107,10 +9114,18 @@ export default function KanbanBoard({ demoMode = false }) {
                               
                               {/* Due Date */}
                               <input
-                                type="date"
-                                value={task.due_date || ''}
-                                onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                                className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                                type="text"
+                                value={formatDateForInput(task.due_date)}
+                                onChange={(e) => {
+                                  const parsed = parseNaturalLanguageDate(e.target.value)
+                                  if (parsed) handleUpdatePendingTask(task.id, 'due_date', parsed)
+                                }}
+                                onBlur={(e) => {
+                                  const parsed = parseNaturalLanguageDate(e.target.value)
+                                  handleUpdatePendingTask(task.id, 'due_date', parsed || null)
+                                }}
+                                placeholder="MM/DD/YYYY"
+                                className="w-28 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
                               />
                               
                               {/* Assignee */}
