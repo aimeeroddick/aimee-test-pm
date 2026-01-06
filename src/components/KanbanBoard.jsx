@@ -4602,45 +4602,64 @@ export default function KanbanBoard({ demoMode = false }) {
     fetchPendingEmailTasks()
   }, [])
 
-  // Fetch Slack connection and handle URL params
-  useEffect(() => {
+  // Handle URL parameters (Slack callback, task deep link)
+  const handleUrlParams = useCallback(async () => {
     if (demoMode) return
     
-    // Check for Slack callback params in URL
     const params = new URLSearchParams(window.location.search)
+    
+    // Check for Slack callback params
     const slackStatus = params.get('slack')
     if (slackStatus === 'success') {
       setSlackSuccess('Slack connected successfully!')
       setSettingsModalOpen(true)
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname)
+      return
     } else if (slackStatus === 'error') {
       setSlackError(params.get('message') || 'Failed to connect Slack')
       setSettingsModalOpen(true)
       window.history.replaceState({}, '', window.location.pathname)
+      return
     }
-
+    
     // Handle task deep link
     const taskId = params.get('task')
     if (taskId) {
-      // Find and open the task
-      const openTaskById = async () => {
-        const { data: task, error } = await supabase
-          .from('tasks')
-          .select('*, project:projects(name, user_id)')
-          .eq('id', taskId)
-          .single()
-        
-        if (!error && task && task.project?.user_id === user.id) {
-          setSelectedTask(task)
-        }
+      const { data: task, error } = await supabase
+        .from('tasks')
+        .select('*, project:projects(name, user_id)')
+        .eq('id', taskId)
+        .single()
+      
+      if (!error && task && task.project?.user_id === user.id) {
+        setSelectedTask(task)
       }
-      openTaskById()
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname)
     }
+  }, [demoMode, user?.id])
+  
+  // Check URL params on mount and when app regains focus (for PWA deep links)
+  useEffect(() => {
+    handleUrlParams()
     
-    // Fetch current Slack connection
+    const handleFocus = () => handleUrlParams()
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') handleUrlParams()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [handleUrlParams])
+  
+  // Fetch Slack connection on mount
+  useEffect(() => {
+    if (demoMode) return
+    
     const fetchSlackConnection = async () => {
       const { data, error } = await supabase
         .from('slack_connections')
