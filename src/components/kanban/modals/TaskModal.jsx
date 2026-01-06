@@ -17,55 +17,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const startDateRef = useRef(null)
   const dueDateRef = useRef(null)
   
-  // Helper to open date picker with click-away closing
-  const datePickerOpenRef = useRef(false)
-  
-  const openDatePicker = (ref) => {
-    if (!ref.current) return
-    ref.current.showPicker?.()
-    datePickerOpenRef.current = true
-    
-    // Handle Escape key to close picker without closing modal
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && datePickerOpenRef.current) {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        ref.current?.blur()
-        datePickerOpenRef.current = false
-        cleanup()
-      }
-    }
-    
-    // Handle click outside to close picker
-    const handleClickAway = (e) => {
-      // Don't close if clicking on the picker itself
-      if (e.target === ref.current) return
-      setTimeout(() => {
-        ref.current?.blur()
-        datePickerOpenRef.current = false
-      }, 0)
-      cleanup()
-    }
-    
-    const cleanup = () => {
-      document.removeEventListener('keydown', handleEscape, true)
-      document.removeEventListener('mousedown', handleClickAway)
-    }
-    
-    // Add listeners immediately in capture phase
-    document.addEventListener('keydown', handleEscape, true) // capture phase fires first
-    document.addEventListener('mousedown', handleClickAway)
-    
-    // Also cleanup when the input loses focus or changes
-    const handleBlur = () => {
-      datePickerOpenRef.current = false
-      cleanup()
-    }
-    ref.current.addEventListener('blur', handleBlur, { once: true })
-    ref.current.addEventListener('change', handleBlur, { once: true })
-  }
-  
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [editingStartDate, setEditingStartDate] = useState(false)
@@ -723,24 +674,18 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     placeholder={getDatePlaceholder()}
                     className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
-                  <label 
-                    className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      openDatePicker(startDateRef)
-                    }}
-                  >
+                  <div className="relative flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <input
                       ref={startDateRef}
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                      className="sr-only"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                  </label>
+                  </div>
                 </div>
                 {formData.start_date && (
                   <p className="text-xs mt-1 text-gray-400">
@@ -817,28 +762,23 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                           : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'
                     }`}
                   />
-                  <label
-                    className={`flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
+                  <div
+                    className={`relative flex items-center justify-center px-3 border border-l-0 rounded-r-xl cursor-pointer transition-colors ${
                     isOverdue
                       ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30'
                       : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      openDatePicker(dueDateRef)
-                    }}
-                  >
+                  }`}>
                     <input
                       ref={dueDateRef}
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                      className="sr-only"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <svg className={`w-4 h-4 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                  </label>
+                  </div>
                 </div>
                 {formData.due_date && (
                   <p className={`text-xs mt-1 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`}>
