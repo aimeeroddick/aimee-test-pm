@@ -191,13 +191,16 @@ export const getOccurrenceCount = (recurrenceType) => {
 }
 
 // Format date for display
-export const formatDate = (dateString, format = 'auto') => {
+export const formatDate = (dateString, format) => {
   if (!dateString) return ''
   const date = new Date(dateString)
   
-  if (format === 'DD/MM/YYYY') {
+  // If format not passed, read from localStorage
+  const effectiveFormat = format ?? (typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto') ?? 'auto'
+  
+  if (effectiveFormat === 'DD/MM/YYYY') {
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  } else if (format === 'MM/DD/YYYY') {
+  } else if (effectiveFormat === 'MM/DD/YYYY') {
     return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
   }
   // Auto: use browser locale

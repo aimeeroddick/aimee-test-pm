@@ -3344,7 +3344,7 @@ const SearchModal = ({ isOpen, onClose, tasks, projects, onEditTask, allTasks })
                             <>
                               <span>•</span>
                               <span className={dueDateStatus === 'overdue' ? 'text-red-600' : dueDateStatus === 'today' ? 'text-orange-600' : ''}>
-                                Due {formatDate(task.due_date, dateFormat)}
+                                Due {formatDate(task.due_date)}
                               </span>
                             </>
                           )}
@@ -3609,7 +3609,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-[10px] text-gray-600 dark:text-gray-300">
             {task.start_date && (
               <span className={`flex items-center gap-0.5 ${readyToStart ? 'text-green-600 dark:text-green-400' : ''}`}>
-                <span>▶</span> {formatDate(task.start_date, dateFormat)}
+                <span>▶</span> {formatDate(task.start_date)}
               </span>
             )}
             {task.due_date && (
@@ -3619,7 +3619,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 dueDateStatus === 'soon' ? 'text-amber-600 dark:text-amber-400' : ''
               }`}>
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                {formatDate(task.due_date, dateFormat)}
+                {formatDate(task.due_date)}
               </span>
             )}
             {task.time_estimate > 0 && (
@@ -8879,7 +8879,7 @@ export default function KanbanBoard({ demoMode = false }) {
                             <p className="text-xs text-gray-500 dark:text-gray-300">{project?.name}</p>
                           </div>
                           <span className="text-xs text-gray-400 dark:text-gray-300 whitespace-nowrap">
-                            {isToday ? 'Today' : formatDate(task.completed_at, dateFormat)}
+                            {isToday ? 'Today' : formatDate(task.completed_at)}
                           </span>
                         </div>
                       )
@@ -9505,7 +9505,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm opacity-0 absolute inset-0 cursor-pointer"
                   />
                   <div className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl text-sm text-center">
-                    {meetingNotesData.date ? formatDate(meetingNotesData.date, dateFormat) : 'Select date'}
+                    {meetingNotesData.date ? formatDate(meetingNotesData.date) : 'Select date'}
                   </div>
                 </div>
               </div>
@@ -9790,7 +9790,7 @@ Or we can extract from:
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Due {formatDate(parsed.date, dateFormat)}
+                        Due {formatDate(parsed.date)}
                       </span>
                       <span className="text-[10px] text-gray-400">(from "{parsed.matched}")</span>
                     </div>
