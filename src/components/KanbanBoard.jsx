@@ -6874,8 +6874,10 @@ export default function KanbanBoard({ demoMode = false }) {
     if (!t.due_date || t.status === 'done') return false
     const due = new Date(t.due_date)
     const today = new Date()
+    today.setHours(0, 0, 0, 0)
     const endOfWeek = new Date(today)
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+    endOfWeek.setHours(23, 59, 59, 999)
     return due >= today && due <= endOfWeek
   }).length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
