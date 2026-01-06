@@ -415,6 +415,26 @@ Deno.serve(async (req) => {
     }
 
     // Project matched - create task directly on board
+    // Determine status based on due date (backlog if > 7 days out)
+    let taskStatus = 'todo'
+    if (taskData.due_date) {
+      const dueDate = new Date(taskData.due_date)
+      const today = new Date()
+      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays > 7) {
+        taskStatus = 'backlog'
+      }
+    }
+
+    // Create automatic comment
+    const now = new Date()
+    const createdComment = {
+      id: crypto.randomUUID(),
+      text: `Created via Slack on ${now.toLocaleDateString('en-GB')} at ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`,
+      created_at: now.toISOString(),
+      is_system: true
+    }
+
     const { data: newTask, error: insertError } = await supabase
       .from('tasks')
       .insert({
@@ -426,7 +446,8 @@ Deno.serve(async (req) => {
         time_estimate: taskData.time_estimate,
         energy_level: taskData.energy_level,
         customer: taskData.customer,
-        status: 'todo'
+        status: taskStatus,
+        comments: [createdComment]
       })
       .select()
       .single()
@@ -439,13 +460,14 @@ Deno.serve(async (req) => {
 
     // Build response message
     const projectName = projects?.find(p => p.id === taskData.project_id)?.name || 'Unknown'
+    const statusText = taskStatus === 'backlog' ? ' (Backlog)' : ''
     let responseText = `✅ *Task created!*\n\n`
     responseText += `• *Title:* ${newTask.title}\n`
-    responseText += `• *Project:* ${projectName}\n`
+    responseText += `• *Project:* ${projectName}${statusText}\n`
     if (newTask.due_date) responseText += `• *Due:* ${newTask.due_date}\n`
     if (newTask.time_estimate) responseText += `• *Estimate:* ${newTask.time_estimate} mins\n`
     if (newTask.critical) responseText += `• *Priority:* 🔴 Critical\n`
-    responseText += `\n_View in Trackli: https://gettrackli.com_`
+    responseText += `\n<https://gettrackli.com?task=${newTask.id}|View task in Trackli>`
 
     await sendSlackResponse(responseUrl, responseText)
   }

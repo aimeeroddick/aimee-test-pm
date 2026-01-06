@@ -4502,6 +4502,26 @@ export default function KanbanBoard({ demoMode = false }) {
       setSettingsModalOpen(true)
       window.history.replaceState({}, '', window.location.pathname)
     }
+
+    // Handle task deep link
+    const taskId = params.get('task')
+    if (taskId) {
+      // Find and open the task
+      const openTaskById = async () => {
+        const { data: task, error } = await supabase
+          .from('tasks')
+          .select('*, project:projects(name, user_id)')
+          .eq('id', taskId)
+          .single()
+        
+        if (!error && task && task.project?.user_id === user.id) {
+          setSelectedTask(task)
+        }
+      }
+      openTaskById()
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname)
+    }
     
     // Fetch current Slack connection
     const fetchSlackConnection = async () => {
