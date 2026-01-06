@@ -10855,15 +10855,15 @@ Or we can extract from:
                     
                     {/* Expanded fields */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-0 ml-14 space-y-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
-                        <div className="pt-3 grid grid-cols-2 gap-3">
+                      <div className="px-4 pb-4 space-y-3 bg-gray-50/50 dark:bg-gray-900/30">
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Start Date</label>
                             <input
                               type="date"
                               value={task.start_date || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
-                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              className="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             />
                           </div>
                           <div>
@@ -10871,7 +10871,7 @@ Or we can extract from:
                             <select
                               value={task.energy_level || 'medium'}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
-                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              className="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             >
                               <option value="low">Low</option>
                               <option value="medium">Medium</option>
@@ -10886,7 +10886,7 @@ Or we can extract from:
                               value={task.time_estimate || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
                               placeholder="mins"
-                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              className="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             />
                           </div>
                           <div>
@@ -10897,7 +10897,7 @@ Or we can extract from:
                               value={task.customer || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
                               placeholder="Type or select..."
-                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              className="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             />
                             <datalist id={`mobile-customers-${task.id}`}>
                               {projectCustomers.map(c => (
@@ -10913,15 +10913,15 @@ Or we can extract from:
                             value={task.assignee_text || ''}
                             onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
                             placeholder="@who"
-                            className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            className="w-full text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                           />
                         </div>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer pt-1">
                           <input
                             type="checkbox"
                             checked={task.critical || false}
                             onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
-                            className="w-4 h-4 rounded border-red-400 text-red-500 focus:ring-red-500"
+                            className="w-5 h-5 rounded border-red-400 text-red-500 focus:ring-red-500"
                           />
                           <span className="text-sm text-red-600 dark:text-red-400 font-medium">Mark as Critical</span>
                         </label>
