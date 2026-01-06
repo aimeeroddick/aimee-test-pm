@@ -182,7 +182,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       setFormData({
         title: task?.title || '',
         description: '',
-        project_id: task?.project_id || projects[0]?.id || '',
+        project_id: task?.project_id || '',
         status: task?.status || 'backlog',
         critical: false,
         start_date: task?.start_date || '',
@@ -1535,7 +1535,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !formData.project_id}
             className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all font-medium shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {loading ? 'Saving...' : task?.id ? 'Save' : 'Create'}
