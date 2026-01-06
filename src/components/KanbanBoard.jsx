@@ -7082,7 +7082,7 @@ export default function KanbanBoard({ demoMode = false }) {
       <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
-          <div className="grid grid-cols-3 items-center">
+          <div className="grid grid-cols-2 min-[1800px]:grid-cols-3 items-center">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
               <div className="relative">
