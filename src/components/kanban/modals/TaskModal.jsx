@@ -16,6 +16,47 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const fileInputRef = useRef(null)
   const startDateRef = useRef(null)
   const dueDateRef = useRef(null)
+  
+  // Helper to open date picker with click-away closing
+  const openDatePicker = (ref) => {
+    if (!ref.current) return
+    ref.current.showPicker?.()
+    
+    // Handle Escape key to close picker without closing modal
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        ref.current?.blur()
+        cleanup()
+      }
+    }
+    
+    // Handle click outside to close picker
+    const handleClickAway = (e) => {
+      // Don't close if clicking on the picker itself
+      if (e.target === ref.current) return
+      setTimeout(() => {
+        ref.current?.blur()
+      }, 0)
+      cleanup()
+    }
+    
+    const cleanup = () => {
+      document.removeEventListener('keydown', handleEscape, true)
+      document.removeEventListener('mousedown', handleClickAway)
+    }
+    
+    // Add listeners after a tick so they don't immediately fire
+    setTimeout(() => {
+      document.addEventListener('keydown', handleEscape, true) // capture phase
+      document.addEventListener('mousedown', handleClickAway, { once: true })
+    }, 100)
+    
+    // Also cleanup when the input loses focus
+    ref.current.addEventListener('blur', cleanup, { once: true })
+  }
+  
   const [formReady, setFormReady] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
@@ -673,7 +714,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                     className="flex items-center justify-center px-3 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-xl bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     onClick={(e) => {
                       e.preventDefault()
-                      startDateRef.current?.showPicker?.()
+                      openDatePicker(startDateRef)
                     }}
                   >
                     <input
@@ -769,7 +810,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   }`}
                     onClick={(e) => {
                       e.preventDefault()
-                      dueDateRef.current?.showPicker?.()
+                      openDatePicker(dueDateRef)
                     }}
                   >
                     <input
