@@ -4131,15 +4131,15 @@ export default function KanbanBoard({ demoMode = false }) {
     if (key === 'trackli-week-start') setWeekStartsOn(value)
     if (key === 'trackli-date-format') {
       setDateFormat(value)
-      // Also sync to slack_connections for Slack integration
+      // Sync to profiles for Slack/Email integrations
       if (user?.id) {
         try {
           await supabase
-            .from('slack_connections')
+            .from('profiles')
             .update({ date_format: value })
-            .eq('user_id', user.id)
+            .eq('id', user.id)
         } catch (err) {
-          console.log('Could not sync date format to Slack:', err)
+          console.log('Could not sync date format:', err)
         }
       }
     }
@@ -7463,12 +7463,17 @@ export default function KanbanBoard({ demoMode = false }) {
                                   {task.critical && (
                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 font-medium">!</span>
                                   )}
-                                  <input
-                                    type="date"
-                                    value={task.due_date || ''}
-                                    onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                                    className="w-32 text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500"
-                                  />
+                                  <div className="relative w-32">
+                                    <input
+                                      type="date"
+                                      value={task.due_date || ''}
+                                      onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                      className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                    <div className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
+                                      {task.due_date ? formatDate(task.due_date) : <span className="text-gray-400">Due date</span>}
+                                    </div>
+                                  </div>
                                   <input
                                     type="text"
                                     value={task.assignee_text || ''}
@@ -9104,13 +9109,18 @@ export default function KanbanBoard({ demoMode = false }) {
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 font-medium">?</span>
                               )}
                               
-                              {/* Due Date */}
-                              <input
-                                type="date"
-                                value={task.due_date || ''}
-                                onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                                className="w-32 text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
-                              />
+                              {/* Due Date - formatted display with hidden date picker */}
+                              <div className="relative w-32">
+                                <input
+                                  type="date"
+                                  value={task.due_date || ''}
+                                  onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <div className="text-xs px-2 py-1 border border-amber-200 dark:border-amber-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 cursor-pointer">
+                                  {task.due_date ? formatDate(task.due_date) : <span className="text-gray-400">Due date</span>}
+                                </div>
+                              </div>
                               
                               {/* Assignee */}
                               <input

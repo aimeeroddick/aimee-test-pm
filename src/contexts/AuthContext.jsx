@@ -109,8 +109,28 @@ export function AuthProvider({ children }) {
       
       if (currentUser) {
         // Fetch profile but don't block on it
-        fetchProfile(currentUser.id).then(profileData => {
-          setProfile(profileData)
+        fetchProfile(currentUser.id).then(async (profileData) => {
+          // Auto-detect and save timezone if not set
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          if (profileData && !profileData.timezone && detectedTimezone) {
+            const { data: updatedProfile } = await supabase
+              .from('profiles')
+              .update({ timezone: detectedTimezone })
+              .eq('id', currentUser.id)
+              .select()
+              .single()
+            setProfile(updatedProfile || { ...profileData, timezone: detectedTimezone })
+          } else if (!profileData) {
+            // No profile yet - create one with timezone
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .upsert({ id: currentUser.id, timezone: detectedTimezone }, { onConflict: 'id' })
+              .select()
+              .single()
+            setProfile(newProfile)
+          } else {
+            setProfile(profileData)
+          }
         })
       }
       
@@ -129,8 +149,28 @@ export function AuthProvider({ children }) {
       
       if (currentUser) {
         // Fetch profile in background, don't block
-        fetchProfile(currentUser.id).then(profileData => {
-          setProfile(profileData)
+        fetchProfile(currentUser.id).then(async (profileData) => {
+          // Auto-detect and save timezone if not set
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          if (profileData && !profileData.timezone && detectedTimezone) {
+            const { data: updatedProfile } = await supabase
+              .from('profiles')
+              .update({ timezone: detectedTimezone })
+              .eq('id', currentUser.id)
+              .select()
+              .single()
+            setProfile(updatedProfile || { ...profileData, timezone: detectedTimezone })
+          } else if (!profileData) {
+            // No profile yet - create one with timezone
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .upsert({ id: currentUser.id, timezone: detectedTimezone }, { onConflict: 'id' })
+              .select()
+              .single()
+            setProfile(newProfile)
+          } else {
+            setProfile(profileData)
+          }
         })
       } else {
         setProfile(null)
