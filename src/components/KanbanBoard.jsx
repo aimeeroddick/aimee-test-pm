@@ -4125,11 +4125,24 @@ export default function KanbanBoard({ demoMode = false }) {
   }
   
   // Handle preference changes
-  const handlePreferenceChange = (key, value) => {
+  const handlePreferenceChange = async (key, value) => {
     localStorage.setItem(key, value)
     if (key === 'trackli-default-view') setDefaultView(value)
     if (key === 'trackli-week-start') setWeekStartsOn(value)
-    if (key === 'trackli-date-format') setDateFormat(value)
+    if (key === 'trackli-date-format') {
+      setDateFormat(value)
+      // Also sync to slack_connections for Slack integration
+      if (user?.id) {
+        try {
+          await supabase
+            .from('slack_connections')
+            .update({ date_format: value })
+            .eq('user_id', user.id)
+        } catch (err) {
+          console.log('Could not sync date format to Slack:', err)
+        }
+      }
+    }
     if (key === 'trackli-show-confetti') setShowConfetti(value === 'true')
   }
   
