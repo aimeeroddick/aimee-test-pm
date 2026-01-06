@@ -7235,37 +7235,33 @@ export default function KanbanBoard({ demoMode = false }) {
                 {currentView === 'progress' && <>{MenuIcons.progress()} Dashboard</>}
                 {currentView === 'projects' && <>{MenuIcons.projects()} Projects</>}
               </span>
+              
+              {/* Mobile/tablet logo - shows in left section below 1800px */}
+              <div className="flex min-[1800px]:hidden items-center gap-2 ml-auto">
+                <div className="w-8 h-8">
+                  <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                    <defs>
+                      <linearGradient id="mobile-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#4F46E5"/>
+                        <stop offset="100%" stopColor="#7C3AED"/>
+                      </linearGradient>
+                      <linearGradient id="mobile-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#9333EA"/>
+                        <stop offset="100%" stopColor="#EC4899"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M6 18L28 6L28 38L6 26Z" fill="url(#mobile-left)"/>
+                    <path d="M28 6L50 18L50 46L28 38Z" fill="url(#mobile-right)"/>
+                    <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                    <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
             </div>
             
-            {/* Center: Logo */}
-            <div className="justify-self-center">
-            {/* Mobile: Small icon + name */}
-              <div className="flex xl:hidden items-center gap-2">
-              <div className="w-9 h-9">
-                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                  <defs>
-                    <linearGradient id="mobile-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#4F46E5"/>
-                      <stop offset="100%" stopColor="#7C3AED"/>
-                    </linearGradient>
-                    <linearGradient id="mobile-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#9333EA"/>
-                      <stop offset="100%" stopColor="#EC4899"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M6 18L28 6L28 38L6 26Z" fill="url(#mobile-left)"/>
-                  <path d="M28 6L50 18L50 46L28 38Z" fill="url(#mobile-right)"/>
-                  <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
-                  <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span className="text-base font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Trackli
-              </span>
-            </div>
-            {/* Desktop: Centered logo */}
-              <div className="hidden xl:flex items-center gap-2.5">
-              <div className="w-9 h-9 sm:w-10 sm:h-10">
+            {/* Center: Logo (wide screens only - centered) */}
+            <div className="hidden min-[1800px]:flex justify-self-center items-center gap-2.5">
+              <div className="w-10 h-10">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
                     <linearGradient id="desktop-left" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -7283,11 +7279,9 @@ export default function KanbanBoard({ demoMode = false }) {
                   <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h1 className="hidden sm:block text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Trackli
               </h1>
-            </div>
-            
             </div>
             {/* Right: Action Buttons */}
             <div className="flex items-center gap-1 sm:gap-2 justify-self-end">
