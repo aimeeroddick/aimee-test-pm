@@ -387,8 +387,8 @@ Deno.serve(async (req) => {
       taskData.project_id = projects[0].id
     }
 
-    // Infer energy_level from time_estimate if not set
-    if (!taskData.energy_level && taskData.time_estimate) {
+    // Infer energy_level from time_estimate (override AI guess with time-based logic)
+    if (taskData.time_estimate) {
       if (taskData.time_estimate <= 30) {
         taskData.energy_level = 'low'
       } else if (taskData.time_estimate <= 120) {
