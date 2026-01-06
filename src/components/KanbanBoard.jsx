@@ -10791,15 +10791,31 @@ Or we can extract from:
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
               {pendingEmailTasks.map(task => {
                 const isSelected = selectedPendingIds.has(task.id)
+                const isExpanded = expandedPendingIds.has(task.id)
+                const selectedProject = projects.find(p => p.id === task.project_id)
+                const projectCustomers = selectedProject?.customers || []
                 return (
-                  <div key={task.id} className={`p-4 ${isSelected ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50 opacity-70'}`}>
-                    <div className="flex items-start gap-3">
+                  <div key={task.id} className={`${isSelected ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50 opacity-70'}`}>
+                    <div className="flex items-start gap-3 p-4">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => togglePendingTaskSelection(task.id)}
                         className="mt-1 w-5 h-5 rounded border-amber-400 dark:border-amber-600 text-amber-500 focus:ring-amber-500"
                       />
+                      <button
+                        onClick={() => setExpandedPendingIds(prev => {
+                          const next = new Set(prev)
+                          if (next.has(task.id)) next.delete(task.id)
+                          else next.add(task.id)
+                          return next
+                        })}
+                        className="mt-1 p-1 text-gray-400 hover:text-amber-500 transition-colors"
+                      >
+                        <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
                       <div className="flex-1 min-w-0">
                         <input
                           type="text"
@@ -10808,24 +10824,23 @@ Or we can extract from:
                           className="w-full text-base font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0"
                         />
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={task.due_date || ''}
-                              onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
-                              className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            />
-                          </div>
+                          <input
+                            type="date"
+                            value={task.due_date || ''}
+                            onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                            className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          />
                           <select
                             value={task.project_id || ''}
                             onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
                             className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                           >
-                            <option value="">Select project...</option>
+                            <option value="">Project *</option>
                             {projects.filter(p => !p.archived).map(p => (
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
+                          {task.critical && <span className="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 rounded font-medium">!</span>}
                         </div>
                       </div>
                       <button
@@ -10837,6 +10852,81 @@ Or we can extract from:
                         </svg>
                       </button>
                     </div>
+                    
+                    {/* Expanded fields */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-0 ml-14 space-y-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+                        <div className="pt-3 grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Start Date</label>
+                            <input
+                              type="date"
+                              value={task.start_date || ''}
+                              onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
+                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Effort</label>
+                            <select
+                              value={task.energy_level || 'medium'}
+                              onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
+                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            >
+                              <option value="low">Low</option>
+                              <option value="medium">Medium</option>
+                              <option value="high">High</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Time (mins)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={task.time_estimate || ''}
+                              onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
+                              placeholder="mins"
+                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Customer</label>
+                            <input
+                              type="text"
+                              list={`mobile-customers-${task.id}`}
+                              value={task.customer || ''}
+                              onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
+                              placeholder="Type or select..."
+                              className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            />
+                            <datalist id={`mobile-customers-${task.id}`}>
+                              {projectCustomers.map(c => (
+                                <option key={c} value={c} />
+                              ))}
+                            </datalist>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1 block">Assignee</label>
+                          <input
+                            type="text"
+                            value={task.assignee_text || ''}
+                            onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
+                            placeholder="@who"
+                            className="w-full text-sm px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          />
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={task.critical || false}
+                            onChange={(e) => handleUpdatePendingTask(task.id, 'critical', e.target.checked)}
+                            className="w-4 h-4 rounded border-red-400 text-red-500 focus:ring-red-500"
+                          />
+                          <span className="text-sm text-red-600 dark:text-red-400 font-medium">Mark as Critical</span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 )
               })}
