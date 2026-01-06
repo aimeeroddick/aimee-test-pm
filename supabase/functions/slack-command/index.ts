@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     const today = getTodayInTimezone(timezone)
     const lowerText = commandText.toLowerCase()
 
-    console.log('Debug:', { timezone, dateFormat, today, userId })
+    // Debug logging removed for production
 
     if (lowerText === 'help' || lowerText === '') {
       return new Response(JSON.stringify({
@@ -163,8 +163,6 @@ Deno.serve(async (req) => {
     const projectNames = projects?.map(p => p.name) || []
 
     if (lowerText === 'today' || lowerText === 'my day') {
-      console.log('Querying tasks with my_day_date:', today, 'projectIds:', projectIds)
-      
       const { data: tasks, error: taskError } = await supabase
         .from('tasks')
         .select('title, due_date, critical, my_day_date')
@@ -172,11 +170,9 @@ Deno.serve(async (req) => {
         .neq('status', 'done')
         .in('project_id', projectIds)
 
-      console.log('Tasks found:', tasks?.length, 'Error:', taskError)
-
       let msg = `*My Day - ${formatDateForDisplay(today, dateFormat)}*\n\n`
       if (!tasks || tasks.length === 0) {
-        msg += `No tasks for today.\n\n_Debug: Looking for my_day_date = ${today}_`
+        msg += 'No tasks for today.'
       } else {
         tasks.forEach((t, i) => {
           const due = t.due_date ? ` (due ${formatDateForDisplay(t.due_date, dateFormat)})` : ''
@@ -213,8 +209,6 @@ Deno.serve(async (req) => {
     const matchedProjectName = findProjectMatch(commandText, projectNames)
     const matchedProject = matchedProjectName ? projects?.find(p => p.name.toLowerCase() === matchedProjectName.toLowerCase()) : null
     const title = extractTitle(commandText, matchedProjectName) || commandText.slice(0, 100)
-
-    console.log('Creating task:', { title, dueDate, matchedProjectName, matchedProjectId: matchedProject?.id })
 
     const { data: newTask, error } = await supabase
       .from('pending_tasks')
