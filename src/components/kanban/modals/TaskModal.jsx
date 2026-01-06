@@ -301,15 +301,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     setAttachments(attachments.filter((a) => a.id !== attachmentId))
   }
   
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    // Require project for new tasks
-    if (!formData.project_id) {
-      setShowProjectError(true)
-      return
-    }
-    
+  // Extracted save logic so it can be called directly or after confirmation
+  const performSave = async () => {
     const finalAssignee = useCustomAssignee ? customAssignee : formData.assignee
     const finalCustomer = useCustomCustomer ? customCustomer : formData.customer
     
@@ -324,6 +317,31 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       comments: comments,
     }, newFiles, attachments)
     onClose()
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    // Require project for new tasks
+    if (!formData.project_id) {
+      setShowProjectError(true)
+      return
+    }
+    
+    // Soft validation: warn if no due date set
+    if (!formData.due_date && onShowConfirm) {
+      onShowConfirm({
+        title: 'No Due Date Set',
+        message: 'Adding a due date helps keep your tasks organised. Continue without a due date?',
+        confirmLabel: 'Continue Anyway',
+        confirmStyle: 'warning',
+        icon: '📅',
+        onConfirm: performSave
+      })
+      return
+    }
+    
+    await performSave()
   }
   
   const availableDependencies = allTasks?.filter(t => 
