@@ -4481,7 +4481,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (e.key === 'q' || (modifier && e.key === 'q')) {
         e.preventDefault()
         if (projects.length > 0) {
-          setQuickAddProject(projects[0]?.id || '')
+          setQuickAddProject('')
           setQuickAddOpen(true)
         }
         return
@@ -7321,7 +7321,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <button
                 onClick={() => {
                   if (projects.length > 0) {
-                    setQuickAddProject(projects[0]?.id || '')
+                    setQuickAddProject('')
                     setQuickAddOpen(true)
                   }
                 }}
@@ -9985,7 +9985,7 @@ Or we can extract from:
                     </button>
                     <button
                       type="submit"
-                      disabled={!quickAddTitle.trim() || saving}
+                      disabled={!quickAddTitle.trim() || !quickAddProject || saving}
                       className="flex-1 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {saving ? 'Adding...' : 'Add Task'}
