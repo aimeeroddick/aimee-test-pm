@@ -10863,7 +10863,8 @@ Or we can extract from:
                               type="date"
                               value={task.start_date || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'start_date', e.target.value || null)}
-                              className="w-full h-10 text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              style={{ height: '40px', minHeight: '40px', maxHeight: '40px' }}
+                              className="w-full text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 appearance-none"
                             />
                           </div>
                           <div>
@@ -10871,7 +10872,8 @@ Or we can extract from:
                             <select
                               value={task.energy_level || 'medium'}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'energy_level', e.target.value)}
-                              className="w-full h-10 text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              style={{ height: '40px' }}
+                              className="w-full text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             >
                               <option value="low">Low</option>
                               <option value="medium">Medium</option>
@@ -10888,7 +10890,8 @@ Or we can extract from:
                               value={task.time_estimate || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'time_estimate', e.target.value ? parseInt(e.target.value) : null)}
                               placeholder="mins"
-                              className="w-full h-10 text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              style={{ height: '40px' }}
+                              className="w-full text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             />
                           </div>
                           <div>
@@ -10899,7 +10902,8 @@ Or we can extract from:
                               value={task.customer || ''}
                               onChange={(e) => handleUpdatePendingTask(task.id, 'customer', e.target.value || null)}
                               placeholder="Select..."
-                              className="w-full h-10 text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              style={{ height: '40px' }}
+                              className="w-full text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                             />
                             <datalist id={`mobile-customers-${task.id}`}>
                               {projectCustomers.map(c => (
@@ -10915,7 +10919,8 @@ Or we can extract from:
                             value={task.assignee_text || ''}
                             onChange={(e) => handleUpdatePendingTask(task.id, 'assignee_text', e.target.value || null)}
                             placeholder="@who"
-                            className="w-full h-10 text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            style={{ height: '40px' }}
+                            className="w-full text-sm px-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                           />
                         </div>
                         <label className="flex items-center gap-3 cursor-pointer pt-1">
