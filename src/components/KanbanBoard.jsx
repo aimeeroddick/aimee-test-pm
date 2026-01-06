@@ -6781,53 +6781,69 @@ export default function KanbanBoard({ demoMode = false }) {
     return true
   })
 
-  // Check if a task has a future start date (not ready to start yet)
-  const hasFutureStartDate = (task) => {
-    if (!task.start_date) return false
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const start = new Date(task.start_date)
-    start.setHours(0, 0, 0, 0)
-    return start > today
-  }
-
-  // Sort tasks by priority: Critical > Due Date (soonest) > Energy Level > Created Date
-  // For backlog: Future start date tasks go to the bottom
-  const sortTasksByPriority = (tasks, isBacklog = false) => {
-    const energyOrder = { high: 0, medium: 1, low: 2 }
-    
+  // Sort tasks by priority for board columns (Backlog, To Do, In Progress)
+  // Sort order: Due Date (earliest) → Critical → Start Date → Created Date
+  // Tasks without due dates fall back to start date, then created date
+  const sortTasksByPriority = (tasks) => {
     return [...tasks].sort((a, b) => {
-      // For backlog: Push future start date tasks to the bottom
-      if (isBacklog) {
-        const aFuture = hasFutureStartDate(a)
-        const bFuture = hasFutureStartDate(b)
-        if (aFuture && !bFuture) return 1
-        if (!aFuture && bFuture) return -1
-      }
-      
-      // 1. Critical tasks first
-      if (a.critical && !b.critical) return -1
-      if (!a.critical && b.critical) return 1
-      
-      // 2. Sort by due date (soonest first, no due date last)
       const aHasDue = !!a.due_date
       const bHasDue = !!b.due_date
-      
+      const aHasStart = !!a.start_date
+      const bHasStart = !!b.start_date
+
+      // Tasks with due dates come before tasks without
+      if (aHasDue && !bHasDue) return -1
+      if (!aHasDue && bHasDue) return 1
+
+      // Both have due dates
       if (aHasDue && bHasDue) {
-        const dateCompare = new Date(a.due_date) - new Date(b.due_date)
-        if (dateCompare !== 0) return dateCompare
-      } else if (aHasDue && !bHasDue) {
-        return -1 // a has due date, b doesn't - a comes first
-      } else if (!aHasDue && bHasDue) {
-        return 1 // b has due date, a doesn't - b comes first
+        // 1. Sort by due date (earliest first)
+        const dueDateCompare = new Date(a.due_date) - new Date(b.due_date)
+        if (dueDateCompare !== 0) return dueDateCompare
+
+        // 2. Same due date: critical first
+        if (a.critical && !b.critical) return -1
+        if (!a.critical && b.critical) return 1
+
+        // 3. Same due date, same critical: sort by start date
+        if (aHasStart && bHasStart) {
+          const startDateCompare = new Date(a.start_date) - new Date(b.start_date)
+          if (startDateCompare !== 0) return startDateCompare
+        } else if (aHasStart && !bHasStart) {
+          return -1
+        } else if (!aHasStart && bHasStart) {
+          return 1
+        }
+
+        // 4. Final tiebreaker: created date (oldest first)
+        return new Date(a.created_at) - new Date(b.created_at)
       }
-      
-      // 3. Sort by energy level (high > medium > low)
-      const aEnergy = energyOrder[a.energy_level] ?? 1
-      const bEnergy = energyOrder[b.energy_level] ?? 1
-      if (aEnergy !== bEnergy) return aEnergy - bEnergy
-      
-      // 4. Sort by created date (oldest first)
+
+      // Neither has due date - fall back to start date logic
+      // Tasks with start dates come before tasks without
+      if (aHasStart && !bHasStart) return -1
+      if (!aHasStart && bHasStart) return 1
+
+      // Both have start dates (but no due dates)
+      if (aHasStart && bHasStart) {
+        // 1. Sort by start date (earliest first)
+        const startDateCompare = new Date(a.start_date) - new Date(b.start_date)
+        if (startDateCompare !== 0) return startDateCompare
+
+        // 2. Same start date: critical first
+        if (a.critical && !b.critical) return -1
+        if (!a.critical && b.critical) return 1
+
+        // 3. Final tiebreaker: created date (oldest first)
+        return new Date(a.created_at) - new Date(b.created_at)
+      }
+
+      // Neither has due date nor start date
+      // 1. Critical first
+      if (a.critical && !b.critical) return -1
+      if (!a.critical && b.critical) return 1
+
+      // 2. Created date (oldest first)
       return new Date(a.created_at) - new Date(b.created_at)
     })
   }
@@ -6845,7 +6861,7 @@ export default function KanbanBoard({ demoMode = false }) {
     }
     
     // Other columns: use priority sorting
-    return sortTasksByPriority(statusTasks, status === 'backlog')
+    return sortTasksByPriority(statusTasks)
   }
 
   // Stats
