@@ -139,7 +139,14 @@ Deno.serve(async (req) => {
       .single()
     
     const timezone = profile?.timezone || 'America/New_York'
-    const dateFormat = profile?.date_format || 'MM/DD/YYYY'
+    
+    // Determine date format - if 'auto' or not set, infer from timezone
+    let dateFormat = profile?.date_format
+    if (!dateFormat || dateFormat === 'auto') {
+      // US timezones use MM/DD/YYYY, others use DD/MM/YYYY
+      const usTimezones = ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix', 'America/Anchorage', 'Pacific/Honolulu']
+      dateFormat = usTimezones.some(tz => timezone.startsWith('America/') || timezone.startsWith('Pacific/')) ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
+    }
     const today = getTodayInTimezone(timezone)
     const lowerText = commandText.toLowerCase()
 
@@ -210,34 +217,60 @@ Deno.serve(async (req) => {
     const matchedProject = matchedProjectName ? projects?.find(p => p.name.toLowerCase() === matchedProjectName.toLowerCase()) : null
     const title = extractTitle(commandText, matchedProjectName) || commandText.slice(0, 100)
 
-    const { data: newTask, error } = await supabase
-      .from('pending_tasks')
-      .insert({
-        user_id: userId,
-        title: title,
-        due_date: dueDate,
-        project_id: matchedProject?.id || null,
-        source: 'slack',
-        status: 'pending'
-      })
-      .select()
-      .single()
+    // If project matched, create real task; otherwise create pending task
+    if (matchedProject) {
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          title: title,
+          due_date: dueDate,
+          project_id: matchedProject.id,
+          status: 'todo',
+          energy_level: 'medium'
+        })
 
-    if (error) {
-      console.error('Insert error:', error)
+      if (error) {
+        console.error('Insert error:', error)
+        return new Response(JSON.stringify({
+          response_type: 'ephemeral',
+          text: 'Could not create task. Please try again.'
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+
+      const dueStr = dueDate ? ` (due ${formatDateForDisplay(dueDate, dateFormat)})` : ''
+      
       return new Response(JSON.stringify({
         response_type: 'ephemeral',
-        text: 'Could not create task. Please try again.'
+        text: `✅ Task created:\n\n• ${title}${dueStr}\n📁 Project: ${matchedProject.name}`
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    } else {
+      // No project matched - create pending task
+      const { error } = await supabase
+        .from('pending_tasks')
+        .insert({
+          user_id: userId,
+          title: title,
+          due_date: dueDate,
+          project_id: null,
+          source: 'slack',
+          status: 'pending'
+        })
+
+      if (error) {
+        console.error('Insert error:', error)
+        return new Response(JSON.stringify({
+          response_type: 'ephemeral',
+          text: 'Could not create task. Please try again.'
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+
+      const dueStr = dueDate ? ` (due ${formatDateForDisplay(dueDate, dateFormat)})` : ''
+      
+      return new Response(JSON.stringify({
+        response_type: 'ephemeral',
+        text: `⏳ Pending task created:\n\n• ${title}${dueStr}\n⚠️ No project matched - please review in Trackli`
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
-
-    const dueStr = dueDate ? ` (due ${formatDateForDisplay(dueDate, dateFormat)})` : ''
-    const projectStr = matchedProject ? `\n📁 Project: ${matchedProject.name}` : '\n⚠️ No project matched - please select in Trackli'
-    
-    return new Response(JSON.stringify({
-      response_type: 'ephemeral',
-      text: `✅ Created pending task:\n\n• ${title}${dueStr}${projectStr}\n\n_Review in Trackli to approve._`
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
   } catch (error) {
     console.error('Error:', error)
