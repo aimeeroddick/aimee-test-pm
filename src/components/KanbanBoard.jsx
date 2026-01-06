@@ -7081,8 +7081,8 @@ export default function KanbanBoard({ demoMode = false }) {
       {/* Header */}
       <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
-        <div className="max-w-full mx-auto pl-3 pr-4 sm:px-6 py-2 sm:py-3 relative">
-          <div className="grid grid-cols-2 items-center">
+        <div className="max-w-full mx-auto pl-3 pr-4 sm:px-6 py-2 sm:py-3 relative overflow-visible">
+          <div className="grid grid-cols-2 items-center overflow-visible">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -7259,7 +7259,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </div>
             </div>
             {/* Right: Action Buttons */}
-            <div className="flex items-center gap-1 sm:gap-2 justify-self-end">
+            <div className="flex items-center gap-1 sm:gap-2 justify-self-end overflow-visible">
               {/* Utility buttons - icon only */}
               
               
@@ -7337,11 +7337,11 @@ export default function KanbanBoard({ demoMode = false }) {
               
               {/* Pending Email Tasks Badge + Dropdown */}
               {pendingEmailCount > 0 && (
-                <div className="relative">
+                <div className="relative overflow-visible">
                   <button
                     type="button"
                     onClick={() => setPendingDropdownOpen(!pendingDropdownOpen)}
-                    className="relative p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
+                    className="relative overflow-visible p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
                     title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
