@@ -7082,7 +7082,7 @@ export default function KanbanBoard({ demoMode = false }) {
       <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
         <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
-          <div className="grid grid-cols-2 min-[1100px]:grid-cols-3 items-center">
+          <div className="grid grid-cols-2 lg:grid-cols-3 items-center">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -7236,8 +7236,8 @@ export default function KanbanBoard({ demoMode = false }) {
                 {currentView === 'projects' && <>{MenuIcons.projects()} Projects</>}
               </span>
               
-              {/* Mobile/tablet logo - shows in left section below 1100px */}
-              <div className="flex min-[1100px]:hidden items-center gap-2 ml-auto">
+              {/* Mobile/tablet logo - shows in left section below lg (1024px) */}
+              <div className="flex lg:hidden items-center gap-2 ml-auto">
                 <div className="w-8 h-8">
                   <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                     <defs>
@@ -7260,7 +7260,7 @@ export default function KanbanBoard({ demoMode = false }) {
             </div>
             
             {/* Center: Logo (wide screens only - centered) */}
-            <div className="hidden min-[1100px]:flex justify-self-center items-center gap-2.5">
+            <div className="hidden lg:flex justify-self-center items-center gap-2.5">
               <div className="w-10 h-10">
                 <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                   <defs>
