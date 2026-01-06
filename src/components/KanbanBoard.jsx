@@ -6324,9 +6324,9 @@ export default function KanbanBoard({ demoMode = false }) {
 
   // Quick Add - create task with just title and optional due date
   const handleQuickAdd = async (title, projectId, dueDate = null) => {
-    if (!title.trim()) return
+    if (!title.trim() || !projectId) return
     
-    const targetProject = projectId || projects[0]?.id
+    const targetProject = projectId
     if (!targetProject) return
     
     // Determine status and start_date based on due date
