@@ -7345,8 +7345,23 @@ export default function KanbanBoard({ demoMode = false }) {
                       if (window.innerWidth < 640) {
                         setCurrentView('board')
                         setPendingReviewExpanded(true)
+                        // Scroll to pending section after a brief delay
+                        setTimeout(() => {
+                          document.querySelector('[data-pending-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 100)
                       } else {
                         setPendingDropdownOpen(!pendingDropdownOpen)
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      // Handle touch on mobile
+                      if (window.innerWidth < 640) {
+                        e.preventDefault()
+                        setCurrentView('board')
+                        setPendingReviewExpanded(true)
+                        setTimeout(() => {
+                          document.querySelector('[data-pending-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 100)
                       }
                     }}
                     className="relative overflow-visible p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
@@ -9024,7 +9039,7 @@ export default function KanbanBoard({ demoMode = false }) {
               
               {/* Pending Email Tasks - Clean Inline Review */}
               {pendingEmailTasks.length > 0 && (
-                <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-200/50 dark:border-amber-800/50 overflow-hidden">
+                <div data-pending-section className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-200/50 dark:border-amber-800/50 overflow-hidden">
                   {/* Header */}
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-amber-200/50 dark:border-amber-800/50">
                     <button
