@@ -7340,7 +7340,15 @@ export default function KanbanBoard({ demoMode = false }) {
                 <div className="relative overflow-visible">
                   <button
                     type="button"
-                    onClick={() => setPendingDropdownOpen(!pendingDropdownOpen)}
+                    onClick={() => {
+                      // On mobile, navigate to board view with pending section expanded
+                      if (window.innerWidth < 640) {
+                        setCurrentView('board')
+                        setPendingReviewExpanded(true)
+                      } else {
+                        setPendingDropdownOpen(!pendingDropdownOpen)
+                      }
+                    }}
                     className="relative overflow-visible p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
                     title={`${pendingEmailCount} pending email task${pendingEmailCount !== 1 ? 's' : ''} to review`}
                   >
@@ -7352,11 +7360,11 @@ export default function KanbanBoard({ demoMode = false }) {
                     </span>
                   </button>
                   
-                  {/* Dropdown Panel */}
+                  {/* Dropdown Panel - desktop only */}
                   {pendingDropdownOpen && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setPendingDropdownOpen(false)} />
-                      <div className="absolute right-0 top-full mt-2 w-[600px] max-w-[90vw] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                      <div className="hidden sm:block fixed inset-0 z-40" onClick={() => setPendingDropdownOpen(false)} />
+                      <div className="hidden sm:block absolute right-0 top-full mt-2 w-[600px] max-w-[90vw] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b border-amber-200/50 dark:border-amber-800/50">
                           <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
