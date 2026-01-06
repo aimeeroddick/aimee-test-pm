@@ -13,7 +13,7 @@ import {
 import {
   getCustomerColor, getDueDateStatus, isReadyToStart, isBlocked, isInMyDay,
   getNextRecurrenceDate, generateFutureOccurrences, getOccurrenceCount,
-  formatDate, isUSDateFormat, formatTimeEstimate, parseFlexibleTime, parseNaturalLanguageDate
+  formatDate, isUSDateFormat, formatTimeEstimate, parseFlexibleTime, parseNaturalLanguageDate, getDateLocale
 } from './kanban/utils'
 import { ToastIcons, ColumnEmptyIcons, TaskCardIcons } from './kanban/icons'
 import { CalendarView, ProgressRing, CalendarSidebarTaskCard } from './kanban/views/CalendarView'
@@ -905,7 +905,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
         .from('tasks')
         .insert({
           title,
-          description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString()}\n\n---\n\n${item.message}`,
+          description: `**From:** ${item.user_email || 'Anonymous'}\n**Page:** ${item.page || 'N/A'}\n**Date:** ${new Date(item.created_at).toLocaleDateString(getDateLocale())}\n\n---\n\n${item.message}`,
           status: 'backlog',
           project_id: feedbackProject.id,
           critical: false,
@@ -1097,7 +1097,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
                       <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-300">
                         <span>{item.user_email}</span>
                         <span>•</span>
-                        <span>{new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}</span>
+                        <span>{new Date(item.created_at).toLocaleDateString(getDateLocale())} {new Date(item.created_at).toLocaleTimeString()}</span>
                         {item.page && (
                           <>
                             <span>•</span>
@@ -8007,7 +8007,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     const op = value[0]
                     const dateStr = value.slice(1)
                     const date = new Date(dateStr)
-                    const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    const formatted = date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
                     displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
                   }
                   else if (field === 'start_date' && value === 'has_date') displayValue = 'Has Date'
@@ -8015,7 +8015,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     const op = value[0]
                     const dateStr = value.slice(1)
                     const date = new Date(dateStr)
-                    const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    const formatted = date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
                     displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
                   }
                   else if (field === 'time_estimate' && (value.startsWith('=') || value.startsWith('<') || value.startsWith('>'))) {
@@ -8793,7 +8793,7 @@ export default function KanbanBoard({ demoMode = false }) {
                       date.setDate(date.getDate() - i)
                       date.setHours(0, 0, 0, 0)
                       const dateStr = date.toDateString()
-                      const dayName = date.toLocaleDateString(undefined, { weekday: 'short' })
+                      const dayName = date.toLocaleDateString(getDateLocale(), { weekday: 'short' })
                       const count = tasks.filter(t => 
                         t.status === 'done' && 
                         t.completed_at && 

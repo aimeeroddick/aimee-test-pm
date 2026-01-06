@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { COLUMN_COLORS, CATEGORIES, ENERGY_LEVELS, btn, COLUMNS } from '../constants'
-import { formatDate, formatTimeEstimate, parseFlexibleTime, getDueDateStatus, isBlocked } from '../utils'
+import { formatDate, formatTimeEstimate, parseFlexibleTime, getDueDateStatus, isBlocked, getDateLocale } from '../utils'
 import { TaskCardIcons } from '../icons'
 
 
@@ -739,7 +739,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
   // Get header title based on view mode
   const getHeaderTitle = () => {
     if (viewMode === 'daily') {
-      return currentDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      return currentDate.toLocaleDateString(getDateLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     } else if (viewMode === 'weekly') {
       const weekDates = getWeekDates()
       const startDate = weekDates[0]
@@ -1629,7 +1629,7 @@ const CalendarView = ({ tasks, projects, onEditTask, allTasks, onUpdateTask, onC
       {selectedDate && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h3 className="font-semibold text-gray-800 dark:text-white mb-4">
-            Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+            Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(getDateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
           </h3>
           {selectedTasks.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-300 text-sm">No tasks due on this date</p>

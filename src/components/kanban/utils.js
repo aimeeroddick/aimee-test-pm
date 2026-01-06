@@ -207,6 +207,14 @@ export const formatDate = (dateString, format) => {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
+// Get the locale string for toLocaleDateString based on user preference
+export const getDateLocale = () => {
+  const format = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
+  if (format === 'DD/MM/YYYY') return 'en-GB'
+  if (format === 'MM/DD/YYYY') return 'en-US'
+  return undefined // auto-detect
+}
+
 // Detect if user's locale uses MM/DD (US) or DD/MM
 export const isUSDateFormat = () => {
   const testDate = new Date(2000, 0, 15)

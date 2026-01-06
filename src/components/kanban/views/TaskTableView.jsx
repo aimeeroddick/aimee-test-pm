@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { supabase } from '../../../lib/supabase'
 import { COLUMNS, COLUMN_COLORS, CATEGORIES, SOURCES, ENERGY_LEVELS } from '../constants'
-import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate } from '../utils'
+import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate, getDateLocale } from '../utils'
 
 
 const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
@@ -108,7 +108,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
       SOURCES.find(s => s.id === t.source)?.label || '',
       t.time_estimate ? `${t.time_estimate}m` : '',
       (t.description || '').replace(/[\n\r,]/g, ' '),
-      t.created_at ? new Date(t.created_at).toLocaleDateString() : ''
+      t.created_at ? new Date(t.created_at).toLocaleDateString(getDateLocale()) : ''
       ]
     })
     
@@ -360,7 +360,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
       case 'time_estimate':
         return task.time_estimate ? formatTimeEstimate(task.time_estimate) : '-'
       case 'created_at':
-        return task.created_at ? new Date(task.created_at).toLocaleDateString() : '-'
+        return task.created_at ? new Date(task.created_at).toLocaleDateString(getDateLocale()) : '-'
       default:
         return task[key] || '-'
     }
