@@ -4131,15 +4131,15 @@ export default function KanbanBoard({ demoMode = false }) {
     if (key === 'trackli-week-start') setWeekStartsOn(value)
     if (key === 'trackli-date-format') {
       setDateFormat(value)
-      // Also sync to slack_connections for Slack integration
+      // Sync to profiles for Slack/Email integrations
       if (user?.id) {
         try {
           await supabase
-            .from('slack_connections')
+            .from('profiles')
             .update({ date_format: value })
-            .eq('user_id', user.id)
+            .eq('id', user.id)
         } catch (err) {
-          console.log('Could not sync date format to Slack:', err)
+          console.log('Could not sync date format:', err)
         }
       }
     }
