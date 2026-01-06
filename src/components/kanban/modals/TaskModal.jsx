@@ -18,16 +18,21 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const dueDateRef = useRef(null)
   
   // Helper to open date picker with click-away closing
+  const datePickerOpenRef = useRef(false)
+  
   const openDatePicker = (ref) => {
     if (!ref.current) return
     ref.current.showPicker?.()
+    datePickerOpenRef.current = true
     
     // Handle Escape key to close picker without closing modal
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && datePickerOpenRef.current) {
         e.preventDefault()
         e.stopPropagation()
+        e.stopImmediatePropagation()
         ref.current?.blur()
+        datePickerOpenRef.current = false
         cleanup()
       }
     }
@@ -38,6 +43,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       if (e.target === ref.current) return
       setTimeout(() => {
         ref.current?.blur()
+        datePickerOpenRef.current = false
       }, 0)
       cleanup()
     }
@@ -47,14 +53,17 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       document.removeEventListener('mousedown', handleClickAway)
     }
     
-    // Add listeners after a tick so they don't immediately fire
-    setTimeout(() => {
-      document.addEventListener('keydown', handleEscape, true) // capture phase
-      document.addEventListener('mousedown', handleClickAway, { once: true })
-    }, 100)
+    // Add listeners immediately in capture phase
+    document.addEventListener('keydown', handleEscape, true) // capture phase fires first
+    document.addEventListener('mousedown', handleClickAway)
     
-    // Also cleanup when the input loses focus
-    ref.current.addEventListener('blur', cleanup, { once: true })
+    // Also cleanup when the input loses focus or changes
+    const handleBlur = () => {
+      datePickerOpenRef.current = false
+      cleanup()
+    }
+    ref.current.addEventListener('blur', handleBlur, { once: true })
+    ref.current.addEventListener('change', handleBlur, { once: true })
   }
   
   const [formReady, setFormReady] = useState(true)
