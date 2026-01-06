@@ -7,8 +7,8 @@ import {
   DATE_SHORTCUTS, btn, COLUMN_COLORS, COLUMNS 
 } from '../constants'
 import { 
-  formatDate, parseNaturalLanguageDate, parseFlexibleTime, 
-  getOccurrenceCount, getCustomerColor, isBlocked, getDueDateStatus, formatTimeEstimate 
+  formatDate, parseNaturalLanguageDate, parseFlexibleTime, getDateLocale,
+  getOccurrenceCount, getCustomerColor, isBlocked, getDueDateStatus, formatTimeEstimate
 } from '../utils'
 import { TaskCardIcons } from '../icons'
 
@@ -236,10 +236,25 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     if (!dateStr) return ''
     try {
       const date = new Date(dateStr + 'T00:00:00')
-      return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+      return date.toLocaleDateString(getDateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' })
     } catch {
       return dateStr
     }
+  }
+  
+  // Get date placeholder based on user's format preference
+  const getDatePlaceholder = (includeHint = false) => {
+    const locale = getDateLocale()
+    let format = 'DD/MM/YYYY'
+    if (locale === 'en-US') format = 'MM/DD/YYYY'
+    else if (locale === undefined) {
+      // Auto-detect from browser
+      const testDate = new Date(2000, 0, 15)
+      const formatted = testDate.toLocaleDateString()
+      const firstNum = parseInt(formatted.split(/[\/\-\.]/)[0])
+      format = firstNum === 1 ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
+    }
+    return includeHint ? `${format} or 'tomorrow'` : format
   }
   
   // Show time fields only if start_date is within 1 day in past, today, or future
@@ -651,7 +666,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       const parsed = parseNaturalLanguageDate(val)
                       if (parsed.date) setFormData({ ...formData, start_date: parsed.date })
                     }}
-                    placeholder="YYYY-MM-DD"
+                    placeholder={getDatePlaceholder()}
                     className={`w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm ${!formData.start_date ? 'border-l-4 border-l-amber-300 dark:border-l-amber-500' : ''}`}
                   />
                   <label 
@@ -737,7 +752,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       const parsed = parseNaturalLanguageDate(val)
                       if (parsed.date) setFormData({ ...formData, due_date: parsed.date })
                     }}
-                    placeholder="YYYY-MM-DD or 'tomorrow'"
+                    placeholder={getDatePlaceholder(true)}
                     className={`w-full px-3 py-2 border rounded-l-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-sm ${
                       isOverdue 
                         ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
