@@ -3054,11 +3054,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <p>Pending is your inbox for tasks from external sources. Tasks arrive here from:</p>
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📧 Email</p>
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email</p>
                         <p className="text-sm">Forward emails to your Trackli address</p>
                       </div>
                       <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">💬 Slack</p>
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> Slack</p>
                         <p className="text-sm">Use /trackli commands</p>
                       </div>
                     </div>
@@ -3068,11 +3068,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <SectionCard index={1} title="Where to Find Pending">
                   <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📬 Header Badge</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /><circle cx="18" cy="5" r="3" fill="currentColor" /></svg> Header Badge</p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Look for the amber badge with count in the top navigation. Click it for a quick dropdown preview of pending tasks.</p>
                     </div>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📋 Board View</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg> Board View</p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">The full Pending Review section appears above your kanban columns. Expand it to see all pending tasks with full editing options.</p>
                     </div>
                   </div>
