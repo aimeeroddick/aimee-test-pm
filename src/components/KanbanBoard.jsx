@@ -4508,6 +4508,7 @@ export default function KanbanBoard({ demoMode = false }) {
       const { data, error } = await supabase
         .from('slack_connections')
         .select('*')
+        .eq('user_id', user.id)
         .single()
       
       if (!error && data) {
