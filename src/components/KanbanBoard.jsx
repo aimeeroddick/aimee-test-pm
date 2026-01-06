@@ -6874,8 +6874,10 @@ export default function KanbanBoard({ demoMode = false }) {
     if (!t.due_date || t.status === 'done') return false
     const due = new Date(t.due_date)
     const today = new Date()
+    today.setHours(0, 0, 0, 0)
     const endOfWeek = new Date(today)
     endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
+    endOfWeek.setHours(23, 59, 59, 999)
     return due >= today && due <= endOfWeek
   }).length
   const totalEstimatedTime = filteredTasks.filter(t => t.status !== 'done').reduce((sum, t) => sum + (t.time_estimate || 0), 0)
@@ -8805,7 +8807,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                   {/* Due Today */}
                   {(() => {
-                    const dueTodayTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'today')
+                    const dueTodayTasks = filteredTasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'today')
                     const dueTodayHours = dueTodayTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
                     return (
                       <button
@@ -8824,7 +8826,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   
                   {/* Overdue */}
                   {(() => {
-                    const overdueTasks = tasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'overdue')
+                    const overdueTasks = filteredTasks.filter(t => t.status !== 'done' && getDueDateStatus(t.due_date, t.status) === 'overdue')
                     const overdueHours = overdueTasks.reduce((sum, t) => sum + (t.time_estimate || 0), 0)
                     return (
                       <button
@@ -8848,7 +8850,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     endOfWeek.setDate(today.getDate() + (7 - today.getDay()))
                     endOfWeek.setHours(23, 59, 59, 999)
                     today.setHours(0, 0, 0, 0)
-                    const dueThisWeekTasks = tasks.filter(t => {
+                    const dueThisWeekTasks = filteredTasks.filter(t => {
                       if (t.status === 'done' || !t.due_date) return false
                       const dueDate = new Date(t.due_date)
                       return dueDate >= today && dueDate <= endOfWeek
