@@ -387,6 +387,17 @@ Deno.serve(async (req) => {
       taskData.project_id = projects[0].id
     }
 
+    // Infer energy_level from time_estimate if not set
+    if (!taskData.energy_level && taskData.time_estimate) {
+      if (taskData.time_estimate <= 30) {
+        taskData.energy_level = 'low'
+      } else if (taskData.time_estimate <= 120) {
+        taskData.energy_level = 'medium'
+      } else {
+        taskData.energy_level = 'high'
+      }
+    }
+
     // If no project matched and multiple projects exist, send to pending
     if (!taskData.project_id) {
       const { data: pendingTask, error: pendingError } = await supabase
@@ -404,6 +415,7 @@ Deno.serve(async (req) => {
           time_estimate: taskData.time_estimate,
           energy_level: taskData.energy_level,
           customer: taskData.customer,
+          source: 'slack',
           status: 'pending'
         })
         .select()
