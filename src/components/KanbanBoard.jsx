@@ -3065,7 +3065,20 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={1} title="Reviewing Tasks">
+                <SectionCard index={1} title="Where to Find Pending">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📬 Header Badge</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Look for the amber badge with count in the top navigation. Click it for a quick dropdown preview of pending tasks.</p>
+                    </div>
+                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📋 Board View</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">The full Pending Review section appears above your kanban columns. Expand it to see all pending tasks with full editing options.</p>
+                    </div>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={2} title="Reviewing Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• <strong>Checkbox</strong> — Select tasks you want to keep</p>
                     <p>• <strong>Expand arrow</strong> — Show more fields (effort, time, customer)</p>
@@ -3074,7 +3087,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={2} title="AI Extraction">
+                <SectionCard index={3} title="AI Extraction">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>The AI automatically extracts task details from your messages:</p>
                     <div className="grid grid-cols-2 gap-2 mt-3">
@@ -3095,7 +3108,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={3} title="Task Routing">
+                <SectionCard index={4} title="Task Routing">
                   <div className="space-y-3">
                     <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
                       <p className="font-semibold text-green-700 dark:text-green-300">✓ Project Matched</p>
@@ -3109,7 +3122,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={4} title="Approving Tasks">
+                <SectionCard index={5} title="Approving Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>1. <strong>Select</strong> the tasks you want (checkbox)</p>
                     <p>2. <strong>Assign</strong> a project to each task</p>
@@ -3118,7 +3131,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={5} title="Email Setup">
+                <SectionCard index={6} title="Email Setup">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>Find your unique email address in <strong>Settings → Integrations</strong></p>
                     <p>Forward any email to create tasks from action items.</p>
@@ -3126,7 +3139,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
                 
-                <SectionCard index={6} title="Slack Setup">
+                <SectionCard index={7} title="Slack Setup">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>Connect Slack in <strong>Settings → Integrations</strong></p>
                     <p>Then use these commands anywhere in Slack:</p>
