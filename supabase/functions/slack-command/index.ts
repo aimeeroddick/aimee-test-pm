@@ -35,11 +35,15 @@ function formatDateForDisplay(isoDate: string | null, dateFormat: string | null)
 }
 
 // Extract tasks using Claude AI
-async function extractTasksWithAI(text: string, projectNames: string[], anthropicKey: string, dateFormat: string | null) {
+async function extractTasksWithAI(
+  text: string, 
+  projectNames: string[], 
+  anthropicKey: string, 
+  dateFormat: string | null
+) {
   const today = new Date().toISOString().split('T')[0]
   const currentYear = new Date().getFullYear()
   
-  // Determine date format instruction based on user preference
   const isUSFormat = dateFormat === 'MM/DD/YYYY'
   const dateFormatInstruction = isUSFormat 
     ? 'When you encounter dates like "05/01" or "10/01/26", interpret them as MM/DD/YYYY (US format). So "05/01" means May 1st, "10/01/26" means October 1, 2026.'
@@ -105,14 +109,20 @@ If no tasks found, respond with: []`
 }
 
 // Format task list for Slack
-function formatTasksForSlack(tasks: any[], title: string, dateFormat: string | null): string {
+function formatTasksForSlack(
+  tasks: any[], 
+  title: string, 
+  dateFormat: string | null
+): string {
   if (tasks.length === 0) {
     return `*${title}*\n\nNo tasks found.`
   }
 
   let message = `*${title}*\n\n`
   tasks.forEach((task, i) => {
-    const dueStr = task.due_date ? ` (due ${formatDateForDisplay(task.due_date, dateFormat)})` : ''
+    const dueStr = task.due_date 
+      ? ` (due ${formatDateForDisplay(task.due_date, dateFormat)})` 
+      : ''
     const criticalStr = task.critical ? ' 🔴' : ''
     message += `${i + 1}. ${task.title}${dueStr}${criticalStr}\n`
   })
@@ -156,6 +166,8 @@ Deno.serve(async (req) => {
   const slackTeamId = params.get('team_id')
   const commandText = params.get('text')?.trim() || ''
 
+  console.log('Slack command:', { slackUserId, slackTeamId, commandText })
+
   if (!slackUserId || !slackTeamId) {
     return new Response(JSON.stringify({ 
       response_type: 'ephemeral',
@@ -167,14 +179,16 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // Find the Trackli user - date_format may not exist yet
   const { data: connection, error: connError } = await supabase
     .from('slack_connections')
-    .select('user_id, access_token, date_format')
+    .select('user_id, access_token')
     .eq('slack_user_id', slackUserId)
     .eq('slack_team_id', slackTeamId)
     .single()
 
   if (connError || !connection) {
+    console.error('No connection found:', connError)
     return new Response(JSON.stringify({
       response_type: 'ephemeral',
       text: '❌ Your Slack account is not connected to Trackli.\n\nGo to Trackli Settings → Integrations → Connect to Slack'
@@ -184,8 +198,11 @@ Deno.serve(async (req) => {
   }
 
   const userId = connection.user_id
-  const dateFormat = connection.date_format || null
+  // Default to UK format if column doesn't exist
+  const dateFormat = (connection as any).date_format || 'DD/MM/YYYY'
   const lowerText = commandText.toLowerCase()
+
+  console.log('User found:', userId, 'dateFormat:', dateFormat)
 
   // /trackli today
   if (lowerText === 'today' || lowerText === 'my day' || lowerText === 'myday') {
@@ -198,6 +215,15 @@ Deno.serve(async (req) => {
     
     const projectIds = projects?.map(p => p.id) || []
     
+    if (projectIds.length === 0) {
+      return new Response(JSON.stringify({
+        response_type: 'ephemeral',
+        text: `*☀️ My Day - ${formatDateForDisplay(today, dateFormat)}*\n\nNo projects found.`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    
     const { data: myDayTasks } = await supabase
       .from('tasks')
       .select('title, due_date, critical, status, project_id')
@@ -208,7 +234,11 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       response_type: 'ephemeral',
-      text: formatTasksForSlack(myDayTasks || [], `☀️ My Day - ${formatDateForDisplay(today, dateFormat)}`, dateFormat)
+      text: formatTasksForSlack(
+        myDayTasks || [], 
+        `☀️ My Day - ${formatDateForDisplay(today, dateFormat)}`, 
+        dateFormat
+      )
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -225,6 +255,15 @@ Deno.serve(async (req) => {
     
     const projectIds = projects?.map(p => p.id) || []
 
+    if (projectIds.length === 0) {
+      return new Response(JSON.stringify({
+        response_type: 'ephemeral',
+        text: '*📊 Trackli Summary*\n\nNo projects found.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { data: allTasks } = await supabase
       .from('tasks')
       .select('title, due_date, critical, status, my_day_date')
@@ -237,10 +276,10 @@ Deno.serve(async (req) => {
     const critical = allTasks?.filter(t => t.critical) || []
 
     let message = `*📊 Trackli Summary*\n\n`
-    message += `• *Overdue:* ${overdue.length} tasks\n`
-    message += `• *Due Today:* ${dueToday.length} tasks\n`
-    message += `• *My Day:* ${myDay.length} tasks\n`
-    message += `• *Critical:* ${critical.length} tasks\n`
+    message += `• *Overdue:* ${overdue.length} task${overdue.length !== 1 ? 's' : ''}\n`
+    message += `• *Due Today:* ${dueToday.length} task${dueToday.length !== 1 ? 's' : ''}\n`
+    message += `• *My Day:* ${myDay.length} task${myDay.length !== 1 ? 's' : ''}\n`
+    message += `• *Critical:* ${critical.length} task${critical.length !== 1 ? 's' : ''}\n`
     message += `\n_Open Trackli: https://gettrackli.com_`
 
     return new Response(JSON.stringify({
@@ -270,9 +309,18 @@ Deno.serve(async (req) => {
 
   const projectNames = projects?.map(p => p.name) || []
 
-  const extractedTasks = await extractTasksWithAI(commandText, projectNames, anthropicKey || '', dateFormat)
+  console.log('Extracting tasks with AI, dateFormat:', dateFormat)
 
-  if (extractedTasks.length === 0) {
+  const extractedTasks = await extractTasksWithAI(
+    commandText, 
+    projectNames, 
+    anthropicKey || '', 
+    dateFormat
+  )
+
+  console.log('Extracted tasks:', extractedTasks?.length || 0)
+
+  if (!extractedTasks || extractedTasks.length === 0) {
     extractedTasks.push({
       title: commandText.slice(0, 100),
       description: null,
@@ -321,6 +369,10 @@ Deno.serve(async (req) => {
       .select()
       .single()
 
+    if (insertError) {
+      console.error('Insert error:', insertError)
+    }
+
     if (!insertError && newTask) {
       pendingTasks.push(newTask)
     }
@@ -329,7 +381,9 @@ Deno.serve(async (req) => {
   if (pendingTasks.length > 0) {
     let responseText = `✅ Created ${pendingTasks.length} pending task${pendingTasks.length > 1 ? 's' : ''}:\n\n`
     pendingTasks.forEach((t) => {
-      const dueStr = t.due_date ? ` (due ${formatDateForDisplay(t.due_date, dateFormat)})` : ''
+      const dueStr = t.due_date 
+        ? ` (due ${formatDateForDisplay(t.due_date, dateFormat)})` 
+        : ''
       responseText += `• ${t.title}${dueStr}\n`
     })
     responseText += `\n_Review in Trackli to approve._`

@@ -5490,6 +5490,7 @@ export default function KanbanBoard({ demoMode = false }) {
           /due\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
           /due\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i,
           /(eod|end of day|eow|end of week|asap)/i,
+          /\s(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\s*$/i, // Date at end of string like "send notes 10/10"
         ]
         
         for (const datePattern of datePatterns) {
@@ -9693,16 +9694,40 @@ Or we can extract from:
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500 dark:text-gray-400 w-16 sm:w-auto">Due:</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                {task.dueDate ? formatDateForInput(task.dueDate) : 'No date'}
-                              </span>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                value={task.dueDate ? formatDateForInput(task.dueDate) : ''}
+                                onChange={(e) => {
+                                  const val = e.target.value
+                                  // Try to parse as date
+                                  const parsed = parseNaturalLanguageDate(val)
+                                  if (parsed.date) {
+                                    updateExtractedTask(task.id, 'dueDate', parsed.date)
+                                  } else {
+                                    // Store raw value temporarily
+                                    updateExtractedTask(task.id, 'dueDate', val)
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const val = e.target.value.trim()
+                                  if (!val) {
+                                    updateExtractedTask(task.id, 'dueDate', null)
+                                    return
+                                  }
+                                  const parsed = parseNaturalLanguageDate(val)
+                                  if (parsed.date) {
+                                    updateExtractedTask(task.id, 'dueDate', parsed.date)
+                                  }
+                                }}
+                                placeholder="DD/MM/YYYY"
+                                className="px-2 py-1 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs w-24 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              />
                               <input
                                 type="date"
                                 value={task.dueDate || ''}
                                 onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
-                                className="px-2 py-1 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs w-8 opacity-0 absolute cursor-pointer"
-                                style={{ width: '24px' }}
+                                className="w-6 h-6 opacity-0 absolute cursor-pointer"
                               />
                               <button
                                 type="button"

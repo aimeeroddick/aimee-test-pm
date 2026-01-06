@@ -10,7 +10,14 @@ const corsHeaders = {
 }
 
 // Extract tasks using Claude AI
-async function extractTasksWithAI(subject: string, bodyText: string, userNote: string, projectNames: string[], anthropicKey: string) {
+async function extractTasksWithAI(
+  subject: string, 
+  bodyText: string, 
+  userNote: string, 
+  projectNames: string[], 
+  anthropicKey: string,
+  dateFormat: string | null
+) {
   const projectList = projectNames.length > 0 
     ? `Available projects: ${projectNames.join(', ')}`
     : 'No projects available'
@@ -18,11 +25,17 @@ async function extractTasksWithAI(subject: string, bodyText: string, userNote: s
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
   const currentYear = new Date().getFullYear()
   
+  // Determine date format instruction based on user preference
+  const isUSFormat = dateFormat === 'MM/DD/YYYY'
+  const dateFormatInstruction = isUSFormat 
+    ? 'When you encounter dates like "05/01" or "10/01/26", interpret them as MM/DD/YYYY (US format). So "05/01" means May 1st, "10/01/26" means October 1, 2026.'
+    : 'When you encounter dates like "05/01" or "10/01/26", interpret them as DD/MM/YYYY (UK/European format). So "05/01" means January 5th, "10/01/26" means January 10, 2026.'
+  
   const prompt = `You are a task extraction assistant. Extract ONLY clear action items from this email.
 
 TODAY'S DATE: ${today} (Current year is ${currentYear})
 
-DATE FORMAT: When you encounter dates in DD/MM/YYYY or DD/MM/YY format (e.g., "10/01/26"), interpret them as day/month/year (UK/European format). So "10/01/26" means January 10, 2026, NOT October 1, 2026. Only use MM/DD/YYYY interpretation if the email explicitly indicates US format or the month name is written out.
+DATE FORMAT: ${dateFormatInstruction}
 
 USER'S NOTE (instructions from the person forwarding):
 ${userNote || '(No specific instructions)'}
@@ -347,7 +360,7 @@ serve(async (req) => {
     // Find user by token
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, date_format')
       .eq('inbound_email_token', token)
       .single()
     
@@ -485,10 +498,11 @@ serve(async (req) => {
     console.log('Parsed from user note:', { effortFromNote, customerFromNote, criticalFromNote })
     
     // Try AI extraction if API key is available
+    const dateFormat = (profile as any).date_format || null
     let extractedTasks = null
     if (anthropicKey) {
-      console.log('Attempting AI extraction...')
-      extractedTasks = await extractTasksWithAI(subject, text, userNote, projectNames, anthropicKey)
+      console.log('Attempting AI extraction with dateFormat:', dateFormat)
+      extractedTasks = await extractTasksWithAI(subject, text, userNote, projectNames, anthropicKey, dateFormat)
       console.log('AI extracted tasks:', extractedTasks?.length || 0)
     } else {
       console.log('No ANTHROPIC_API_KEY, skipping AI extraction')
