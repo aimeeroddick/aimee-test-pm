@@ -9952,11 +9952,15 @@ Or we can extract from:
                   )}
                   
                   <div>
-                    <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project</label>
+                    <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project <span className="text-red-500">*</span></label>
                     <select
                       value={quickAddProject}
                       onChange={(e) => setQuickAddProject(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className={`w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:border-transparent transition-all ${
+                        !quickAddProject 
+                          ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 focus:ring-red-500' 
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500'
+                      }`}
                     >
                       <option value="">Select project...</option>
                       {projects.filter(p => !p.archived).map(p => (
