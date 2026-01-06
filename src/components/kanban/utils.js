@@ -215,6 +215,32 @@ export const getDateLocale = () => {
   return undefined // auto-detect
 }
 
+// Format ISO date (YYYY-MM-DD) for display in user's preferred format
+export const formatDateForInput = (isoDate) => {
+  if (!isoDate) return ''
+  // If it doesn't look like ISO format, return as-is
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate
+  
+  const [year, month, day] = isoDate.split('-')
+  const locale = getDateLocale()
+  
+  if (locale === 'en-US') {
+    return `${month}/${day}/${year}`
+  } else if (locale === 'en-GB') {
+    return `${day}/${month}/${year}`
+  } else {
+    // Auto-detect from browser
+    const testDate = new Date(2000, 0, 15)
+    const formatted = testDate.toLocaleDateString()
+    const firstNum = parseInt(formatted.split(/[\/\-\.]/)[0])
+    if (firstNum === 1) {
+      return `${month}/${day}/${year}` // US format
+    } else {
+      return `${day}/${month}/${year}` // UK format
+    }
+  }
+}
+
 // Detect if user's locale uses MM/DD (US) or DD/MM
 export const isUSDateFormat = () => {
   const testDate = new Date(2000, 0, 15)

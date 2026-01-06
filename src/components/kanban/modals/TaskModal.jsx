@@ -7,7 +7,7 @@ import {
   DATE_SHORTCUTS, btn, COLUMN_COLORS, COLUMNS 
 } from '../constants'
 import { 
-  formatDate, parseNaturalLanguageDate, parseFlexibleTime, getDateLocale,
+  formatDate, parseNaturalLanguageDate, parseFlexibleTime, getDateLocale, formatDateForInput,
   getOccurrenceCount, getCustomerColor, isBlocked, getDueDateStatus, formatTimeEstimate
 } from '../utils'
 import { TaskCardIcons } from '../icons'
@@ -282,32 +282,6 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       return date.toLocaleDateString(getDateLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' })
     } catch {
       return dateStr
-    }
-  }
-  
-  // Format ISO date (YYYY-MM-DD) for input display in user's format
-  const formatDateForInput = (isoDate) => {
-    if (!isoDate) return ''
-    // If it doesn't look like ISO format, return as-is (user is typing)
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate
-    
-    const [year, month, day] = isoDate.split('-')
-    const locale = getDateLocale()
-    
-    if (locale === 'en-US') {
-      return `${month}/${day}/${year}`
-    } else if (locale === 'en-GB') {
-      return `${day}/${month}/${year}`
-    } else {
-      // Auto-detect
-      const testDate = new Date(2000, 0, 15)
-      const formatted = testDate.toLocaleDateString()
-      const firstNum = parseInt(formatted.split(/[\/\-\.]/)[0])
-      if (firstNum === 1) {
-        return `${month}/${day}/${year}` // US format
-      } else {
-        return `${day}/${month}/${year}` // UK format
-      }
     }
   }
   

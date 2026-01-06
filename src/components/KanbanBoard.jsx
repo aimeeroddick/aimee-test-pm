@@ -13,7 +13,7 @@ import {
 import {
   getCustomerColor, getDueDateStatus, isReadyToStart, isBlocked, isInMyDay,
   getNextRecurrenceDate, generateFutureOccurrences, getOccurrenceCount,
-  formatDate, isUSDateFormat, formatTimeEstimate, parseFlexibleTime, parseNaturalLanguageDate, getDateLocale
+  formatDate, isUSDateFormat, formatTimeEstimate, parseFlexibleTime, parseNaturalLanguageDate, getDateLocale, formatDateForInput
 } from './kanban/utils'
 import { ToastIcons, ColumnEmptyIcons, TaskCardIcons } from './kanban/icons'
 import { CalendarView, ProgressRing, CalendarSidebarTaskCard } from './kanban/views/CalendarView'
@@ -9680,12 +9680,30 @@ Or we can extract from:
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500 dark:text-gray-400 w-16 sm:w-auto">Due:</span>
-                            <input
-                              type="date"
-                              value={task.dueDate || ''}
-                              onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
-                              className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs flex-1 sm:w-auto focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                {task.dueDate ? formatDateForInput(task.dueDate) : 'No date'}
+                              </span>
+                              <input
+                                type="date"
+                                value={task.dueDate || ''}
+                                onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
+                                className="px-2 py-1 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs w-8 opacity-0 absolute cursor-pointer"
+                                style={{ width: '24px' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  const input = e.currentTarget.previousElementSibling
+                                  input?.showPicker?.()
+                                }}
+                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                              >
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                           <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto sm:ml-0">
                             <input
