@@ -93,15 +93,13 @@ function extractTitle(text: string, projectName: string | null): string {
   // Clean up whitespace
   result = result.replace(/\s+/g, ' ').trim()
   
-  // Remove project name if matched
+  // Remove project name AND adjacent "project" word only
   if (projectName) {
     const escapedName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(escapedName, 'gi')
-    result = result.replace(regex, '').replace(/\s+/g, ' ').trim()
+    // Remove "project <name>" or "<name> project" but not standalone "project" elsewhere
+    const regexWithProject = new RegExp('\\b(project\\s+)?' + escapedName + '(\\s+project)?\\b', 'gi')
+    result = result.replace(regexWithProject, '').replace(/\s+/g, ' ').trim()
   }
-  
-  // Remove standalone "project" word (common pattern: "demo project" where "demo" is the project name)
-  result = result.replace(/\bproject\b/gi, '').replace(/\s+/g, ' ').trim()
   
   return result
 }
