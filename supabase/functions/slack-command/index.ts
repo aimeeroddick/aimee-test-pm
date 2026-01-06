@@ -52,7 +52,8 @@ function parseSimpleDate(text: string, dateFormat: string): string | null {
     }
   }
   
-  const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/)
+  // Match dates with /, ., or - separators (e.g., 5/1, 5.1, 5-1)
+  const dateMatch = text.match(/(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?/)
   if (dateMatch) {
     const isUS = dateFormat === 'MM/DD/YYYY'
     const month = isUS ? parseInt(dateMatch[1]) : parseInt(dateMatch[2])
@@ -79,21 +80,28 @@ function findProjectMatch(text: string, projectNames: string[]): string | null {
 
 function extractTitle(text: string, projectName: string | null): string {
   let result = text
-    // Remove dates with preceding words (by/on/due/for Monday, tomorrow, 5/1, etc.)
-    .replace(/\b(by|on|due|for)\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/gi, '')
-    // Remove standalone dates (5/1, 12/25, etc.) 
-    .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g, '')
-    // Remove standalone day names
-    .replace(/\b(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim()
   
+  // Remove dates with preceding words (by/on/due/for Monday, tomorrow, 5/1, etc.)
+  result = result.replace(/\b(by|on|due|for)\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}[\/.\-]\d{1,2}(?:[\/.\-]\d{2,4})?)\b/gi, '')
+  
+  // Remove standalone dates (5/1, 12.25, 01-05, etc.) 
+  result = result.replace(/\b\d{1,2}[\/.\-]\d{1,2}(?:[\/.\-]\d{2,4})?\b/g, '')
+  
+  // Remove standalone day names
+  result = result.replace(/\b(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
+  
+  // Clean up whitespace
+  result = result.replace(/\s+/g, ' ').trim()
+  
+  // Remove project name if matched
   if (projectName) {
-    // Escape special regex characters in project name
     const escapedName = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const regex = new RegExp(escapedName, 'gi')
     result = result.replace(regex, '').replace(/\s+/g, ' ').trim()
   }
+  
+  // Remove standalone "project" word (common pattern: "demo project" where "demo" is the project name)
+  result = result.replace(/\bproject\b/gi, '').replace(/\s+/g, ' ').trim()
   
   return result
 }
@@ -158,9 +166,6 @@ Deno.serve(async (req) => {
       const isUSTimezone = usTimezones.includes(timezone) || timezone.startsWith('America/Indiana')
       dateFormat = isUSTimezone ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
     }
-    
-    // Debug: Log what we're using
-    console.log('Slack command:', { timezone, dateFormat, commandText })
     
     const today = getTodayInTimezone(timezone)
     const lowerText = commandText.toLowerCase()
@@ -229,8 +234,6 @@ Deno.serve(async (req) => {
     const matchedProjectName = findProjectMatch(commandText, projectNames)
     const matchedProject = matchedProjectName ? projects?.find(p => p.name.toLowerCase() === matchedProjectName.toLowerCase()) : null
     const title = extractTitle(commandText, matchedProjectName) || commandText.slice(0, 100)
-
-    console.log('Creating task:', { title, dueDate, matchedProjectName, dateFormat })
 
     // If project matched, create real task; otherwise create pending task
     if (matchedProject) {
