@@ -62,7 +62,10 @@ For each task, provide:
 - assignee_text: Person responsible if mentioned (or null)
 - project_name: Match to one of the available projects if mentioned in user note or email (exact match from list, or null)
 - critical: true ONLY if explicitly marked urgent/ASAP/critical
-- time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120, "30 mins" → 30). Use null if not mentioned.
+- time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120, "30 mins" → 30). If time range given, calculate from that. Use null if not mentioned.
+- start_date: YYYY-MM-DD format. If a specific time/time range is mentioned with a date, use that date. Otherwise null.
+- start_time: HH:MM format (24-hour). Extract from time ranges like "8:30-9:30am", "2pm-4pm", "at 3pm". For "8:30am" use "08:30". For "2pm" use "14:00". Use null if no time mentioned.
+- end_time: HH:MM format (24-hour). Extract end time from ranges. If only start time given (e.g., "at 3pm"), use null. Use null if no time range mentioned.
 - energy_level: If effort/complexity mentioned, use "low" (quick/easy/simple), "medium" (moderate), or "high" (complex/difficult/big). Use null if not mentioned.
 - customer: If a customer/client/company name is mentioned for the task, extract it. Use null if not mentioned.
 - confidence: Your confidence this is a real action item (0.7-1.0 for clear "[Name] to [action]" patterns, 0.5-0.7 for ambiguous items)
@@ -82,7 +85,7 @@ Rules:
 - Be conservative - when in doubt, don't extract
 
 Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "time_estimate": 30, "energy_level": "medium", "customer": "Acme Corp", "confidence": 0.9}]
+[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "start_date": "${currentYear}-01-15", "start_time": "09:00", "end_time": "10:00", "assignee_text": "Chris", "project_name": "Feedback", "critical": false, "time_estimate": 60, "energy_level": "medium", "customer": "Acme Corp", "confidence": 0.9}]
 
 If no tasks found, respond with: []`
 
@@ -568,6 +571,9 @@ serve(async (req) => {
         title: task.title?.substring(0, 200) || 'Untitled task',
         description: task.description?.substring(0, 1000) || null,
         due_date: task.due_date || null,
+        start_date: task.start_date || null,
+        start_time: task.start_time || null,
+        end_time: task.end_time || null,
         assignee_text: task.assignee_text || null,
         project_id: matchedProjectId,
         customer: finalCustomer,

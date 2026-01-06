@@ -53,14 +53,17 @@ Extract:
 - title: Clear, actionable task title (max 100 chars)
 - description: Additional context if any (max 200 chars, or null)
 - due_date: YYYY-MM-DD format. Convert relative dates: "tomorrow" = next day, "Wednesday" = next Wednesday, "next week" = 7 days, "Friday" = this Friday if today is before Friday else next Friday. Use null if no date mentioned.
+- start_date: YYYY-MM-DD format. If a specific time/time range is mentioned with a date, use that date. Otherwise null.
+- start_time: HH:MM format (24-hour). Extract from time ranges like "8:30-9:30am", "2pm-4pm", "at 3pm". For "8:30am" use "08:30". For "2pm" use "14:00". Use null if no time mentioned.
+- end_time: HH:MM format (24-hour). Extract end time from ranges. If only start time given (e.g., "at 3pm"), use null. Use null if no time range mentioned.
 - project_name: Match to available projects if mentioned (case-insensitive match, or null if not mentioned or no match)
 - critical: true ONLY if words like "urgent", "ASAP", "critical", "important" are used
-- time_estimate: Duration in MINUTES if mentioned (e.g., "quick" = 15, "30 mins" = 30, "2 hours" = 120). Use null if not mentioned.
+- time_estimate: Duration in MINUTES if mentioned (e.g., "quick" = 15, "30 mins" = 30, "2 hours" = 120). If time range given, calculate from that. Use null if not mentioned.
 - energy_level: "low" for quick/easy tasks, "medium" for moderate tasks, "high" for complex/difficult. Infer from task complexity, or null.
 - customer: Customer/client name if mentioned, or null.
 
 Respond ONLY with a JSON object (no markdown, no explanation):
-{"title": "...", "description": null, "due_date": "2026-01-10", "project_name": null, "critical": false, "time_estimate": 30, "energy_level": "medium", "customer": null}`
+{"title": "...", "description": null, "due_date": "2026-01-10", "start_date": "2026-01-10", "start_time": "08:30", "end_time": "09:30", "project_name": null, "critical": false, "time_estimate": 60, "energy_level": "medium", "customer": null}`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -342,6 +345,9 @@ Deno.serve(async (req) => {
       title: commandText.slice(0, 100),
       description: null as string | null,
       due_date: null as string | null,
+      start_date: null as string | null,
+      start_time: null as string | null,
+      end_time: null as string | null,
       project_id: null as string | null,
       critical: false,
       time_estimate: null as number | null,
@@ -356,6 +362,9 @@ Deno.serve(async (req) => {
         taskData.title = aiResult.title || commandText.slice(0, 100)
         taskData.description = aiResult.description || null
         taskData.due_date = aiResult.due_date || null
+        taskData.start_date = aiResult.start_date || null
+        taskData.start_time = aiResult.start_time || null
+        taskData.end_time = aiResult.end_time || null
         taskData.critical = aiResult.critical || false
         taskData.time_estimate = aiResult.time_estimate || null
         taskData.energy_level = aiResult.energy_level || null
@@ -387,6 +396,9 @@ Deno.serve(async (req) => {
           title: taskData.title,
           description: taskData.description,
           due_date: taskData.due_date,
+          start_date: taskData.start_date,
+          start_time: taskData.start_time,
+          end_time: taskData.end_time,
           project_id: null,
           critical: taskData.critical,
           time_estimate: taskData.time_estimate,
@@ -406,6 +418,12 @@ Deno.serve(async (req) => {
       let responseText = `📋 *Task added to Pending*\n\n`
       responseText += `• *Title:* ${pendingTask.title}\n`
       if (pendingTask.due_date) responseText += `• *Due:* ${pendingTask.due_date}\n`
+      if (pendingTask.start_time) {
+        const timeStr = pendingTask.end_time 
+          ? `${pendingTask.start_time} - ${pendingTask.end_time}`
+          : `${pendingTask.start_time}`
+        responseText += `• *Time:* ${timeStr}\n`
+      }
       if (pendingTask.time_estimate) responseText += `• *Estimate:* ${pendingTask.time_estimate} mins\n`
       if (pendingTask.critical) responseText += `• *Priority:* 🔴 Critical\n`
       responseText += `\n_No project matched. Review in Trackli to assign a project and approve._`
@@ -442,6 +460,9 @@ Deno.serve(async (req) => {
         title: taskData.title,
         description: taskData.description,
         due_date: taskData.due_date,
+        start_date: taskData.start_date,
+        start_time: taskData.start_time,
+        end_time: taskData.end_time,
         critical: taskData.critical,
         time_estimate: taskData.time_estimate,
         energy_level: taskData.energy_level,
@@ -465,6 +486,12 @@ Deno.serve(async (req) => {
     responseText += `• *Title:* ${newTask.title}\n`
     responseText += `• *Project:* ${projectName}${statusText}\n`
     if (newTask.due_date) responseText += `• *Due:* ${newTask.due_date}\n`
+    if (newTask.start_time) {
+      const timeStr = newTask.end_time 
+        ? `${newTask.start_time} - ${newTask.end_time}`
+        : `${newTask.start_time}`
+      responseText += `• *Time:* ${timeStr}\n`
+    }
     if (newTask.time_estimate) responseText += `• *Estimate:* ${newTask.time_estimate} mins\n`
     if (newTask.critical) responseText += `• *Priority:* 🔴 Critical\n`
     responseText += `\n<https://gettrackli.com?task=${newTask.id}|View task in Trackli>`
