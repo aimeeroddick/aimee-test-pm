@@ -5303,8 +5303,9 @@ export default function KanbanBoard({ demoMode = false }) {
     const cleaned = dateStr.trim().toLowerCase()
     const today = new Date()
     
-    // Detect if user's locale uses MM/DD (US) or DD/MM (most other countries)
-    const isUSLocale = isUSDateFormat()
+    // Check user's explicit preference first, then fall back to browser detection
+    const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
+    const isUSLocale = dateFormatPref === 'MM/DD/YYYY' || (dateFormatPref === 'auto' && isUSDateFormat())
     
     if (cleaned === 'today' || cleaned === 'eod') {
       return today.toISOString().split('T')[0]
@@ -5442,14 +5443,22 @@ export default function KanbanBoard({ demoMode = false }) {
         taskTitle = taskTitle
           .replace(/^[-*•]\s*\[?\s*\]?\s*/, '')
           .replace(/^\d+[.)]\s*/, '')
-          .replace(/^(?:action|todo|task|ai|action item|follow[ -]?up)[:\s]*/i, '')
+          .replace(/^(?:action|todo|task|action item|follow[ -]?up)[:\s]*/i, '')
+          .replace(/^ai[:\s]+/i, '') // Separate AI prefix - must have colon or space after
           .trim()
         
         let dueDate = meetingNotesData.date
+        
+        // Check user's date format preference
+        const dateFormatPref = typeof localStorage !== 'undefined' ? localStorage.getItem('trackli-date-format') : 'auto'
+        const isUSLocale = dateFormatPref === 'MM/DD/YYYY' || (dateFormatPref === 'auto' && isUSDateFormat())
+        
         const datePatterns = [
           /by\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
-          /by\s+(\d{1,2}\/\d{1,2})/i,
+          /by\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i,
+          /on\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i,
           /due\s+(today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+          /due\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i,
           /(eod|end of day|eow|end of week|asap)/i,
         ]
         
@@ -5476,6 +5485,24 @@ export default function KanbanBoard({ demoMode = false }) {
               if (daysUntil === 0) daysUntil = 7
               today.setDate(today.getDate() + daysUntil)
               dueDate = today.toISOString().split('T')[0]
+            } else if (/\d{1,2}\/\d{1,2}/.test(hint)) {
+              // Numeric date like 10/01 or 10/01/2026
+              const parts = hint.split('/')
+              let day, month, year = today.getFullYear()
+              if (isUSLocale) {
+                month = parseInt(parts[0]) - 1
+                day = parseInt(parts[1])
+              } else {
+                day = parseInt(parts[0])
+                month = parseInt(parts[1]) - 1
+              }
+              if (parts[2]) {
+                year = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2])
+              }
+              const parsedDate = new Date(year, month, day)
+              if (!isNaN(parsedDate.getTime())) {
+                dueDate = parsedDate.toISOString().split('T')[0]
+              }
             }
             taskTitle = taskTitle.replace(datePattern, '').trim()
           }

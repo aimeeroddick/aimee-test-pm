@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ENERGY_LEVELS } from '../constants'
-import { getDueDateStatus, isBlocked, formatDate } from '../utils'
+import { getDueDateStatus, isBlocked, formatDate, getDateLocale } from '../utils'
 import { TaskCardIcons, MenuIcons } from '../icons'
 import { GreetingIcon, EmptyState } from '../ui/EmptyState'
 
@@ -900,7 +900,7 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
             <GreetingIcon hour={hour} /> {greetingWithName}
           </h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 mt-0.5 sm:mt-1">
-            {dayNames[today.getDay()]}, {monthNames[today.getMonth()]} {today.getDate()}
+            {today.toLocaleDateString(getDateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
         
