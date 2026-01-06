@@ -2412,6 +2412,15 @@ const HelpTabIcons = {
       <line x1="5" y1="16" x2="19" y2="16" stroke="white" strokeWidth="1.5" opacity="0.4" />
     </svg>
   ),
+  pending: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="#F59E0B" />
+      <path d="M8 9 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8 13 L14 13" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      <circle cx="6" cy="9" r="1.5" fill="white" />
+      <circle cx="6" cy="13" r="1.5" fill="white" opacity="0.7" />
+    </svg>
+  ),
   shortcuts: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5">
       <rect x="2" y="6" width="20" height="12" rx="2" fill="#6B7280" />
@@ -2609,6 +2618,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
     { id: 'myday', label: 'My Day', icon: () => HelpTabIcons.myday(), color: 'from-yellow-500 to-orange-500' },
     { id: 'calendar', label: 'Calendar', icon: () => HelpTabIcons.calendar(), color: 'from-green-500 to-emerald-500' },
     { id: 'alltasks', label: 'All Tasks', icon: () => HelpTabIcons.alltasks(), color: 'from-blue-500 to-cyan-500' },
+    { id: 'pending', label: 'Pending', icon: () => HelpTabIcons.pending(), color: 'from-amber-500 to-yellow-500' },
     { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-purple-500 to-indigo-500' },
   ]
   
@@ -3031,6 +3041,100 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 <SectionCard index={4} title="Import from CSV" icon="📥">
                   <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
                     <p className="text-gray-700 dark:text-gray-300">Click <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">Import CSV</span> to bulk create tasks.</p>
+                  </div>
+                </SectionCard>
+              </>
+            )}
+            
+            {/* Pending Tab */}
+            {activeTab === 'pending' && (
+              <>
+                <SectionCard index={0} title="What is Pending?">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>Pending is your inbox for tasks from external sources. Tasks arrive here from:</p>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">📧 Email</p>
+                        <p className="text-sm">Forward emails to your Trackli address</p>
+                      </div>
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">💬 Slack</p>
+                        <p className="text-sm">Use /trackli commands</p>
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={1} title="Reviewing Tasks">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>• <strong>Checkbox</strong> — Select tasks you want to keep</p>
+                    <p>• <strong>Expand arrow</strong> — Show more fields (effort, time, customer)</p>
+                    <p>• <strong>Project dropdown</strong> — Assign to a project (required to approve)</p>
+                    <p>• <strong>X button</strong> — Remove unwanted tasks</p>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={2} title="AI Extraction">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>The AI automatically extracts task details from your messages:</p>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {[
+                        { field: 'Title', example: 'Clear task name' },
+                        { field: 'Due Date', example: '"by Friday", "tomorrow"' },
+                        { field: 'Time', example: '"9:30-10:30am"' },
+                        { field: 'Estimate', example: '"30 mins", "2 hours"' },
+                        { field: 'Priority', example: '"urgent", "ASAP"' },
+                        { field: 'Customer', example: 'Client names' },
+                      ].map((item, i) => (
+                        <div key={i} className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">{item.field}</span>
+                          <span className="text-sm text-gray-500 ml-2">{item.example}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={3} title="Task Routing">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                      <p className="font-semibold text-green-700 dark:text-green-300">✓ Project Matched</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Task goes directly to your board</p>
+                    </div>
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                      <p className="font-semibold text-amber-700 dark:text-amber-300">? No Project Match</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Task arrives in Pending for you to assign</p>
+                    </div>
+                    <p className="text-sm text-gray-500">Tip: Mention your project name in Slack commands to route tasks directly!</p>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={4} title="Approving Tasks">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>1. <strong>Select</strong> the tasks you want (checkbox)</p>
+                    <p>2. <strong>Assign</strong> a project to each task</p>
+                    <p>3. Click <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">Create Tasks</span></p>
+                    <p className="text-sm text-gray-500 mt-2">Tasks due {'>'} 7 days out go to Backlog, others go to To Do.</p>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={5} title="Email Setup">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>Find your unique email address in <strong>Settings → Integrations</strong></p>
+                    <p>Forward any email to create tasks from action items.</p>
+                    <p className="text-sm">Tip: Add a note at the top like "Add to Demo project, urgent" to help the AI categorise tasks.</p>
+                  </div>
+                </SectionCard>
+                
+                <SectionCard index={6} title="Slack Setup">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>Connect Slack in <strong>Settings → Integrations</strong></p>
+                    <p>Then use these commands anywhere in Slack:</p>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli Buy milk tomorrow</div>
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli today</div>
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli summary</div>
+                    </div>
                   </div>
                 </SectionCard>
               </>
