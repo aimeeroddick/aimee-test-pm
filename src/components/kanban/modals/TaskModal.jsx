@@ -18,6 +18,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   const dueDateRef = useRef(null)
   
   const [formReady, setFormReady] = useState(true)
+  const [showProjectError, setShowProjectError] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [editingStartDate, setEditingStartDate] = useState(false)
   const [editingDueDate, setEditingDueDate] = useState(false)
@@ -118,6 +119,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     const taskKey = task?.id ? `edit-${task.id}` : (isOpen ? `new-${task?.title || ''}-${task?.project_id || ''}` : null)
     if (!isOpen || initializedRef.current === taskKey) return
     initializedRef.current = taskKey
+    
+    // Reset error state on open
+    setShowProjectError(false)
     
     if (task?.id) {
       const project = projects.find((p) => p.id === task.project_id)
@@ -299,6 +303,13 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Require project for new tasks
+    if (!formData.project_id) {
+      setShowProjectError(true)
+      return
+    }
+    
     const finalAssignee = useCustomAssignee ? customAssignee : formData.assignee
     const finalCustomer = useCustomCustomer ? customCustomer : formData.customer
     
@@ -373,23 +384,31 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
             })}
           </div>
           {/* Project - clean chip */}
-          <div className="flex items-center">
-            <select
-              required
-              value={formData.project_id}
-              onChange={(e) => setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })}
-              className={`text-xs font-medium pl-2.5 pr-6 py-1.5 rounded-md border cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_4px] ${
-                formData.project_id 
-                  ? 'bg-indigo-500 text-white border-indigo-500 dark:bg-indigo-600 dark:border-indigo-600' 
-                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-              }`}
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${formData.project_id ? 'white' : '%236B7280'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
-            >
-              <option value="">Project...</option>
+          <div className="flex items-center gap-2">
+          <select
+          required
+          value={formData.project_id}
+          onChange={(e) => {
+            setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })
+          if (e.target.value) setShowProjectError(false)
+          }}
+          className={`text-xs font-medium pl-2.5 pr-6 py-1.5 rounded-md border cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_4px] ${
+            showProjectError && !formData.project_id
+              ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-500 ring-2 ring-red-500/30'
+                : formData.project_id 
+                ? 'bg-indigo-500 text-white border-indigo-500 dark:bg-indigo-600 dark:border-indigo-600'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+          }`}
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${showProjectError && !formData.project_id ? '%23EF4444' : formData.project_id ? 'white' : '%236B7280'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
+          >
+              <option value="">{showProjectError ? 'Select project *' : 'Project...'}</option>
               {projects.filter(p => !p.archived).map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            {showProjectError && !formData.project_id && (
+              <span className="text-xs text-red-500 font-medium">Required</span>
+            )}
           </div>
         </div>
         
@@ -1535,7 +1554,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           </button>
           <button
             type="submit"
-            disabled={loading || !formData.project_id}
+            disabled={loading}
             className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all font-medium shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             {loading ? 'Saving...' : task?.id ? 'Save' : 'Create'}
