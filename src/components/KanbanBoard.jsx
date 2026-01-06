@@ -5333,16 +5333,20 @@ export default function KanbanBoard({ demoMode = false }) {
       let day, month
       if (isUSLocale) {
         // US: MM/DD/YYYY
-        month = parseInt(match[1]) - 1
+        month = parseInt(match[1])
         day = parseInt(match[2])
       } else {
         // UK/EU: DD/MM/YYYY
         day = parseInt(match[1])
-        month = parseInt(match[2]) - 1
+        month = parseInt(match[2])
       }
       const year = match[3].length === 2 ? 2000 + parseInt(match[3]) : parseInt(match[3])
-      const date = new Date(year, month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+      // Validate date
+      const date = new Date(year, month - 1, day)
+      if (!isNaN(date.getTime()) && date.getDate() === day) {
+        // Format directly to avoid timezone issues
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
     }
     
     // Short date without year
@@ -5350,14 +5354,19 @@ export default function KanbanBoard({ demoMode = false }) {
     if (match) {
       let day, month
       if (isUSLocale) {
-        month = parseInt(match[1]) - 1
+        month = parseInt(match[1])
         day = parseInt(match[2])
       } else {
         day = parseInt(match[1])
-        month = parseInt(match[2]) - 1
+        month = parseInt(match[2])
       }
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+      const year = today.getFullYear()
+      // Validate date
+      const date = new Date(year, month - 1, day)
+      if (!isNaN(date.getTime()) && date.getDate() === day) {
+        // Format directly to avoid timezone issues
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
     }
     
     const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
@@ -5365,15 +5374,21 @@ export default function KanbanBoard({ demoMode = false }) {
     if (match) {
       const day = parseInt(match[1])
       const month = months.indexOf(match[2].toLowerCase())
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+      const year = today.getFullYear()
+      const date = new Date(year, month, day)
+      if (!isNaN(date.getTime()) && date.getDate() === day) {
+        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
     }
     match = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
     if (match) {
       const day = parseInt(match[2])
       const month = months.indexOf(match[1].toLowerCase())
-      const date = new Date(today.getFullYear(), month, day)
-      if (!isNaN(date.getTime())) return date.toISOString().split('T')[0]
+      const year = today.getFullYear()
+      const date = new Date(year, month, day)
+      if (!isNaN(date.getTime()) && date.getDate() === day) {
+        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
     }
     
     return null

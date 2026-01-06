@@ -376,17 +376,20 @@ export const parseNaturalLanguageDate = (text) => {
   if (numericMatch) {
     let day, month
     if (isUSLocale) {
-      month = parseInt(numericMatch[1]) - 1
+      month = parseInt(numericMatch[1])
       day = parseInt(numericMatch[2])
     } else {
       day = parseInt(numericMatch[1])
-      month = parseInt(numericMatch[2]) - 1
+      month = parseInt(numericMatch[2])
     }
     const year = numericMatch[3].length === 2 ? 2000 + parseInt(numericMatch[3]) : parseInt(numericMatch[3])
-    const d = new Date(year, month, day)
-    if (!isNaN(d.getTime())) {
+    // Validate the date
+    const d = new Date(year, month - 1, day)
+    if (!isNaN(d.getTime()) && d.getDate() === day) {
+      // Format directly to avoid timezone issues with toISOString()
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       return {
-        date: d.toISOString().split('T')[0],
+        date: dateStr,
         cleanedText: '',
         matched: text.trim()
       }
@@ -398,19 +401,23 @@ export const parseNaturalLanguageDate = (text) => {
   if (numericMatch) {
     let day, month
     if (isUSLocale) {
-      month = parseInt(numericMatch[1]) - 1
+      month = parseInt(numericMatch[1])
       day = parseInt(numericMatch[2])
     } else {
       day = parseInt(numericMatch[1])
-      month = parseInt(numericMatch[2]) - 1
+      month = parseInt(numericMatch[2])
     }
-    const d = new Date(today.getFullYear(), month, day)
+    let year = today.getFullYear()
+    // Validate and check if date is in past
+    const d = new Date(year, month - 1, day)
     if (d < today) {
-      d.setFullYear(d.getFullYear() + 1)
+      year = year + 1
     }
-    if (!isNaN(d.getTime())) {
+    if (!isNaN(d.getTime()) && d.getDate() === day) {
+      // Format directly to avoid timezone issues
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       return {
-        date: d.toISOString().split('T')[0],
+        date: dateStr,
         cleanedText: '',
         matched: text.trim()
       }
