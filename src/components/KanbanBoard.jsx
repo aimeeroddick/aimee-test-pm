@@ -10204,7 +10204,7 @@ Or we can extract from:
       <button
         onClick={() => {
           if (projects.length > 0) {
-            setQuickAddProject(projects[0]?.id || '')
+            setQuickAddProject('')
             setQuickAddOpen(true)
           }
         }}
