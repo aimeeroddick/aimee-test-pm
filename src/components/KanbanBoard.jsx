@@ -4129,6 +4129,7 @@ export default function KanbanBoard({ demoMode = false }) {
     localStorage.setItem(key, value)
     if (key === 'trackli-default-view') setDefaultView(value)
     if (key === 'trackli-week-start') setWeekStartsOn(value)
+    if (key === 'trackli-date-format') setDateFormat(value)
     if (key === 'trackli-show-confetti') setShowConfetti(value === 'true')
   }
   
@@ -4217,6 +4218,7 @@ export default function KanbanBoard({ demoMode = false }) {
   // Settings - Preferences
   const [defaultView, setDefaultView] = useState(() => localStorage.getItem('trackli-default-view') || 'board')
   const [weekStartsOn, setWeekStartsOn] = useState(() => localStorage.getItem('trackli-week-start') || '0')
+  const [dateFormat, setDateFormat] = useState(() => localStorage.getItem('trackli-date-format') || 'auto')
   const [showConfetti, setShowConfetti] = useState(() => localStorage.getItem('trackli-show-confetti') !== 'false')
   // Settings - Data
   const [clearingTasks, setClearingTasks] = useState(false)
@@ -10397,6 +10399,39 @@ Or we can extract from:
                       Email address not yet generated. Contact support.
                     </div>
                   )}
+                </div>
+              </div>
+              
+              {/* Region & Language Section */}
+              <div>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Region & Language
+                </h3>
+                <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  {/* Date Format */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Date format</span>
+                    <select
+                      value={dateFormat}
+                      onChange={(e) => handlePreferenceChange('trackli-date-format', e.target.value)}
+                      className={`w-36 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="auto">Auto-detect</option>
+                      <option value="DD/MM/YYYY">15/01 (DD/MM)</option>
+                      <option value="MM/DD/YYYY">01/15 (MM/DD)</option>
+                    </select>
+                  </div>
+                  
+                  {/* Timezone info */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Timezone</span>
+                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    </span>
+                  </div>
                 </div>
               </div>
               
