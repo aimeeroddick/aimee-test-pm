@@ -7079,9 +7079,9 @@ export default function KanbanBoard({ demoMode = false }) {
       )}
 
       {/* Header */}
-      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
+      <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] overflow-visible ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
-        <div className="max-w-full mx-auto pl-3 pr-4 sm:px-6 py-2 sm:py-3 relative overflow-visible">
+        <div className="max-w-full mx-auto pl-3 pr-4 sm:px-6 pt-3 pb-2 sm:py-3 relative overflow-visible">
           <div className="grid grid-cols-2 items-center overflow-visible">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
@@ -7347,7 +7347,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
                       {pendingEmailCount > 9 ? '9+' : pendingEmailCount}
                     </span>
                   </button>
