@@ -360,7 +360,7 @@ serve(async (req) => {
     // Find user by token
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, date_format')
+      .select('id, date_format, timezone')
       .eq('inbound_email_token', token)
       .single()
     
@@ -497,8 +497,20 @@ serve(async (req) => {
     const criticalFromNote = parseHighPriorityFromNote(userNote)
     console.log('Parsed from user note:', { effortFromNote, customerFromNote, criticalFromNote })
     
+    // Determine date format - same logic as Slack
+    let dateFormat = profile.date_format
+    const timezone = profile.timezone || 'America/New_York'
+    if (!dateFormat || dateFormat === 'auto') {
+      // US timezones use MM/DD/YYYY, everyone else uses DD/MM/YYYY
+      const usTimezones = [
+        'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+        'America/Phoenix', 'America/Anchorage', 'America/Detroit', 'Pacific/Honolulu'
+      ]
+      const isUSTimezone = usTimezones.includes(timezone) || timezone.startsWith('America/Indiana')
+      dateFormat = isUSTimezone ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
+    }
+    
     // Try AI extraction if API key is available
-    const dateFormat = (profile as any).date_format || null
     let extractedTasks = null
     if (anthropicKey) {
       console.log('Attempting AI extraction with dateFormat:', dateFormat)
