@@ -191,9 +191,16 @@ export const getOccurrenceCount = (recurrenceType) => {
 }
 
 // Format date for display
-export const formatDate = (dateString) => {
+export const formatDate = (dateString, format = 'auto') => {
   if (!dateString) return ''
   const date = new Date(dateString)
+  
+  if (format === 'DD/MM/YYYY') {
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  } else if (format === 'MM/DD/YYYY') {
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+  }
+  // Auto: use browser locale
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
