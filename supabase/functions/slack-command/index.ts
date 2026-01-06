@@ -140,12 +140,20 @@ Deno.serve(async (req) => {
     
     const timezone = profile?.timezone || 'America/New_York'
     
-    // Determine date format - if 'auto' or not set, infer from timezone
+    // Determine date format
     let dateFormat = profile?.date_format
     if (!dateFormat || dateFormat === 'auto') {
-      // US timezones use MM/DD/YYYY, others use DD/MM/YYYY
-      const usTimezones = ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix', 'America/Anchorage', 'Pacific/Honolulu']
-      dateFormat = usTimezones.some(tz => timezone.startsWith('America/') || timezone.startsWith('Pacific/')) ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
+      // US timezones that use MM/DD/YYYY
+      const usTimezones = [
+        'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+        'America/Phoenix', 'America/Anchorage', 'America/Detroit', 'Pacific/Honolulu'
+      ]
+      // Only use US format if user explicitly set a US timezone
+      // (not if it's just the default)
+      const userSetTimezone = profile?.timezone && profile.timezone !== 'auto'
+      const isUSTimezone = usTimezones.includes(timezone) || timezone.startsWith('America/Indiana')
+      
+      dateFormat = (userSetTimezone && isUSTimezone) ? 'MM/DD/YYYY' : 'DD/MM/YYYY'
     }
     const today = getTodayInTimezone(timezone)
     const lowerText = commandText.toLowerCase()
