@@ -1,61 +1,66 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Verify Slack request signature
-function verifySlackSignature(
+// Verify Slack request signature using Web Crypto API
+async function verifySlackSignature(
   signingSecret: string,
   signature: string,
   timestamp: string,
   body: string
-): boolean {
-  const baseString = `v0:${timestamp}:${body}`
-  const hmac = createHmac('sha256', signingSecret)
-  hmac.update(baseString)
-  const mySignature = `v0=${hmac.digest('hex')}`
-  return mySignature === signature
+): Promise<boolean> {
+  try {
+    const baseString = `v0:${timestamp}:${body}`
+    const encoder = new TextEncoder()
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(signingSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(baseString))
+    const hashArray = Array.from(new Uint8Array(sig))
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    const mySignature = `v0=${hashHex}`
+    return mySignature === signature
+  } catch (e) {
+    console.error('Signature verification error:', e)
+    return false
+  }
 }
 
-// Extract tasks using Claude AI (same as email)
-async function extractTasksWithAI(text: string, projectNames: string[], anthropicKey: string) {
+// Extract task details using Claude AI
+async function extractTaskWithAI(text: string, projectNames: string[], anthropicKey: string) {
   const today = new Date().toISOString().split('T')[0]
   const currentYear = new Date().getFullYear()
 
-  const prompt = `You are a task extraction assistant. Extract action items from this Slack message.
+  const prompt = `You are a task extraction assistant. Parse this task request.
 
 TODAY'S DATE: ${today} (Current year is ${currentYear})
 
 DATE FORMAT: When you encounter dates in DD/MM/YYYY or DD/MM/YY format (e.g., "10/01/26"), interpret them as day/month/year (UK/European format). So "10/01/26" means January 10, 2026, NOT October 1, 2026.
 
-SLACK MESSAGE:
+TASK REQUEST:
 ${text}
 
 Available projects: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'}
 
-For each task found, provide:
+Extract:
 - title: Clear, actionable task title (max 100 chars)
-- description: Brief context if needed (max 200 chars, or null)
-- due_date: YYYY-MM-DD format if mentioned (e.g., "tomorrow" → calculate, "Friday" → next Friday). Use null if no date.
-- project_name: Match to available projects if mentioned (exact match, or null)
-- critical: true ONLY if explicitly marked urgent/ASAP/critical
-- time_estimate: Duration in MINUTES if mentioned (e.g., "10 minutes" → 10, "2 hours" → 120). Use null if not mentioned.
-- energy_level: "low" (quick/easy), "medium" (moderate), or "high" (complex/difficult). Use null if not mentioned.
-- customer: Customer/client name if mentioned. Use null if not mentioned.
-- confidence: 0.7-1.0 for clear tasks, 0.5-0.7 for ambiguous
+- description: Additional context if any (max 200 chars, or null)
+- due_date: YYYY-MM-DD format. Convert relative dates: "tomorrow" = next day, "Wednesday" = next Wednesday, "next week" = 7 days, "Friday" = this Friday if today is before Friday else next Friday. Use null if no date mentioned.
+- project_name: Match to available projects if mentioned (case-insensitive match, or null if not mentioned or no match)
+- critical: true ONLY if words like "urgent", "ASAP", "critical", "important" are used
+- time_estimate: Duration in MINUTES if mentioned (e.g., "quick" = 15, "30 mins" = 30, "2 hours" = 120). Use null if not mentioned.
+- energy_level: "low" for quick/easy tasks, "medium" for moderate tasks, "high" for complex/difficult. Infer from task complexity, or null.
+- customer: Customer/client name if mentioned, or null.
 
-Rules:
-- Even short messages like "Buy milk" should be extracted as a task
-- Convert relative dates (tomorrow, next week, Friday) to absolute dates
-- If the message is clearly NOT a task (like "hello" or "thanks"), return empty array
-
-Respond ONLY with a JSON array:
-[{"title": "...", "description": null, "due_date": "${currentYear}-01-15", "project_name": null, "critical": false, "time_estimate": 30, "energy_level": "medium", "customer": null, "confidence": 0.9}]
-
-If no tasks found, respond with: []`
+Respond ONLY with a JSON object (no markdown, no explanation):
+{"title": "...", "description": null, "due_date": "2026-01-10", "project_name": null, "critical": false, "time_estimate": 30, "energy_level": "medium", "customer": null}`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -67,7 +72,7 @@ If no tasks found, respond with: []`
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 500,
         messages: [{
           role: 'user',
           content: prompt
@@ -76,17 +81,17 @@ If no tasks found, respond with: []`
     })
 
     const data = await response.json()
-    const content = data.content?.[0]?.text || '[]'
+    const content = data.content?.[0]?.text || '{}'
     
     // Extract JSON from response
-    const jsonMatch = content.match(/\[[\s\S]*\]/)
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0])
     }
-    return []
+    return null
   } catch (error) {
     console.error('AI extraction error:', error)
-    return []
+    return null
   }
 }
 
@@ -105,6 +110,23 @@ function formatTasksForSlack(tasks: any[], title: string): string {
   return message
 }
 
+// Send async response to Slack
+async function sendSlackResponse(responseUrl: string, message: string) {
+  try {
+    await fetch(responseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        response_type: 'ephemeral',
+        text: message,
+        replace_original: true
+      })
+    })
+  } catch (e) {
+    console.error('Error sending Slack response:', e)
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -118,8 +140,10 @@ Deno.serve(async (req) => {
 
   if (!signingSecret || !supabaseUrl || !supabaseServiceKey) {
     console.error('Missing environment variables')
-    return new Response(JSON.stringify({ error: 'Configuration error' }), {
-      status: 500,
+    return new Response(JSON.stringify({ 
+      response_type: 'ephemeral',
+      text: '❌ Configuration error. Please contact support.' 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
@@ -128,22 +152,31 @@ Deno.serve(async (req) => {
   const body = await req.text()
   const params = new URLSearchParams(body)
   
-  // Verify Slack signature
+  // Verify Slack signature (skip if missing - for testing)
   const timestamp = req.headers.get('x-slack-request-timestamp') || ''
   const signature = req.headers.get('x-slack-signature') || ''
   
-  // Skip verification in development or if headers missing
   if (signature && timestamp) {
-    // Check timestamp is within 5 minutes
     const now = Math.floor(Date.now() / 1000)
     if (Math.abs(now - parseInt(timestamp)) > 300) {
       console.error('Request timestamp too old')
-      return new Response('Invalid request', { status: 401 })
+      return new Response(JSON.stringify({ 
+        response_type: 'ephemeral',
+        text: '❌ Request expired. Please try again.' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    if (!verifySlackSignature(signingSecret, signature, timestamp, body)) {
+    const isValid = await verifySlackSignature(signingSecret, signature, timestamp, body)
+    if (!isValid) {
       console.error('Invalid Slack signature')
-      return new Response('Invalid signature', { status: 401 })
+      return new Response(JSON.stringify({ 
+        response_type: 'ephemeral',
+        text: '❌ Invalid request signature.' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
   }
 
@@ -151,7 +184,7 @@ Deno.serve(async (req) => {
   const slackUserId = params.get('user_id')
   const slackTeamId = params.get('team_id')
   const commandText = params.get('text')?.trim() || ''
-  const responseUrl = params.get('response_url')
+  const responseUrl = params.get('response_url') || ''
 
   console.log('Slack command received:', { slackUserId, slackTeamId, commandText })
 
@@ -185,21 +218,42 @@ Deno.serve(async (req) => {
   }
 
   const userId = connection.user_id
-
-  // Handle different commands
   const lowerText = commandText.toLowerCase()
+
+  // Command: /trackli help (or empty)
+  if (lowerText === 'help' || lowerText === '') {
+    return new Response(JSON.stringify({
+      response_type: 'ephemeral',
+      text: `*🚀 Trackli Slash Commands*\n\n` +
+        `• \`/trackli Buy milk by Friday\` - Create a new task\n` +
+        `• \`/trackli today\` - See your My Day tasks\n` +
+        `• \`/trackli summary\` - Get an overview of your tasks\n` +
+        `• \`/trackli help\` - Show this help message\n\n` +
+        `_Mention a project name to add directly, otherwise goes to Pending._`
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
 
   // Command: /trackli today - Show My Day tasks
   if (lowerText === 'today' || lowerText === 'my day' || lowerText === 'myday') {
     const today = new Date().toISOString().split('T')[0]
     
-    // Get user's projects
     const { data: projects } = await supabase
       .from('projects')
       .select('id')
       .eq('user_id', userId)
     
     const projectIds = projects?.map(p => p.id) || []
+    
+    if (projectIds.length === 0) {
+      return new Response(JSON.stringify({
+        response_type: 'ephemeral',
+        text: `*☀️ My Day - ${today}*\n\nNo projects found. Create a project in Trackli first!`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
     
     const { data: myDayTasks } = await supabase
       .from('tasks')
@@ -221,7 +275,6 @@ Deno.serve(async (req) => {
   if (lowerText === 'summary' || lowerText === 'overview') {
     const today = new Date().toISOString().split('T')[0]
     
-    // Get user's projects
     const { data: projects } = await supabase
       .from('projects')
       .select('id')
@@ -229,7 +282,15 @@ Deno.serve(async (req) => {
     
     const projectIds = projects?.map(p => p.id) || []
 
-    // Get various task counts
+    if (projectIds.length === 0) {
+      return new Response(JSON.stringify({
+        response_type: 'ephemeral',
+        text: `*📊 Trackli Summary*\n\nNo projects found. Create a project in Trackli first!`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { data: allTasks } = await supabase
       .from('tasks')
       .select('title, due_date, critical, status, my_day_date')
@@ -256,111 +317,149 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Command: /trackli help
-  if (lowerText === 'help' || lowerText === '') {
-    return new Response(JSON.stringify({
-      response_type: 'ephemeral',
-      text: `*🚀 Trackli Slash Commands*\n\n` +
-        `• \`/trackli Buy milk by Friday\` - Create a new task\n` +
-        `• \`/trackli today\` - See your My Day tasks\n` +
-        `• \`/trackli summary\` - Get an overview of your tasks\n` +
-        `• \`/trackli help\` - Show this help message\n\n` +
-        `_Tasks created via Slack go to your Pending Tasks for review._`
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
   // Default: Create a task from the text
   // Get user's projects for AI matching
   const { data: projects } = await supabase
     .from('projects')
-    .select('name')
+    .select('id, name')
     .eq('user_id', userId)
     .eq('archived', false)
 
   const projectNames = projects?.map(p => p.name) || []
 
-  // Extract tasks using AI
-  const extractedTasks = await extractTasksWithAI(commandText, projectNames, anthropicKey || '')
-
-  if (extractedTasks.length === 0) {
-    // If AI didn't find tasks, create one from the raw text
-    extractedTasks.push({
-      title: commandText.slice(0, 100),
-      description: null,
-      due_date: null,
-      project_name: null,
-      critical: false,
-      time_estimate: null,
-      energy_level: null,
-      customer: null,
-      confidence: 0.8
-    })
-  }
-
-  // Create pending tasks
-  const pendingTasks = []
-  for (const task of extractedTasks) {
-    // Match project name to ID
-    let projectId = null
-    if (task.project_name) {
-      const { data: matchedProject } = await supabase
-        .from('projects')
-        .select('id')
-        .eq('user_id', userId)
-        .ilike('name', task.project_name)
-        .single()
-      
-      if (matchedProject) {
-        projectId = matchedProject.id
-      }
-    }
-
-    const { data: newTask, error: insertError } = await supabase
-      .from('pending_tasks')
-      .insert({
-        user_id: userId,
-        title: task.title,
-        description: task.description,
-        due_date: task.due_date,
-        project_id: projectId,
-        critical: task.critical || false,
-        time_estimate: task.time_estimate,
-        energy_level: task.energy_level,
-        customer: task.customer,
-        confidence: task.confidence || 0.8,
-        source: 'slack',
-        status: 'pending'
-      })
-      .select()
-      .single()
-
-    if (!insertError && newTask) {
-      pendingTasks.push(newTask)
-    }
-  }
-
-  if (pendingTasks.length > 0) {
-    const taskWord = pendingTasks.length === 1 ? 'task' : 'tasks'
-    let responseText = `✅ Created ${pendingTasks.length} pending ${taskWord}:\n\n`
-    pendingTasks.forEach((t, i) => {
-      const dueStr = t.due_date ? ` (due ${t.due_date})` : ''
-      responseText += `• ${t.title}${dueStr}\n`
-    })
-    responseText += `\n_Review in Trackli to approve or edit._`
-
+  if (!projects || projects.length === 0) {
     return new Response(JSON.stringify({
       response_type: 'ephemeral',
-      text: responseText
+      text: '❌ No projects found. Create a project in Trackli first!'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
 
+  // Process async with AI
+  const processTask = async () => {
+    let taskData = {
+      title: commandText.slice(0, 100),
+      description: null as string | null,
+      due_date: null as string | null,
+      project_id: null as string | null,
+      critical: false,
+      time_estimate: null as number | null,
+      energy_level: null as string | null,
+      customer: null as string | null
+    }
+
+    // Try AI extraction if we have the key
+    if (anthropicKey) {
+      const aiResult = await extractTaskWithAI(commandText, projectNames, anthropicKey)
+      if (aiResult) {
+        taskData.title = aiResult.title || commandText.slice(0, 100)
+        taskData.description = aiResult.description || null
+        taskData.due_date = aiResult.due_date || null
+        taskData.critical = aiResult.critical || false
+        taskData.time_estimate = aiResult.time_estimate || null
+        taskData.energy_level = aiResult.energy_level || null
+        taskData.customer = aiResult.customer || null
+
+        // Match project name to ID
+        if (aiResult.project_name) {
+          const matchedProject = projects?.find(
+            p => p.name.toLowerCase() === aiResult.project_name.toLowerCase()
+          )
+          if (matchedProject) {
+            taskData.project_id = matchedProject.id
+          }
+        }
+      }
+    }
+
+    // If only one project, always use it
+    if (!taskData.project_id && projects && projects.length === 1) {
+      taskData.project_id = projects[0].id
+    }
+
+    // If no project matched and multiple projects exist, send to pending
+    if (!taskData.project_id) {
+      const { data: pendingTask, error: pendingError } = await supabase
+        .from('pending_tasks')
+        .insert({
+          user_id: userId,
+          title: taskData.title,
+          description: taskData.description,
+          due_date: taskData.due_date,
+          project_id: null,
+          critical: taskData.critical,
+          time_estimate: taskData.time_estimate,
+          energy_level: taskData.energy_level,
+          customer: taskData.customer,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (pendingError) {
+        console.error('Pending insert error:', pendingError)
+        await sendSlackResponse(responseUrl, '❌ Could not create task. Please try again.')
+        return
+      }
+
+      let responseText = `📋 *Task added to Pending*\n\n`
+      responseText += `• *Title:* ${pendingTask.title}\n`
+      if (pendingTask.due_date) responseText += `• *Due:* ${pendingTask.due_date}\n`
+      if (pendingTask.time_estimate) responseText += `• *Estimate:* ${pendingTask.time_estimate} mins\n`
+      if (pendingTask.critical) responseText += `• *Priority:* 🔴 Critical\n`
+      responseText += `\n_No project matched. Review in Trackli to assign a project and approve._`
+
+      await sendSlackResponse(responseUrl, responseText)
+      return
+    }
+
+    // Project matched - create task directly on board
+    const { data: newTask, error: insertError } = await supabase
+      .from('tasks')
+      .insert({
+        project_id: taskData.project_id,
+        title: taskData.title,
+        description: taskData.description,
+        due_date: taskData.due_date,
+        critical: taskData.critical,
+        time_estimate: taskData.time_estimate,
+        energy_level: taskData.energy_level,
+        customer: taskData.customer,
+        status: 'todo'
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Insert error:', insertError)
+      await sendSlackResponse(responseUrl, '❌ Could not create task. Please try again.')
+      return
+    }
+
+    // Build response message
+    const projectName = projects?.find(p => p.id === taskData.project_id)?.name || 'Unknown'
+    let responseText = `✅ *Task created!*\n\n`
+    responseText += `• *Title:* ${newTask.title}\n`
+    responseText += `• *Project:* ${projectName}\n`
+    if (newTask.due_date) responseText += `• *Due:* ${newTask.due_date}\n`
+    if (newTask.time_estimate) responseText += `• *Estimate:* ${newTask.time_estimate} mins\n`
+    if (newTask.critical) responseText += `• *Priority:* 🔴 Critical\n`
+    responseText += `\n_View in Trackli: https://gettrackli.com_`
+
+    await sendSlackResponse(responseUrl, responseText)
+  }
+
+  // Start async processing
+  processTask().catch(e => {
+    console.error('Task processing error:', e)
+    sendSlackResponse(responseUrl, '❌ Error processing task. Please try again.')
+  })
+
+  // Respond immediately to Slack
   return new Response(JSON.stringify({
     response_type: 'ephemeral',
-    text: '❌ Could not create task. Please try again.'
+    text: '⏳ Creating task...'
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
