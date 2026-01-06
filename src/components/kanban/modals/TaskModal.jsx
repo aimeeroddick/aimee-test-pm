@@ -397,11 +397,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-500 ring-2 ring-red-500/30'
               : formData.project_id 
                 ? 'bg-indigo-500 text-white border-indigo-500 dark:bg-indigo-600 dark:border-indigo-600'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-300 dark:border-l-amber-500'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-500'
           }`}
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${showProjectError && !formData.project_id ? '%23EF4444' : formData.project_id ? 'white' : '%236B7280'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
           >
-              <option value="">{showProjectError ? 'Select project *' : 'Project...'}</option>
+              <option value="">Project *</option>
               {projects.filter(p => !p.archived).map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
