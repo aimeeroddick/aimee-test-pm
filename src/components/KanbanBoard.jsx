@@ -4481,7 +4481,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (e.key === 'q' || (modifier && e.key === 'q')) {
         e.preventDefault()
         if (projects.length > 0) {
-          setQuickAddProject(projects[0]?.id || '')
+          setQuickAddProject('')
           setQuickAddOpen(true)
         }
         return
@@ -6324,9 +6324,9 @@ export default function KanbanBoard({ demoMode = false }) {
 
   // Quick Add - create task with just title and optional due date
   const handleQuickAdd = async (title, projectId, dueDate = null) => {
-    if (!title.trim()) return
+    if (!title.trim() || !projectId) return
     
-    const targetProject = projectId || projects[0]?.id
+    const targetProject = projectId
     if (!targetProject) return
     
     // Determine status and start_date based on due date
@@ -7321,7 +7321,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <button
                 onClick={() => {
                   if (projects.length > 0) {
-                    setQuickAddProject(projects[0]?.id || '')
+                    setQuickAddProject('')
                     setQuickAddOpen(true)
                   }
                 }}
@@ -9952,12 +9952,17 @@ Or we can extract from:
                   )}
                   
                   <div>
-                    <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project</label>
+                    <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project <span className="text-red-500">*</span></label>
                     <select
                       value={quickAddProject}
                       onChange={(e) => setQuickAddProject(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className={`w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:border-transparent transition-all ${
+                        !quickAddProject 
+                          ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 focus:ring-red-500' 
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500'
+                      }`}
                     >
+                      <option value="">Select project...</option>
                       {projects.filter(p => !p.archived).map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
@@ -9985,7 +9990,7 @@ Or we can extract from:
                     </button>
                     <button
                       type="submit"
-                      disabled={!quickAddTitle.trim() || saving}
+                      disabled={!quickAddTitle.trim() || !quickAddProject || saving}
                       className="flex-1 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {saving ? 'Adding...' : 'Add Task'}
@@ -10204,7 +10209,7 @@ Or we can extract from:
       <button
         onClick={() => {
           if (projects.length > 0) {
-            setQuickAddProject(projects[0]?.id || '')
+            setQuickAddProject('')
             setQuickAddOpen(true)
           }
         }}
