@@ -4200,6 +4200,7 @@ export default function KanbanBoard({ demoMode = false }) {
   })
   const [mobileColumnIndex, setMobileColumnIndex] = useState(1) // Default to To Do column
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [mobilePendingSheetOpen, setMobilePendingSheetOpen] = useState(false)
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [helpModalOpen, setHelpModalOpen] = useState(false)
   const [pendingEmailTasks, setPendingEmailTasks] = useState([])
@@ -7341,14 +7342,9 @@ export default function KanbanBoard({ demoMode = false }) {
                   <button
                     type="button"
                     onClick={() => {
-                      // On mobile, navigate to board view with pending section expanded
+                      // On mobile, open bottom sheet
                       if (window.innerWidth < 640) {
-                        setCurrentView('board')
-                        setPendingReviewExpanded(true)
-                        // Scroll to pending section after a brief delay
-                        setTimeout(() => {
-                          document.querySelector('[data-pending-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }, 100)
+                        setMobilePendingSheetOpen(true)
                       } else {
                         setPendingDropdownOpen(!pendingDropdownOpen)
                       }
@@ -7357,11 +7353,7 @@ export default function KanbanBoard({ demoMode = false }) {
                       // Handle touch on mobile
                       if (window.innerWidth < 640) {
                         e.preventDefault()
-                        setCurrentView('board')
-                        setPendingReviewExpanded(true)
-                        setTimeout(() => {
-                          document.querySelector('[data-pending-section]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }, 100)
+                        setMobilePendingSheetOpen(true)
                       }
                     }}
                     className="relative overflow-visible p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-colors text-amber-600 dark:text-amber-400 cursor-pointer"
@@ -10745,7 +10737,123 @@ Or we can extract from:
             </div>
           </div>
         </div>
-      )}
+            )}
+      
+      {/* Mobile Pending Tasks Sheet - renders on all views */}
+      {mobilePendingSheetOpen && createPortal(
+        <div className="sm:hidden fixed inset-0 z-[9999]">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setMobilePendingSheetOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-b border-amber-200/50 dark:border-amber-800/50">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="text-lg font-semibold">{pendingEmailTasks.length} Pending Tasks</span>
+              </div>
+              <button 
+                onClick={() => setMobilePendingSheetOpen(false)}
+                onTouchEnd={(e) => { e.preventDefault(); setMobilePendingSheetOpen(false); }}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Selection bar */}
+            <div className="flex items-center justify-between px-4 py-2 bg-amber-50/50 dark:bg-amber-900/20 border-b border-amber-200/30 dark:border-amber-800/30">
+              <span className="text-sm text-amber-600 dark:text-amber-400">
+                {pendingEmailTasks.filter(t => selectedPendingIds.has(t.id)).length} selected
+              </span>
+              <button
+                onClick={async () => {
+                  await handleBulkApprovePendingTasks()
+                  if (pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length > 0) {
+                    setMobilePendingSheetOpen(false)
+                  }
+                }}
+                disabled={approvingTaskId === 'bulk' || pendingEmailTasks.filter(t => selectedPendingIds.has(t.id) && t.project_id).length === 0}
+                className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                {approvingTaskId === 'bulk' ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                )}
+                Create Tasks
+              </button>
+            </div>
+            
+            {/* Task List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+              {pendingEmailTasks.map(task => {
+                const isSelected = selectedPendingIds.has(task.id)
+                return (
+                  <div key={task.id} className={`p-4 ${isSelected ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50 opacity-70'}`}>
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePendingTaskSelection(task.id)}
+                        className="mt-1 w-5 h-5 rounded border-amber-400 dark:border-amber-600 text-amber-500 focus:ring-amber-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <input
+                          type="text"
+                          value={task.title}
+                          onChange={(e) => handleUpdatePendingTask(task.id, 'title', e.target.value)}
+                          className="w-full text-base font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0"
+                        />
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <div className="relative">
+                            <input
+                              type="date"
+                              value={task.due_date || ''}
+                              onChange={(e) => handleUpdatePendingTask(task.id, 'due_date', e.target.value || null)}
+                              className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            />
+                          </div>
+                          <select
+                            value={task.project_id || ''}
+                            onChange={(e) => handleUpdatePendingTask(task.id, 'project_id', e.target.value || null)}
+                            className="text-sm px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          >
+                            <option value="">Select project...</option>
+                            {projects.filter(p => !p.archived).map(p => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePendingTask(task.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            {/* Footer */}
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => { setCurrentView('board'); setPendingReviewExpanded(true); setMobilePendingSheetOpen(false); }}
+                className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+              >
+                View on Board →
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
       
       {/* Footer */}
       <footer className="mt-auto py-4 px-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
