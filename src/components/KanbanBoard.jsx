@@ -7081,7 +7081,7 @@ export default function KanbanBoard({ demoMode = false }) {
       {/* Header */}
       <header className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 pt-[env(safe-area-inset-top)] ${isElectron && isMac ? 'pl-16' : ''} ${demoMode ? 'mt-10 sm:mt-11' : ''}`}>
         {/* Main Header Row */}
-        <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3">
+        <div className="max-w-full mx-auto px-3 sm:px-6 py-2 sm:py-3 relative">
           <div className="grid grid-cols-2 items-center">
             {/* Left: Menu Button */}
             <div className="flex items-center gap-3">
@@ -7236,8 +7236,8 @@ export default function KanbanBoard({ demoMode = false }) {
                 {currentView === 'projects' && <>{MenuIcons.projects()} Projects</>}
               </span>
               
-              {/* Logo - always in left section */}
-              <div className="flex items-center gap-2">
+              {/* Logo - shows in left section on smaller screens */}
+              <div className="flex xl:hidden items-center gap-2">
                 <div className="w-8 h-8">
                   <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
                     <defs>
@@ -7579,6 +7579,31 @@ export default function KanbanBoard({ demoMode = false }) {
               
               
             </div>
+          </div>
+          
+          {/* Centered Logo - only visible on wide screens (xl+), absolutely positioned */}
+          <div className="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 pointer-events-none">
+            <div className="w-10 h-10">
+              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="center-logo-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4F46E5"/>
+                    <stop offset="100%" stopColor="#7C3AED"/>
+                  </linearGradient>
+                  <linearGradient id="center-logo-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9333EA"/>
+                    <stop offset="100%" stopColor="#EC4899"/>
+                  </linearGradient>
+                </defs>
+                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#center-logo-left)"/>
+                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#center-logo-right)"/>
+                <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
+                <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Trackli
+            </h1>
           </div>
         </div>
         
