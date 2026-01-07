@@ -830,7 +830,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
 }
 
 // Admin Feedback Panel Component
-const ADMIN_EMAIL = 'roddickaimee@gmail.com'
+const ADMIN_EMAILS = ['roddickaimee@gmail.com', 'aimee.roddick@spicymango.co.uk']
 
 const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated, projects = [] }) => {
   const [feedback, setFeedback] = useState([])
@@ -841,7 +841,7 @@ const AdminFeedbackPanel = ({ isOpen, onClose, userEmail, userId, onTaskCreated,
   // Hardcoded project for feedback tasks
   const FEEDBACK_PROJECT_NAME = 'Feedback'
   
-  const isAdmin = userEmail === ADMIN_EMAIL
+  const isAdmin = ADMIN_EMAILS.includes(userEmail)
   
   useEffect(() => {
     if (isOpen && isAdmin) {
@@ -7681,7 +7681,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </button>
               
               {/* Admin Feedback Button - only visible to admin */}
-              {user?.email === ADMIN_EMAIL && (
+              {ADMIN_EMAILS.includes(user?.email) && (
                 <button
                   onClick={() => setAdminPanelOpen(true)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
