@@ -5665,12 +5665,36 @@ export default function KanbanBoard({ demoMode = false }) {
         setExtractedTasks(extracted)
         setShowExtractedTasks(true)
       } else {
-        // Use local text extraction
-        setTimeout(() => {
-          const extracted = extractActionItems(meetingNotesData.notes)
-          setExtractedTasks(extracted)
+        // Use AI-powered extraction via Edge Function
+        const selectedProject = projects.find(p => p.id === meetingNotesData.projectId)
+        const projectMembers = selectedProject?.members || []
+        
+        const response = await fetch('https://quzfljuvpvevvvdnsktd.supabase.co/functions/v1/extract-tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notes: meetingNotesData.notes,
+            title: meetingNotesData.title,
+            date: meetingNotesData.date,
+            members: projectMembers,
+          }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to extract tasks')
+        }
+        
+        const data = await response.json()
+        
+        if (data.tasks && data.tasks.length > 0) {
+          setExtractedTasks(data.tasks)
           setShowExtractedTasks(true)
-        }, 300)
+        } else {
+          // No tasks found
+          setExtractedTasks([])
+          setShowExtractedTasks(true)
+        }
       }
     } catch (error) {
       console.error('Extraction error:', error)
@@ -9831,20 +9855,13 @@ Or we can extract from:
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500 dark:text-gray-400 w-16 sm:w-auto">Due:</span>
-                            <div className="flex items-center gap-1">
+                            <div className="relative flex items-center">
                               <input
                                 type="text"
                                 value={task.dueDate ? formatDateForInput(task.dueDate) : ''}
                                 onChange={(e) => {
-                                  const val = e.target.value
-                                  // Try to parse as date
-                                  const parsed = parseNaturalLanguageDate(val)
-                                  if (parsed.date) {
-                                    updateExtractedTask(task.id, 'dueDate', parsed.date)
-                                  } else {
-                                    // Store raw value temporarily
-                                    updateExtractedTask(task.id, 'dueDate', val)
-                                  }
+                                  // Just store the raw value while typing - don't parse yet
+                                  updateExtractedTask(task.id, 'dueDate', e.target.value)
                                 }}
                                 onBlur={(e) => {
                                   const val = e.target.value.trim()
@@ -9852,32 +9869,26 @@ Or we can extract from:
                                     updateExtractedTask(task.id, 'dueDate', null)
                                     return
                                   }
+                                  // Only parse on blur
                                   const parsed = parseNaturalLanguageDate(val)
                                   if (parsed.date) {
                                     updateExtractedTask(task.id, 'dueDate', parsed.date)
                                   }
                                 }}
                                 placeholder="DD/MM/YYYY"
-                                className="px-2 py-1 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-xs w-24 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="px-2 py-1 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-l-lg text-xs w-24 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                               />
-                              <input
-                                type="date"
-                                value={task.dueDate || ''}
-                                onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
-                                className="w-6 h-6 opacity-0 absolute cursor-pointer"
-                              />
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  const input = e.currentTarget.previousElementSibling
-                                  input?.showPicker?.()
-                                }}
-                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                              >
+                              <div className="relative flex items-center justify-center px-2 border border-l-0 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-r-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <input
+                                  type="date"
+                                  value={task.dueDate || ''}
+                                  onChange={(e) => updateExtractedTask(task.id, 'dueDate', e.target.value)}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                              </button>
+                              </div>
                             </div>
                           </div>
                           <label className="flex items-center gap-1.5 text-xs cursor-pointer ml-auto sm:ml-0">
