@@ -5665,12 +5665,36 @@ export default function KanbanBoard({ demoMode = false }) {
         setExtractedTasks(extracted)
         setShowExtractedTasks(true)
       } else {
-        // Use local text extraction
-        setTimeout(() => {
-          const extracted = extractActionItems(meetingNotesData.notes)
-          setExtractedTasks(extracted)
+        // Use AI-powered extraction via Edge Function
+        const selectedProject = projects.find(p => p.id === meetingNotesData.projectId)
+        const projectMembers = selectedProject?.members || []
+        
+        const response = await fetch('https://quzfljuvpvevvvdnsktd.supabase.co/functions/v1/extract-tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notes: meetingNotesData.notes,
+            title: meetingNotesData.title,
+            date: meetingNotesData.date,
+            members: projectMembers,
+          }),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to extract tasks')
+        }
+        
+        const data = await response.json()
+        
+        if (data.tasks && data.tasks.length > 0) {
+          setExtractedTasks(data.tasks)
           setShowExtractedTasks(true)
-        }, 300)
+        } else {
+          // No tasks found
+          setExtractedTasks([])
+          setShowExtractedTasks(true)
+        }
       }
     } catch (error) {
       console.error('Extraction error:', error)
