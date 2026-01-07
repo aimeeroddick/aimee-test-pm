@@ -306,8 +306,21 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     const finalAssignee = useCustomAssignee ? customAssignee : formData.assignee
     const finalCustomer = useCustomCustomer ? customCustomer : formData.customer
     
+    // For new tasks: auto-set to 'todo' if due within 2 days, otherwise 'backlog'
+    let finalStatus = formData.status
+    if (!task?.id && formData.due_date) {
+      const dueDate = new Date(formData.due_date + 'T23:59:59')
+      const today = new Date()
+      const twoDaysFromNow = new Date(today)
+      twoDaysFromNow.setDate(today.getDate() + 2)
+      if (dueDate <= twoDaysFromNow && formData.status === 'backlog') {
+        finalStatus = 'todo'
+      }
+    }
+    
     await onSave({
       ...formData,
+      status: finalStatus,
       assignee: finalAssignee,
       customer: finalCustomer,
       time_estimate: formData.time_estimate ? parseInt(formData.time_estimate) : null,

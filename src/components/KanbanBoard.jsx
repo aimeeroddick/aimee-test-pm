@@ -4299,8 +4299,9 @@ export default function KanbanBoard({ demoMode = false }) {
     title: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
-    projectId: '',
+    projectId: '', // Empty by default - user must select
   })
+  const [showMeetingNotesProjectError, setShowMeetingNotesProjectError] = useState(false)
   const [extractedTasks, setExtractedTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [showExtractedTasks, setShowExtractedTasks] = useState(false)
@@ -4509,9 +4510,10 @@ export default function KanbanBoard({ demoMode = false }) {
       if (modifier && e.key === 'n') {
         e.preventDefault()
         if (projects.length > 0) {
-          setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+          setMeetingNotesData({ ...meetingNotesData, projectId: '' }) // Don't auto-select
           setExtractedTasks([])
           setShowExtractedTasks(false)
+          setShowMeetingNotesProjectError(false)
           setVoiceTranscript('')
           setMeetingNotesModalOpen(true)
         }
@@ -4522,9 +4524,10 @@ export default function KanbanBoard({ demoMode = false }) {
       if (modifier && e.key === 'v') {
         e.preventDefault()
         if (projects.length > 0) {
-          setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '', notes: '' })
+          setMeetingNotesData({ ...meetingNotesData, projectId: '', notes: '' }) // Don't auto-select
           setExtractedTasks([])
           setShowExtractedTasks(false)
+          setShowMeetingNotesProjectError(false)
           setVoiceTranscript(' ')  // Set to trigger voice mode
           setMeetingNotesModalOpen(true)
         }
@@ -5384,25 +5387,42 @@ export default function KanbanBoard({ demoMode = false }) {
       }
     }
     
-    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    match = dateStr.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
+    // Month name mappings (both short and full)
+    const monthsShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    const monthsFull = ['january','february','march','april','may','june','july','august','september','october','november','december']
+    
+    // Helper to get month index from name (short or full)
+    const getMonthIndex = (monthStr) => {
+      const lower = monthStr.toLowerCase()
+      let idx = monthsShort.indexOf(lower.substring(0, 3))
+      if (idx === -1) idx = monthsFull.indexOf(lower)
+      return idx
+    }
+    
+    // Match "7 January" or "7 Jan" (day first)
+    match = dateStr.match(/(\d{1,2})\s*(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
     if (match) {
       const day = parseInt(match[1])
-      const month = months.indexOf(match[2].toLowerCase())
-      const year = today.getFullYear()
-      const date = new Date(year, month, day)
-      if (!isNaN(date.getTime()) && date.getDate() === day) {
-        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const month = getMonthIndex(match[2])
+      if (month !== -1) {
+        const year = today.getFullYear()
+        const date = new Date(year, month, day)
+        if (!isNaN(date.getTime()) && date.getDate() === day) {
+          return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        }
       }
     }
-    match = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
+    // Match "January 7" or "Jan 7" (month first)
+    match = dateStr.match(/(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
     if (match) {
       const day = parseInt(match[2])
-      const month = months.indexOf(match[1].toLowerCase())
-      const year = today.getFullYear()
-      const date = new Date(year, month, day)
-      if (!isNaN(date.getTime()) && date.getDate() === day) {
-        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const month = getMonthIndex(match[1])
+      if (month !== -1) {
+        const year = today.getFullYear()
+        const date = new Date(year, month, day)
+        if (!isNaN(date.getTime()) && date.getDate() === day) {
+          return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        }
       }
     }
     
@@ -5445,6 +5465,13 @@ export default function KanbanBoard({ demoMode = false }) {
           }
           else {
             taskTitle = match[1]?.trim() || ''
+            // After matching bullet/numbered list, check for "Name to verb" pattern within
+            const nameToPattern = /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+to\s+(.+)/i
+            const nameToMatch = taskTitle.match(nameToPattern)
+            if (nameToMatch) {
+              assignee = nameToMatch[1].trim()
+              // Keep the full task title including assignee name for context
+            }
           }
           matched = true
           break
@@ -5492,6 +5519,11 @@ export default function KanbanBoard({ demoMode = false }) {
           /due\s+(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/i,
           /(eod|end of day|eow|end of week|asap)/i,
           /\s(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\s*$/i, // Date at end of string like "send notes 10/10"
+          /by\s+((?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*\d{1,2})\b/i, // "by January 9"
+          /by\s+(\d{1,2}\s*(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))\b/i, // "by 9 January"
+          /[\u2013\u2014-]\s*(\d{1,2}\s*(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))\s*$/i, // "- 7 January" at end
+          /\s((?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*\d{1,2})\s*$/i, // "January 8" at end
+          /\s(\d{1,2}\s*(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))\s*$/i, // "7 January" at end
         ]
         
         for (const datePattern of datePatterns) {
@@ -5537,6 +5569,38 @@ export default function KanbanBoard({ demoMode = false }) {
                 // Format directly to avoid timezone issues
                 dueDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
               }
+            } else if (/\d{1,2}\s*(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(hint)) {
+              // Month name date like "7 January" or "7 Jan" (day first)
+              const monthsShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+              const monthMatch = hint.match(/(\d{1,2})\s*(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)
+              if (monthMatch) {
+                const day = parseInt(monthMatch[1])
+                const monthStr = monthMatch[2].toLowerCase()
+                const month = monthsShort.indexOf(monthStr.substring(0, 3))
+                if (month !== -1) {
+                  const year = today.getFullYear()
+                  const parsedDate = new Date(year, month, day)
+                  if (!isNaN(parsedDate.getTime()) && parsedDate.getDate() === day) {
+                    dueDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                  }
+                }
+              }
+            } else if (/(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*\d{1,2}/i.test(hint)) {
+              // Month name date like "January 9" or "Jan 9" (month first)
+              const monthsShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+              const monthMatch = hint.match(/(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s*(\d{1,2})/i)
+              if (monthMatch) {
+                const monthStr = monthMatch[1].toLowerCase()
+                const day = parseInt(monthMatch[2])
+                const month = monthsShort.indexOf(monthStr.substring(0, 3))
+                if (month !== -1) {
+                  const year = today.getFullYear()
+                  const parsedDate = new Date(year, month, day)
+                  if (!isNaN(parsedDate.getTime()) && parsedDate.getDate() === day) {
+                    dueDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                  }
+                }
+              }
             }
             taskTitle = taskTitle.replace(datePattern, '').trim()
           }
@@ -5560,6 +5624,13 @@ export default function KanbanBoard({ demoMode = false }) {
   
   const handleExtractTasks = async () => {
     if (!meetingNotesData.notes.trim() && !uploadedImage) return
+    
+    // Validate project selection
+    if (!meetingNotesData.projectId) {
+      setShowMeetingNotesProjectError(true)
+      return
+    }
+    setShowMeetingNotesProjectError(false)
     
     setIsExtracting(true)
     
@@ -5692,11 +5763,23 @@ export default function KanbanBoard({ demoMode = false }) {
           )
         }
         
+        // Determine status: to-do if due within 2 days, otherwise backlog
+        let status = 'backlog'
+        if (task.dueDate) {
+          const dueDate = new Date(task.dueDate + 'T23:59:59')
+          const today = new Date()
+          const twoDaysFromNow = new Date(today)
+          twoDaysFromNow.setDate(today.getDate() + 2)
+          if (dueDate <= twoDaysFromNow) {
+            status = 'todo'
+          }
+        }
+        
         const taskData = {
           title: task.title,
           description: meetingNotesData.title ? `From meeting: ${meetingNotesData.title}` : '',
           project_id: projectId,
-          status: 'todo',
+          status: status,
           critical: task.critical,
           start_date: null,
           due_date: task.dueDate || null,
@@ -7200,9 +7283,10 @@ export default function KanbanBoard({ demoMode = false }) {
                         </button>
                         <button
                           onClick={() => {
-                            setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+                            setMeetingNotesData({ ...meetingNotesData, projectId: '' }) // Don't auto-select
                             setExtractedTasks([])
                             setShowExtractedTasks(false)
+                            setShowMeetingNotesProjectError(false)
                             setMeetingNotesModalOpen(true)
                             setNavMenuOpen(false)
                           }}
@@ -7339,9 +7423,10 @@ export default function KanbanBoard({ demoMode = false }) {
               
               <button
                 onClick={() => {
-                  setMeetingNotesData({ ...meetingNotesData, projectId: projects[0]?.id || '' })
+                  setMeetingNotesData({ ...meetingNotesData, projectId: '' }) // Don't auto-select
                   setExtractedTasks([])
                   setShowExtractedTasks(false)
+                  setShowMeetingNotesProjectError(false)
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
@@ -9505,9 +9590,10 @@ export default function KanbanBoard({ demoMode = false }) {
           setMeetingNotesModalOpen(false)
           stopListening()
           setVoiceTranscript('')
-          setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: projects[0]?.id || '' })
+          setMeetingNotesData({ title: '', date: new Date().toISOString().split('T')[0], notes: '', projectId: '' })
           setExtractedTasks([])
           setShowExtractedTasks(false)
+          setShowMeetingNotesProjectError(false)
           setUploadedImage(null)
         }} 
         title="Import Meeting Notes"
@@ -9609,16 +9695,31 @@ export default function KanbanBoard({ demoMode = false }) {
             
             {/* Project */}
             <div>
-              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project</label>
-              <select
-                value={meetingNotesData.projectId}
-                onChange={(e) => setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-              >
-                {projects.filter(p => !p.archived).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Project *</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={meetingNotesData.projectId}
+                  onChange={(e) => {
+                    setMeetingNotesData({ ...meetingNotesData, projectId: e.target.value })
+                    if (e.target.value) setShowMeetingNotesProjectError(false)
+                  }}
+                  className={`flex-1 px-3 py-2 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm appearance-none cursor-pointer ${
+                    showMeetingNotesProjectError && !meetingNotesData.projectId
+                      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-2 border-red-500 ring-2 ring-red-500/20'
+                      : meetingNotesData.projectId 
+                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-500'
+                  }`}
+                >
+                  <option value="">Select a project...</option>
+                  {projects.filter(p => !p.archived).map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                {showMeetingNotesProjectError && !meetingNotesData.projectId && (
+                  <span className="text-xs text-red-500 font-medium">Required</span>
+                )}
+              </div>
             </div>
             
             {/* Meeting Notes */}
