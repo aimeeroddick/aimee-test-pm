@@ -1,1400 +1,539 @@
 import { Link } from 'react-router-dom'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { track } from '@vercel/analytics'
-import { supabase } from '../lib/supabase'
-import { L } from '../lib/locale'
 import { extractTasks } from '../utils/taskExtraction'
 
-// Custom Landing Page Icons
-const LandingIcons = {
-  target: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <circle cx="24" cy="24" r="18" fill="none" stroke="#EF4444" strokeWidth="3" />
-      <circle cx="24" cy="24" r="12" fill="none" stroke="#EF4444" strokeWidth="3" />
-      <circle cx="24" cy="24" r="6" fill="#EF4444" />
-      <path d="M38 10 L30 18" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-      <path d="M34 6 L38 10 L42 6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-  ),
-  money: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <rect x="4" y="12" width="32" height="20" rx="2" fill="#FCD34D" />
-      <rect x="12" y="16" width="36" height="20" rx="2" fill="#F59E0B" />
-      <circle cx="30" cy="26" r="6" fill="#FCD34D" />
-      <text x="30" y="30" textAnchor="middle" fontSize="10" fill="#92400E" fontWeight="bold">$</text>
-    </svg>
-  ),
-  refresh: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <path d="M24 8 A16 16 0 1 1 8 24" fill="none" stroke="#6366F1" strokeWidth="4" strokeLinecap="round" />
-      <path d="M24 8 L18 2 M24 8 L18 14" stroke="#6366F1" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-  ),
-  sun: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <circle cx="24" cy="24" r="10" fill="#F59E0B" />
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-        <line key={i} x1="24" y1="6" x2="24" y2="10" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" transform={`rotate(${angle} 24 24)`} />
-      ))}
-    </svg>
-  ),
-  home: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <path d="M8 22 L24 8 L40 22 L40 40 L8 40 Z" fill="#F97316" />
-      <path d="M24 8 L8 22" stroke="#EA580C" strokeWidth="3" strokeLinecap="round" />
-      <path d="M24 8 L40 22" stroke="#EA580C" strokeWidth="3" strokeLinecap="round" />
-      <rect x="18" y="28" width="12" height="12" fill="#FED7AA" rx="1" />
-    </svg>
-  ),
-  sparkles: () => (
-    <svg viewBox="0 0 48 48" className="w-8 h-8">
-      <path d="M24 4 L26 18 L40 20 L26 22 L24 36 L22 22 L8 20 L22 18 Z" fill="#A78BFA" />
-      <path d="M36 8 L37 14 L43 15 L37 16 L36 22 L35 16 L29 15 L35 14 Z" fill="#C4B5FD" />
-      <path d="M12 28 L13 32 L17 33 L13 34 L12 38 L11 34 L7 33 L11 32 Z" fill="#C4B5FD" />
-    </svg>
-  ),
-  clipboard: () => (
-    <svg viewBox="0 0 48 48" className="w-12 h-12">
-      <rect x="10" y="8" width="28" height="36" rx="3" fill="#D4A574" />
-      <rect x="14" y="4" width="20" height="8" rx="2" fill="#B8956E" />
-      <rect x="14" y="16" width="20" height="24" rx="1" fill="#FDF6E9" />
-      <line x1="17" y1="22" x2="31" y2="22" stroke="#D1D5DB" strokeWidth="2" />
-      <line x1="17" y1="28" x2="28" y2="28" stroke="#D1D5DB" strokeWidth="2" />
-      <line x1="17" y1="34" x2="31" y2="34" stroke="#D1D5DB" strokeWidth="2" />
-    </svg>
-  ),
-  calendar: () => (
-    <svg viewBox="0 0 48 48" className="w-12 h-12">
-      <rect x="6" y="10" width="36" height="32" rx="4" fill="#E5E7EB" />
-      <rect x="6" y="10" width="36" height="10" rx="4" fill="#EF4444" />
-      <text x="24" y="18" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">JUL</text>
-      <rect x="12" y="24" width="24" height="14" rx="2" fill="white" />
-      <text x="24" y="35" textAnchor="middle" fontSize="14" fill="#374151" fontWeight="bold">17</text>
-    </svg>
-  ),
-}
-
-// Kanban Drag Animation - shows card moving between columns
-const KanbanDragAnimation = () => (
-  <svg viewBox="0 0 320 180" className="w-full h-48">
-    <defs>
-      <linearGradient id="kanbanHeader" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#818CF8" />
-        <stop offset="100%" stopColor="#6366F1" />
-      </linearGradient>
-      <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.15" />
-      </filter>
-    </defs>
-    
-    {/* Board background */}
-    <rect x="10" y="10" width="300" height="160" rx="12" fill="#F8FAFC" />
-    
-    {/* Column 1: To Do */}
-    <rect x="20" y="20" width="85" height="140" rx="8" fill="#F1F5F9" />
-    <rect x="25" y="25" width="75" height="20" rx="4" fill="#E2E8F0" />
-    <text x="62" y="39" textAnchor="middle" fontSize="9" fill="#64748B" fontWeight="bold">To Do</text>
-    
-    {/* Static task in To Do */}
-    <rect x="28" y="50" width="69" height="45" rx="6" fill="white" filter="url(#cardShadow)" />
-    <circle cx="40" cy="62" r="5" fill="#94A3B8" />
-    <rect x="50" y="58" width="40" height="6" rx="2" fill="#CBD5E1" />
-    <rect x="50" y="68" width="30" height="4" rx="1" fill="#E2E8F0" />
-    
-    {/* Column 2: In Progress */}
-    <rect x="115" y="20" width="85" height="140" rx="8" fill="#EEF2FF" />
-    <rect x="120" y="25" width="75" height="20" rx="4" fill="#C7D2FE" />
-    <text x="157" y="39" textAnchor="middle" fontSize="9" fill="#4F46E5" fontWeight="bold">In Progress</text>
-    
-    {/* Animated dragging card */}
-    <g>
-      {/* Card moving from To Do to In Progress */}
-      <rect rx="6" fill="white" filter="url(#cardShadow)" width="69" height="45">
-        <animate attributeName="x" values="28;28;75;118;118" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <animate attributeName="y" values="100;100;70;50;50" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <animate attributeName="opacity" values="1;1;0.9;1;1" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-      </rect>
-      <circle r="5" fill="#6366F1">
-        <animate attributeName="cx" values="40;40;87;130;130" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <animate attributeName="cy" values="112;112;82;62;62" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-      </circle>
-      <rect rx="2" fill="#374151" width="40" height="6">
-        <animate attributeName="x" values="50;50;97;140;140" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <animate attributeName="y" values="108;108;78;58;58" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-      </rect>
-      <rect rx="1" fill="#9CA3AF" width="30" height="4">
-        <animate attributeName="x" values="50;50;97;140;140" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <animate attributeName="y" values="118;118;88;68;68" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-      </rect>
-      {/* Drag cursor indicator */}
-      <g>
-        <animate attributeName="opacity" values="0;1;1;0;0" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        <circle r="8" fill="#6366F1" opacity="0.2">
-          <animate attributeName="cx" values="62;62;109;152;152" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-          <animate attributeName="cy" values="122;122;92;72;72" dur="3s" repeatCount="indefinite" keyTimes="0;0.2;0.5;0.8;1" />
-        </circle>
-      </g>
-    </g>
-    
-    {/* Column 3: Done */}
-    <rect x="210" y="20" width="85" height="140" rx="8" fill="#F0FDF4" />
-    <rect x="215" y="25" width="75" height="20" rx="4" fill="#BBF7D0" />
-    <text x="252" y="39" textAnchor="middle" fontSize="9" fill="#16A34A" fontWeight="bold">Done</text>
-    
-    {/* Completed task in Done */}
-    <rect x="218" y="50" width="69" height="45" rx="6" fill="white" filter="url(#cardShadow)" />
-    <circle cx="230" cy="62" r="5" fill="#22C55E" />
-    <path d="M227 62 L229 64 L233 60" stroke="white" strokeWidth="1.5" fill="none" />
-    <rect x="240" y="58" width="40" height="6" rx="2" fill="#CBD5E1" />
-    <rect x="240" y="68" width="30" height="4" rx="1" fill="#E2E8F0" />
-  </svg>
-)
-
-// Calendar Animation - shows task scheduling then calendar with tasks
-const CalendarAnimation = () => (
-  <svg viewBox="0 0 320 200" className="w-full h-52">
-    <defs>
-      <linearGradient id="calGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#F59E0B" />
-        <stop offset="100%" stopColor="#D97706" />
-      </linearGradient>
-    </defs>
-    
-    {/* Phase 1: Task being scheduled (fades out) */}
-    <g>
-      <animate attributeName="opacity" values="1;1;0;0;0" dur="5s" repeatCount="indefinite" keyTimes="0;0.3;0.4;0.9;1" />
-      
-      {/* Task card */}
-      <rect x="20" y="30" width="120" height="55" rx="8" fill="white" stroke="#E5E7EB" />
-      <circle cx="38" cy="50" r="6" fill="#F59E0B" />
-      <rect x="52" y="44" width="70" height="8" rx="2" fill="#374151" />
-      <rect x="52" y="56" width="50" height="6" rx="2" fill="#9CA3AF" />
-      
-      {/* Calendar button pulse */}
-      <rect x="100" y="62" width="28" height="18" rx="4" fill="#FEF3C7">
-        <animate attributeName="fill" values="#FEF3C7;#FDE68A;#FEF3C7" dur="1s" repeatCount="indefinite" />
-      </rect>
-      <text x="114" y="74" textAnchor="middle" fontSize="10" fill="#D97706">🗓</text>
-      
-      {/* Click ripple */}
-      <circle cx="114" cy="71" r="10" fill="none" stroke="#F59E0B" strokeWidth="2">
-        <animate attributeName="r" values="10;20;20" dur="1.5s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.6;0;0" dur="1.5s" repeatCount="indefinite" />
-      </circle>
-      
-      {/* Arrow */}
-      <path d="M150 57 L170 57" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
-        <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" />
-      </path>
-      <path d="M167 53 L173 57 L167 61" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" />
-      </path>
-      
-      {/* Mini schedule modal */}
-      <rect x="180" y="20" width="120" height="80" rx="8" fill="white" stroke="#E5E7EB" />
-      <text x="240" y="38" textAnchor="middle" fontSize="9" fill="#374151" fontWeight="bold">Schedule Task</text>
-      <rect x="190" y="45" width="100" height="18" rx="4" fill="#FEF3C7" />
-      <text x="240" y="57" textAnchor="middle" fontSize="8" fill="#92400E">Thu, Jan 2 • 9:00 AM</text>
-      <rect x="210" y="70" width="60" height="20" rx="6" fill="url(#calGradient)" />
-      <text x="240" y="84" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">Schedule</text>
-    </g>
-    
-    {/* Phase 2: Full calendar view (fades in) */}
-    <g>
-      <animate attributeName="opacity" values="0;0;1;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.3;0.5;0.9;1" />
-      
-      {/* Calendar container */}
-      <rect x="20" y="15" width="280" height="170" rx="10" fill="white" stroke="#E5E7EB" />
-      
-      {/* Calendar header */}
-      <rect x="20" y="15" width="280" height="30" rx="10" fill="#FFFBEB" />
-      <text x="160" y="35" textAnchor="middle" fontSize="11" fill="#92400E" fontWeight="bold">January 2026</text>
-      
-      {/* Day headers */}
-      <text x="45" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Mon</text>
-      <text x="85" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Tue</text>
-      <text x="125" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Wed</text>
-      <text x="165" y="55" textAnchor="middle" fontSize="8" fill="#F59E0B" fontWeight="bold">Thu</text>
-      <text x="205" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Fri</text>
-      <text x="245" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Sat</text>
-      <text x="280" y="55" textAnchor="middle" fontSize="8" fill="#9CA3AF">Sun</text>
-      
-      {/* Calendar grid - Week 1 */}
-      <line x1="30" y1="62" x2="290" y2="62" stroke="#F3F4F6" />
-      
-      {/* Date numbers */}
-      <text x="125" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">1</text>
-      <text x="165" y="72" textAnchor="middle" fontSize="9" fill="#F59E0B" fontWeight="bold">2</text>
-      <text x="205" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">3</text>
-      <text x="245" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">4</text>
-      <text x="280" y="72" textAnchor="middle" fontSize="9" fill="#6B7280">5</text>
-      
-      {/* Task on Wed 1st */}
-      <rect x="108" y="76" width="34" height="14" rx="3" fill="#DBEAFE" />
-      <text x="125" y="86" textAnchor="middle" fontSize="6" fill="#1E40AF">Review</text>
-      
-      {/* Tasks on Thu 2nd (today - highlighted) */}
-      <rect x="145" y="62" width="40" height="50" rx="0" fill="#FEF3C7" opacity="0.3" />
-      <rect x="148" y="76" width="34" height="14" rx="3" fill="#F59E0B">
-        <animate attributeName="opacity" values="0;0;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.4;0.6;1" />
-      </rect>
-      <text x="165" y="86" textAnchor="middle" fontSize="6" fill="white" fontWeight="bold">
-        <animate attributeName="opacity" values="0;0;1;1" dur="5s" repeatCount="indefinite" keyTimes="0;0.4;0.6;1" />
-        9:00 AM
-      </text>
-      <rect x="148" y="93" width="34" height="14" rx="3" fill="#A78BFA" />
-      <text x="165" y="103" textAnchor="middle" fontSize="6" fill="white">Meeting</text>
-      
-      {/* Task on Fri 3rd */}
-      <rect x="188" y="76" width="34" height="14" rx="3" fill="#86EFAC" />
-      <text x="205" y="86" textAnchor="middle" fontSize="6" fill="#166534">Deploy</text>
-      
-      {/* Week 2 row */}
-      <line x1="30" y1="115" x2="290" y2="115" stroke="#F3F4F6" />
-      <text x="45" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">6</text>
-      <text x="85" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">7</text>
-      <text x="125" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">8</text>
-      <text x="165" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">9</text>
-      <text x="205" y="128" textAnchor="middle" fontSize="9" fill="#6B7280">10</text>
-      
-      {/* Tasks in week 2 */}
-      <rect x="28" y="132" width="34" height="14" rx="3" fill="#FCA5A5" />
-      <text x="45" y="142" textAnchor="middle" fontSize="6" fill="#991B1B">Sprint</text>
-      <rect x="68" y="132" width="34" height="14" rx="3" fill="#93C5FD" />
-      <text x="85" y="142" textAnchor="middle" fontSize="6" fill="#1E40AF">Design</text>
-      <rect x="148" y="132" width="34" height="14" rx="3" fill="#FDE68A" />
-      <text x="165" y="142" textAnchor="middle" fontSize="6" fill="#92400E">Plan</text>
-      
-      {/* Week 3 row */}
-      <line x1="30" y1="155" x2="290" y2="155" stroke="#F3F4F6" />
-      <text x="45" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">13</text>
-      <text x="85" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">14</text>
-      <text x="125" y="168" textAnchor="middle" fontSize="9" fill="#6B7280">15</text>
-    </g>
-  </svg>
-)
-
-// GitHub Release URLs - Update these when you publish releases
-const DOWNLOAD_URLS = {
-  mac: 'https://github.com/aimeeroddick/aimee-test-pm/releases/latest/download/Trackli.dmg',
-  windows: 'https://github.com/aimeeroddick/aimee-test-pm/releases/latest/download/Trackli-Setup.exe',
-}
-
-// Download Buttons Component with OS Detection
-const DownloadButtons = () => {
-  const [detectedOS, setDetectedOS] = useState('mac')
-  
-  useEffect(() => {
-    // Detect OS from user agent
-    const userAgent = window.navigator.userAgent.toLowerCase()
-    if (userAgent.includes('win')) {
-      setDetectedOS('windows')
-    } else if (userAgent.includes('mac')) {
-      setDetectedOS('mac')
-    }
-    // Default to mac for other OS (Linux users can use web version)
-  }, [])
-  
-  const primaryOS = detectedOS
-  const secondaryOS = detectedOS === 'mac' ? 'windows' : 'mac'
-  
-  const osConfig = {
-    mac: {
-      name: 'macOS',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-        </svg>
-      ),
-      downloadUrl: DOWNLOAD_URLS.mac,
-      fileName: 'Trackli.dmg'
-    },
-    windows: {
-      name: 'Windows',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/>
-        </svg>
-      ),
-      downloadUrl: DOWNLOAD_URLS.windows,
-      fileName: 'Trackli-Setup.exe'
-    }
-  }
-  
-  const primary = osConfig[primaryOS]
-  const secondary = osConfig[secondaryOS]
-  
-  return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-      {/* Primary Download Button */}
-      <a
-        href={primary.downloadUrl}
-        className="group flex items-center gap-3 px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all hover:-translate-y-0.5"
-      >
-        {primary.icon}
-        <span>Download for {primary.name}</span>
-        <svg className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </a>
-      
-      {/* Secondary Download Link */}
-      <a
-        href={secondary.downloadUrl}
-        className="flex items-center gap-2 px-6 py-3 text-gray-300 hover:text-white transition-colors"
-      >
-        {secondary.icon}
-        <span>Download for {secondary.name}</span>
-      </a>
-    </div>
-  )
-}
-
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false)
-  const [notes, setNotes] = useState('')
-  const [extractedTasks, setExtractedTasks] = useState([])
+  // Task extraction demo state
+  const [demoNotes, setDemoNotes] = useState('')
+  const [demoTasks, setDemoTasks] = useState([])
   const [isExtracting, setIsExtracting] = useState(false)
-  const [waitlistModal, setWaitlistModal] = useState({ open: false, feature: '' })
-  const [waitlistEmail, setWaitlistEmail] = useState('')
-  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false)
-  const [waitlistSuccess, setWaitlistSuccess] = useState(false)
+  const [hasExtracted, setHasExtracted] = useState(false)
 
-
-  const handleExtract = useCallback(() => {
-    if (!notes.trim()) return
+  const handleExtract = useCallback(async () => {
+    if (!demoNotes.trim()) return
+    
     setIsExtracting(true)
+    track('landing_demo_extract')
     
-    // Track extraction attempt
-    track('task_extractor_used', { source: 'landing_page' })
+    // Simulate a brief delay for effect
+    await new Promise(resolve => setTimeout(resolve, 800))
     
-    setTimeout(() => {
-      const tasks = extractTasks(notes)
-      setExtractedTasks(tasks)
-      setIsExtracting(false)
-      
-      // Track extraction result
-      track('tasks_extracted', { 
-        count: tasks.length,
-        source: 'landing_page'
-      })
-    }, 500)
-  }, [notes])
-
-  const resetExtractor = useCallback(() => {
-    setNotes('')
-    setExtractedTasks([])
-  }, [])
-
-  const handleWaitlistSubmit = useCallback(async (e) => {
-    e.preventDefault()
-    if (!waitlistEmail.trim()) return
-    
-    setWaitlistSubmitting(true)
-    
-    try {
-      // Track waitlist signup
-      track('waitlist_signup', { feature: waitlistModal.feature })
-      
-      // Insert into Supabase
-      const { error } = await supabase
-        .from('waitlist')
-        .insert([{ 
-          email: waitlistEmail.trim().toLowerCase(),
-          feature: waitlistModal.feature,
-          created_at: new Date().toISOString()
-        }])
-      
-      if (error) {
-        // If duplicate, still show success (they're already on the list)
-        if (error.code === '23505') {
-          setWaitlistSuccess(true)
-        } else {
-          console.error('Waitlist error:', error)
-          alert('Something went wrong. Please try again.')
-        }
-      } else {
-        setWaitlistSuccess(true)
-      }
-    } catch (err) {
-      console.error('Waitlist error:', err)
-      alert('Something went wrong. Please try again.')
-    } finally {
-      setWaitlistSubmitting(false)
-    }
-  }, [waitlistEmail, waitlistModal.feature])
-
-  const closeWaitlistModal = useCallback(() => {
-    setWaitlistModal({ open: false, feature: '' })
-    setWaitlistEmail('')
-    setWaitlistSuccess(false)
-  }, [])
-
-  useEffect(() => {
-    let ticking = false
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 50)
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    const extracted = extractTasks(demoNotes)
+    setDemoTasks(extracted)
+    setHasExtracted(true)
+    setIsExtracting(false)
+  }, [demoNotes])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-white">
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-shift {
+          background: linear-gradient(135deg, #7C3AED, #A855F7, #EC4899, #F97316, #FBBF24, #34D399, #06B6D4, #7C3AED);
+          background-size: 400% 400%;
+          animation: gradient-shift 15s ease infinite;
+        }
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -20px) scale(1.05); }
+          66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+        .animate-blob { animation: blob 8s ease-in-out infinite; }
+        .animate-blob-2 { animation: blob 10s ease-in-out infinite reverse; animation-delay: -2s; }
+        .animate-blob-3 { animation: blob 12s ease-in-out infinite; animation-delay: -4s; }
+        .animate-blob-4 { animation: blob 9s ease-in-out infinite; animation-delay: -3s; }
+        @keyframes gentle-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: gentle-float 6s ease-in-out infinite; }
+        .animate-float-2 { animation: gentle-float 7s ease-in-out infinite; animation-delay: -2s; }
+        .animate-float-3 { animation: gentle-float 5s ease-in-out infinite; animation-delay: -4s; }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+        .screenshot-glow {
+          box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.1), 0 25px 50px -12px rgba(124, 58, 237, 0.25), 0 0 100px rgba(249, 115, 22, 0.1);
+        }
+      `}</style>
+
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-[env(safe-area-inset-top)] ${
-        scrolled ? 'bg-white/90 backdrop-blur-lg shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-14 sm:h-14">
-              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="landing-header-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#7C3AED"/>
-                    <stop offset="100%" stopColor="#9333EA"/>
-                  </linearGradient>
-                  <linearGradient id="landing-header-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#EA580C"/>
-                    <stop offset="100%" stopColor="#F97316"/>
-                  </linearGradient>
-                </defs>
-                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#landing-header-left)"/>
-                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#landing-header-right)"/>
-                <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="glass-card rounded-2xl px-6 py-3 flex justify-between items-center shadow-lg shadow-black/5">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-9 h-9">
+                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="nav-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#7C3AED"/>
+                      <stop offset="100%" stopColor="#9333EA"/>
+                    </linearGradient>
+                    <linearGradient id="nav-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#EA580C"/>
+                      <stop offset="100%" stopColor="#F97316"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M6 18L28 6L28 38L6 26Z" fill="url(#nav-left)"/>
+                  <path d="M28 6L50 18L50 46L28 38Z" fill="url(#nav-right)"/>
+                  <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
+                  <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">Trackli</span>
+            </Link>
+            <div className="flex items-center gap-4">
+              <a href="#features" className="hidden sm:block text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Features</a>
+              <a href="#demo" className="hidden sm:block text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Demo</a>
+              <Link to="/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Sign In</Link>
+              <Link to="/login?signup=true" className="px-5 py-2 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-700 transition-colors shadow-lg shadow-purple-500/25">
+                Get Started
+              </Link>
             </div>
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500 bg-clip-text text-transparent">
-              Trackli
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="#features" className="hidden sm:block text-gray-600 hover:text-gray-900 transition-colors">
-              Features
-            </a>
-            <Link
-              to="/beta"
-              className="hidden sm:block text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Beta Testers
-            </Link>
-            <Link
-              to="/login"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/login?signup=true"
-              className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-medium shadow-lg shadow-indigo-500/25"
-            >
-              Get Started
-            </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <main>
-      <section className="pt-32 pb-20 px-6 relative overflow-hidden">
-        {/* Background gradient blob */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/40 via-purple-200/40 to-pink-200/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <section className="min-h-screen animate-gradient-shift relative flex items-center justify-center overflow-hidden pt-20">
+        {/* Floating blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-blob absolute -top-32 -left-32 w-96 h-96 bg-white/20 rounded-full blur-3xl"></div>
+          <div className="animate-blob-2 absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-white/15 rounded-full blur-3xl"></div>
+          <div className="animate-blob-3 absolute top-1/4 right-1/4 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+          <div className="animate-blob-4 absolute bottom-1/3 left-1/4 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
         
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-sm font-medium text-indigo-700 mb-8">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            Now in beta
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Task management that{' '}
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              just <span className="italic">works</span>
-            </span>
+        {/* Hero content */}
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-lg">
+            Task management<br/>that sparks joy
           </h1>
-          
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            Tired of tools that are either too simple or overwhelmingly complex? 
-            Trackli is the sweet spot: powerful enough for real work, simple enough to actually use.
+          <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
+            Finally, a way to organise your work that doesn't feel like work.
           </p>
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login?signup=true"
-              className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
-            >
-              Get Started
+            <Link to="/login?signup=true" className="px-8 py-4 bg-white text-gray-900 rounded-2xl font-semibold text-lg shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-1">
+              Start for free
             </Link>
-            <a
-              href="#try-it"
-              className="px-8 py-4 bg-white text-indigo-600 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all font-semibold flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <a href="#demo" className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white rounded-2xl font-semibold text-lg border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
               </svg>
-              Try It Now
-            </a>
-            <a
-              href="#demo"
-              className="px-8 py-4 bg-white text-gray-700 rounded-xl border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all font-semibold flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              View Demo
+              Watch 2-min demo
             </a>
           </div>
         </div>
-
-        {/* App Preview */}
-        <div className="max-w-6xl mx-auto mt-16 px-4">
-          <div className="relative">
-            {/* Gradient glow behind screenshot */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
-            
-            {/* Screenshot */}
-            <img 
-            src="/screenshots/board.webp" 
-            alt="Trackli Kanban Board"
-            className="relative w-full rounded-2xl shadow-2xl"
-              fetchpriority="high"
-              decoding="async"
-              width={1363}
-              height={460}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Try It Now Section - Interactive Extractor */}
-      <section id="try-it" className="py-20 px-6 bg-gradient-to-b from-white to-indigo-50">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              AI-Powered Productivity
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Paste your notes. Get tasks.
-            </h2>
-            <p className="text-lg text-gray-600 max-w-xl mx-auto">
-              Meeting notes, emails, whatever — paste it below and watch the magic happen.
-            </p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl" />
-            
-            <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-              {extractedTasks.length === 0 ? (
-                // Input state
-                <div className="p-6">
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder={`Paste your meeting notes or email here...
-
-Examples we can extract from:
-• Follow-up tables from Teams/Outlook
-• "John to send the report by Friday"
-• Action items and bullet points
-• @sarah: Review the proposal`}
-                    className="w-full h-48 p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-700 placeholder:text-gray-400"
-                  />
-                  <div className="mt-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                      ✨ Works with tables, bullet points, and natural language
-                    </p>
-                    <button
-                      onClick={handleExtract}
-                      disabled={!notes.trim() || isExtracting}
-                      className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {isExtracting ? (
-                        <>
-                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Extracting...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          Extract Tasks
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // Results state
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </span>
-                      Found {extractedTasks.length} task{extractedTasks.length !== 1 ? 's' : ''}!
-                    </h3>
-                    <button
-                      onClick={resetExtractor}
-                      className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Try again
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {extractedTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
-                      >
-                        <div className="w-5 h-5 rounded border-2 border-indigo-500 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">{task.title}</p>
-                          {(task.assignee || task.dueDate) && (
-                            <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1 flex-wrap">
-                              {task.assignee && (
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                  </svg>
-                                  {task.assignee}
-                                </span>
-                              )}
-                              {task.assignee && task.dueDate && <span className="mx-1">•</span>}
-                              {task.dueDate && (
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                  {task.dueDate}
-                                </span>
-                              )}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <p className="text-center text-gray-600 mb-4">
-                      Want to save these tasks and track them?
-                    </p>
-                    <Link
-                      to="/login?signup=true"
-                      className="block w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold shadow-lg shadow-indigo-500/25 text-center"
-                    >
-                      Save to Trackli — Free
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Built by a PM, for PMs and busy professionals
-          </p>
-        </div>
-      </section>
-
-      {/* Pain Points Section */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              Why Trackli?
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Built different, on purpose
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We designed Trackli to solve the problems we kept running into with other tools.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                iconComponent: 'target',
-                title: 'Depth without the learning curve',
-                subtitle: "Simple tools leave you wanting more. Powerful ones take weeks to learn.",
-                highlight: 'Trackli gives you both.',
-              },
-              {
-                iconComponent: 'money',
-                title: 'Everything included from day one',
-                subtitle: 'Calendar view? Timeline? Premium only... elsewhere.',
-                highlight: 'Every feature, no paywalls.',
-              },
-              {
-                iconComponent: 'refresh',
-                title: 'Built to stick',
-                subtitle: '73% abandon their productivity app within 30 days.',
-                highlight: 'Intuitive from the first click.',
-              },
-              {
-                iconComponent: 'sun',
-                title: 'Focus on what matters today',
-                subtitle: 'Most tools show everything, all the time.',
-                highlight: 'My Day keeps you focused.',
-              },
-              {
-                iconComponent: 'home',
-                title: 'Works for work and life',
-                subtitle: 'Enterprise software for tracking groceries?',
-                highlight: 'Clean for personal, capable for work.',
-              },
-              {
-                iconComponent: 'sparkles',
-                title: 'A tool you actually enjoy',
-                subtitle: 'Cluttered interfaces. Outdated aesthetics.',
-                highlight: 'Modern design that stays out of your way.',
-              },
-            ].map((card) => (
-              <div
-                key={card.title}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100"
-              >
-                <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
-                  {card.iconComponent && LandingIcons[card.iconComponent] ? LandingIcons[card.iconComponent]() : card.icon}
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">{card.title}</h3>
-                <p className="text-gray-500 text-sm mb-2">{card.subtitle}</p>
-                <p className="text-indigo-600 font-medium text-sm">{card.highlight}</p>
-              </div>
-            ))}
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center pt-2">
+            <div className="w-1.5 h-3 bg-white/70 rounded-full animate-bounce"></div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="features" className="py-32 relative overflow-hidden bg-gray-50">
+        {/* Subtle gradient blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-blob absolute top-20 -left-20 w-72 h-72 bg-purple-200/40 rounded-full blur-3xl"></div>
+          <div className="animate-blob-2 absolute bottom-20 -right-20 w-80 h-80 bg-orange-200/40 rounded-full blur-3xl"></div>
+          <div className="animate-blob-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-200/30 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              Features
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Everything you need, nothing you don't
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Everything clicks into place
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Powerful task management that respects your time and attention.
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Simple tools that adapt to how you actually work
             </p>
           </div>
-
-          {/* Feature 1: My Day */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-            <div>
-              <p className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
-                Daily Focus
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                My Day: Your daily command center
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Start each day with a clear view of what matters. Add tasks from any project to today's focus, track your progress, and actually finish what you start.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Add tasks from any project to your day',
-                  'Visual progress tracking',
-                  'Keyboard shortcuts for power users',
-                  'Satisfying completion animations',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-gray-600">
-                    <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+          
+          {/* Feature cards */}
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="animate-float glass-card rounded-3xl p-8 shadow-xl shadow-purple-500/10 border border-white/50">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Kanban boards</h3>
+              <p className="text-gray-600">Drag, drop, done. See your progress at a glance and move tasks with satisfying ease.</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 overflow-hidden">
-              <img 
-                src="/screenshots/my-day.webp" 
-                alt="Trackli My Day View" 
-                className="w-full rounded-xl shadow-lg"
-              />
+            
+            <div className="animate-float-2 glass-card rounded-3xl p-8 shadow-xl shadow-orange-500/10 border border-white/50">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/30">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">My Day</h3>
+              <p className="text-gray-600">Start each morning with a clean slate. Pick your priorities, ignore the rest.</p>
+            </div>
+            
+            <div className="animate-float-3 glass-card rounded-3xl p-8 shadow-xl shadow-teal-500/10 border border-white/50">
+              <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-teal-500/30">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Calendar view</h3>
+              <p className="text-gray-600">See your deadlines coming. Plan ahead without the spreadsheet anxiety.</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Feature 2: Kanban */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="order-2 lg:order-1 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 flex items-center justify-center">
-              <KanbanDragAnimation />
+      {/* Notes to Tasks Section with Interactive Demo */}
+      <section id="try-it" className="py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50"></div>
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-blob absolute -top-20 right-1/4 w-64 h-64 bg-purple-200/50 rounded-full blur-3xl"></div>
+          <div className="animate-blob-2 absolute -bottom-20 left-1/4 w-72 h-72 bg-orange-200/50 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-6">
+              <span>✨</span> AI-Powered
             </div>
-            <div className="order-1 lg:order-2">
-              <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
-                Visual Workflow
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Kanban boards that scale with you
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Intuitive drag-and-drop boards that help you visualize your work. No artificial limits, no surprise paywalls.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Unlimited projects and boards',
-                  `${L.Organized} workflow columns`,
-                  'Subtasks, attachments, and due dates',
-                  'Filter and search across everything',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-gray-600">
-                    <svg className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Meeting notes → tasks in seconds
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Paste your messy meeting notes, and we'll pull out the action items automatically.
+            </p>
+          </div>
+          
+          {/* Interactive Demo */}
+          <div className="max-w-4xl mx-auto">
+            <div className="glass-card rounded-3xl p-8 shadow-2xl border border-white/50">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Input side */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Paste your notes</label>
+                  <textarea 
+                    value={demoNotes}
+                    onChange={(e) => setDemoNotes(e.target.value)}
+                    className="w-full h-48 px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none text-sm"
+                    placeholder={`Team sync - 7th Jan
+
+Sarah to follow up with the client by Friday.
+Mike will prepare the Q2 report by next week.
+Everyone needs to review the proposal before Monday.
+Discussed the new feature - looks promising.
+Alex mentioned he's blocked on the API integration.`}
+                  />
+                  <button 
+                    onClick={handleExtract}
+                    disabled={isExtracting || !demoNotes.trim()}
+                    className="mt-4 w-full py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isExtracting ? (
+                      <>
+                        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Extracting...
+                      </>
+                    ) : (
+                      'Extract Tasks ✨'
+                    )}
+                  </button>
+                </div>
+                
+                {/* Output side */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Extracted tasks</label>
+                  <div className="h-48 overflow-y-auto border border-gray-200 rounded-2xl p-4 bg-gray-50">
+                    {!hasExtracted ? (
+                      <p className="text-gray-400 text-sm text-center mt-16">Your extracted tasks will appear here</p>
+                    ) : demoTasks.length === 0 ? (
+                      <p className="text-gray-400 text-sm text-center mt-16">No action items found. Try notes with phrases like "Sarah to follow up" or "Mike will prepare"</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {demoTasks.map((task, i) => (
+                          <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100">
+                            <div className="w-5 h-5 rounded-full border-2 border-purple-500 flex-shrink-0"></div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-gray-800 text-sm block truncate">{task.title}</span>
+                            </div>
+                            {task.assignee && (
+                              <span className="text-xs text-gray-400 flex-shrink-0">{task.assignee}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-4 text-sm text-gray-500 text-center">
+                    <Link to="/login?signup=true" className="text-purple-600 hover:text-purple-700 font-medium">Sign up</Link> to save these tasks to your board
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Feature 3: Calendar */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-sm font-semibold text-amber-600 uppercase tracking-wide mb-3">
-                Time Awareness
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                Schedule tasks on a calendar
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                See your tasks in a calendar view. Drag to schedule, set time estimates, and never miss a deadline again.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Calendar view included free',
-                  'Recurring tasks for routines',
-                  'Time estimates and tracking',
-                  'Import and export via CSV',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-gray-600">
-                    <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+      {/* Integrations Section */}
+      <section className="py-32 relative overflow-hidden bg-white">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Works where you work
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Connect Trackli to the tools you already use
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Email to Tasks */}
+            <div className="glass-card rounded-3xl p-8 shadow-xl border border-white/50 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 bg-orange-50 rounded-2xl flex items-center justify-center">
+                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Email to Tasks</h3>
+              <p className="text-gray-600 mb-4">Forward any email to your personal Trackli address. Task created, inbox cleared.</p>
+              <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Available now</span>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 overflow-hidden">
-              <img 
-                src="/screenshots/calendar.webp" 
-                alt="Trackli Calendar View" 
-                className="w-full rounded-xl shadow-lg"
+            
+            {/* Slack integration */}
+            <div className="glass-card rounded-3xl p-8 shadow-xl border border-white/50 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 bg-purple-50 rounded-2xl flex items-center justify-center">
+                <svg className="w-10 h-10" viewBox="0 0 24 24">
+                  <path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z"/>
+                  <path fill="#36C5F0" d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z"/>
+                  <path fill="#2EB67D" d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z"/>
+                  <path fill="#ECB22E" d="M15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Slack Integration</h3>
+              <p className="text-gray-600 mb-4">Create tasks from messages, get reminders in Slack</p>
+              <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Available now</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product Screenshots Section */}
+      <section className="py-32 relative overflow-hidden bg-gray-50">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-blob absolute top-0 left-1/4 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl"></div>
+          <div className="animate-blob-2 absolute bottom-0 right-1/4 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              See it in action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              A clean interface that gets out of your way
+            </p>
+          </div>
+          
+          {/* Screenshot grid */}
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="animate-float">
+              <div className="screenshot-glow rounded-2xl overflow-hidden bg-white">
+                <div className="bg-gray-100 px-4 py-2 flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  </div>
+                  <span className="text-xs text-gray-500 ml-2">Kanban Board</span>
+                </div>
+                <img 
+                  src="/board.webp" 
+                  alt="Trackli Kanban Board" 
+                  className="w-full"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-center text-gray-600 mt-4">Drag and drop to organise your workflow</p>
+            </div>
+            
+            <div className="animate-float-2">
+              <div className="screenshot-glow rounded-2xl overflow-hidden bg-white">
+                <div className="bg-gray-100 px-4 py-2 flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  </div>
+                  <span className="text-xs text-gray-500 ml-2">My Day</span>
+                </div>
+                <img 
+                  src="/my-day.webp" 
+                  alt="Trackli My Day View" 
+                  className="w-full"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-center text-gray-600 mt-4">Focus on what matters today</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Demo Video */}
+      <section id="demo" className="py-32 relative overflow-hidden bg-white">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium mb-6">
+              Interactive Tour
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              See Trackli in action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-xl mx-auto">
+              Take a 2-minute tour of the key features — boards, My Day, calendar, and more.
+            </p>
+          </div>
+          
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
+            <div style={{ position: 'relative', paddingBottom: 'calc(58.947368% + 41px)', height: 0, width: '100%' }}>
+              <iframe 
+                src="https://demo.arcade.software/Sy0Ssp9rMh2oc9q50W6K?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
+                title="Trackli Product Tour"
+                frameBorder="0"
+                loading="lazy"
+                webkitallowfullscreen="true"
+                mozallowfullscreen="true"
+                allowFullScreen
+                allow="clipboard-write"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light' }}
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* More Features Grid */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-              And so much more
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Features that save you time
+      {/* Why This Exists Section */}
+      <section className="py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-purple-50"></div>
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Why this exists
             </h2>
+            <p className="text-xl text-gray-600 max-w-xl mx-auto">
+              I got frustrated and built something better. Here's what actually matters.
+            </p>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                ),
-                title: "Voice to Task",
-                description: "Speak your tasks on mobile. Perfect for capturing ideas on the go.",
-                bgColor: "bg-indigo-100",
-                textColor: "text-indigo-600"
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                ),
-                title: "Quick Add",
-                description: "Add tasks in seconds with smart parsing. Type naturally, we'll figure it out.",
-                bgColor: "bg-amber-100",
-                textColor: "text-amber-600"
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                ),
-                title: "AI Task Breakdown",
-                description: "Stuck on a big task? AI suggests subtasks to break it into manageable pieces.",
-                bgColor: "bg-purple-100",
-                textColor: "text-purple-600"
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                ),
-                title: "Meeting Notes Import",
-                description: "Paste meeting notes or emails, extract action items automatically.",
-                bgColor: "bg-green-100",
-                textColor: "text-green-600"
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                ),
-                title: "Dark Mode",
-                description: "Easy on the eyes for late night planning sessions.",
-                bgColor: "bg-gray-100",
-                textColor: "text-gray-600"
-              },
-              {
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                ),
-                title: "Mobile Optimized",
-                description: "Full-featured mobile experience. Manage tasks anywhere.",
-                bgColor: "bg-pink-100",
-                textColor: "text-pink-600"
-              },
-            ].map((feature) => (
-              <div key={feature.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center ${feature.textColor} mb-4`}>
-                  {feature.icon}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600">{feature.description}</p>
+            {/* Card 1: Origin story - quote style */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
+              <p className="text-gray-800 mb-4 leading-relaxed">"Every tool I tried was either way too complex for daily tasks, or too basic to handle real projects. I wanted both — so I built it."</p>
+              <p className="text-sm text-gray-500">— The gap that started Trackli</p>
+            </div>
+            
+            {/* Card 2: Pricing - big stat */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
+              <p className="text-5xl font-bold text-gray-900 mb-3">£0</p>
+              <p className="text-gray-600">Calendar view, timeline, AI features, the lot. No "upgrade to unlock" nonsense.</p>
+            </div>
+            
+            {/* Card 3: Favourite feature highlight */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 shadow-lg">
+              <p className="text-xs font-medium text-orange-600 uppercase tracking-wide mb-3">Favourite feature</p>
+              <p className="text-gray-900 font-medium mb-2">Meeting notes → tasks, automatically</p>
+              <p className="text-sm text-gray-600">Paste your notes, AI extracts the action items. No more "wait, what did I agree to do?"</p>
+            </div>
+            
+            {/* Card 4: Email feature - casual */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
+              <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+                </svg>
               </div>
-            ))}
+              <h3 className="font-semibold text-gray-900 mb-2">Forward an email, get a task</h3>
+              <p className="text-sm text-gray-600">That "can you just..." email? Forward it to Trackli. Done. No copy-paste faff.</p>
+            </div>
+            
+            {/* Card 5: My Day - punchy */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59z"/>
+                </svg>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">My Day actually works</h3>
+              <p className="text-sm text-gray-600">Pick today's tasks. Focus on those. Everything else waits. Revolutionary? No. But somehow most tools overcomplicate this.</p>
+            </div>
+            
+            {/* Card 6: Simple truth */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg flex items-center">
+              <p className="text-gray-800">Powerful enough for work projects. Simple enough for your shopping list. That's it, really.</p>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Coming Soon Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-3">
-              Coming Soon
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Even more on the way
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We're building the integrations and features you've been asking for.
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">Calendar Integration</h3>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Connect Google Calendar or Outlook. See your meetings and tasks together, block time for deep work.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                  In development
-                </span>
-                <button
-                  onClick={() => setWaitlistModal({ open: true, feature: 'calendar_integration' })}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                >
-                  Notify me
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">Email to Task</h3>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Forward any email to your Trackli inbox and it becomes a task. Simple as that.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  In development
-                </span>
-                <button
-                  onClick={() => setWaitlistModal({ open: true, feature: 'email_to_task' })}
-                  className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
-                >
-                  Notify me
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">AI Weekly Summary</h3>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Get an AI-generated status report based on your completed tasks. Perfect for standups.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-700 bg-purple-100 px-2.5 py-1 rounded-full">
-                  Planned
-                </span>
-                <button
-                  onClick={() => setWaitlistModal({ open: true, feature: 'ai_weekly_summary' })}
-                  className="text-sm font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1"
-                >
-                  Notify me
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900">Zapier Integration</h3>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Connect Trackli to 5,000+ apps. Automate task creation from Slack, Salesforce, and more.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
-                  Planned
-                </span>
-                <button
-                  onClick={() => setWaitlistModal({ open: true, feature: 'zapier_integration' })}
-                  className="text-sm font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                >
-                  Notify me
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <p className="text-center text-gray-500 text-sm mt-8">
-            Have a feature request? <a href="mailto:hello@gettrackli.com" className="text-indigo-600 hover:text-indigo-700 font-medium">Let us know</a>
-          </p>
-        </div>
-      </section>
-
-      {/* Pricing Section - TODO: Add back when pricing is finalized */}
-
-      {/* Interactive Demo Section */}
-      <section id="demo" className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-      <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-3">
-      Interactive Tour
-      </p>
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-      See Trackli in Action
-      </h2>
-      <p className="text-gray-600 max-w-xl mx-auto">
-      Take a 2-minute tour of the key features — boards, My Day, calendar, and more.
-      </p>
-      </div>
-      <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-200">
-      <div style={{ position: 'relative', paddingBottom: 'calc(58.947368% + 41px)', height: '0px', width: '100%' }}>
-      <iframe 
-      src="https://demo.arcade.software/Sy0Ssp9rMh2oc9q50W6K?embed&embed_mobile=tab&embed_desktop=inline&show_copy_link=true"
-      title="Trackli Product Tour"
-      frameBorder="0"
-      loading="lazy"
-      webkitallowfullscreen="true"
-      mozallowfullscreen="true"
-      allowFullScreen
-      allow="clipboard-write"
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', colorScheme: 'light' }}
-      />
-      </div>
-      </div>
-      </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Ready to get things done?
+      <section className="py-32 animate-gradient-shift relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-blob absolute -top-32 -left-32 w-96 h-96 bg-white/20 rounded-full blur-3xl"></div>
+          <div className="animate-blob-2 absolute -bottom-32 -right-32 w-96 h-96 bg-white/15 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+            Ready to feel organised?
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Start {L.organizing} your work today. No credit card required.
+          <p className="text-xl text-white/90 mb-10">
+            Free to use. No credit card required. No guilt trips when you cancel.
           </p>
-          <Link
-            to="/login?signup=true"
-            className="inline-block px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-transform duration-200 font-semibold shadow-xl shadow-indigo-500/25 hover:-translate-y-0.5"
-          >
-            Get Started
+          <Link to="/login?signup=true" className="inline-block px-10 py-5 bg-white text-gray-900 rounded-2xl font-bold text-lg shadow-2xl hover:-translate-y-1 transition-all">
+            Get started free
           </Link>
         </div>
       </section>
 
-      {/* Download Desktop App Section - TEMPORARILY HIDDEN
-      <section id="download" className="py-20 px-6 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-indigo-300 text-sm font-medium mb-6">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Desktop App
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Take Trackli everywhere
-          </h2>
-          <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
-            Download the desktop app for a faster, native experience. 
-            Works offline and syncs automatically when you're back online.
-          </p>
-          
-          <DownloadButtons />
-          
-          <p className="mt-8 text-sm text-gray-500">
-            Also available on the web at{' '}
-            <a href="https://gettrackli.com" className="text-indigo-400 hover:text-indigo-300">gettrackli.com</a>
-          </p>
-        </div>
-      </section>
-      */}
-
-      {/* FAQ Section */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Frequently Asked Questions</h2>
-          
-          <div className="space-y-6">
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                Is Trackli free?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Yes! Trackli is completely free to use. We're focused on building the best task management experience first. Premium features for teams may be added in the future.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                How does the AI task extraction work?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Paste your meeting notes, emails, or even attach an image of handwritten notes. Our AI {L.analyze}s the content and automatically identifies action items, assignees, and due dates - turning chaos into {L.organized} tasks in seconds.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                Can I use Trackli on mobile?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Absolutely! Trackli works great on mobile browsers. You can also install it as an app on your phone - just tap "Add to Home Screen" in your browser menu for quick access with voice-to-task support.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                Is my data secure?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Yes. Your data is encrypted and stored securely. We use industry-standard security practices and never share your information with third parties. Your tasks and notes remain private to you.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                Can I share projects with my team?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Team collaboration features are coming soon! Currently Trackli is designed for individual productivity, but shared projects and team workflows are on our roadmap. Join the waitlist above to be notified when it launches.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                Does Trackli integrate with my calendar?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                Calendar integration is coming soon! You'll be able to see your tasks alongside calendar events and schedule tasks directly. Sign up for the waitlist to get notified when it's ready.
-              </div>
-            </details>
-
-            <details className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <summary className="flex justify-between items-center cursor-pointer p-6 font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
-                How do I import tasks from other apps?
-                <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </summary>
-              <div className="px-6 pb-6 text-gray-600">
-                You can use the Notes feature to paste tasks from anywhere - just copy your task list from another app and our AI will parse it into individual tasks. Dedicated import from popular apps like Todoist and Asana is on our roadmap.
-              </div>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      </main>
-
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-gray-200">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8">
-              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="landing-footer-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#4F46E5"/>
-                    <stop offset="100%" stopColor="#7C3AED"/>
-                  </linearGradient>
-                  <linearGradient id="landing-footer-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#9333EA"/>
-                    <stop offset="100%" stopColor="#EC4899"/>
-                  </linearGradient>
-                </defs>
-                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#landing-footer-left)"/>
-                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#landing-footer-right)"/>
-                <path d="M6 18L28 6L50 18L28 30Z" fill="#DDD6FE"/>
-                <path d="M18 20L25 27L38 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+      <footer className="py-12 bg-gray-900">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8">
+                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
+                  <path d="M6 18L28 6L28 38L6 26Z" fill="#A78BFA"/>
+                  <path d="M28 6L50 18L50 46L28 38Z" fill="#FB923C"/>
+                  <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
+                  <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="text-lg font-bold text-white">Trackli</span>
             </div>
-            <span className="font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Trackli
-            </span>
+            <div className="flex gap-8 text-gray-400 text-sm">
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <a href="mailto:hello@gettrackli.com" className="hover:text-white transition-colors">Contact</a>
+            </div>
+            <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Trackli</p>
           </div>
-          <div className="flex gap-8">
-            <Link to="/privacy" className="text-gray-500 hover:text-gray-700 transition-colors">Privacy</Link>
-            <Link to="/terms" className="text-gray-500 hover:text-gray-700 transition-colors">Terms</Link>
-            <a href="mailto:support@gettrackli.com" className="text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
-          </div>
-          <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Trackli. All rights reserved.</p>
         </div>
       </footer>
-
-      {/* Waitlist Modal */}
-      {waitlistModal.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeWaitlistModal}>
-          <div 
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {!waitlistSuccess ? (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Get notified</h3>
-                  <button onClick={closeWaitlistModal} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <p className="text-gray-600 text-sm mb-4">
-                  We'll send you one email when this feature launches. No spam, ever.
-                </p>
-                <form onSubmit={handleWaitlistSubmit}>
-                  <input
-                    type="email"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-4"
-                  />
-                  <button
-                    type="submit"
-                    disabled={waitlistSubmitting}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-semibold disabled:opacity-50"
-                  >
-                    {waitlistSubmitting ? 'Adding...' : 'Notify me'}
-                  </button>
-                </form>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">You're on the list!</h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  We'll let you know as soon as this feature is ready.
-                </p>
-                <button
-                  onClick={closeWaitlistModal}
-                  className="px-6 py-2 text-indigo-600 font-medium hover:text-indigo-700"
-                >
-                  Close
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
