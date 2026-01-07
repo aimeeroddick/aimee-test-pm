@@ -60,9 +60,6 @@ export default function LandingPage() {
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
         }
-        .screenshot-glow {
-          box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.1), 0 25px 50px -12px rgba(124, 58, 237, 0.25), 0 0 100px rgba(249, 115, 22, 0.1);
-        }
       `}</style>
 
       {/* Navigation */}
@@ -195,7 +192,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Notes to Tasks Section with Interactive Demo */}
+      {/* Try It Section - Interactive Demo */}
       <section id="try-it" className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50"></div>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -331,75 +328,15 @@ Alex mentioned he's blocked on the API integration.`}
         </div>
       </section>
 
-      {/* Product Screenshots Section */}
-      <section className="py-32 relative overflow-hidden bg-gray-50">
+      {/* Video Demo Section */}
+      <section id="demo" className="py-32 relative overflow-hidden bg-gray-50">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="animate-blob absolute top-0 left-1/4 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl"></div>
           <div className="animate-blob-2 absolute bottom-0 right-1/4 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl"></div>
         </div>
         
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              See it in action
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A clean interface that gets out of your way
-            </p>
-          </div>
-          
-          {/* Screenshot grid */}
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="animate-float">
-              <div className="screenshot-glow rounded-2xl overflow-hidden bg-white">
-                <div className="bg-gray-100 px-4 py-2 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  </div>
-                  <span className="text-xs text-gray-500 ml-2">Kanban Board</span>
-                </div>
-                <img 
-                  src="/board.webp" 
-                  alt="Trackli Kanban Board" 
-                  className="w-full"
-                  loading="lazy"
-                />
-              </div>
-              <p className="text-center text-gray-600 mt-4">Drag and drop to organise your workflow</p>
-            </div>
-            
-            <div className="animate-float-2">
-              <div className="screenshot-glow rounded-2xl overflow-hidden bg-white">
-                <div className="bg-gray-100 px-4 py-2 flex items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  </div>
-                  <span className="text-xs text-gray-500 ml-2">My Day</span>
-                </div>
-                <img 
-                  src="/my-day.webp" 
-                  alt="Trackli My Day View" 
-                  className="w-full"
-                  loading="lazy"
-                />
-              </div>
-              <p className="text-center text-gray-600 mt-4">Focus on what matters today</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Demo Video */}
-      <section id="demo" className="py-32 relative overflow-hidden bg-white">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium mb-6">
-              Interactive Tour
-            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               See Trackli in action
             </h2>
@@ -426,70 +363,6 @@ Alex mentioned he's blocked on the API integration.`}
         </div>
       </section>
 
-      {/* Why This Exists Section */}
-      <section className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-purple-50"></div>
-        
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Why this exists
-            </h2>
-            <p className="text-xl text-gray-600 max-w-xl mx-auto">
-              I got frustrated and built something better. Here's what actually matters.
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Card 1: Origin story - quote style */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-              <p className="text-gray-800 mb-4 leading-relaxed">"Every tool I tried was either way too complex for daily tasks, or too basic to handle real projects. I wanted both — so I built it."</p>
-              <p className="text-sm text-gray-500">— The gap that started Trackli</p>
-            </div>
-            
-            {/* Card 2: Pricing - big stat */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-              <p className="text-5xl font-bold text-gray-900 mb-3">£0</p>
-              <p className="text-gray-600">Calendar view, timeline, AI features, the lot. No "upgrade to unlock" nonsense.</p>
-            </div>
-            
-            {/* Card 3: Favourite feature highlight */}
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 shadow-lg">
-              <p className="text-xs font-medium text-orange-600 uppercase tracking-wide mb-3">Favourite feature</p>
-              <p className="text-gray-900 font-medium mb-2">Meeting notes → tasks, automatically</p>
-              <p className="text-sm text-gray-600">Paste your notes, AI extracts the action items. No more "wait, what did I agree to do?"</p>
-            </div>
-            
-            {/* Card 4: Email feature - casual */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
-                </svg>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Forward an email, get a task</h3>
-              <p className="text-sm text-gray-600">That "can you just..." email? Forward it to Trackli. Done. No copy-paste faff.</p>
-            </div>
-            
-            {/* Card 5: My Day - punchy */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59z"/>
-                </svg>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">My Day actually works</h3>
-              <p className="text-sm text-gray-600">Pick today's tasks. Focus on those. Everything else waits. Revolutionary? No. But somehow most tools overcomplicate this.</p>
-            </div>
-            
-            {/* Card 6: Simple truth */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg flex items-center">
-              <p className="text-gray-800">Powerful enough for work projects. Simple enough for your shopping list. That's it, really.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-32 animate-gradient-shift relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -502,7 +375,7 @@ Alex mentioned he's blocked on the API integration.`}
             Ready to feel organised?
           </h2>
           <p className="text-xl text-white/90 mb-10">
-            Free to use. No credit card required. No guilt trips when you cancel.
+            Free forever. No credit card required.
           </p>
           <Link to="/login?signup=true" className="inline-block px-10 py-5 bg-white text-gray-900 rounded-2xl font-bold text-lg shadow-2xl hover:-translate-y-1 transition-all">
             Get started free
