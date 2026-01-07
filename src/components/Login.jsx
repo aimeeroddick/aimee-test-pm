@@ -145,6 +145,7 @@ export default function Login() {
             </div>
             <span className="text-2xl font-bold text-white drop-shadow-lg">Trackli</span>
           </Link>
+          <p className="text-white/70 text-sm mt-1">Task management that sparks joy</p>
         </div>
         
         {/* Form Card */}

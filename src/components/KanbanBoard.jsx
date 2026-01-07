@@ -11091,6 +11091,7 @@ Or we can extract from:
       <footer className="mt-auto py-4 px-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
           <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-500 transition-colors">Trackli</a>
+          <span className="hidden sm:inline text-gray-400 dark:text-gray-500 italic">Task management that sparks joy</span>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
           <Link to="/privacy" className="hover:text-indigo-500 transition-colors">Privacy</Link>
           <Link to="/terms" className="hover:text-indigo-500 transition-colors">Terms</Link>
