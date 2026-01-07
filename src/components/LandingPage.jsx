@@ -111,6 +111,10 @@ export default function LandingPage() {
         
         {/* Hero content */}
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6 border border-white/30">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            Now in Beta
+          </div>
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-lg">
             Task management<br/>that sparks joy
           </h1>
@@ -371,11 +375,15 @@ Alex mentioned he's blocked on the API integration.`}
         </div>
         
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6 border border-white/30">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            Beta
+          </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
             Ready to feel organised?
           </h2>
           <p className="text-xl text-white/90 mb-10">
-            Free forever. No credit card required.
+            Free while in beta. No credit card required.
           </p>
           <Link to="/login?signup=true" className="inline-block px-10 py-5 bg-white text-gray-900 rounded-2xl font-bold text-lg shadow-2xl hover:-translate-y-1 transition-all">
             Get started free
