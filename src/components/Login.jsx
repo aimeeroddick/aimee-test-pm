@@ -152,7 +152,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Features (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 flex-col items-center justify-center relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 via-purple-500 to-orange-500 p-12 flex-col items-center justify-center relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -173,7 +173,7 @@ export default function Login() {
                 <path d="M6 18L28 6L28 38L6 26Z" fill="white" fillOpacity="0.9"/>
                 <path d="M28 6L50 18L50 46L28 38Z" fill="white" fillOpacity="0.7"/>
                 <path d="M6 18L28 6L50 18L28 30Z" fill="white" fillOpacity="0.5"/>
-                <path d="M18 20L25 27L38 14" fill="none" stroke="rgba(99, 102, 241, 0.8)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 19L25 26L36 14" fill="none" stroke="rgba(234, 88, 12, 0.8)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <span className="text-3xl font-bold text-white">Trackli</span>
@@ -500,7 +500,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500 text-white rounded-xl hover:from-purple-700 hover:via-purple-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
