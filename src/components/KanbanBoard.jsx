@@ -1385,7 +1385,7 @@ const EmptyState = ({ icon, title, description, action, actionLabel, variant = '
       {action && (
         <button
           onClick={action}
-          className="group px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0"
+          className="group px-5 sm:px-6 py-2.5 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:-translate-y-0.5 active:translate-y-0"
         >
           <span className="flex items-center gap-2">
             {actionLabel}
@@ -2297,7 +2297,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
         <div className="relative z-[1001] max-w-md w-full animate-fadeIn">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
+            <div className="bg-purple-600 p-6 text-white">
               <div className="mb-3">
                   {currentStep.iconComponent && TourIcons[currentStep.iconComponent] 
                     ? TourIcons[currentStep.iconComponent]() 
@@ -2620,7 +2620,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
     { id: 'calendar', label: 'Calendar', icon: () => HelpTabIcons.calendar(), color: 'from-green-500 to-emerald-500' },
     { id: 'alltasks', label: 'All Tasks', icon: () => HelpTabIcons.alltasks(), color: 'from-blue-500 to-cyan-500' },
     { id: 'pending', label: 'Pending', icon: () => HelpTabIcons.pending(), color: 'from-amber-500 to-yellow-500' },
-    { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-purple-500 to-indigo-500' },
+    { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-purple-500 to-orange-500' },
   ]
   
   const SectionCard = ({ index, title, children, icon }) => {
@@ -2669,11 +2669,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         <div className="p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-lg sm:text-2xl shadow-lg shadow-purple-500/30">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center text-white text-lg sm:text-2xl shadow-lg shadow-purple-500/30">
                 📚
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
                   Help Guide
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Master your productivity with Trackli</p>
@@ -2719,7 +2719,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
               <>
                 <SectionCard index={0} title="Creating Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>• Click the <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg text-sm font-medium">+ Task</span> button in the header</p>
+                    <p>• Click the <span className="px-2 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">+ Task</span> button in the header</p>
                     <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd></p>
                     <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Q</kbd> for Quick Add with voice support!</p>
                   </div>
@@ -3199,7 +3199,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
           </p>
           <button
             onClick={onClose}
-            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-lg sm:rounded-xl font-medium text-sm sm:text-base hover:shadow-lg hover:shadow-purple-500/30 transition-all hover:scale-105"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg sm:rounded-xl font-medium text-sm sm:text-base transition-all hover:shadow-lg"
           >
             Got it! ✨
           </button>
@@ -7127,7 +7127,7 @@ export default function KanbanBoard({ demoMode = false }) {
       
       {/* Demo Mode Banner */}
       {demoMode && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2.5 text-center text-sm font-medium shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-purple-600 text-white px-4 py-2.5 text-center text-sm font-medium shadow-lg">
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <span className="inline-flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7428,7 +7428,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <button
                 onClick={() => { setEditingTask(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg sm:rounded-xl hover:from-indigo-600 hover:to-purple-600 active:from-indigo-700 active:to-purple-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-indigo-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg sm:rounded-xl transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-purple-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
                 title={`${shortcutModifier}T`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7464,7 +7464,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 }}
                 disabled={projects.length === 0}
                 className="hidden sm:flex px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-amber-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-                title="Import Meeting Notes (⌘N)"
+                title={`Import Meeting Notes (${shortcutModifier}N)`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -8529,7 +8529,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   {/* Empty State */}
       {projects.length === 0 && (
         <div className="max-w-md mx-auto mt-12 sm:mt-20 text-center px-6">
-          <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center mx-auto mb-6">
             <svg className="w-12 h-12 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -8538,7 +8538,7 @@ export default function KanbanBoard({ demoMode = false }) {
           <p className="text-gray-500 dark:text-gray-300 mb-8 text-base sm:text-base">Get started by creating your first project.</p>
           <button
             onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-            className="w-full sm:w-auto px-8 py-4 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 text-lg sm:text-base active:scale-95"
+            className="w-full sm:w-auto px-8 py-4 sm:py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium shadow-lg shadow-purple-500/25 text-lg sm:text-base active:scale-95"
           >
             Create Your First Project
           </button>
@@ -8679,7 +8679,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Projects</h2>
                 <button
                   onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                  className="px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium flex items-center gap-2 text-sm sm:text-base"
+                  className="px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium flex items-center gap-2 text-sm sm:text-base"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -8731,7 +8731,7 @@ export default function KanbanBoard({ demoMode = false }) {
                             <div className="mt-3 flex items-center gap-3">
                               <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                 <div 
-                                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                                  className="h-full bg-purple-600 rounded-full transition-all"
                                   style={{ width: `${progress}%` }}
                                 />
                               </div>
@@ -9018,7 +9018,7 @@ export default function KanbanBoard({ demoMode = false }) {
                           <div 
                             className={`w-full max-w-[40px] rounded-t-lg transition-all ${
                               day.isToday 
-                                ? 'bg-gradient-to-t from-indigo-500 to-purple-500' 
+                                ? 'bg-purple-600' 
                                 : 'bg-indigo-200 dark:bg-indigo-800'
                             }`}
                             style={{ height: `${Math.max((day.count / maxCount) * 100, 8)}%` }}
@@ -9057,7 +9057,7 @@ export default function KanbanBoard({ demoMode = false }) {
                         </div>
                         <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                            className="h-full bg-purple-600 rounded-full transition-all"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -9937,7 +9937,7 @@ Or we can extract from:
               <button
                 onClick={handleCreateExtractedTasks}
                 disabled={extractedTasks.filter(t => t.selected).length === 0 || saving}
-                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
               >
                 {saving ? (
                   <>
@@ -10318,7 +10318,7 @@ Or we can extract from:
                     setPlanningModeOpen(false)
                     setCurrentView('myday')
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all font-medium"
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium"
                 >
                   View My Day →
                 </button>
@@ -10336,7 +10336,7 @@ Or we can extract from:
             setQuickAddOpen(true)
           }
         }}
-        className="sm:hidden fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center z-30 active:scale-95 transition-transform"
+        className="sm:hidden fixed bottom-6 right-6 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg shadow-purple-500/40 flex items-center justify-center z-30 active:scale-95 transition-transform"
         disabled={projects.length === 0}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10455,7 +10455,7 @@ Or we can extract from:
                           className="w-14 h-14 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-700"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
                           {(profile?.display_name || user?.email)?.charAt(0).toUpperCase()}
                         </div>
                       )}
