@@ -11115,7 +11115,7 @@ Or we can extract from:
         isOpen={sparkPanelOpen}
         onClose={() => setSparkPanelOpen(false)}
         tasks={tasks}
-        projects={projects}
+        projects={projects.filter(p => !p.archived)}
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
         onTaskCreated={async (taskData) => {
           // Create task via Spark - aligned with email extraction pattern
