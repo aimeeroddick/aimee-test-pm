@@ -6531,7 +6531,7 @@ export default function KanbanBoard({ demoMode = false }) {
         })
       }
 
-      await fetchData()
+      // Realtime handles UI updates
       
       // Show notification
       const isNew = !taskData.id
@@ -6599,7 +6599,7 @@ export default function KanbanBoard({ demoMode = false }) {
         
         if (error) throw error
         
-        await fetchData()
+        // Realtime handles UI updates
         showNotification(`Deleted ${tasksToDelete.length} recurring tasks`)
       } else {
         // Just delete this single task
@@ -6615,7 +6615,7 @@ export default function KanbanBoard({ demoMode = false }) {
         const { error } = await supabase.from('tasks').delete().eq('id', taskId)
         if (error) throw error
         
-        await fetchData()
+        // Realtime handles UI updates
         showNotification('Task deleted')
       }
     } catch (err) {
