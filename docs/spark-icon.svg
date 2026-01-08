@@ -1,0 +1,25 @@
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Each point is a different colour from the Trackli brand palette -->
+  <!-- Top point - Purple -->
+  <path d="M28 4L31 24L28 28L25 24L28 4Z" fill="#7C3AED"/>
+  <!-- Right point - Pink -->
+  <path d="M52 28L32 31L28 28L32 25L52 28Z" fill="#EC4899"/>
+  <!-- Bottom point - Orange -->
+  <path d="M28 52L25 32L28 28L31 32L28 52Z" fill="#F97316"/>
+  <!-- Left point - Yellow -->
+  <path d="M4 28L24 25L28 28L24 31L4 28Z" fill="#FBBF24"/>
+  
+  <!-- Centre glow -->
+  <defs>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.2"/>
+    </radialGradient>
+  </defs>
+  <circle cx="28" cy="28" r="6" fill="url(#centerGlow)"/>
+  
+  <!-- Accent sparkle dots -->
+  <circle cx="40" cy="14" r="2" fill="#34D399"/>
+  <circle cx="42" cy="40" r="1.5" fill="#06B6D4"/>
+</svg>

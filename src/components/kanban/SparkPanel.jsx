@@ -1,45 +1,43 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 
-// The Spark icon - 4-pointed star with brand colours
+// The Spark icon - Joyful Spark with gradient and accent dots
 const SparkIcon = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 56 56" fill="none">
-    {/* Top point - Purple */}
-    <path d="M28 4L31 24L28 28L25 24L28 4Z" fill="#7C3AED"/>
-    {/* Right point - Pink */}
-    <path d="M52 28L32 31L28 28L32 25L52 28Z" fill="#EC4899"/>
-    {/* Bottom point - Orange */}
-    <path d="M28 52L25 32L28 28L31 32L28 52Z" fill="#F97316"/>
-    {/* Left point - Yellow */}
-    <path d="M4 28L24 25L28 28L24 31L4 28Z" fill="#FBBF24"/>
-    {/* Centre glow */}
-    <circle cx="28" cy="28" r="5" fill="white" opacity="0.9"/>
+    <defs>
+      <linearGradient id="sparkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#F97316"/>
+        <stop offset="50%" stopColor="#EC4899"/>
+        <stop offset="100%" stopColor="#F97316"/>
+      </linearGradient>
+    </defs>
+    {/* Main 4-point star with gradient */}
+    <path d="M28 4C28 4 30 18 32 22C34 26 48 28 48 28C48 28 34 30 32 34C30 38 28 52 28 52C28 52 26 38 24 34C22 30 8 28 8 28C8 28 22 26 24 22C26 18 28 4 28 4Z" fill="url(#sparkGradient)"/>
     {/* Accent dots */}
-    <circle cx="40" cy="14" r="2" fill="#34D399"/>
-    <circle cx="42" cy="40" r="1.5" fill="#06B6D4"/>
+    <circle cx="44" cy="16" r="3" fill="#34D399"/>
+    <circle cx="44" cy="44" r="2" fill="#06B6D4"/>
   </svg>
 )
 
-// White version for the header button
-export const SparkIconWhite = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 56 56" fill="none">
-    <path d="M28 4L31 24L28 28L25 24L28 4Z" fill="white"/>
-    <path d="M52 28L32 31L28 28L32 25L52 28Z" fill="white" opacity="0.9"/>
-    <path d="M28 52L25 32L28 28L31 32L28 52Z" fill="white" opacity="0.8"/>
-    <path d="M4 28L24 25L28 28L24 31L4 28Z" fill="white" opacity="0.85"/>
-    <circle cx="28" cy="28" r="4" fill="white"/>
-  </svg>
-)
-
-// Header button component - gradient background with white icon
+// Header button component - Option H: Soft pink background, icon only
 export const SparkButton = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="hidden sm:flex px-3 py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white rounded-xl hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 active:from-purple-700 active:via-pink-700 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-purple-500/25 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+    className="hidden sm:flex p-2 bg-pink-50 hover:bg-pink-100 active:bg-pink-200 border border-pink-200 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2"
     title="Spark AI Assistant (⌃⌘S)"
   >
-    <SparkIconWhite className="w-4 h-4" />
-    <span className="hidden lg:inline"><u>S</u>park</span>
+    <svg className="w-6 h-6" viewBox="0 0 56 56" fill="none">
+      <defs>
+        <linearGradient id="sparkBtnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F97316"/>
+          <stop offset="50%" stopColor="#EC4899"/>
+          <stop offset="100%" stopColor="#F97316"/>
+        </linearGradient>
+      </defs>
+      <path d="M28 4C28 4 30 18 32 22C34 26 48 28 48 28C48 28 34 30 32 34C30 38 28 52 28 52C28 52 26 38 24 34C22 30 8 28 8 28C8 28 22 26 24 22C26 18 28 4 28 4Z" fill="url(#sparkBtnGrad)"/>
+      <circle cx="44" cy="16" r="3" fill="#34D399"/>
+      <circle cx="44" cy="44" r="2" fill="#06B6D4"/>
+    </svg>
   </button>
 )
 
