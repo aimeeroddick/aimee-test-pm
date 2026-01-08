@@ -102,7 +102,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Spark received request')
     const { message, context, conversationHistory } = await req.json()
+    console.log('Message:', message?.substring(0, 100))
 
     if (!message || message.trim().length === 0) {
       return new Response(
@@ -113,11 +115,13 @@ serve(async (req) => {
 
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicKey) {
+      console.error('Missing ANTHROPIC_API_KEY')
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+    console.log('API key found')
 
     const today = new Date().toISOString().split('T')[0]
     const currentYear = new Date().getFullYear()
@@ -157,6 +161,8 @@ ${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: 
     }
     messages.push({ role: 'user', content: message })
 
+    console.log('Calling Claude API with', messages.length, 'messages')
+    
     // Non-streaming call to Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -172,6 +178,8 @@ ${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: 
         messages: messages
       })
     })
+    
+    console.log('Claude API response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -184,6 +192,8 @@ ${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: 
 
     const data = await response.json()
     const rawText = data.content?.[0]?.text || ''
+    console.log('Claude raw response length:', rawText.length)
+    console.log('Claude raw response preview:', rawText.substring(0, 200))
     
     // Parse JSON response
     let result: any
@@ -194,8 +204,10 @@ ${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: 
         jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
       }
       result = JSON.parse(jsonStr)
-    } catch {
+      console.log('Parsed result successfully')
+    } catch (parseError) {
       // If not valid JSON, treat as plain text response
+      console.log('JSON parse failed, using raw text:', parseError)
       result = { response: rawText }
     }
 
@@ -206,9 +218,10 @@ ${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: 
 
   } catch (error) {
     console.error('Request error:', error)
+    console.error('Error stack:', error.stack)
     return new Response(
-      JSON.stringify({ error: 'Something went wrong', details: String(error) }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Something went wrong', details: String(error), stack: error.stack }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
