@@ -33,22 +33,27 @@ serve(async (req) => {
     const userName = body.context?.userName || 'User'
     
     // Simplified prompt
+    const projectCount = projects.length
     const systemPrompt = `You are Spark, a task assistant. Today is ${today}.
 
 RESPOND IN JSON FORMAT ONLY:
 {"response": "your message", "action": {"type": "create_task", "task": {...}}} - when creating tasks
 {"response": "your message"} - for questions/conversation
 
-TASK FIELDS: title, status (todo/in_progress/done/backlog), due_date (YYYY-MM-DD), start_date, start_time (HH:MM), end_time, time_estimate (minutes), assignee, project_id, energy_level (low/medium/high), critical (boolean)
+TASK FIELDS: title, status (todo/in_progress/done/backlog), due_date (YYYY-MM-DD), start_date, start_time (HH:MM), end_time, time_estimate (minutes), assignee, project_id (UUID), energy_level (low/medium/high), critical (boolean)
 
 USER: ${userName}
-PROJECTS: ${projects.map((p: any) => `${p.name} (ID: ${p.id})`).join(', ') || 'None'}
+PROJECTS (${projectCount} total): ${projects.map((p: any) => `${p.name} (ID: ${p.id})`).join(', ') || 'None'}
 
-RULES:
+CRITICAL PROJECT RULE:
+${projectCount > 1 ? `User has ${projectCount} projects. If they do NOT specify a project name in their message, you MUST ask which project. Do NOT create the task yet - respond with just {"response": "Which project?..."} and list the project names.` : 'User has 1 project, use it automatically.'}
+
+OTHER RULES:
 - If user says "I need to..." assign to ${userName}
-- If multiple projects and user doesn't specify, ASK which project (no action)
 - Parse times: "8:30am" → "08:30", "2pm-4pm" → start "14:00" end "16:00"
-- energy_level: <=30min=low, 31-120min=medium, >120min=high`
+- energy_level: <=30min=low, 31-120min=medium, >120min=high
+- "tomorrow" = calculate tomorrow's date
+- "one week from today" = calculate that date`
 
     console.log('Calling Claude...')
     
