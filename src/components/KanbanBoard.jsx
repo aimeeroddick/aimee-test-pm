@@ -11122,16 +11122,26 @@ Or we can extract from:
           try {
             // Handle project_id - Claude might send name instead of UUID
             let projectId = taskData.project_id
-            if (projectId && !projectId.match(/^[0-9a-f-]{36}$/i)) {
+            console.log('Spark received project_id:', projectId, 'type:', typeof projectId)
+            
+            // Check if it's a valid UUID (36 chars with dashes)
+            const isUUID = projectId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)
+            console.log('Is UUID:', isUUID)
+            
+            if (projectId && !isUUID) {
               // Not a UUID - try to find project by name
+              console.log('Looking up project by name:', projectId)
               const matchedProject = projects.find(p => 
                 p.name.toLowerCase() === projectId.toLowerCase() ||
                 p.name.toLowerCase().includes(projectId.toLowerCase())
               )
+              console.log('Matched project:', matchedProject?.name, matchedProject?.id)
               projectId = matchedProject?.id || projects[0]?.id || null
             } else if (!projectId) {
               projectId = projects[0]?.id || null
             }
+            
+            console.log('Final project_id:', projectId)
             
             const newTask = {
               title: taskData.title,
