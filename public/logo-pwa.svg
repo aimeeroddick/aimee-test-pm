@@ -13,10 +13,10 @@
       <stop offset="100%" stop-color="#F97316"/>
     </linearGradient>
   </defs>
-  <!-- Light background - fills entire space -->
+  <!-- Light background -->
   <rect width="512" height="512" fill="url(#bg)"/>
-  <!-- Logo - scale 9.5x to fill most of the space, centered -->
-  <g transform="translate(22, 40) scale(9.5)">
+  <!-- Logo centered: scale 10x, offset to center (logo center is at 28,26 in original coords) -->
+  <g transform="translate(-24, -4) scale(10)">
     <path d="M6 18L28 6L28 38L6 26Z" fill="url(#left)"/>
     <path d="M28 6L50 18L50 46L28 38Z" fill="url(#right)"/>
     <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
