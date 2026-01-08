@@ -22,6 +22,7 @@ import { TaskTableView } from './kanban/views/TaskTableView'
 import TaskModal from './kanban/modals/TaskModal'
 import ProjectModal from './kanban/modals/ProjectModal'
 import WelcomeModal from './kanban/modals/WelcomeModal'
+import { trackEvent } from '../utils/analytics'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
@@ -4604,6 +4605,9 @@ export default function KanbanBoard({ demoMode = false }) {
   // Scroll to top when view changes
   useEffect(() => {
     window.scrollTo(0, 0)
+    if (currentView) {
+      trackEvent('view_changed', { view: currentView })
+    }
   }, [currentView])
   
   // Handle completing a view tour
@@ -5824,6 +5828,7 @@ export default function KanbanBoard({ demoMode = false }) {
         if (insertError) throw insertError
       }
       
+      trackEvent('ai_notes_used', { task_count: selectedTasks.length })
       await fetchData()
       
       setMeetingNotesModalOpen(false)
@@ -6249,6 +6254,7 @@ export default function KanbanBoard({ demoMode = false }) {
         
         if (insertError) throw insertError
         taskId = newTask.id
+        trackEvent('task_created', { source: taskData.source || 'manual' })
         
         if (taskData.dependencies && taskData.dependencies.length > 0) {
           await supabase.from('task_dependencies').insert(
@@ -6496,9 +6502,10 @@ export default function KanbanBoard({ demoMode = false }) {
         t.id === taskId ? { ...t, ...updateData } : t
       ))
       
-      // Show notification
+      // Show notification and track
       if (myDayDate && new Date(myDayDate).toDateString() === new Date().toDateString()) {
         showNotification(`Added "${task?.title}" to My Day`)
+        trackEvent('my_day_task_added')
       } else if (!myDayDate) {
         showNotification(`Removed "${task?.title}" from My Day`)
       }
@@ -6538,6 +6545,7 @@ export default function KanbanBoard({ demoMode = false }) {
       
       // Show undo toast
       if (newStatus === 'done') {
+        trackEvent('task_completed', { had_subtasks: (task?.subtasks?.length || 0) > 0 })
         setUndoToast({
           taskId,
           previousStatus,
@@ -6627,6 +6635,7 @@ export default function KanbanBoard({ demoMode = false }) {
       
       setTasks(tasks.map(t => t.id === breakdownTask.id ? { ...t, subtasks: allSubtasks } : t))
       showNotification(`✨ Added ${newSubtasks.length} subtask${newSubtasks.length > 1 ? 's' : ''}`)
+      trackEvent('ai_breakdown_used', { subtask_count: newSubtasks.length })
     } catch (err) {
       console.error('Error adding subtasks:', err)
       setError(err.message)
