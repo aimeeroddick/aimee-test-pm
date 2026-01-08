@@ -11116,13 +11116,13 @@ Or we can extract from:
         onClose={() => setSparkPanelOpen(false)}
         tasks={tasks}
         projects={projects}
+        userName={profile?.display_name || user?.email?.split('@')[0] || ''}
         onTaskCreated={async (taskData) => {
-          // Create task via Spark - matches Quick Add pattern exactly
+          // Create task via Spark - aligned with email extraction pattern
           try {
             // Resolve project_id - handle name vs UUID
             let projectId = taskData.project_id
             if (projectId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)) {
-              // Not a UUID - find by name
               const match = projects.find(p => 
                 p.name.toLowerCase() === projectId.toLowerCase() ||
                 p.name.toLowerCase().includes(projectId.toLowerCase())
@@ -11131,16 +11131,23 @@ Or we can extract from:
             }
             if (!projectId) projectId = projects[0]?.id
             
-            // Match Quick Add insert exactly
+            // Build task matching email extraction schema
             const { data, error } = await supabase
               .from('tasks')
               .insert({
                 title: taskData.title?.trim() || 'New task',
+                description: taskData.description || null,
                 project_id: projectId,
                 status: taskData.status || 'todo',
-                start_date: taskData.due_date || null,
                 due_date: taskData.due_date || null,
-                energy_level: 'medium',
+                start_date: taskData.start_date || taskData.due_date || null,
+                start_time: taskData.start_time || null,
+                end_time: taskData.end_time || null,
+                time_estimate: taskData.time_estimate || null,
+                assignee: taskData.assignee || null,
+                critical: taskData.critical || false,
+                energy_level: taskData.energy_level || 'medium',
+                customer: taskData.customer || null,
                 category: 'deliverable',
                 source: 'spark'
               })

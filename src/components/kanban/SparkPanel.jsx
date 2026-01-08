@@ -72,7 +72,8 @@ export default function SparkPanel({
   isOpen, 
   onClose, 
   tasks = [], 
-  projects = [], 
+  projects = [],
+  userName = '',
   onTaskCreated,
   onTaskUpdated,
   onTaskCompleted,
@@ -161,8 +162,14 @@ export default function SparkPanel({
       task_count: tasks.filter(t => t.project_id === p.id).length
     }))
 
-    return { projects: projectSummaries, taskSummary, overdueTasks, myDayTasks }
-  }, [tasks, projects])
+    return { 
+      projects: projectSummaries, 
+      taskSummary, 
+      overdueTasks, 
+      myDayTasks,
+      userName: userName || 'User'
+    }
+  }, [tasks, projects, userName])
 
   // Send message to Spark
   const sendMessage = async () => {
