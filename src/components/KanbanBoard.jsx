@@ -11178,9 +11178,17 @@ Or we can extract from:
               .select()
               .single()
 
+            console.log('Spark insert result:', { data, error })
+
             if (error) {
               console.error('Spark task error:', error)
-              setToast({ message: 'Failed to create task', type: 'error' })
+              setToast({ message: `Failed to create task: ${error.message}`, type: 'error' })
+              return false
+            }
+            
+            if (!data) {
+              console.error('Spark: No data returned from insert')
+              setToast({ message: 'Failed to create task: No data returned', type: 'error' })
               return false
             }
             
