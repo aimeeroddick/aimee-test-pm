@@ -228,14 +228,15 @@ export default function SparkPanel({
 
       // Parse the JSON response (non-streaming)
       const data = await response.json()
-      console.log('Spark response:', data)
+      console.log('Spark raw response:', data)
 
       // Handle the response
       let displayMessage = data.response || data.error || "I didn't quite catch that."
       
       // If there's an action, execute it
       if (data.action) {
-        console.log('Executing action:', data.action)
+        console.log('Spark action:', JSON.stringify(data.action, null, 2))
+        console.log('Task data:', JSON.stringify(data.action.task, null, 2))
         const success = await executeAction(data.action)
         
         if (!success) {

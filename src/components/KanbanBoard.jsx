@@ -11119,6 +11119,7 @@ Or we can extract from:
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
         onTaskCreated={async (taskData) => {
           // Create task via Spark - aligned with email extraction pattern
+          console.log('Spark onTaskCreated received:', JSON.stringify(taskData, null, 2))
           try {
             // Resolve project_id - handle name vs UUID
             let projectId = taskData.project_id
@@ -11128,29 +11129,36 @@ Or we can extract from:
                 p.name.toLowerCase().includes(projectId.toLowerCase())
               )
               projectId = match?.id || projects[0]?.id
+              console.log('Resolved project name to ID:', taskData.project_id, '->', projectId)
             }
-            if (!projectId) projectId = projects[0]?.id
+            if (!projectId) {
+              projectId = projects[0]?.id
+              console.log('No project specified, using first:', projectId)
+            }
             
             // Build task matching email extraction schema
+            const insertData = {
+              title: taskData.title?.trim() || 'New task',
+              description: taskData.description || null,
+              project_id: projectId,
+              status: taskData.status || 'todo',
+              due_date: taskData.due_date || null,
+              start_date: taskData.start_date || taskData.due_date || null,
+              start_time: taskData.start_time || null,
+              end_time: taskData.end_time || null,
+              time_estimate: taskData.time_estimate || null,
+              assignee: taskData.assignee || null,
+              critical: taskData.critical || false,
+              energy_level: taskData.energy_level || 'medium',
+              customer: taskData.customer || null,
+              category: 'deliverable',
+              source: 'spark'
+            }
+            console.log('Spark inserting task:', JSON.stringify(insertData, null, 2))
+            
             const { data, error } = await supabase
               .from('tasks')
-              .insert({
-                title: taskData.title?.trim() || 'New task',
-                description: taskData.description || null,
-                project_id: projectId,
-                status: taskData.status || 'todo',
-                due_date: taskData.due_date || null,
-                start_date: taskData.start_date || taskData.due_date || null,
-                start_time: taskData.start_time || null,
-                end_time: taskData.end_time || null,
-                time_estimate: taskData.time_estimate || null,
-                assignee: taskData.assignee || null,
-                critical: taskData.critical || false,
-                energy_level: taskData.energy_level || 'medium',
-                customer: taskData.customer || null,
-                category: 'deliverable',
-                source: 'spark'
-              })
+              .insert(insertData)
               .select()
               .single()
 
