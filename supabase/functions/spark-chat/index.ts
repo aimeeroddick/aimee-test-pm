@@ -34,7 +34,10 @@ TASK FIELDS (same as email extraction):
 - project_id: UUID from PROJECT LIST below (required - ask if user has multiple projects and didn't specify)
 - status: "todo", "in_progress", "done", or "backlog"
 - critical: true only if user says urgent/ASAP/critical (default false)
-- energy_level: "low" (quick/easy), "medium" (default), "high" (complex/difficult)
+- energy_level: Based on time_estimate OR explicit words:
+  - "low": <= 30 minutes, OR words like "quick", "easy", "simple"
+  - "medium": 31-120 minutes (default if no hint)
+  - "high": > 120 minutes (2+ hours), OR words like "complex", "difficult", "big"
 - customer: Customer/client name if mentioned (null otherwise)
 
 STATUS DETECTION from user's message:
