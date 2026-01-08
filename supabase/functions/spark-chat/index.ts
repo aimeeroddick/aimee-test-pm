@@ -165,16 +165,38 @@ For questions about tasks, general chat, or when you need more info, just respon
     const data = await response.json()
     const rawText = data.content?.[0]?.text || ''
 
-    // Parse JSON response
+    // Parse JSON response - handle various Claude output formats
     let result: any
     try {
       let jsonStr = rawText.trim()
+      
+      // Remove markdown code blocks if present
       if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
       }
+      
+      // Try to extract JSON if there's text before/after it
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0]
+      }
+      
       result = JSON.parse(jsonStr)
+      
+      // Validate result has expected structure
+      if (!result.response && !result.action && !result.error) {
+        result = { response: rawText }
+      }
     } catch {
-      result = { response: rawText }
+      // If JSON parsing fails completely, treat as plain text
+      // But clean up any JSON artifacts
+      let cleanText = rawText
+      if (rawText.includes('{"response"')) {
+        // Try to extract just the response text
+        const match = rawText.match(/"response"\s*:\s*"([^"]+)"/)
+        if (match) cleanText = match[1].replace(/\\n/g, '\n')
+      }
+      result = { response: cleanText }
     }
 
     return new Response(
