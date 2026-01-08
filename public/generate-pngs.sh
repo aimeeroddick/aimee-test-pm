@@ -6,14 +6,14 @@ cd "$(dirname "$0")"
 
 echo "Generating PNG files from SVGs..."
 
-# Root level icons - use transparent logo for favicon
+# Favicon icons - use favicon.svg (optimized for small sizes, transparent)
 for size in 16 32 64 80 128; do
-  qlmanage -t -s $size -o . logo.svg 2>/dev/null
-  mv logo.svg.png icon-$size.png 2>/dev/null
-  echo "Created icon-$size.png"
+  qlmanage -t -s $size -o . favicon.svg 2>/dev/null
+  mv favicon.svg.png icon-$size.png 2>/dev/null
+  echo "Created icon-$size.png from favicon.svg"
 done
 
-# logo.png (56x56) - transparent
+# logo.png (56x56) - transparent, use logo.svg
 qlmanage -t -s 56 -o . logo.svg 2>/dev/null
 mv logo.svg.png logo.png 2>/dev/null
 echo "Created logo.png"
@@ -41,5 +41,5 @@ done
 
 echo ""
 echo "Done! PNG files generated."
-echo "- Favicon icons: transparent background"
-echo "- PWA/touch icons: purple gradient background"
+echo "- Favicon icons: from favicon.svg (transparent)"
+echo "- PWA/touch icons: from logo-pwa.svg (light background)"

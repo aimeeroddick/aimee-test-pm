@@ -1,26 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="50%" stop-color="#9333EA"/>
-      <stop offset="100%" stop-color="#A855F7"/>
+      <stop offset="0%" stop-color="#F5F3FF"/>
+      <stop offset="100%" stop-color="#EDE9FE"/>
     </linearGradient>
     <linearGradient id="left" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#A78BFA"/>
-      <stop offset="100%" stop-color="#C4B5FD"/>
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#9333EA"/>
     </linearGradient>
     <linearGradient id="right" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FB923C"/>
-      <stop offset="100%" stop-color="#FDBA74"/>
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#F97316"/>
     </linearGradient>
   </defs>
-  <!-- Background -->
+  <!-- Light background -->
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Logo centered and scaled (original 56x56, scale ~5.5x, centered) -->
-  <g transform="translate(102, 102) scale(5.5)">
+  <!-- Logo - larger scale (7x) and centered -->
+  <g transform="translate(60, 68) scale(7)">
     <path d="M6 18L28 6L28 38L6 26Z" fill="url(#left)"/>
     <path d="M28 6L50 18L50 46L28 38Z" fill="url(#right)"/>
-    <path d="M6 18L28 6L50 18L28 30Z" fill="#F3E8FF"/>
+    <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
     <path d="M18 19L25 26L36 14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>
