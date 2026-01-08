@@ -237,10 +237,14 @@ export default function SparkPanel({
       if (data.action) {
         console.log('Spark action:', JSON.stringify(data.action, null, 2))
         console.log('Task data:', JSON.stringify(data.action.task, null, 2))
-        const success = await executeAction(data.action)
+        const result = await executeAction(data.action)
+        
+        // Handle result - could be boolean or { success, error }
+        const success = typeof result === 'object' ? result.success : result
+        const errorMsg = typeof result === 'object' ? result.error : null
         
         if (!success) {
-          displayMessage = "Sorry, I couldn't complete that action. Could you try again?"
+          displayMessage = errorMsg || "Sorry, I couldn't complete that action. Could you try again?"
         }
       }
 
@@ -267,7 +271,11 @@ export default function SparkPanel({
           console.log('Spark: Calling onTaskCreated...')
           const result = await onTaskCreated(action.task)
           console.log('Spark: onTaskCreated returned:', result)
-          return result
+          // Handle both old boolean return and new object return
+          if (typeof result === 'object') {
+            return result // { success: boolean, error?: string }
+          }
+          return { success: result }
         }
       } else if (action.type === 'complete_task' && action.task_id) {
         if (onTaskCompleted) {
@@ -284,9 +292,9 @@ export default function SparkPanel({
       }
     } catch (e) {
       console.error('Action execution error:', e)
-      return false
+      return { success: false, error: 'An error occurred while executing the action' }
     }
-    return false
+    return { success: false, error: 'Unknown action type' }
   }
 
   const handleKeyDown = (e) => {

@@ -11122,6 +11122,8 @@ Or we can extract from:
           // Claude returns project_name (text), we match it to project_id here
           console.log('Spark task:', taskData.title, '| project_name:', taskData.project_name)
           
+          const activeProjects = projects.filter(p => !p.archived)
+          
           try {
             // Match project_name to project_id (same logic as inbound-email)
             let projectId = null
@@ -11131,12 +11133,12 @@ Or we can extract from:
               const searchName = projectName.toLowerCase().trim()
               
               // Try exact match first
-              const exactMatch = projects.find(p => p.name.toLowerCase() === searchName)
+              const exactMatch = activeProjects.find(p => p.name.toLowerCase() === searchName)
               if (exactMatch) {
                 projectId = exactMatch.id
               } else {
                 // Try partial match
-                const partialMatch = projects.find(p => {
+                const partialMatch = activeProjects.find(p => {
                   const pNameLower = p.name.toLowerCase()
                   return pNameLower.includes(searchName) || searchName.includes(pNameLower)
                 })
@@ -11144,13 +11146,17 @@ Or we can extract from:
               }
             }
             
-            // Fallback to first project if no match
-            if (!projectId && projects.length > 0) {
-              projectId = projects[0].id
-              console.log('Spark: No project match, using first project')
+            // If no project specified or found, return error with project list
+            if (!projectId) {
+              const projectList = activeProjects.map(p => p.name).join(', ')
+              console.log('Spark: Project not found, returning error')
+              return { 
+                success: false, 
+                error: `I couldn't find that project. Please choose from your active projects: ${projectList}` 
+              }
             }
             
-            console.log('Spark: Matched to project:', projects.find(p => p.id === projectId)?.name)
+            console.log('Spark: Matched to project:', activeProjects.find(p => p.id === projectId)?.name)
             
             // Build task matching email extraction schema
             const insertData = {
@@ -11216,15 +11222,15 @@ Or we can extract from:
               
               setToast({ message: `Created: ${data.title}`, type: 'success' })
               console.log('Spark: setToast called')
-              return true
+              return { success: true }
             } catch (stateError) {
               console.error('Spark: Error updating state:', stateError)
-              return false
+              return { success: false, error: 'Failed to update task list' }
             }
           } catch (e) {
             console.error('Spark exception:', e)
             setToast({ message: 'Failed to create task', type: 'error' })
-            return false
+            return { success: false, error: 'Something went wrong creating the task' }
           }
         }}
         onTaskUpdated={async (taskId, updates) => {
