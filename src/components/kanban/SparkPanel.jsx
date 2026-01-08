@@ -23,10 +23,10 @@ const SparkIcon = ({ className = "w-6 h-6" }) => (
 export const SparkButton = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="hidden sm:flex p-2 bg-pink-50 hover:bg-pink-100 active:bg-pink-200 border border-pink-200 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2"
+    className="hidden sm:flex p-1.5 bg-pink-50 hover:bg-pink-100 active:bg-pink-200 border border-pink-200 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2"
     title="Spark AI Assistant (⌃⌘S)"
   >
-    <svg className="w-6 h-6" viewBox="0 0 56 56" fill="none">
+    <svg className="w-7 h-7" viewBox="0 0 56 56" fill="none">
       <defs>
         <linearGradient id="sparkBtnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#F97316"/>
