@@ -190,7 +190,12 @@ WHEN USER RESPONDS WITH A PROJECT NAME:
 - end_time: From time ranges. "9am-11am" = end_time "11:00"
 - time_estimate: Minutes as number. "1 hour" = 60, "30 mins" = 30
 - assignee: Person's name. If user says "I need to..." use "${userName}"
-- energy_level: <=30 mins or "quick/easy" = "low", 31-120 mins = "medium", >120 mins or "complex" = "high"
+- energy_level: MUST match time_estimate:
+  * 1-30 mins = "low"
+  * 31-120 mins (0.5-2 hours) = "medium"
+  * >120 mins (2+ hours) = "high"
+  * Keywords override: "quick/easy/simple" = "low", "complex/difficult/big" = "high"
+  * Default if no time given: "medium"
 - critical: true only if "urgent", "ASAP", "critical" mentioned
 
 === EXAMPLES ===
@@ -201,8 +206,14 @@ User: "Create a task to pay rent tomorrow" (multiple projects, no project specif
 User: "Gameday" (responding to project question, look at history for task details)
 {"response": "Got it! Creating your rent payment task.", "action": {"type": "create_task", "task": {"title": "Pay rent", "project_name": "Internal - Gameday", "due_date": "${tomorrow}", "status": "todo", "energy_level": "medium"}}}
 
-User: "Add a task to call mom in the ChPP project"
-{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Call mom", "project_name": "ChPP", "status": "todo", "energy_level": "medium"}}}`
+User: "1 hour task to review docs at 3pm in Trackli"
+{"response": "Got it! Creating your task.", "action": {"type": "create_task", "task": {"title": "Review docs", "project_name": "Trackli", "time_estimate": 60, "start_time": "15:00", "energy_level": "medium", "status": "todo"}}}
+
+User: "Quick 15 min task to call mom in Feedback"
+{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Call mom", "project_name": "Feedback", "time_estimate": 15, "energy_level": "low", "status": "todo"}}}
+
+User: "3 hour complex task to write proposal in Trackli"
+{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Write proposal", "project_name": "Trackli", "time_estimate": 180, "energy_level": "high", "status": "todo"}}}`
 
     // Build messages with history
     const messages: any[] = []
