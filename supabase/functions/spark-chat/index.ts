@@ -42,6 +42,15 @@ serve(async (req) => {
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
     const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     
+    // Pre-calculate relative dates
+    const in2Days = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+    const in3Days = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
+    const in4Days = new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0]
+    const in5Days = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0]
+    const in2Weeks = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
+    const in3Weeks = new Date(Date.now() + 21 * 86400000).toISOString().split('T')[0]
+    const inAMonth = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+    
     // Calculate next occurrence of each day of week
     const getDayOfWeek = (dayName: string, nextWeek: boolean = false): string => {
       const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -120,9 +129,14 @@ DATE CONVERSION RULES:
 - "Monday" or "on Monday" = ${thisMonday}
 - "next Monday" = ${nextMonday}
 - "next week" = ${nextWeek}
+- "in 2 days" = ${in2Days}
+- "in 3 days" = ${in3Days}
+- "in 4 days" = ${in4Days}
+- "in 5 days" = ${in5Days}
+- "in 2 weeks" = ${in2Weeks}
+- "in 3 weeks" = ${in3Weeks}
+- "in a month" = ${inAMonth}
 - "January 15" = ${currentYear}-01-15 (use ${currentYear + 1} if date has passed)
-- "in 2 days" = calculate from today
-- "in 3 weeks" = calculate from today
 - If a date like "January 8" has already passed this year, use next year (${currentYear + 1})
 
 === USER & PROJECTS ===
