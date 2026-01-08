@@ -11136,17 +11136,17 @@ Or we can extract from:
               .single()
             if (error) {
               console.error('Spark task creation error:', error)
-              showToast('Failed to create task: ' + error.message, 'error')
+              setToast({ message: 'Failed to create task', type: 'error' })
               return false
             }
             if (data) {
               setTasks(prev => [...prev, data])
-              showToast('Task created by Spark!', 'success')
+              setToast({ message: 'Task created by Spark!', type: 'success' })
               return true
             }
           } catch (e) {
             console.error('Spark task creation exception:', e)
-            showToast('Failed to create task', 'error')
+            setToast({ message: 'Failed to create task', type: 'error' })
             return false
           }
           return false
@@ -11155,15 +11155,19 @@ Or we can extract from:
           const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)
           if (!error) {
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t))
+            return true
           }
+          return false
         }}
         onTaskCompleted={async (taskId) => {
           const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
           if (!error) {
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t))
             handleConfetti()
-            showToast('Task completed!', 'success')
+            setToast({ message: 'Task completed!', type: 'success' })
+            return true
           }
+          return false
         }}
         onProjectCreated={async (projectData) => {
           const newProject = {
@@ -11174,8 +11178,10 @@ Or we can extract from:
           const { data, error } = await supabase.from('projects').insert([newProject]).select().single()
           if (!error && data) {
             setProjects(prev => [...prev, data])
-            showToast('Project created by Spark', 'success')
+            setToast({ message: 'Project created by Spark', type: 'success' })
+            return true
           }
+          return false
         }}
       />
       
