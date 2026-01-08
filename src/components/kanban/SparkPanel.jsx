@@ -339,8 +339,8 @@ export default function SparkPanel({
             } else {
               try {
                 const action = JSON.parse(jsonStr)
-                console.log('Executing action:', action)
-                await executeAction(action)
+                console.log('Parsed action:', action)
+                actionSucceeded = await executeAction(action)
               } catch (e) {
                 console.error('Failed to parse action JSON:', e, jsonStr)
                 actionSucceeded = false
@@ -375,34 +375,41 @@ export default function SparkPanel({
   }
 
   // Execute an action returned by Claude (create task, complete task, etc.)
+  // Returns true if action succeeded, false otherwise
   const executeAction = async (action) => {
     console.log('Executing action:', action)
     
-    switch (action.action) {
-      case 'create_task':
-        if (onTaskCreated && action.data) {
-          await onTaskCreated(action.data)
-        }
-        break
-      case 'complete_task':
-        if (onTaskCompleted && action.data?.task_id) {
-          await onTaskCompleted(action.data.task_id)
-        }
-        break
-      case 'update_task':
-        if (onTaskUpdated && action.data?.task_id) {
-          await onTaskUpdated(action.data.task_id, action.data.updates)
-        }
-        break
-      case 'create_project':
-        if (onProjectCreated && action.data) {
-          await onProjectCreated(action.data)
-        }
-        break
-      // Add more actions as needed
-      default:
-        console.log('Unknown action:', action.action)
+    try {
+      switch (action.action) {
+        case 'create_task':
+          if (onTaskCreated && action.data) {
+            return await onTaskCreated(action.data)
+          }
+          break
+        case 'complete_task':
+          if (onTaskCompleted && action.data?.task_id) {
+            return await onTaskCompleted(action.data.task_id)
+          }
+          break
+        case 'update_task':
+          if (onTaskUpdated && action.data?.task_id) {
+            return await onTaskUpdated(action.data.task_id, action.data.updates)
+          }
+          break
+        case 'create_project':
+          if (onProjectCreated && action.data) {
+            return await onProjectCreated(action.data)
+          }
+          break
+        default:
+          console.log('Unknown action:', action.action)
+          return false
+      }
+    } catch (e) {
+      console.error('Error executing action:', e)
+      return false
     }
+    return false
   }
 
   // Handle Enter key to send message

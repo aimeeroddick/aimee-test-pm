@@ -11118,18 +11118,32 @@ Or we can extract from:
         projects={projects}
         onTaskCreated={async (taskData) => {
           // Create task via Spark
-          const newTask = {
-            ...taskData,
-            user_id: user.id,
-            project_id: taskData.project_id || projects[0]?.id,
-            status: taskData.status || 'todo',
-            created_at: new Date().toISOString()
+          try {
+            const newTask = {
+              ...taskData,
+              user_id: user.id,
+              project_id: taskData.project_id || projects[0]?.id,
+              status: taskData.status || 'todo',
+              created_at: new Date().toISOString()
+            }
+            console.log('Spark creating task:', newTask)
+            const { data, error } = await supabase.from('tasks').insert([newTask]).select().single()
+            if (error) {
+              console.error('Spark task creation error:', error)
+              showToast('Failed to create task: ' + error.message, 'error')
+              return false
+            }
+            if (data) {
+              setTasks(prev => [...prev, data])
+              showToast('Task created by Spark!', 'success')
+              return true
+            }
+          } catch (e) {
+            console.error('Spark task creation exception:', e)
+            showToast('Failed to create task', 'error')
+            return false
           }
-          const { data, error } = await supabase.from('tasks').insert([newTask]).select().single()
-          if (!error && data) {
-            setTasks(prev => [...prev, data])
-            showToast('Task created by Spark', 'success')
-          }
+          return false
         }}
         onTaskUpdated={async (taskId, updates) => {
           const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)
