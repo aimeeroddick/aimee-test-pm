@@ -11119,21 +11119,32 @@ Or we can extract from:
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
         onTaskCreated={async (taskData) => {
           // Create task via Spark - aligned with email extraction pattern
+          // Claude returns project_name (text), we match it to project_id here
           console.log('Spark onTaskCreated received:', JSON.stringify(taskData, null, 2))
           try {
-            // Resolve project_id - handle name vs UUID
-            let projectId = taskData.project_id
-            if (projectId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)) {
-              const match = projects.find(p => 
-                p.name.toLowerCase() === projectId.toLowerCase() ||
-                p.name.toLowerCase().includes(projectId.toLowerCase())
-              )
-              projectId = match?.id || projects[0]?.id
-              console.log('Resolved project name to ID:', taskData.project_id, '->', projectId)
+            // Match project_name to project_id (same logic as inbound-email)
+            let projectId = null
+            if (taskData.project_name) {
+              const searchName = taskData.project_name.toLowerCase().trim()
+              // Try exact match first
+              const exactMatch = projects.find(p => p.name.toLowerCase() === searchName)
+              if (exactMatch) {
+                projectId = exactMatch.id
+              } else {
+                // Try partial match
+                const partialMatch = projects.find(p =>
+                  p.name.toLowerCase().includes(searchName) ||
+                  searchName.includes(p.name.toLowerCase())
+                )
+                if (partialMatch) projectId = partialMatch.id
+              }
+              console.log('Matched project_name to ID:', taskData.project_name, '->', projectId)
             }
-            if (!projectId) {
-              projectId = projects[0]?.id
-              console.log('No project specified, using first:', projectId)
+            
+            // Fallback to first project if no match
+            if (!projectId && projects.length > 0) {
+              projectId = projects[0].id
+              console.log('No project match, using first:', projectId)
             }
             
             // Build task matching email extraction schema
