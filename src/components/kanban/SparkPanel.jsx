@@ -82,7 +82,7 @@ export default function SparkPanel({
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [messagesRemaining, setMessagesRemaining] = useState(50)
+  const [messagesRemaining, setMessagesRemaining] = useState(200) // Increased for testing
   
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
@@ -106,10 +106,10 @@ export default function SparkPanel({
       const { count, date } = JSON.parse(stored)
       const today = new Date().toDateString()
       if (date === today) {
-        setMessagesRemaining(50 - count)
+        setMessagesRemaining(200 - count)
       } else {
         localStorage.setItem('sparkMessageCount', JSON.stringify({ count: 0, date: today }))
-        setMessagesRemaining(50)
+        setMessagesRemaining(200)
       }
     }
   }, [])
