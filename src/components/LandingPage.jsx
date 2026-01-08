@@ -271,7 +271,7 @@ export default function LandingPage() {
                   <textarea 
                     value={demoNotes}
                     onChange={(e) => setDemoNotes(e.target.value)}
-                    className="w-full h-40 md:h-48 px-4 py-3 border border-gray-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none text-sm"
+                    className="w-full h-40 md:h-48 px-4 py-3 border border-gray-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none text-sm bg-white text-gray-900"
                     placeholder={`Team sync - 7th Jan
 
 Sarah to follow up with the client by Friday.
