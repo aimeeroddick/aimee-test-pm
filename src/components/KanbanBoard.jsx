@@ -11201,28 +11201,14 @@ Or we can extract from:
             }
             
             try {
-              console.log('Spark: About to add task to state')
-              console.log('Spark: data.id =', data.id)
-              console.log('Spark: data.title =', data.title)
+              console.log('Spark: Task created, refreshing data')
               
-              // Force refetch tasks to ensure UI updates
-              // (optimistic update wasn't working - investigating)
-              const { data: freshTasks, error: fetchError } = await supabase
-                .from('tasks')
-                .select('*, attachments(*), dependencies:task_dependencies!dependent_task_id(*)')
-                .eq('user_id', user.id)
-                .is('archived_at', null)
-                .order('created_at', { ascending: false })
-              
-              if (!fetchError && freshTasks) {
-                console.log('Spark: Refetched tasks, count:', freshTasks.length)
-                setTasks(freshTasks)
-              } else {
-                console.error('Spark: Failed to refetch tasks:', fetchError)
-              }
+              // Refresh all data to ensure UI updates
+              // (Optimistic update has closure issues with inline callbacks)
+              await fetchData()
               
               setToast({ message: `Created: ${data.title}`, type: 'success' })
-              console.log('Spark: setToast called')
+              console.log('Spark: Task added successfully')
               return { success: true }
             } catch (stateError) {
               console.error('Spark: Error updating state:', stateError)
