@@ -189,6 +189,8 @@ WHEN USER RESPONDS WITH A PROJECT NAME:
 - start_time: 24-hour format. "8:30am" = "08:30", "2pm" = "14:00"
 - end_time: From time ranges. "9am-11am" = end_time "11:00"
 - time_estimate: Minutes as number. "1 hour" = 60, "30 mins" = 30
+  * "quick task" = 15 minutes
+  * "short task" = 15 minutes
 - assignee: Person's name. If user says "I need to..." use "${userName}"
 - energy_level: MUST match time_estimate:
   * 1-30 mins = "low"
@@ -196,7 +198,8 @@ WHEN USER RESPONDS WITH A PROJECT NAME:
   * >120 mins (2+ hours) = "high"
   * Keywords override: "quick/easy/simple" = "low", "complex/difficult/big" = "high"
   * Default if no time given: "medium"
-- critical: true only if "urgent", "ASAP", "critical" mentioned
+- critical: true if ANY of these keywords appear: "urgent", "ASAP", "critical", "important"
+  * Default: false
 
 === EXAMPLES ===
 
@@ -213,7 +216,13 @@ User: "Quick 15 min task to call mom in Feedback"
 {"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Call mom", "project_name": "Feedback", "time_estimate": 15, "energy_level": "low", "status": "todo"}}}
 
 User: "3 hour complex task to write proposal in Trackli"
-{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Write proposal", "project_name": "Trackli", "time_estimate": 180, "energy_level": "high", "status": "todo"}}}`
+{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Write proposal", "project_name": "Trackli", "time_estimate": 180, "energy_level": "high", "status": "todo", "critical": false}}}
+
+User: "Quick task to reply to email in Feedback"
+{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Reply to email", "project_name": "Feedback", "time_estimate": 15, "energy_level": "low", "status": "todo", "critical": false}}}
+
+User: "Urgent task to fix bug in Trackli"
+{"response": "Created your urgent task!", "action": {"type": "create_task", "task": {"title": "Fix bug", "project_name": "Trackli", "energy_level": "medium", "status": "todo", "critical": true}}}`
 
     // Build messages with history
     const messages: any[] = []
