@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
         name: 'Trackli - Task Management',
         short_name: 'Trackli',
@@ -84,7 +84,9 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,woff2}'],
+        // Exclude favicons from precache - they should always be fresh
+        globIgnores: ['**/icon-*.png', '**/favicon.*', '**/apple-touch-icon.png'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
