@@ -133,7 +133,7 @@ ${context.recentTasks?.length > 0 ? `RECENT TASKS:\n${context.recentTasks.slice(
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        max_tokens: 2048,
         stream: true, // Enable streaming for real-time responses
         system: SPARK_SYSTEM_PROMPT + contextSection,
         messages: messages

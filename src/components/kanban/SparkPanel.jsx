@@ -313,6 +313,7 @@ export default function SparkPanel({
         // Match ACTION: followed by JSON (handles multi-line by being more flexible)
         const actionIndex = fullResponse.indexOf('ACTION:')
         let displayMessage = fullResponse
+        let actionSucceeded = true
         
         if (actionIndex !== -1) {
           const jsonStart = fullResponse.indexOf('{', actionIndex)
@@ -330,17 +331,30 @@ export default function SparkPanel({
             }
             
             const jsonStr = fullResponse.slice(jsonStart, jsonEnd)
-            try {
-              const action = JSON.parse(jsonStr)
-              console.log('Executing action:', action)
-              await executeAction(action)
-            } catch (e) {
-              console.error('Failed to parse action JSON:', e, jsonStr)
+            
+            // Check if JSON looks complete (braces balanced)
+            if (braceCount !== 0) {
+              console.error('Incomplete JSON (braces not balanced):', jsonStr)
+              actionSucceeded = false
+            } else {
+              try {
+                const action = JSON.parse(jsonStr)
+                console.log('Executing action:', action)
+                await executeAction(action)
+              } catch (e) {
+                console.error('Failed to parse action JSON:', e, jsonStr)
+                actionSucceeded = false
+              }
             }
             
             // Remove ACTION and everything after from displayed message
             displayMessage = fullResponse.slice(0, actionIndex).trim()
           }
+        }
+
+        // If action failed, append error message
+        if (actionIndex !== -1 && !actionSucceeded) {
+          displayMessage = "Sorry, I tried to do that but something went wrong. Could you try again?"
         }
 
         if (displayMessage) {
