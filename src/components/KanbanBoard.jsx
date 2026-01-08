@@ -11198,12 +11198,22 @@ Or we can extract from:
               console.log('Spark: data.id =', data.id)
               console.log('Spark: data.title =', data.title)
               
-              setTasks(prev => {
-                console.log('Spark: Inside setTasks, prev.length =', prev.length)
-                return [...prev, { ...data, attachments: [], dependencies: [] }]
-              })
+              // Force refetch tasks to ensure UI updates
+              // (optimistic update wasn't working - investigating)
+              const { data: freshTasks, error: fetchError } = await supabase
+                .from('tasks')
+                .select('*, attachments(*), dependencies:task_dependencies!dependent_task_id(*)')
+                .eq('user_id', user.id)
+                .is('archived_at', null)
+                .order('created_at', { ascending: false })
               
-              console.log('Spark: setTasks called')
+              if (!fetchError && freshTasks) {
+                console.log('Spark: Refetched tasks, count:', freshTasks.length)
+                setTasks(freshTasks)
+              } else {
+                console.error('Spark: Failed to refetch tasks:', fetchError)
+              }
+              
               setToast({ message: `Created: ${data.title}`, type: 'success' })
               console.log('Spark: setToast called')
               return true
