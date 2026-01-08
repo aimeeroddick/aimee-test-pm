@@ -298,6 +298,11 @@ export default function SparkPanel({
     localStorage.removeItem('sparkConversation')
   }
 
+  const resetMessageLimit = () => {
+    localStorage.removeItem('sparkMessageCount')
+    setMessagesRemaining(200)
+  }
+
   if (!isOpen) return null
 
   return (
@@ -318,7 +323,11 @@ export default function SparkPanel({
           <div className="flex items-center gap-2">
             <SparkIcon className="w-6 h-6" />
             <span className="font-semibold text-gray-900 dark:text-white">Spark</span>
-            <span className="text-xs text-gray-500">{messagesRemaining} left today</span>
+            <span 
+              className="text-xs text-gray-500 cursor-pointer hover:text-purple-600" 
+              onClick={resetMessageLimit}
+              title="Click to reset limit (testing)"
+            >{messagesRemaining} left today</span>
           </div>
           <div className="flex items-center gap-2">
             <button
