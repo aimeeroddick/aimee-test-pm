@@ -74,6 +74,7 @@ export default function SparkPanel({
   tasks = [], 
   projects = [],
   userName = '',
+  dateFormat = 'DD/MM/YYYY',
   onTaskCreated,
   onTaskUpdated,
   onTaskCompleted,
@@ -167,9 +168,10 @@ export default function SparkPanel({
       taskSummary, 
       overdueTasks, 
       myDayTasks,
-      userName: userName || 'User'
+      userName: userName || 'User',
+      dateFormat: dateFormat
     }
-  }, [tasks, projects, userName])
+  }, [tasks, projects, userName, dateFormat])
 
   // Send message to Spark
   const sendMessage = async () => {

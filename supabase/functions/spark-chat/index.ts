@@ -42,6 +42,31 @@ serve(async (req) => {
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
     const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     
+    // Calculate next occurrence of each day of week
+    const getDayOfWeek = (dayName: string): string => {
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      const targetDay = days.indexOf(dayName.toLowerCase())
+      if (targetDay === -1) return ''
+      const now = new Date()
+      const currentDay = now.getDay()
+      let daysUntil = targetDay - currentDay
+      if (daysUntil <= 0) daysUntil += 7 // Next week if today or past
+      const targetDate = new Date(now.getTime() + daysUntil * 86400000)
+      return targetDate.toISOString().split('T')[0]
+    }
+    
+    const nextMonday = getDayOfWeek('monday')
+    const nextTuesday = getDayOfWeek('tuesday')
+    const nextWednesday = getDayOfWeek('wednesday')
+    const nextThursday = getDayOfWeek('thursday')
+    const nextFriday = getDayOfWeek('friday')
+    const nextSaturday = getDayOfWeek('saturday')
+    const nextSunday = getDayOfWeek('sunday')
+    
+    // Get user's date format preference
+    const dateFormat = context?.dateFormat || 'DD/MM/YYYY'
+    const isUSFormat = dateFormat === 'MM/DD/YYYY'
+    
     const projects = context?.projects || []
     const projectNames = projects.map((p: any) => p.name)
     const userName = context?.userName || 'User'
@@ -50,11 +75,35 @@ serve(async (req) => {
     // System prompt - aligned with email extraction approach
     const systemPrompt = `You are Spark, a friendly task assistant in Trackli.
 
+=== DATE REFERENCE ===
 TODAY: ${today}
 TOMORROW: ${tomorrow}
-ONE WEEK FROM TODAY: ${nextWeek}
+NEXT WEEK: ${nextWeek}
 CURRENT YEAR: ${currentYear}
 
+DAYS OF WEEK (next occurrence):
+- Monday: ${nextMonday}
+- Tuesday: ${nextTuesday}
+- Wednesday: ${nextWednesday}
+- Thursday: ${nextThursday}
+- Friday: ${nextFriday}
+- Saturday: ${nextSaturday}
+- Sunday: ${nextSunday}
+
+DATE FORMAT: ${isUSFormat ? 'MM/DD/YYYY (US format) - "05/01" means May 1st' : 'DD/MM/YYYY (UK format) - "05/01" means January 5th'}
+
+DATE CONVERSION RULES:
+- "today" = ${today}
+- "tomorrow" = ${tomorrow}
+- "next week" = ${nextWeek}
+- "Friday" = ${nextFriday}
+- "Monday" = ${nextMonday}
+- "January 15" = ${currentYear}-01-15 (use ${currentYear + 1} if date has passed)
+- "in 2 days" = calculate from today
+- "in 3 weeks" = calculate from today
+- If a date like "January 8" has already passed this year, use next year (${currentYear + 1})
+
+=== USER & PROJECTS ===
 USER NAME: ${userName}
 AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'}
 PROJECT COUNT: ${projectCount}
@@ -99,8 +148,8 @@ WHEN USER RESPONDS WITH A PROJECT NAME:
 === TASK FIELD RULES ===
 - title: Clear, actionable (max 100 chars)
 - project_name: EXACT name from the available projects list. REQUIRED for task creation.
-- due_date: YYYY-MM-DD format. "tomorrow" = ${tomorrow}, "next week" = ${nextWeek}
-- start_date: When work should begin (YYYY-MM-DD)
+- due_date: YYYY-MM-DD format. Use the DATE CONVERSION RULES above.
+- start_date: YYYY-MM-DD format. When work should begin.
 - start_time: 24-hour format. "8:30am" = "08:30", "2pm" = "14:00"
 - end_time: From time ranges. "9am-11am" = end_time "11:00"
 - time_estimate: Minutes as number. "1 hour" = 60, "30 mins" = 30

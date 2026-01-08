@@ -11117,6 +11117,7 @@ Or we can extract from:
         tasks={tasks}
         projects={projects.filter(p => !p.archived)}
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
+        dateFormat={dateFormat}
         onTaskCreated={async (taskData) => {
           // Create task via Spark - aligned with email extraction pattern
           // Claude returns project_name (text), we match it to project_id here
