@@ -183,10 +183,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         }
       }
       
+      // Auto-default to only project if user has just one
+      const activeProjects = projects.filter(p => !p.archived)
+      const defaultProjectId = task?.project_id || (activeProjects.length === 1 ? activeProjects[0].id : '')
+      
       setFormData({
         title: task?.title || '',
         description: '',
-        project_id: task?.project_id || '',
+        project_id: defaultProjectId,
         status: task?.status || 'backlog',
         critical: false,
         start_date: task?.start_date || '',
