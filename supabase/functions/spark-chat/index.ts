@@ -65,7 +65,8 @@ Only output ACTION when the user explicitly wants to CREATE, UPDATE, COMPLETE, o
 === END WHEN NOT TO USE ACTIONS ===
 
 Available actions:
-- create_task: {"action": "create_task", "data": {"title": "...", "status": "todo|in_progress|done|backlog", "due_date?": "YYYY-MM-DD", "description?": "..."}}
+- create_task: {"action": "create_task", "data": {"title": "...", "status": "todo|in_progress|done|backlog", "due_date?": "YYYY-MM-DD", "project_id?": "uuid-from-context", "description?": "..."}}
+  NOTE: project_id must be the UUID from the context, NOT the project name
 - complete_task: {"action": "complete_task", "data": {"task_id": "..."}}
 - update_task: {"action": "update_task", "data": {"task_id": "...", "updates": {...}}}
 - add_to_my_day: {"action": "add_to_my_day", "data": {"task_id": "..."}}

@@ -11120,12 +11120,25 @@ Or we can extract from:
           // Create task via Spark
           // Note: user_id is set automatically by database default (auth.uid())
           try {
+            // Handle project_id - Claude might send name instead of UUID
+            let projectId = taskData.project_id
+            if (projectId && !projectId.match(/^[0-9a-f-]{36}$/i)) {
+              // Not a UUID - try to find project by name
+              const matchedProject = projects.find(p => 
+                p.name.toLowerCase() === projectId.toLowerCase() ||
+                p.name.toLowerCase().includes(projectId.toLowerCase())
+              )
+              projectId = matchedProject?.id || projects[0]?.id || null
+            } else if (!projectId) {
+              projectId = projects[0]?.id || null
+            }
+            
             const newTask = {
               title: taskData.title,
               description: taskData.description || null,
               status: taskData.status || 'todo',
               due_date: taskData.due_date || null,
-              project_id: taskData.project_id || projects[0]?.id || null,
+              project_id: projectId,
               energy_level: 'medium',
               category: 'deliverable',
               source: 'spark'
