@@ -11120,51 +11120,37 @@ Or we can extract from:
         onTaskCreated={async (taskData) => {
           // Create task via Spark - aligned with email extraction pattern
           // Claude returns project_name (text), we match it to project_id here
-          console.log('=== SPARK TASK CREATION ===')
-          console.log('Received taskData:', taskData)
-          console.log('Available projects:', projects.map(p => ({ id: p.id, name: p.name })))
+          console.log('Spark task:', taskData.title, '| project_name:', taskData.project_name)
           
           try {
             // Match project_name to project_id (same logic as inbound-email)
             let projectId = null
             const projectName = taskData.project_name
-            console.log('Looking for project_name:', projectName)
             
             if (projectName) {
               const searchName = projectName.toLowerCase().trim()
-              console.log('Search name (lowercase):', searchName)
               
               // Try exact match first
               const exactMatch = projects.find(p => p.name.toLowerCase() === searchName)
               if (exactMatch) {
                 projectId = exactMatch.id
-                console.log('EXACT MATCH found:', exactMatch.name, '->', exactMatch.id)
               } else {
                 // Try partial match
                 const partialMatch = projects.find(p => {
                   const pNameLower = p.name.toLowerCase()
-                  const isMatch = pNameLower.includes(searchName) || searchName.includes(pNameLower)
-                  console.log(`Checking "${p.name}" (${pNameLower}): includes "${searchName}"? ${pNameLower.includes(searchName)}, or reverse? ${searchName.includes(pNameLower)}`)
-                  return isMatch
+                  return pNameLower.includes(searchName) || searchName.includes(pNameLower)
                 })
-                if (partialMatch) {
-                  projectId = partialMatch.id
-                  console.log('PARTIAL MATCH found:', partialMatch.name, '->', partialMatch.id)
-                } else {
-                  console.log('NO MATCH found for:', searchName)
-                }
+                if (partialMatch) projectId = partialMatch.id
               }
-            } else {
-              console.log('No project_name provided in taskData')
             }
             
             // Fallback to first project if no match
             if (!projectId && projects.length > 0) {
               projectId = projects[0].id
-              console.log('FALLBACK to first project:', projects[0].name, '->', projectId)
+              console.log('Spark: No project match, using first project')
             }
             
-            console.log('Final projectId:', projectId)
+            console.log('Spark: Matched to project:', projects.find(p => p.id === projectId)?.name)
             
             // Build task matching email extraction schema
             const insertData = {
