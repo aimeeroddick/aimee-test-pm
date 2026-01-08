@@ -352,9 +352,15 @@ export default function SparkPanel({
           }
         }
 
-        // If action failed, append error message
+        // If action failed, show error message instead of Claude's optimistic response
         if (actionIndex !== -1 && !actionSucceeded) {
-          displayMessage = "Sorry, I tried to do that but something went wrong. Could you try again?"
+          displayMessage = "Hmm, that didn't work. Could you try again or rephrase?"
+        } else if (actionIndex !== -1 && actionSucceeded) {
+          // Action succeeded - keep Claude's short message (which will be like "Done!" or "On it!")
+          // The toast will show the specific confirmation
+          if (!displayMessage) {
+            displayMessage = "Done!"
+          }
         }
 
         if (displayMessage) {
