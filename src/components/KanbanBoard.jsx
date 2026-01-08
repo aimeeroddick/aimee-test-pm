@@ -11179,6 +11179,7 @@ Or we can extract from:
               .single()
 
             console.log('Spark insert result:', { data, error })
+            console.log('Spark: data exists?', !!data, 'error exists?', !!error)
 
             if (error) {
               console.error('Spark task error:', error)
@@ -11192,9 +11193,24 @@ Or we can extract from:
               return false
             }
             
-            setTasks(prev => [...prev, { ...data, attachments: [], dependencies: [] }])
-            setToast({ message: `Created: ${data.title}`, type: 'success' })
-            return true
+            try {
+              console.log('Spark: About to add task to state')
+              console.log('Spark: data.id =', data.id)
+              console.log('Spark: data.title =', data.title)
+              
+              setTasks(prev => {
+                console.log('Spark: Inside setTasks, prev.length =', prev.length)
+                return [...prev, { ...data, attachments: [], dependencies: [] }]
+              })
+              
+              console.log('Spark: setTasks called')
+              setToast({ message: `Created: ${data.title}`, type: 'success' })
+              console.log('Spark: setToast called')
+              return true
+            } catch (stateError) {
+              console.error('Spark: Error updating state:', stateError)
+              return false
+            }
           } catch (e) {
             console.error('Spark exception:', e)
             setToast({ message: 'Failed to create task', type: 'error' })

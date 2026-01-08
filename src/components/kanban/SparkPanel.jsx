@@ -264,7 +264,10 @@ export default function SparkPanel({
     try {
       if (action.type === 'create_task' && action.task) {
         if (onTaskCreated) {
-          return await onTaskCreated(action.task)
+          console.log('Spark: Calling onTaskCreated...')
+          const result = await onTaskCreated(action.task)
+          console.log('Spark: onTaskCreated returned:', result)
+          return result
         }
       } else if (action.type === 'complete_task' && action.task_id) {
         if (onTaskCompleted) {
