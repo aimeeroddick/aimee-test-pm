@@ -373,7 +373,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
       <form onSubmit={handleSubmit}>
         {/* Status & Project - unified control bar */}
-        <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
           {/* Status - contained segmented control */}
           <div className="inline-flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg p-1 gap-0.5">
             {COLUMNS.map((col) => {
