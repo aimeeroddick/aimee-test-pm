@@ -296,7 +296,9 @@ export default function SparkPanel({
               if (parsed.type === 'content_block_delta') {
                 const text = parsed.delta?.text || ''
                 fullResponse += text
-                setStreamingMessage(fullResponse)
+                // Hide ACTION from streaming display - show everything before "ACTION:"
+                const displayText = fullResponse.split('ACTION:')[0].trim()
+                setStreamingMessage(displayText)
               }
             } catch (e) {
               // Not all lines are valid JSON, that's okay
@@ -308,19 +310,42 @@ export default function SparkPanel({
       // Streaming complete - add the full response to messages
       if (fullResponse) {
         // Check if there's an action to execute
-        const actionMatch = fullResponse.match(/ACTION:(\{.+\})/)
-        if (actionMatch) {
-          try {
-            const action = JSON.parse(actionMatch[1])
-            await executeAction(action)
-            // Remove the ACTION line from displayed message
-            fullResponse = fullResponse.replace(/ACTION:\{.+\}/, '').trim()
-          } catch (e) {
-            console.error('Failed to execute action:', e)
+        // Match ACTION: followed by JSON (handles multi-line by being more flexible)
+        const actionIndex = fullResponse.indexOf('ACTION:')
+        let displayMessage = fullResponse
+        
+        if (actionIndex !== -1) {
+          const jsonStart = fullResponse.indexOf('{', actionIndex)
+          if (jsonStart !== -1) {
+            // Find the matching closing brace
+            let braceCount = 0
+            let jsonEnd = jsonStart
+            for (let i = jsonStart; i < fullResponse.length; i++) {
+              if (fullResponse[i] === '{') braceCount++
+              if (fullResponse[i] === '}') braceCount--
+              if (braceCount === 0) {
+                jsonEnd = i + 1
+                break
+              }
+            }
+            
+            const jsonStr = fullResponse.slice(jsonStart, jsonEnd)
+            try {
+              const action = JSON.parse(jsonStr)
+              console.log('Executing action:', action)
+              await executeAction(action)
+            } catch (e) {
+              console.error('Failed to parse action JSON:', e, jsonStr)
+            }
+            
+            // Remove ACTION and everything after from displayed message
+            displayMessage = fullResponse.slice(0, actionIndex).trim()
           }
         }
 
-        setMessages(prev => [...prev, { role: 'assistant', content: fullResponse }])
+        if (displayMessage) {
+          setMessages(prev => [...prev, { role: 'assistant', content: displayMessage }])
+        }
       }
 
     } catch (error) {
