@@ -13,8 +13,8 @@ const getTaskMinutes = (task) => {
   if (task.time_estimate) return task.time_estimate
   // Default based on energy level
   switch (task.energy_level) {
-    case 'high': return 240 // 4 hours
-    case 'medium': return 120 // 2 hours
+    case 'high': return 120 // 2 hours
+    case 'medium': return 60 // 1 hour
     case 'low': return 30 // 30 minutes
     default: return 60 // 1 hour default
   }
@@ -70,7 +70,12 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
   const [availableMinutes, setAvailableMinutes] = useState(240) // 4 hours default
   const [suggestedTasks, setSuggestedTasks] = useState([])
   const [overflowTasks, setOverflowTasks] = useState([])
+  const [bumpedTasks, setBumpedTasks] = useState([]) // Tasks currently in My Day that won't fit
+  const [keepInToday, setKeepInToday] = useState(new Set()) // IDs of bumped tasks user wants to keep
   const [step, setStep] = useState(1) // 1 = input time, 2 = review plan
+  
+  // Get today's date string
+  const todayStr = new Date().toISOString().split('T')[0]
   
   // Get all eligible tasks (not done, including those already in My Day)
   const eligibleTasks = useMemo(() => {
@@ -82,6 +87,11 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
       return true
     })
   }, [allTasks, projects])
+  
+  // Get tasks currently in My Day
+  const currentMyDayTasks = useMemo(() => {
+    return allTasks.filter(t => t.status !== 'done' && t.my_day_date === todayStr)
+  }, [allTasks, todayStr])
   
   const generatePlan = () => {
     // Sort tasks by priority score
@@ -104,8 +114,16 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
       if (selected.length >= 10 && overflow.length >= 5) break
     }
     
+    // Find tasks currently in My Day that didn't make the suggested plan
+    const selectedIds = new Set(selected.map(t => t.id))
+    const bumped = currentMyDayTasks
+      .filter(t => !selectedIds.has(t.id))
+      .map(t => ({ ...t, estimatedMinutes: getTaskMinutes(t) }))
+    
     setSuggestedTasks(selected)
     setOverflowTasks(overflow)
+    setBumpedTasks(bumped)
+    setKeepInToday(new Set()) // Reset selections
     setStep(2)
   }
   
@@ -139,10 +157,15 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
   }
   
   const handleAccept = () => {
-    onAcceptPlan(suggestedTasks.map(t => t.id))
+    // Pass suggested task IDs, bumped task IDs to keep, and bumped task IDs to move to tomorrow
+    const bumpedToKeep = bumpedTasks.filter(t => keepInToday.has(t.id)).map(t => t.id)
+    const bumpedToTomorrow = bumpedTasks.filter(t => !keepInToday.has(t.id)).map(t => t.id)
+    onAcceptPlan(suggestedTasks.map(t => t.id), bumpedToKeep, bumpedToTomorrow)
     onClose()
     setStep(1)
     setSuggestedTasks([])
+    setBumpedTasks([])
+    setKeepInToday(new Set())
   }
   
   const handleClose = () => {
@@ -150,6 +173,20 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
     setStep(1)
     setSuggestedTasks([])
     setOverflowTasks([])
+    setBumpedTasks([])
+    setKeepInToday(new Set())
+  }
+  
+  const toggleKeepInToday = (taskId) => {
+    setKeepInToday(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId)
+      } else {
+        newSet.add(taskId)
+      }
+      return newSet
+    })
   }
   
   if (!isOpen) return null
@@ -305,6 +342,61 @@ const PlanMyDayModal = ({ isOpen, onClose, allTasks, projects, onAcceptPlan }) =
                   })}
                 </>
               )}
+            </div>
+          )}
+          
+          {/* Bumped tasks section - tasks currently in My Day that won't fit */}
+          {step === 2 && bumpedTasks.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-start gap-2 mb-3">
+                <span className="text-amber-500 mt-0.5">⚠️</span>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Won't fit today
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    These tasks were in your My Day but don't fit. They'll move to tomorrow unless you choose to keep them.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {bumpedTasks.map((task) => {
+                  const project = projects.find(p => p.id === task.project_id)
+                  const willKeep = keepInToday.has(task.id)
+                  return (
+                    <div
+                      key={task.id}
+                      className={`flex items-center gap-2 p-2 rounded-lg text-sm transition-colors ${
+                        willKeep 
+                          ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' 
+                          : 'bg-gray-50 dark:bg-gray-800/50'
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          {task.critical && <span className="text-red-500">{TaskCardIcons.flag('w-3 h-3')}</span>}
+                          <span className="text-gray-700 dark:text-gray-300 truncate">{task.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          {project && <span>{project.name}</span>}
+                          <span>~{formatTime(task.estimatedMinutes)}</span>
+                          {!willKeep && <span className="text-amber-600 dark:text-amber-400">→ Tomorrow</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggleKeepInToday(task.id)}
+                        className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
+                          willKeep
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                        }`}
+                      >
+                        {willKeep ? '✓ Keeping' : 'Keep today'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
           
@@ -816,21 +908,34 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
     onUpdateMyDayDate(task.id, yesterdayStr)
   }
   
-  const handleAcceptPlan = (taskIds) => {
+  const handleAcceptPlan = (taskIds, bumpedToKeep = [], bumpedToTomorrow = []) => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const todayStr = today.toISOString().split('T')[0]
+    
+    // Calculate tomorrow's date
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]
     
     // Get current My Day tasks
     const currentMyDayTaskIds = tasks
       .filter(t => t.status !== 'done' && t.my_day_date === todayStr)
       .map(t => t.id)
     
-    // Remove tasks from My Day that aren't in the new plan
+    // All tasks that should remain in today: suggested + bumped to keep
+    const keepInTodayIds = [...taskIds, ...bumpedToKeep]
+    
+    // Remove tasks from My Day that aren't in the plan AND aren't being kept
     currentMyDayTaskIds.forEach(taskId => {
-      if (!taskIds.includes(taskId)) {
-        onUpdateMyDayDate(taskId, null) // Remove from My Day
+      if (!keepInTodayIds.includes(taskId) && !bumpedToTomorrow.includes(taskId)) {
+        onUpdateMyDayDate(taskId, null) // Remove from My Day entirely
       }
+    })
+    
+    // Move bumped tasks to tomorrow
+    bumpedToTomorrow.forEach(taskId => {
+      onUpdateMyDayDate(taskId, tomorrowStr)
     })
     
     // Add tasks to My Day that are in the plan
@@ -841,8 +946,9 @@ const MyDayDashboard = ({ tasks, projects, onEditTask, allTasks, onQuickStatusCh
     })
     
     // Update the custom order in localStorage to match the plan order
+    // Include both suggested tasks and kept bumped tasks
     const orderKey = `trackli-myday-order-${todayStr}`
-    localStorage.setItem(orderKey, JSON.stringify(taskIds))
+    localStorage.setItem(orderKey, JSON.stringify(keepInTodayIds))
   }
   
   const RecommendationSection = ({ title, emoji, color, tasks, id }) => {
