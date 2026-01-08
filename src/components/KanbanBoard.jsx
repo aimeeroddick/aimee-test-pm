@@ -4691,11 +4691,132 @@ export default function KanbanBoard({ demoMode = false }) {
         }
       )
       .subscribe((status) => {
-        console.log('Realtime subscription status:', status)
+        console.log('Realtime tasks subscription:', status)
       })
 
     return () => {
-      console.log('Realtime: Unsubscribing')
+      supabase.removeChannel(channel)
+    }
+  }, [demoMode, user?.id])
+
+  // Supabase Realtime subscription for projects
+  useEffect(() => {
+    if (demoMode || !user?.id) return
+
+    const channel = supabase
+      .channel('projects-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'projects',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Project inserted', payload.new.id)
+          setProjects(prev => {
+            if (prev.some(p => p.id === payload.new.id)) return prev
+            return [...prev, { ...payload.new, members: [], customers: [] }]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'projects',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Project updated', payload.new.id)
+          setProjects(prev => prev.map(p => 
+            p.id === payload.new.id 
+              ? { ...p, ...payload.new }
+              : p
+          ))
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'projects',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Project deleted', payload.old.id)
+          setProjects(prev => prev.filter(p => p.id !== payload.old.id))
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime projects subscription:', status)
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [demoMode, user?.id])
+
+  // Supabase Realtime subscription for pending email tasks
+  useEffect(() => {
+    if (demoMode || !user?.id) return
+
+    const channel = supabase
+      .channel('pending-email-tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pending_email_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Pending email task inserted', payload.new.id)
+          setPendingEmailTasks(prev => {
+            if (prev.some(t => t.id === payload.new.id)) return prev
+            return [payload.new, ...prev] // Newest first
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pending_email_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Pending email task updated', payload.new.id)
+          setPendingEmailTasks(prev => prev.map(t => 
+            t.id === payload.new.id 
+              ? { ...t, ...payload.new }
+              : t
+          ))
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'pending_email_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Pending email task deleted', payload.old.id)
+          setPendingEmailTasks(prev => prev.filter(t => t.id !== payload.old.id))
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime pending email tasks subscription:', status)
+      })
+
+    return () => {
       supabase.removeChannel(channel)
     }
   }, [demoMode, user?.id])
