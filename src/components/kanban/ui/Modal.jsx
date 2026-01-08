@@ -37,7 +37,7 @@ const Modal = ({ isOpen, onClose, title, children, wide, fullScreenMobile }) => 
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 overscroll-contain">{children}</div>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 sm:px-6 sm:py-4 overscroll-contain">{children}</div>
       </div>
     </div>
   )

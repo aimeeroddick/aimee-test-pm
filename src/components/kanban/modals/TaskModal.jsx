@@ -371,11 +371,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="overflow-x-hidden">
         {/* Status & Project - unified control bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800 overflow-hidden">
           {/* Status - contained segmented control */}
-          <div className="inline-flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg p-1 gap-0.5">
+          <div className="flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg p-1 gap-0.5 w-full sm:w-auto">
             {COLUMNS.map((col) => {
               const isSelected = formData.status === col.id
               const getIcon = () => {
@@ -396,7 +396,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   key={col.id}
                   type="button"
                   onClick={() => setFormData({ ...formData, status: col.id })}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
                     isSelected
                       ? 'shadow-sm ring-1 ring-inset'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
