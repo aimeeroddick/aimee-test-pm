@@ -23,6 +23,7 @@ import TaskModal from './kanban/modals/TaskModal'
 import ProjectModal from './kanban/modals/ProjectModal'
 import WelcomeModal from './kanban/modals/WelcomeModal'
 import { trackEvent } from '../utils/analytics'
+import SparkPanel, { SparkButton } from './kanban/SparkPanel'
 // Lazy load confetti - only needed when completing tasks
 const loadConfetti = () => import('canvas-confetti').then(m => m.default)
 
@@ -4296,6 +4297,9 @@ export default function KanbanBoard({ demoMode = false }) {
   
   // Meeting Notes Import
   const [meetingNotesModalOpen, setMeetingNotesModalOpen] = useState(false)
+  
+  // Spark AI Assistant
+  const [sparkPanelOpen, setSparkPanelOpen] = useState(false)
   const [meetingNotesData, setMeetingNotesData] = useState({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -4465,10 +4469,17 @@ export default function KanbanBoard({ demoMode = false }) {
       // On Windows: require Ctrl+Alt
       const modifier = isMac ? (e.metaKey && e.ctrlKey) : (e.ctrlKey && e.altKey)
       
-      // Cmd/Ctrl/Alt + K or S for search
-      if (modifier && (e.key === 'k' || e.key === 's')) {
+      // Cmd/Ctrl/Alt + K for search
+      if (modifier && e.key === 'k') {
         e.preventDefault()
         setSearchModalOpen(true)
+        return
+      }
+      
+      // Cmd/Ctrl/Alt + S for Spark AI assistant
+      if (modifier && e.key === 's') {
+        e.preventDefault()
+        setSparkPanelOpen(true)
         return
       }
       
@@ -7471,6 +7482,9 @@ export default function KanbanBoard({ demoMode = false }) {
                 </svg>
                 <span className="hidden sm:inline"><u>N</u>otes</span>
               </button>
+              
+              {/* Spark AI Assistant */}
+              <SparkButton onClick={() => setSparkPanelOpen(true)} />
               
               {/* Pending Email Tasks Badge + Dropdown */}
               {pendingEmailCount > 0 && (
@@ -11095,6 +11109,55 @@ Or we can extract from:
           </div>
         </div>
       , document.body)}
+      
+      {/* Spark AI Assistant Panel */}
+      <SparkPanel
+        isOpen={sparkPanelOpen}
+        onClose={() => setSparkPanelOpen(false)}
+        tasks={tasks}
+        projects={projects}
+        onTaskCreated={async (taskData) => {
+          // Create task via Spark
+          const newTask = {
+            ...taskData,
+            user_id: user.id,
+            project_id: taskData.project_id || projects[0]?.id,
+            status: taskData.status || 'todo',
+            created_at: new Date().toISOString()
+          }
+          const { data, error } = await supabase.from('tasks').insert([newTask]).select().single()
+          if (!error && data) {
+            setTasks(prev => [...prev, data])
+            showToast('Task created by Spark', 'success')
+          }
+        }}
+        onTaskUpdated={async (taskId, updates) => {
+          const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)
+          if (!error) {
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t))
+          }
+        }}
+        onTaskCompleted={async (taskId) => {
+          const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
+          if (!error) {
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t))
+            handleConfetti()
+            showToast('Task completed!', 'success')
+          }
+        }}
+        onProjectCreated={async (projectData) => {
+          const newProject = {
+            ...projectData,
+            user_id: user.id,
+            color: projectData.color || PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)]
+          }
+          const { data, error } = await supabase.from('projects').insert([newProject]).select().single()
+          if (!error && data) {
+            setProjects(prev => [...prev, data])
+            showToast('Project created by Spark', 'success')
+          }
+        }}
+      />
       
       {/* Footer */}
       <footer className="mt-auto py-4 px-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
