@@ -11118,21 +11118,23 @@ Or we can extract from:
         projects={projects}
         onTaskCreated={async (taskData) => {
           // Create task via Spark
+          // Note: user_id is set automatically by database default (auth.uid())
           try {
             const newTask = {
               title: taskData.title,
               description: taskData.description || null,
               status: taskData.status || 'todo',
               due_date: taskData.due_date || null,
-              user_id: user.id,
               project_id: taskData.project_id || projects[0]?.id || null,
-              created_at: new Date().toISOString()
+              energy_level: 'medium',
+              category: 'deliverable',
+              source: 'spark'
             }
             console.log('Spark creating task:', newTask)
             const { data, error } = await supabase
               .from('tasks')
               .insert(newTask)
-              .select('*')
+              .select()
               .single()
             if (error) {
               console.error('Spark task creation error:', error)
