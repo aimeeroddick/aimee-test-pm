@@ -11117,64 +11117,50 @@ Or we can extract from:
         tasks={tasks}
         projects={projects}
         onTaskCreated={async (taskData) => {
-          // Create task via Spark
-          // Note: user_id is set automatically by database default (auth.uid())
+          // Create task via Spark - matches Quick Add pattern exactly
           try {
-            // Handle project_id - Claude might send name instead of UUID
+            // Resolve project_id - handle name vs UUID
             let projectId = taskData.project_id
-            console.log('Spark received project_id:', projectId, 'type:', typeof projectId)
-            
-            // Check if it's a valid UUID (36 chars with dashes)
-            const isUUID = projectId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)
-            console.log('Is UUID:', isUUID)
-            
-            if (projectId && !isUUID) {
-              // Not a UUID - try to find project by name
-              console.log('Looking up project by name:', projectId)
-              const matchedProject = projects.find(p => 
+            if (projectId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(projectId)) {
+              // Not a UUID - find by name
+              const match = projects.find(p => 
                 p.name.toLowerCase() === projectId.toLowerCase() ||
                 p.name.toLowerCase().includes(projectId.toLowerCase())
               )
-              console.log('Matched project:', matchedProject?.name, matchedProject?.id)
-              projectId = matchedProject?.id || projects[0]?.id || null
-            } else if (!projectId) {
-              projectId = projects[0]?.id || null
+              projectId = match?.id || projects[0]?.id
             }
+            if (!projectId) projectId = projects[0]?.id
             
-            console.log('Final project_id:', projectId)
-            
-            const newTask = {
-              title: taskData.title,
-              description: taskData.description || null,
-              status: taskData.status || 'todo',
-              due_date: taskData.due_date || null,
-              project_id: projectId,
-              energy_level: 'medium',
-              category: 'deliverable',
-              source: 'spark'
-            }
-            console.log('Spark creating task:', newTask)
+            // Match Quick Add insert exactly
             const { data, error } = await supabase
               .from('tasks')
-              .insert(newTask)
+              .insert({
+                title: taskData.title?.trim() || 'New task',
+                project_id: projectId,
+                status: taskData.status || 'todo',
+                start_date: taskData.due_date || null,
+                due_date: taskData.due_date || null,
+                energy_level: 'medium',
+                category: 'deliverable',
+                source: 'spark'
+              })
               .select()
               .single()
+
             if (error) {
-              console.error('Spark task creation error:', error)
+              console.error('Spark task error:', error)
               setToast({ message: 'Failed to create task', type: 'error' })
               return false
             }
-            if (data) {
-              setTasks(prev => [...prev, data])
-              setToast({ message: 'Task created by Spark!', type: 'success' })
-              return true
-            }
+            
+            setTasks(prev => [...prev, { ...data, attachments: [], dependencies: [] }])
+            setToast({ message: `Created: ${data.title}`, type: 'success' })
+            return true
           } catch (e) {
-            console.error('Spark task creation exception:', e)
+            console.error('Spark exception:', e)
             setToast({ message: 'Failed to create task', type: 'error' })
             return false
           }
-          return false
         }}
         onTaskUpdated={async (taskId, updates) => {
           const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)

@@ -3,134 +3,74 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-// CORS headers allow the browser to call this function from your domain
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Spark's personality and capabilities - this is the "system prompt" that defines how Spark behaves
-const SPARK_SYSTEM_PROMPT = `You are Spark, an AI assistant embedded in Trackli, a task management app.
+// Simplified, focused system prompt
+const getSystemPrompt = (today: string) => `You are Spark, a friendly AI assistant in Trackli (a task management app).
 
-=== CRITICAL: HOW TO CREATE/MODIFY TASKS ===
-To actually create or modify a task, you MUST output an ACTION line. Without it, nothing happens.
+TODAY'S DATE: ${today}
 
-When the user asks you to create a task, your response MUST end with:
-ACTION:{"action": "create_task", "data": {"title": "...", "status": "...", "due_date": "..."}}
+YOUR CAPABILITIES:
+1. Create tasks
+2. Answer questions about the user's tasks
+3. Help plan their day
+4. General productivity chat
 
-Example - User says: "Create a task to buy milk"
-Your response MUST be:
-Done! Creating your task now.
-ACTION:{"action": "create_task", "data": {"title": "Buy milk", "status": "todo"}}
+CREATING TASKS:
+When the user wants to create a task, respond with JSON in this exact format:
+{"response": "Your friendly message here", "action": {"type": "create_task", "task": {"title": "...", "status": "...", "due_date": "...", "project_id": "..."}}}
 
-Example - User says: "Add an in-progress task for today to call the bank"
-Your response MUST be:
-On it!
-ACTION:{"action": "create_task", "data": {"title": "Call the bank", "status": "in_progress", "due_date": "${new Date().toISOString().split('T')[0]}"}}
+Task fields:
+- title (required): The task name
+- status: "todo", "in_progress", "done", or "backlog" (default: "todo")
+- due_date: YYYY-MM-DD format (use ${today} for "today"/"tonight", calculate tomorrow, etc.)
+- project_id: Use the UUID from the PROJECT LIST below, NOT the name
 
-If you respond without the ACTION line when creating a task, THE TASK WILL NOT BE CREATED.
-=== END CRITICAL ===
+STATUS HINTS - detect from user's message:
+- "in progress", "working on", "started" → "in_progress"
+- "done", "finished", "completed" → "done"  
+- "backlog", "someday", "later" → "backlog"
+- Otherwise → "todo"
 
-=== IMPORTANT: ASK IF UNCLEAR ===
-If the user's request is ambiguous or missing key details, ASK before acting:
+ASKING FOR CLARIFICATION:
+If the user has MULTIPLE projects and doesn't specify which one, ASK them. Include the project names in your question.
+If the user has only ONE project, use it automatically.
+If the task title is unclear, ask for clarification.
 
-1. PROJECT: If the user doesn't specify a project:
-   - If they only have ONE project, use that project automatically
-   - If they have MULTIPLE projects, ask which project to add it to and list their options
+WHEN NOT CREATING TASKS:
+For questions, advice, or conversation, just respond normally:
+{"response": "Your helpful answer here"}
 
-2. TITLE: If they don't give a clear task title, ask what the task should be called.
+FORMATTING:
+- Keep responses short and friendly
+- No markdown (**bold**, *italic*)
+- For lists, use • with blank lines between items
+- No emojis
 
-3. STATUS: Pay attention to status hints in their message and SET THE CORRECT STATUS AT CREATION TIME:
-   - "in progress", "working on", "started", "already started" = status: "in_progress"
-   - "done", "finished", "completed" = status: "done"
-   - "backlog", "someday", "later" = status: "backlog"
-   - Default to "todo" only if no hint given
-   
-   IMPORTANT: Set the status correctly when creating. Do NOT create as "todo" then try to update.
+EXAMPLE - Create task:
+User: "I need to call the bank tomorrow"
+{"response": "Got it! Created your task to call the bank for tomorrow.", "action": {"type": "create_task", "task": {"title": "Call the bank", "status": "todo", "due_date": "2026-01-09"}}}
 
-4. DUE DATE: "today", "tonight", "now" = today's date. "tomorrow" = tomorrow's date.
+EXAMPLE - Ask for project:
+User: "Add a task to review the report" (user has multiple projects)
+{"response": "I'll create that task! Which project should it go in?\\n\\n• Project A\\n\\n• Project B\\n\\n• Project C"}
 
-DO NOT guess or make assumptions. It's better to ask than to create the wrong task.
-=== END IMPORTANT ===
-
-=== WHEN NOT TO USE ACTIONS ===
-Do NOT output an ACTION line for:
-- Questions about how to use Trackli or Spark
-- Troubleshooting questions like "why didn't it work?"
-- General conversation or chitchat
-- Questions asking for advice or opinions
-- Requests to explain something
-
-Only output ACTION when the user explicitly wants to CREATE, UPDATE, COMPLETE, or otherwise MODIFY their tasks/projects.
-=== END WHEN NOT TO USE ACTIONS ===
-
-Available actions:
-- create_task: {"action": "create_task", "data": {"title": "...", "status": "todo|in_progress|done|backlog", "due_date?": "YYYY-MM-DD", "project_id?": "uuid-from-context", "description?": "..."}}
-  NOTE: project_id must be the UUID from the context, NOT the project name
-- complete_task: {"action": "complete_task", "data": {"task_id": "..."}}
-- update_task: {"action": "update_task", "data": {"task_id": "...", "updates": {...}}}
-- add_to_my_day: {"action": "add_to_my_day", "data": {"task_id": "..."}}
-- create_project: {"action": "create_project", "data": {"name": "..."}}
-
-PERSONALITY:
-- Warm, efficient, helpful - like a capable colleague
-- Keep responses SHORT - just 1-2 sentences before the ACTION
-- Never use emojis
-- Use plain text only - NO markdown like **bold** or *italic*
-- For lists, use bullet points with • character, not - or *
-
-FORMATTING EXAMPLES:
-
-When suggesting tasks to work on:
-"Looking at your My Day, here are some quick wins for 30 minutes:
-
-• \"Update pre-filtering work status\" - due today, ~10 mins
-
-• \"Find ITT and review\" - due today, ~15 mins
-
-• \"Reach out to Shabana\" - overdue, ~5 mins
-
-I'd start with the overdue one to clear it off your plate. What feels most urgent?"
-
-When listing capabilities or options:
-"Yes, I can update existing tasks! I can modify things like:
-
-• Status (todo, in_progress, done, backlog)
-
-• Title or description
-
-• Due dates
-
-• Add tasks to My Day
-
-What would you like to change?"
-
-CRITICAL FORMATTING RULES:
-- Always put a blank line between each bullet point
-- Use • character for bullets, never - or *
-- NO markdown like **bold** or *italic*
-- Keep responses concise and scannable
-
-RESTRICTIONS - You CANNOT:
-- Delete tasks or projects
-- Bulk operations
-- Access other users' data
-
-TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+EXAMPLE - Question:
+User: "What's overdue?"
+{"response": "You have 3 overdue tasks:\\n\\n• \\"Review Q3 report\\" - was due Monday\\n\\n• \\"Send invoice\\" - was due last week"}
 `
 
-// Main request handler
 serve(async (req) => {
-  // Handle CORS preflight requests (browser security check)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Parse the incoming request
     const { message, context, conversationHistory } = await req.json()
 
-    // Validate we have a message
     if (!message || message.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: 'Message is required' }),
@@ -138,58 +78,52 @@ serve(async (req) => {
       )
     }
 
-    // Get the Anthropic API key from environment variables
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicKey) {
-      console.error('Missing ANTHROPIC_API_KEY')
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Build the context section for Claude (info about user's tasks/projects)
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Build context with PROJECT IDs (critical for task creation)
     let contextSection = ''
     if (context) {
+      // Include project IDs so Claude can use them
+      const projectList = context.projects?.map((p: any) => 
+        `- "${p.name}" (ID: ${p.id}, ${p.task_count} tasks)`
+      ).join('\n') || 'No projects'
+      
       contextSection = `
-CURRENT USER CONTEXT:
-- Projects: ${context.projects?.map((p: any) => `${p.name} (${p.task_count} tasks)`).join(', ') || 'None'}
-- Total tasks: ${context.taskSummary?.total || 0}
+
+PROJECT LIST (use these IDs when creating tasks):
+${projectList}
+
+TASK SUMMARY:
+- Total: ${context.taskSummary?.total || 0}
 - To Do: ${context.taskSummary?.todo || 0}
 - In Progress: ${context.taskSummary?.in_progress || 0}
 - Done: ${context.taskSummary?.done || 0}
 - Overdue: ${context.taskSummary?.overdue || 0}
-- In My Day: ${context.myDayTasks?.length || 0} tasks
 
 ${context.overdueTasks?.length > 0 ? `OVERDUE TASKS:\n${context.overdueTasks.map((t: any) => `- "${t.title}" (due ${t.due_date})`).join('\n')}` : ''}
 
-${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: any) => `- "${t.title}" [${t.status}]${t.due_date ? ` (due ${t.due_date})` : ''}`).join('\n')}` : ''}
-
-${context.recentTasks?.length > 0 ? `RECENT TASKS:\n${context.recentTasks.slice(0, 10).map((t: any) => `- "${t.title}" [${t.status}]${t.project_name ? ` in ${t.project_name}` : ''}`).join('\n')}` : ''}
+${context.myDayTasks?.length > 0 ? `MY DAY TASKS:\n${context.myDayTasks.map((t: any) => `- "${t.title}" [${t.status}]`).join('\n')}` : ''}
 `
     }
 
-    // Build the messages array for Claude
-    // Include conversation history for context (last 10 messages)
+    // Build messages array
     const messages = []
-    
     if (conversationHistory && Array.isArray(conversationHistory)) {
-      // Add previous messages (alternating user/assistant)
       for (const msg of conversationHistory.slice(-10)) {
-        messages.push({
-          role: msg.role,
-          content: msg.content
-        })
+        messages.push({ role: msg.role, content: msg.content })
       }
     }
-    
-    // Add the current message
-    messages.push({
-      role: 'user',
-      content: message
-    })
+    messages.push({ role: 'user', content: message })
 
-    // Call Claude API with streaming enabled
+    // NON-STREAMING call to Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -199,9 +133,8 @@ ${context.recentTasks?.length > 0 ? `RECENT TASKS:\n${context.recentTasks.slice(
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        stream: true, // Enable streaming for real-time responses
-        system: SPARK_SYSTEM_PROMPT + contextSection,
+        max_tokens: 1024,
+        system: getSystemPrompt(today) + contextSection,
         messages: messages
       })
     })
@@ -215,21 +148,27 @@ ${context.recentTasks?.length > 0 ? `RECENT TASKS:\n${context.recentTasks.slice(
       )
     }
 
-    // Stream the response back to the client
-    // This creates a "pipe" that forwards Claude's chunks as they arrive
-    return new Response(response.body, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
-    })
+    const data = await response.json()
+    const rawText = data.content?.[0]?.text || ''
+    
+    // Try to parse as JSON
+    let result: any
+    try {
+      result = JSON.parse(rawText)
+    } catch {
+      // If not valid JSON, treat as plain text response
+      result = { response: rawText }
+    }
+
+    return new Response(
+      JSON.stringify(result),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
     console.error('Request error:', error)
     return new Response(
-      JSON.stringify({ error: 'Invalid request', details: String(error) }),
+      JSON.stringify({ error: 'Something went wrong', details: String(error) }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
