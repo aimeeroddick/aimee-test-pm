@@ -62,10 +62,10 @@ PROJECT COUNT: ${projectCount}
 === RESPONSE FORMAT ===
 Always respond with valid JSON in one of these formats:
 
-1. CREATING A TASK (when you have all required info):
+1. CREATING A TASK (when you have all required info including project):
 {"response": "Got it! Creating your task.", "action": {"type": "create_task", "task": {
   "title": "Task title",
-  "project_name": "ProjectName or null",
+  "project_name": "ExactProjectName",
   "status": "todo",
   "due_date": "YYYY-MM-DD or null",
   "start_date": "YYYY-MM-DD or null",
@@ -74,59 +74,50 @@ Always respond with valid JSON in one of these formats:
   "time_estimate": "number in minutes or null",
   "assignee": "name or null",
   "energy_level": "low/medium/high",
-  "critical": false,
-  "customer": "customer name or null",
-  "description": "brief context or null"
+  "critical": false
 }}}
 
-2. ASKING FOR CLARIFICATION (when info is missing):
-{"response": "Your question here"}
+2. ASKING FOR PROJECT (when project is needed but not specified):
+{"response": "Which project should this go in?\n\n• Project1\n\n• Project2"}
 
 === CRITICAL: PROJECT HANDLING ===
 ${projectCount === 0 ? 'No projects exist. Set project_name to null.' : ''}
-${projectCount === 1 ? `Only one project: "${projectNames[0]}". Always use this project_name.` : ''}
-${projectCount > 1 ? `Multiple projects exist. If the user mentions a project name in their message, use it for project_name. If they do NOT mention any project, you MUST ask which project BEFORE creating the task. Do not guess - ask!
+${projectCount === 1 ? `Only one project exists: "${projectNames[0]}". Always use project_name: "${projectNames[0]}"` : ''}
+${projectCount > 1 ? `Multiple projects exist. 
 
-When asking, respond like this (NO action):
-{"response": "I'll create that task! Which project should it go in?\\n\\n• ${projectNames.join('\\n\\n• ')}"}` : ''}
+WHEN USER FIRST REQUESTS A TASK:
+- If they mention a project name, use it for project_name
+- If they do NOT mention a project, ask which project (response only, no action)
+
+WHEN USER RESPONDS WITH A PROJECT NAME:
+- They are answering your question about which project
+- Look at the conversation history to get the task details
+- Create the task with project_name set to the project they just specified
+- Use EXACT project name from this list: ${projectNames.join(', ')}
+- If they say a partial name like "Gameday", find the matching project ("Internal - Gameday")` : ''}
 
 === TASK FIELD RULES ===
 - title: Clear, actionable (max 100 chars)
-- project_name: EXACT name from the list above, or null. NOT a UUID.
-- status: "todo" (default), "in_progress", "done", or "backlog"
+- project_name: EXACT name from the available projects list. REQUIRED for task creation.
 - due_date: YYYY-MM-DD format. "tomorrow" = ${tomorrow}, "next week" = ${nextWeek}
 - start_date: When work should begin (YYYY-MM-DD)
 - start_time: 24-hour format. "8:30am" = "08:30", "2pm" = "14:00"
 - end_time: From time ranges. "9am-11am" = end_time "11:00"
 - time_estimate: Minutes as number. "1 hour" = 60, "30 mins" = 30
 - assignee: Person's name. If user says "I need to..." use "${userName}"
-- energy_level: Based on time OR words:
-  - "low": ≤30 mins, or "quick", "easy", "simple"
-  - "medium": 31-120 mins (default)
-  - "high": >120 mins, or "complex", "difficult", "big"
+- energy_level: <=30 mins or "quick/easy" = "low", 31-120 mins = "medium", >120 mins or "complex" = "high"
 - critical: true only if "urgent", "ASAP", "critical" mentioned
-- customer: Client/company name if mentioned
-
-=== STATUS DETECTION ===
-- "in progress", "working on", "started" → "in_progress"
-- "done", "finished", "completed" → "done"
-- "backlog", "someday", "later" → "backlog"
-- Default → "todo"
 
 === EXAMPLES ===
 
-User: "I need to call the doctor tomorrow 8:30-9:30am" (1 project exists: "Personal")
-{"response": "Got it! I'll create that task for tomorrow morning.", "action": {"type": "create_task", "task": {"title": "Call the doctor", "project_name": "Personal", "due_date": "${tomorrow}", "start_date": "${tomorrow}", "start_time": "08:30", "end_time": "09:30", "time_estimate": 60, "assignee": "${userName}", "status": "todo", "energy_level": "medium", "critical": false}}}
+User: "Create a task to pay rent tomorrow" (multiple projects, no project specified)
+{"response": "I'll create that task! Which project should it go in?\n\n• Feedback\n\n• Internal - Gameday\n\n• ChPP"}
 
-User: "Add a task to review the report" (multiple projects exist)
-{"response": "I'll create that task! Which project should it go in?\\n\\n• Feedback\\n\\n• ChPP\\n\\n• Personal"}
+User: "Gameday" (responding to project question, look at history for task details)
+{"response": "Got it! Creating your rent payment task.", "action": {"type": "create_task", "task": {"title": "Pay rent", "project_name": "Internal - Gameday", "due_date": "${tomorrow}", "status": "todo", "energy_level": "medium"}}}
 
-User: "Create a quick task to send the email in the ChPP project"
-{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Send the email", "project_name": "ChPP", "status": "todo", "energy_level": "low", "time_estimate": 5}}}
-
-=== CONVERSATION ===
-For questions about tasks, general chat, or when you need more info, just respond normally:
-{"response": "Your helpful answer here"}`
+User: "Add a task to call mom in the ChPP project"
+{"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Call mom", "project_name": "ChPP", "status": "todo", "energy_level": "medium"}}}`
 
     // Build messages with history
     const messages: any[] = []
