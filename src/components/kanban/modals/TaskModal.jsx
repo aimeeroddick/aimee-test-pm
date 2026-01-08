@@ -183,10 +183,14 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         }
       }
       
+      // Auto-default to only project if user has just one
+      const activeProjects = projects.filter(p => !p.archived)
+      const defaultProjectId = task?.project_id || (activeProjects.length === 1 ? activeProjects[0].id : '')
+      
       setFormData({
         title: task?.title || '',
         description: '',
-        project_id: task?.project_id || '',
+        project_id: defaultProjectId,
         status: task?.status || 'backlog',
         critical: false,
         start_date: task?.start_date || '',
@@ -371,11 +375,11 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={task?.id ? 'Edit Task' : 'New Task'} wide fullScreenMobile>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="overflow-x-hidden">
         {/* Status & Project - unified control bar */}
-        <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-800 overflow-hidden">
           {/* Status - contained segmented control */}
-          <div className="inline-flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg p-1 gap-0.5">
+          <div className="flex items-center bg-gray-50 dark:bg-gray-800/50 rounded-lg p-1 gap-0.5 w-full sm:w-auto">
             {COLUMNS.map((col) => {
               const isSelected = formData.status === col.id
               const getIcon = () => {
@@ -396,7 +400,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   key={col.id}
                   type="button"
                   onClick={() => setFormData({ ...formData, status: col.id })}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
                     isSelected
                       ? 'shadow-sm ring-1 ring-inset'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
@@ -475,7 +479,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               )}
             </div>
             
-            {/* Customer & Effort Level - side by side */}
+            {/* Customer & Assignee - side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Customer/Client</label>
@@ -567,6 +571,50 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
               </div>
               
               <div>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Assignee</label>
+                {!useCustomAssignee ? (
+                  <select
+                    value={formData.assignee}
+                    onChange={(e) => {
+                      if (e.target.value === '__other__') {
+                        setUseCustomAssignee(true)
+                        setFormData({ ...formData, assignee: '' })
+                      } else {
+                        setFormData({ ...formData, assignee: e.target.value })
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">Unassigned</option>
+                    {selectedProject?.members?.map((member) => (
+                      <option key={member} value={member}>{member}</option>
+                    ))}
+                    <option value="__other__">Other (type name)</option>
+                  </select>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customAssignee}
+                      onChange={(e) => setCustomAssignee(e.target.value)}
+                      className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      placeholder="Assignee name"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setUseCustomAssignee(false); setCustomAssignee('') }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Effort Level & Time Estimate - side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div>
                 <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Effort Level</label>
                 <div className="flex gap-1.5">
                   {Object.entries(ENERGY_LEVELS).map(([key, val]) => (
@@ -574,7 +622,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                       key={key}
                       type="button"
                       onClick={() => setFormData({ ...formData, energy_level: key })}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         formData.energy_level === key
                           ? 'ring-2 ring-offset-1 ring-indigo-500'
                           : 'hover:opacity-80'
@@ -586,81 +634,78 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                   ))}
                 </div>
               </div>
-            </div>
-            
-            {/* Time Estimate - Quick Input */}
-            <div>
-              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Time Estimate</label>
-              <div className="flex gap-2 items-center">
-                <div className="flex gap-1">
-                  {[
-                    { label: '15m', mins: 15 },
-                    { label: '30m', mins: 30 },
-                    { label: '1h', mins: 60 },
-                    { label: '2h', mins: 120 },
-                    { label: '4h', mins: 240 },
-                  ].map(opt => (
-                    <button
-                      key={opt.label}
-                      type="button"
-                      onClick={() => {
-                        const updates = { time_estimate: String(opt.mins) }
-                        if (formData.start_time) {
-                          const [hours, mins] = formData.start_time.split(':').map(Number)
-                          const startMinutes = hours * 60 + mins
-                          const endMinutes = startMinutes + opt.mins
-                          const endHours = Math.floor(endMinutes / 60)
-                          const endMins = endMinutes % 60
-                          updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
-                        }
-                        setFormData({ ...formData, ...updates })
-                      }}
-                      className={`px-2 py-1 text-xs font-medium rounded-lg transition-all ${
-                        formData.time_estimate === String(opt.mins)
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+              
+              <div>
+                <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Time Estimate</label>
+                <div className="flex gap-1.5 items-center flex-wrap">
+                  <div className="flex gap-1">
+                    {[
+                      { label: '15m', mins: 15 },
+                      { label: '30m', mins: 30 },
+                      { label: '1h', mins: 60 },
+                      { label: '2h', mins: 120 },
+                    ].map(opt => (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => {
+                          const updates = { time_estimate: String(opt.mins) }
+                          if (formData.start_time) {
+                            const [hours, mins] = formData.start_time.split(':').map(Number)
+                            const startMinutes = hours * 60 + mins
+                            const endMinutes = startMinutes + opt.mins
+                            const endHours = Math.floor(endMinutes / 60)
+                            const endMins = endMinutes % 60
+                            updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                          }
+                          setFormData({ ...formData, ...updates })
+                        }}
+                        className={`px-2 py-1 text-xs font-medium rounded-lg transition-all ${
+                          formData.time_estimate === String(opt.mins)
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={formData.time_estimate}
+                    onChange={(e) => {
+                      const newEstimate = e.target.value
+                      const updates = { time_estimate: newEstimate }
+                      if (formData.start_time && newEstimate) {
+                        const [hours, mins] = formData.start_time.split(':').map(Number)
+                        const startMinutes = hours * 60 + mins
+                        const endMinutes = startMinutes + parseInt(newEstimate)
+                        const endHours = Math.floor(endMinutes / 60)
+                        const endMins = endMinutes % 60
+                        updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+                      }
+                      setFormData({ ...formData, ...updates })
+                    }}
+                    className="w-16 px-2 py-1 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    placeholder="mins"
+                  />
+                  {formData.time_estimate && (
+                    <>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatTimeEstimate(parseInt(formData.time_estimate))}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, time_estimate: '' })}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </>
+                  )}
                 </div>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="5"
-                  value={formData.time_estimate}
-                  onChange={(e) => {
-                    const newEstimate = e.target.value
-                    const updates = { time_estimate: newEstimate }
-                    if (formData.start_time && newEstimate) {
-                      const [hours, mins] = formData.start_time.split(':').map(Number)
-                      const startMinutes = hours * 60 + mins
-                      const endMinutes = startMinutes + parseInt(newEstimate)
-                      const endHours = Math.floor(endMinutes / 60)
-                      const endMins = endMinutes % 60
-                      updates.end_time = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
-                    }
-                    setFormData({ ...formData, ...updates })
-                  }}
-                  className="w-20 px-2 py-1 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  placeholder="mins"
-                />
-                {formData.time_estimate && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatTimeEstimate(parseInt(formData.time_estimate))}
-                  </span>
-                )}
-                {formData.time_estimate && (
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, time_estimate: '' })}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    ✕
-                  </button>
-                )}
               </div>
             </div>
             
