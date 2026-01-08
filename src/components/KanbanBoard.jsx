@@ -4636,6 +4636,70 @@ export default function KanbanBoard({ demoMode = false }) {
     fetchPendingEmailTasks()
   }, [])
 
+  // Supabase Realtime subscription for tasks
+  // Automatically updates UI when tasks are created/updated/deleted from any source
+  useEffect(() => {
+    if (demoMode || !user?.id) return
+
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Task inserted', payload.new.id)
+          setTasks(prev => {
+            // Avoid duplicates (in case optimistic update already added it)
+            if (prev.some(t => t.id === payload.new.id)) return prev
+            return [...prev, { ...payload.new, attachments: [], dependencies: [] }]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Task updated', payload.new.id)
+          setTasks(prev => prev.map(t => 
+            t.id === payload.new.id 
+              ? { ...t, ...payload.new }
+              : t
+          ))
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Task deleted', payload.old.id)
+          setTasks(prev => prev.filter(t => t.id !== payload.old.id))
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status)
+      })
+
+    return () => {
+      console.log('Realtime: Unsubscribing')
+      supabase.removeChannel(channel)
+    }
+  }, [demoMode, user?.id])
+
   // Handle URL parameters (Slack callback, task deep link)
   const handleUrlParams = useCallback(async () => {
     if (demoMode) return
@@ -11201,14 +11265,15 @@ Or we can extract from:
             }
             
             try {
-              console.log('Spark: Task created, refreshing data')
-              
-              // Refresh all data to ensure UI updates
-              // (Optimistic update has closure issues with inline callbacks)
-              await fetchData()
+              // Optimistic update for immediate feedback
+              // Realtime subscription will handle any edge cases
+              setTasks(prev => {
+                // Avoid duplicates (realtime might also add it)
+                if (prev.some(t => t.id === data.id)) return prev
+                return [...prev, { ...data, attachments: [], dependencies: [] }]
+              })
               
               setToast({ message: `Created: ${data.title}`, type: 'success' })
-              console.log('Spark: Task added successfully')
               return { success: true }
             } catch (stateError) {
               console.error('Spark: Error updating state:', stateError)
