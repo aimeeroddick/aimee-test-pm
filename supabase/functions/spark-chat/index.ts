@@ -43,7 +43,7 @@ serve(async (req) => {
     const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     
     // Calculate next occurrence of each day of week
-    const getDayOfWeek = (dayName: string): string => {
+    const getDayOfWeek = (dayName: string, nextWeek: boolean = false): string => {
       const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
       const targetDay = days.indexOf(dayName.toLowerCase())
       if (targetDay === -1) return ''
@@ -51,17 +51,28 @@ serve(async (req) => {
       const currentDay = now.getDay()
       let daysUntil = targetDay - currentDay
       if (daysUntil <= 0) daysUntil += 7 // Next week if today or past
+      if (nextWeek) daysUntil += 7 // Add another week for "next Friday"
       const targetDate = new Date(now.getTime() + daysUntil * 86400000)
       return targetDate.toISOString().split('T')[0]
     }
     
-    const nextMonday = getDayOfWeek('monday')
-    const nextTuesday = getDayOfWeek('tuesday')
-    const nextWednesday = getDayOfWeek('wednesday')
-    const nextThursday = getDayOfWeek('thursday')
-    const nextFriday = getDayOfWeek('friday')
-    const nextSaturday = getDayOfWeek('saturday')
-    const nextSunday = getDayOfWeek('sunday')
+    // "Friday" = this coming Friday
+    const thisMonday = getDayOfWeek('monday')
+    const thisTuesday = getDayOfWeek('tuesday')
+    const thisWednesday = getDayOfWeek('wednesday')
+    const thisThursday = getDayOfWeek('thursday')
+    const thisFriday = getDayOfWeek('friday')
+    const thisSaturday = getDayOfWeek('saturday')
+    const thisSunday = getDayOfWeek('sunday')
+    
+    // "Next Friday" = Friday of next week
+    const nextMonday = getDayOfWeek('monday', true)
+    const nextTuesday = getDayOfWeek('tuesday', true)
+    const nextWednesday = getDayOfWeek('wednesday', true)
+    const nextThursday = getDayOfWeek('thursday', true)
+    const nextFriday = getDayOfWeek('friday', true)
+    const nextSaturday = getDayOfWeek('saturday', true)
+    const nextSunday = getDayOfWeek('sunday', true)
     
     // Get user's date format preference
     const dateFormat = context?.dateFormat || 'DD/MM/YYYY'
@@ -81,23 +92,34 @@ TOMORROW: ${tomorrow}
 NEXT WEEK: ${nextWeek}
 CURRENT YEAR: ${currentYear}
 
-DAYS OF WEEK (next occurrence):
-- Monday: ${nextMonday}
-- Tuesday: ${nextTuesday}
-- Wednesday: ${nextWednesday}
-- Thursday: ${nextThursday}
-- Friday: ${nextFriday}
-- Saturday: ${nextSaturday}
-- Sunday: ${nextSunday}
+THIS COMING ("Friday", "on Monday"):
+- Monday: ${thisMonday}
+- Tuesday: ${thisTuesday}
+- Wednesday: ${thisWednesday}
+- Thursday: ${thisThursday}
+- Friday: ${thisFriday}
+- Saturday: ${thisSaturday}
+- Sunday: ${thisSunday}
+
+NEXT WEEK ("next Friday", "next Monday"):
+- Next Monday: ${nextMonday}
+- Next Tuesday: ${nextTuesday}
+- Next Wednesday: ${nextWednesday}
+- Next Thursday: ${nextThursday}
+- Next Friday: ${nextFriday}
+- Next Saturday: ${nextSaturday}
+- Next Sunday: ${nextSunday}
 
 DATE FORMAT: ${isUSFormat ? 'MM/DD/YYYY (US format) - "05/01" means May 1st' : 'DD/MM/YYYY (UK format) - "05/01" means January 5th'}
 
 DATE CONVERSION RULES:
 - "today" = ${today}
 - "tomorrow" = ${tomorrow}
+- "Friday" or "on Friday" or "this Friday" = ${thisFriday}
+- "next Friday" = ${nextFriday}
+- "Monday" or "on Monday" = ${thisMonday}
+- "next Monday" = ${nextMonday}
 - "next week" = ${nextWeek}
-- "Friday" = ${nextFriday}
-- "Monday" = ${nextMonday}
 - "January 15" = ${currentYear}-01-15 (use ${currentYear + 1} if date has passed)
 - "in 2 days" = calculate from today
 - "in 3 weeks" = calculate from today
