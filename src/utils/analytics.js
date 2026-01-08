@@ -13,6 +13,7 @@ export async function trackEvent(eventName, eventData = {}) {
     
     await supabase.from('user_events').insert({
       user_id: user.id,
+      user_email: user.email,
       event_name: eventName,
       event_data: eventData
     })
