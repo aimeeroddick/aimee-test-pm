@@ -11120,14 +11120,20 @@ Or we can extract from:
           // Create task via Spark
           try {
             const newTask = {
-              ...taskData,
-              user_id: user.id,
-              project_id: taskData.project_id || projects[0]?.id,
+              title: taskData.title,
+              description: taskData.description || null,
               status: taskData.status || 'todo',
+              due_date: taskData.due_date || null,
+              user_id: user.id,
+              project_id: taskData.project_id || projects[0]?.id || null,
               created_at: new Date().toISOString()
             }
             console.log('Spark creating task:', newTask)
-            const { data, error } = await supabase.from('tasks').insert([newTask]).select().single()
+            const { data, error } = await supabase
+              .from('tasks')
+              .insert(newTask)
+              .select('*')
+              .single()
             if (error) {
               console.error('Spark task creation error:', error)
               showToast('Failed to create task: ' + error.message, 'error')
