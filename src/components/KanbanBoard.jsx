@@ -11172,16 +11172,30 @@ Or we can extract from:
           return false
         }}
         onProjectCreated={async (projectData) => {
-          const newProject = {
-            ...projectData,
-            user_id: user.id,
-            color: projectData.color || PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)]
-          }
-          const { data, error } = await supabase.from('projects').insert([newProject]).select().single()
-          if (!error && data) {
-            setProjects(prev => [...prev, data])
-            setToast({ message: 'Project created by Spark', type: 'success' })
-            return true
+          try {
+            const { data, error } = await supabase
+              .from('projects')
+              .insert({ 
+                name: projectData.name, 
+                color: projectData.color || PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)],
+                user_id: user.id 
+              })
+              .select()
+              .single()
+            if (error) {
+              console.error('Spark project creation error:', error)
+              setToast({ message: 'Failed to create project', type: 'error' })
+              return false
+            }
+            if (data) {
+              setProjects(prev => [...prev, data])
+              setToast({ message: 'Project created by Spark!', type: 'success' })
+              return true
+            }
+          } catch (e) {
+            console.error('Spark project creation exception:', e)
+            setToast({ message: 'Failed to create project', type: 'error' })
+            return false
           }
           return false
         }}
