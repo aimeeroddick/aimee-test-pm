@@ -52,6 +52,15 @@ RULES:
 
     console.log('Calling Claude...')
     
+    // Build messages with conversation history
+    const messages = []
+    if (body.conversationHistory && Array.isArray(body.conversationHistory)) {
+      for (const msg of body.conversationHistory.slice(-10)) {
+        messages.push({ role: msg.role, content: msg.content })
+      }
+    }
+    messages.push({ role: 'user', content: body.message })
+    
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -63,7 +72,7 @@ RULES:
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: systemPrompt,
-        messages: [{ role: 'user', content: body.message }]
+        messages: messages
       })
     })
 
