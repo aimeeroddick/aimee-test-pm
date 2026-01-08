@@ -78,7 +78,7 @@ Always respond with valid JSON in one of these formats:
 }}}
 
 2. ASKING FOR PROJECT (when project is needed but not specified):
-{"response": "Which project should this go in?\n\n• Project1\n\n• Project2"}
+{"response": "Which project should this go in?\n• Project1\n• Project2"}
 
 === CRITICAL: PROJECT HANDLING ===
 ${projectCount === 0 ? 'No projects exist. Set project_name to null.' : ''}
@@ -111,7 +111,7 @@ WHEN USER RESPONDS WITH A PROJECT NAME:
 === EXAMPLES ===
 
 User: "Create a task to pay rent tomorrow" (multiple projects, no project specified)
-{"response": "I'll create that task! Which project should it go in?\n\n• Feedback\n\n• Internal - Gameday\n\n• ChPP"}
+{"response": "I'll create that task! Which project should it go in?\n• Feedback\n• Internal - Gameday\n• ChPP"}
 
 User: "Gameday" (responding to project question, look at history for task details)
 {"response": "Got it! Creating your rent payment task.", "action": {"type": "create_task", "task": {"title": "Pay rent", "project_name": "Internal - Gameday", "due_date": "${tomorrow}", "status": "todo", "energy_level": "medium"}}}
