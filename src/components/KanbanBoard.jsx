@@ -8452,7 +8452,8 @@ export default function KanbanBoard({ demoMode = false }) {
                     const op = value[0]
                     const dateStr = value.slice(1)
                     const date = new Date(dateStr)
-                    const formatted = date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
+                    // Handle invalid dates (user mid-typing)
+                    const formatted = isNaN(date.getTime()) ? dateStr || '...' : date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
                     displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
                   }
                   else if (field === 'start_date' && value === 'has_date') displayValue = 'Has Date'
@@ -8460,7 +8461,8 @@ export default function KanbanBoard({ demoMode = false }) {
                     const op = value[0]
                     const dateStr = value.slice(1)
                     const date = new Date(dateStr)
-                    const formatted = date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
+                    // Handle invalid dates (user mid-typing)
+                    const formatted = isNaN(date.getTime()) ? dateStr || '...' : date.toLocaleDateString(getDateLocale(), { day: 'numeric', month: 'short' })
                     displayValue = `${op === '=' ? '=' : op === '<' ? 'before' : 'after'} ${formatted}`
                   }
                   else if (field === 'time_estimate' && (value.startsWith('=') || value.startsWith('<') || value.startsWith('>'))) {
