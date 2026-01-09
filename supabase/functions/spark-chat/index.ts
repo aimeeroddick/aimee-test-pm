@@ -103,6 +103,7 @@ YESTERDAY: ${yesterday}
 TOMORROW: ${tomorrow}
 NEXT WEEK: ${nextWeek}
 CURRENT YEAR: ${currentYear}
+USER'S DATE FORMAT: ${dateFormat} (${isUSFormat ? 'Month/Day/Year - so 1/9 = January 9th' : 'Day/Month/Year - so 9/1 = January 9th, 1/9 = September 1st'})
 
 THIS COMING ("Friday", "on Monday"):
 - Monday: ${thisMonday}
