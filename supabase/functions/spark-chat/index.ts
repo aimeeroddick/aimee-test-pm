@@ -38,12 +38,24 @@ serve(async (req) => {
       )
     }
 
-    // Essential date references only - Claude can calculate day-of-week dates
-    const today = new Date().toISOString().split('T')[0]
-    const currentYear = new Date().getFullYear()
+    // Pre-calculate all date references - don't rely on Claude's date calculation
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    const currentYear = now.getFullYear()
+    const dayOfWeek = now.getDay() // 0 = Sunday, 1 = Monday, etc.
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
     const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+
+    // Pre-calculate day-of-week dates (next occurrence of each day)
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayDates: Record<string, string> = {}
+    for (let i = 0; i < 7; i++) {
+      let daysUntil = i - dayOfWeek
+      if (daysUntil <= 0) daysUntil += 7 // If today or past, go to next week
+      const date = new Date(now.getTime() + daysUntil * 86400000)
+      dayDates[dayNames[i]] = date.toISOString().split('T')[0]
+    }
 
     // Get user's date format preference
     const dateFormat = context?.dateFormat || 'DD/MM/YYYY'
@@ -63,18 +75,25 @@ TODAY: ${today} | TOMORROW: ${tomorrow} | YESTERDAY: ${yesterday} | NEXT WEEK: $
 CURRENT YEAR: ${currentYear}
 USER'S DATE FORMAT: ${dateFormat} (${isUSFormat ? 'US: 1/9 = January 9th' : 'UK: 9/1 = January 9th'})
 
-For day-of-week dates ("Friday", "next Monday"), calculate from today's date.
-- "Friday" = next occurrence of Friday from today
-- "next Friday" = the Friday after that (add 7 days)
-- If a named date has passed this year, use next year
+DAY-OF-WEEK DATES (pre-calculated, use these exact dates):
+- Monday: ${dayDates['Monday']}
+- Tuesday: ${dayDates['Tuesday']}
+- Wednesday: ${dayDates['Wednesday']}
+- Thursday: ${dayDates['Thursday']}
+- Friday: ${dayDates['Friday']}
+- Saturday: ${dayDates['Saturday']}
+- Sunday: ${dayDates['Sunday']}
+
+For "next Monday" etc., add 7 days to the above dates.
+If a named date has passed this year, use next year.
 
 === USER & PROJECTS ===
 USER NAME: ${userName}
 AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'}
 PROJECT COUNT: ${projectCount}
 
-=== ACTIVE TASKS (for updates and queries) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
+=== ACTIVE TASKS (${activeTasks.length} total, max 25 shown) ===
+${activeTasks.length > 0 ? activeTasks.slice(0, 25).map((t: any) => `${t.id} | "${t.title}" | ${t.project_name} | ${t.due_date || 'no-due'} | ${t.status}`).join('\n') : 'No active tasks'}
 
 ${lastQueryResults && lastQueryResults.length > 0 ? `=== PREVIOUS QUERY RESULTS ===
 The user just saw these tasks from a query. If they reference #1, #2, etc., use these IDs:
@@ -386,7 +405,8 @@ User: "Update all to 60 minutes"
       if (!response.ok) {
         const err = await response.text()
         console.error('Claude API error:', response.status, err)
-        throw new Error('AI service temporarily unavailable')
+        console.error('Request body was:', JSON.stringify(requestBody, null, 2).substring(0, 2000))
+        throw new Error(`AI service error: ${err.substring(0, 200)}`)
       }
       
       return response.json()
@@ -441,7 +461,7 @@ User: "Update all to 60 minutes"
     } catch (error) {
       console.error('Claude call error:', String(error))
       return new Response(
-        JSON.stringify({ error: 'AI service temporarily unavailable' }),
+        JSON.stringify({ error: String(error) || 'AI service temporarily unavailable' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

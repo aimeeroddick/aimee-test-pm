@@ -235,19 +235,7 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     return formatResults(matching, 'due tomorrow')
   }
   
-  // ==== DUE THIS WEEK ====
-  // "what's due this week", "this week's tasks", "tasks for this week"
-  if (/\b(due|for)?\s*(this\s*)?week\b/i.test(query) ||
-      /\bweekly\s*(tasks?|work)\b/i.test(query) ||
-      /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
-    const endOfWeek = new Date()
-    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
-    const endDate = endOfWeek.toISOString().split('T')[0]
-    const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
-    return formatResults(matching, 'due this week')
-  }
-  
-  // ==== DUE NEXT WEEK ====
+  // ==== DUE NEXT WEEK ==== (must check BEFORE "this week" to avoid false matches)
   if (/\b(due|for)?\s*next\s*week\b/i.test(query) ||
       /\bnext\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
     const startOfNextWeek = new Date()
@@ -259,19 +247,41 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= startDate && t.due_date <= endDate)
     return formatResults(matching, 'due next week')
   }
+
+  // ==== DUE THIS WEEK ====
+  // "what's due this week", "this week's tasks", "tasks for this week", "due this week"
+  if (/\b(due|for)\s*(this\s*)?week\b/i.test(query) ||
+      /\bweekly\s*(tasks?|work)\b/i.test(query) ||
+      /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
+    const endOfWeek = new Date()
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
+    const endDate = endOfWeek.toISOString().split('T')[0]
+    const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
+    return formatResults(matching, 'due this week')
+  }
   
   // ==== DUE ON SPECIFIC DATE ====
-  // "what's due Friday", "due on January 15", "tasks for Monday"
-  const dueDateMatch = query.match(/\b(?:due|for)\s*(?:on)?\s*(.+)/i)
-  if (dueDateMatch) {
-    const dateStr = dueDateMatch[1].trim()
-    // Skip if it matches already-handled patterns
-    if (!/(today|tomorrow|this\s*week|next\s*week)$/i.test(dateStr)) {
-      const parsedDate = parseDate(dateStr)
-      if (parsedDate) {
-        const matching = activeTasks.filter(t => t.due_date === parsedDate)
-        const dateDisplay = new Date(parsedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
-        return formatResults(matching, `due on ${dateDisplay}`)
+  // "what's due Friday", "due on January 15", "tasks for Monday", "show me tasks on Monday"
+  // Multiple patterns to catch different phrasings
+  const datePatterns = [
+    /\b(?:due|for)\s*(?:on)?\s*(.+)/i,                    // "due Friday", "for Monday"
+    /\b(?:show|what'?s?)\s*(?:me\s+)?(?:tasks?\s+)?(?:on|for)\s+(.+)/i,  // "show me tasks on Monday"
+    /\btasks?\s+(?:on|for)\s+(.+)/i,                      // "tasks on Monday"
+    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*tasks?\b/i,  // "Monday tasks"
+  ]
+
+  for (const pattern of datePatterns) {
+    const match = query.match(pattern)
+    if (match) {
+      const dateStr = match[1].trim()
+      // Skip if it matches already-handled patterns
+      if (!/(today|tomorrow|this\s*week|next\s*week)$/i.test(dateStr)) {
+        const parsedDate = parseDate(dateStr)
+        if (parsedDate) {
+          const matching = activeTasks.filter(t => t.due_date === parsedDate)
+          const dateDisplay = new Date(parsedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+          return formatResults(matching, `due on ${dateDisplay}`)
+        }
       }
     }
   }
