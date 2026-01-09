@@ -205,6 +205,9 @@ Always respond with valid JSON in one of these formats:
 3. UPDATING A TASK (when user wants to change an existing task):
 {"response": "Done! I've updated the task.", "action": {"type": "update_task", "task_id": "uuid-from-activeTasks", "updates": {"field_to_change": "new_value"}}}
 
+3b. COMPLETING A TASK (when user wants to mark a task as done/complete):
+{"response": "Done! I've marked that as complete.", "action": {"type": "complete_task", "task_id": "uuid-from-activeTasks"}}
+
 4. BULK UPDATING TASKS (when user wants to update multiple tasks from a query):
 {"response": "Done! I've updated all 24 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", ...all matching IDs up to 20], "updates": {"time_estimate": 60, "energy_level": "medium"}}}
 Note: Include ALL task IDs matching the query criteria (up to 20). Get the IDs from the ACTIVE TASKS list by filtering for the query criteria.
