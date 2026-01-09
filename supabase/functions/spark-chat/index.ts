@@ -539,7 +539,7 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
         const toolUseBlock = data.content.find((block: any) => block.type === 'tool_use')
         
         if (toolUseBlock && toolUseBlock.name === 'query_tasks') {
-          console.log('Tool call:', toolUseBlock.name, toolUseBlock.input)
+          console.log('Tool call:', toolUseBlock.name, JSON.stringify(toolUseBlock.input))
           
           // Execute the query
           const queryResults = executeQueryTool(toolUseBlock.input)
@@ -549,6 +549,8 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
           const formattedResults = queryResults.map((t: any) => 
             `ID: ${t.id} | "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status}`
           ).join('\n')
+          
+          console.log('Formatted results preview:', formattedResults.substring(0, 200))
           
           // Send tool result back to Claude
           const toolResultMessages = [
@@ -566,13 +568,14 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
             }
           ]
           
+          console.log('Calling Claude with tool results...')
           // Get Claude's final response (no tools on second call)
           data = await callClaude(toolResultMessages, false)
-          console.log('Claude final response after tool use')
+          console.log('Claude final response stop_reason:', data.stop_reason)
         }
       }
     } catch (error) {
-      console.error('Claude call error:', error)
+      console.error('Claude call error:', String(error))
       return new Response(
         JSON.stringify({ error: 'AI service temporarily unavailable' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -580,8 +583,13 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
     }
 
     // Extract the text response
-    const textBlock = data.content.find((block: any) => block.type === 'text')
+    const textBlock = data.content?.find((block: any) => block.type === 'text')
     const rawText = textBlock?.text || ''
+    
+    if (!rawText) {
+      console.log('No text block found in response. Full content:', JSON.stringify(data.content))
+    }
+    
     console.log('Claude raw response:', rawText.substring(0, 500))
 
     // Parse JSON response - handle various Claude output formats
