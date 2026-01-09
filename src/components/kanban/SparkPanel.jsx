@@ -248,6 +248,12 @@ export default function SparkPanel({
           })
         }
       )
+      
+      // Debug: Log what we're sending
+      const ctx = buildContext()
+      console.log('Spark context today:', new Date().toISOString().split('T')[0])
+      console.log('Spark activeTasks with DueToday:', ctx.activeTasks.filter(t => t.is_due_today === 'YES').map(t => ({ title: t.title, due: t.due_date, dueToday: t.is_due_today })))
+      console.log('Spark activeTasks with Overdue:', ctx.activeTasks.filter(t => t.is_overdue === 'YES').map(t => ({ title: t.title, due: t.due_date, overdue: t.is_overdue })))
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
