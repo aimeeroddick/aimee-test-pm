@@ -8179,7 +8179,13 @@ export default function KanbanBoard({ demoMode = false }) {
                           <input
                             type="date"
                             value={fieldFilters.due_date.slice(1)}
-                            onChange={(e) => setFieldFilters({ ...fieldFilters, due_date: fieldFilters.due_date[0] + e.target.value })}
+                            onChange={(e) => {
+                              // Only update if we have a valid date value (prevents Safari crash on partial input)
+                              const newValue = e.target.value
+                              if (newValue && !isNaN(new Date(newValue).getTime())) {
+                                setFieldFilters({ ...fieldFilters, due_date: fieldFilters.due_date[0] + newValue })
+                              }
+                            }}
                             className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
                           />
                         )}
@@ -8210,7 +8216,13 @@ export default function KanbanBoard({ demoMode = false }) {
                           <input
                             type="date"
                             value={fieldFilters.start_date.slice(1)}
-                            onChange={(e) => setFieldFilters({ ...fieldFilters, start_date: fieldFilters.start_date[0] + e.target.value })}
+                            onChange={(e) => {
+                              // Only update if we have a valid date value (prevents Safari crash on partial input)
+                              const newValue = e.target.value
+                              if (newValue && !isNaN(new Date(newValue).getTime())) {
+                                setFieldFilters({ ...fieldFilters, start_date: fieldFilters.start_date[0] + newValue })
+                              }
+                            }}
                             className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
                           />
                         )}
@@ -8618,8 +8630,10 @@ export default function KanbanBoard({ demoMode = false }) {
                       type="date"
                       autoFocus
                       onChange={(e) => {
-                        if (e.target.value) {
-                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${e.target.value}` })
+                        // Only update if we have a valid date value (prevents Safari crash on partial input)
+                        const newValue = e.target.value
+                        if (newValue && !isNaN(new Date(newValue).getTime())) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${newValue}` })
                           setPendingFilterField('')
                           setPendingFilterOperator('')
                         }

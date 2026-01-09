@@ -96,6 +96,16 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
   // Common query starters - matches "what's", "show", "list", "give me", "any", "do I have", etc.
   const queryStarter = /^(what'?s?|show|list|give\s*me|any|do\s*i\s*have|are\s*there|get|find|display|view|see)\s*(my|the|all)?\s*/i
   
+  // ==== DUE TODAY OR OVERDUE (combined) ====
+  // "what's due today or overdue", "tasks due today or past due", "today or overdue tasks"
+  if ((/\btoday\b/i.test(query) && /\b(overdue|past\s*due|late)\b/i.test(query)) ||
+      /\b(overdue|late)\b.*\btoday\b/i.test(query)) {
+    const dueToday = activeTasks.filter(t => t.due_date === today)
+    const overdue = activeTasks.filter(t => t.due_date && t.due_date < today)
+    const combined = [...new Set([...dueToday, ...overdue])] // Dedupe
+    return formatResults(combined, 'due today or overdue')
+  }
+  
   // ==== DUE TODAY ====
   // "what's due today", "show tasks due today", "today's tasks", "tasks for today", "anything due today"
   if (/\b(due|for|tasks?)\s*today\b/i.test(query) || 
@@ -172,7 +182,8 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
   if (/\b(in\s*)?(my\s*day)\b/i.test(query) ||
       /\bmy\s*day\s*(tasks?|list)?\b/i.test(query) ||
       /\b(today'?s?|daily)\s*(plan|focus|priorities)\b/i.test(query)) {
-    const matching = activeTasks.filter(t => t.my_day_date)
+    const today = new Date().toISOString().split('T')[0]
+    const matching = activeTasks.filter(t => t.my_day_date === today)
     return formatResults(matching, 'in My Day')
   }
   
