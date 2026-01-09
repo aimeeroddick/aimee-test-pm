@@ -236,26 +236,21 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   }
   
   // ==== DUE NEXT WEEK ==== (must check BEFORE "this week" to avoid false matches)
+  // Rolling window: T+8 through T+14 (matches board filter logic)
   if (/\b(due|for)?\s*next\s*week\b/i.test(query) ||
       /\bnext\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
-    const startOfNextWeek = new Date()
-    startOfNextWeek.setDate(startOfNextWeek.getDate() + (7 - startOfNextWeek.getDay()) + 1)
-    const endOfNextWeek = new Date(startOfNextWeek)
-    endOfNextWeek.setDate(endOfNextWeek.getDate() + 6)
-    const startDate = startOfNextWeek.toISOString().split('T')[0]
-    const endDate = endOfNextWeek.toISOString().split('T')[0]
+    const startDate = new Date(Date.now() + 8 * 86400000).toISOString().split('T')[0]
+    const endDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= startDate && t.due_date <= endDate)
     return formatResults(matching, 'due next week')
   }
 
   // ==== DUE THIS WEEK ====
-  // "what's due this week", "this week's tasks", "tasks for this week", "due this week"
+  // Rolling window: T through T+7 (matches board filter logic)
   if (/\b(due|for)\s*(this\s*)?week\b/i.test(query) ||
       /\bweekly\s*(tasks?|work)\b/i.test(query) ||
       /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
-    const endOfWeek = new Date()
-    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
-    const endDate = endOfWeek.toISOString().split('T')[0]
+    const endDate = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
     return formatResults(matching, 'due this week')
   }
