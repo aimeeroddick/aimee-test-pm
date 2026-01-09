@@ -1705,7 +1705,13 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'bottom',
     },
     {
-      target: 'help',
+      target: 'notes-button',
+      title: 'Import Notes 📝',
+      description: 'Paste meeting notes, emails, or any text and AI will extract tasks automatically. Great for turning conversations into action items!',
+      position: 'bottom',
+    },
+    {
+      target: 'help-button',
       title: 'Need Help?',
       description: 'Click the ? icon anytime to access the full help guide. You\'re all set!',
       position: 'bottom',
@@ -1729,8 +1735,9 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 3 ? 'top-20 right-[280px]' :
           step === 4 ? 'top-24 left-8' :
           step === 5 ? 'top-20 right-[180px]' :
-          step === 6 ? 'top-20 right-[100px]' :
-          'top-20 right-0'
+          step === 6 ? 'top-20 right-[140px]' :
+          step === 7 ? 'top-20 right-[80px]' :
+          'top-20 right-4'
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700">
@@ -7754,6 +7761,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </button>
               
               <button
+                id="notes-button"
                 onClick={() => {
                   setMeetingNotesData({ ...meetingNotesData, projectId: '' }) // Don't auto-select
                   setExtractedTasks([])
@@ -7772,7 +7780,7 @@ export default function KanbanBoard({ demoMode = false }) {
               </button>
               
               {/* Spark AI Assistant */}
-              <SparkButton onClick={() => setSparkPanelOpen(true)} />
+              <SparkButton id="spark-button" onClick={() => setSparkPanelOpen(true)} />
               
               {/* Pending Email Tasks Badge + Dropdown */}
               {pendingEmailCount > 0 && (
@@ -8006,6 +8014,7 @@ export default function KanbanBoard({ demoMode = false }) {
               )}
               
               <button
+                id="help-button"
                 onClick={() => setHelpModalOpen(true)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-500 dark:text-gray-300"
                 title="Help Guide"

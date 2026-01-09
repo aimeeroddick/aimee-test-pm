@@ -501,8 +501,9 @@ const SparkIcon = ({ className = "w-6 h-6" }) => (
 )
 
 // Header button component
-export const SparkButton = ({ onClick }) => (
+export const SparkButton = ({ onClick, id }) => (
   <button
+    id={id}
     onClick={onClick}
     className="hidden sm:flex p-1.5 bg-pink-50 hover:bg-pink-100 active:bg-pink-200 border border-pink-200 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2"
     title="Spark AI Assistant (⌃⌘S)"
