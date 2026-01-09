@@ -317,11 +317,12 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // ==== IN PROGRESS ====
   // "what am I working on", "in progress", "currently working", "active tasks"
+  // Note: "started" pattern excludes "not started" which should match backlog
   if (/\b(what('?s|\s*am\s*i)|show)\s*(working\s*on|in\s*progress)\b/i.test(query) ||
       /\bin\s*progress\b/i.test(query) ||
       /\bcurrently\s*(working|doing)\b/i.test(query) ||
       /\bactive\s*(tasks?|work)?\b/i.test(query) ||
-      /\bstarted\s*(tasks?)?\b/i.test(query)) {
+      (/\bstarted\s*(tasks?)?\b/i.test(query) && !/\bnot\s*started\b/i.test(query))) {
     const matching = activeTasks.filter(t => t.status === 'in_progress')
     return formatResults(matching, 'in progress')
   }
