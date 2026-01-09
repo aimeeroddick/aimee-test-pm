@@ -6531,10 +6531,17 @@ export default function KanbanBoard({ demoMode = false }) {
         })
       }
 
-      // Realtime handles save updates
+      // Optimistic update for instant UI feedback
+      const isNew = !taskData.id
+      if (isNew && taskId) {
+        // New task - add to state
+        setTasks(prev => [...prev, { ...taskData, id: taskId, attachments: [], dependencies: [] }])
+      } else if (taskId) {
+        // Updated task - update in state
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...taskData } : t))
+      }
       
       // Show notification
-      const isNew = !taskData.id
       showNotification(isNew ? "✓ Task created" : "✓ Task saved")
       
       // Track task count for PWA install prompt
