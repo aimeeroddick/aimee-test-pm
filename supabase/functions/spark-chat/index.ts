@@ -149,36 +149,30 @@ AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'
 PROJECT COUNT: ${projectCount}
 
 === ACTIVE TASKS (for updates and queries) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | DueToday: ${t.is_due_today} | Overdue: ${t.is_overdue} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
 
 === QUERY TASKS ===
-When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
+When user asks about their tasks (what's due, what's overdue, show tasks, etc.), use the query_tasks tool to filter tasks. DO NOT try to filter the ACTIVE TASKS list yourself - always use the tool.
 
-⚠️ For "due today" queries: ONLY include tasks where DueToday = "YES". If DueToday = "no", do NOT include that task.
+The query_tasks tool accepts these parameters:
+- field: The field to filter on (due_date, start_date, status, project_name, energy_level, time_estimate, critical, my_day_date, assignee)
+- operator: How to compare (equals, before, after, is_null, is_not_null, contains)
+- value: The value to compare against (use YYYY-MM-DD format for dates)
 
-AVAILABLE FIELDS FOR QUERIES:
-- Title, Project, Due date, Start date, Status, Effort (energy_level), Time (time_estimate), Critical, My Day, Owner (assignee)
+Examples of when to use query_tasks:
+- "What's due today?" → query_tasks(field: "due_date", operator: "equals", value: "${today}")
+- "What's due tomorrow?" → query_tasks(field: "due_date", operator: "equals", value: "${tomorrow}")
+- "What's overdue?" → query_tasks(field: "due_date", operator: "before", value: "${today}")
+- "What's due this week?" → query_tasks(field: "due_date", operator: "before", value: "${nextWeek}") then filter >= today
+- "What's in my day?" → query_tasks(field: "my_day_date", operator: "is_not_null")
+- "What tasks are in [project]?" → query_tasks(field: "project_name", operator: "equals", value: "ProjectName")
+- "Show my high effort tasks" → query_tasks(field: "energy_level", operator: "equals", value: "high")
+- "Tasks without time estimates" → query_tasks(field: "time_estimate", operator: "is_null")
+- "What's critical?" → query_tasks(field: "critical", operator: "equals", value: "true")
+- "What am I working on?" → query_tasks(field: "status", operator: "equals", value: "in_progress")
+- "What's assigned to Harry?" → query_tasks(field: "assignee", operator: "contains", value: "Harry")
 
-FIELDS NOT AVAILABLE (cannot search by these):
-- Description, tags, priority, notes, customer, comments content
-
-If user asks to filter by a field in the NOT AVAILABLE list, say: "I can't search by [field] - I don't have access to that information. I can search by title, project, due date, start date, status, effort level, time estimate, critical flag, My Day status, or owner."
-
-Do NOT say "no tasks have [field]" if the field isn't in your data - that's misleading. Only report on fields you can actually see.
-
-QUERY TYPES:
-- "What's due today?" - ONLY tasks where DueToday = "YES"
-- "What's due tomorrow?" - ONLY tasks where Due = "${tomorrow}" exactly
-- "What's overdue?" - ONLY tasks where Overdue = "YES"
-- "What's in my day?" - Filter where my_day_date is set (not 'no')
-- "What tasks are in [project]?" - Filter by project_name
-- "Show my high/medium/low effort tasks" - Filter by energy_level (Effort field)
-- "Tasks without time estimates" - Filter where Time = 'none'
-- "What's critical/urgent?" - Filter where Critical = yes
-- "What am I working on?" - Filter where status = in_progress
-- "What's in backlog?" - Filter where status = backlog
-- "What tasks are assigned to [name]?" - Filter by Owner field
-- "What's starting this week?" - Filter by start_date
+After getting results from query_tasks, format them as a numbered list for the user.
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
@@ -402,6 +396,93 @@ User: "Mark all as done" (after a query with 8 tasks)
 User: "Update all of them to 60 minutes" (after a query finding 24 medium effort tasks without time estimates)
 {"response": "Done! I've updated all 20 tasks to 60 minutes. There are 4 more - would you like me to update those too?", "action": {"type": "bulk_update_tasks", "task_ids": ["id1", "id2", "id3", ... up to 20 IDs from filtering ACTIVE TASKS where energy_level=medium and time_estimate is not set], "updates": {"time_estimate": 60}}}`
 
+    // Define the query_tasks tool
+    const tools = [
+      {
+        name: 'query_tasks',
+        description: 'Filter and search tasks based on field values. Use this for any query about tasks (what\'s due, overdue, by project, by status, etc.)',
+        input_schema: {
+          type: 'object',
+          properties: {
+            field: {
+              type: 'string',
+              enum: ['due_date', 'start_date', 'status', 'project_name', 'energy_level', 'time_estimate', 'critical', 'my_day_date', 'assignee', 'title'],
+              description: 'The task field to filter on'
+            },
+            operator: {
+              type: 'string',
+              enum: ['equals', 'before', 'after', 'before_or_equals', 'after_or_equals', 'is_null', 'is_not_null', 'contains'],
+              description: 'The comparison operator. Use "before" for dates earlier than value, "after" for dates later than value.'
+            },
+            value: {
+              type: 'string',
+              description: 'The value to compare against. Use YYYY-MM-DD format for dates. For boolean fields like critical, use "true" or "false".'
+            }
+          },
+          required: ['field', 'operator']
+        }
+      }
+    ]
+
+    // Function to execute query_tasks tool
+    const executeQueryTool = (toolInput: any): any[] => {
+      const { field, operator, value } = toolInput
+      
+      return activeTasks.filter((task: any) => {
+        let taskValue = task[field]
+        
+        // Handle null/undefined checks
+        if (operator === 'is_null') {
+          return taskValue === null || taskValue === undefined || taskValue === '' || taskValue === 'none'
+        }
+        if (operator === 'is_not_null') {
+          return taskValue !== null && taskValue !== undefined && taskValue !== '' && taskValue !== 'none' && taskValue !== 'no'
+        }
+        
+        // For other operators, we need a value
+        if (value === undefined) return false
+        
+        // Handle different operators
+        switch (operator) {
+          case 'equals':
+            // Case-insensitive string comparison
+            if (typeof taskValue === 'string' && typeof value === 'string') {
+              return taskValue.toLowerCase() === value.toLowerCase()
+            }
+            // Boolean handling
+            if (field === 'critical') {
+              return (taskValue === true || taskValue === 'yes') === (value === 'true' || value === 'yes')
+            }
+            return taskValue === value
+            
+          case 'before':
+            // Date comparison: taskValue < value
+            if (!taskValue) return false
+            return taskValue < value
+            
+          case 'after':
+            // Date comparison: taskValue > value
+            if (!taskValue) return false
+            return taskValue > value
+            
+          case 'before_or_equals':
+            if (!taskValue) return false
+            return taskValue <= value
+            
+          case 'after_or_equals':
+            if (!taskValue) return false
+            return taskValue >= value
+            
+          case 'contains':
+            if (!taskValue) return false
+            return String(taskValue).toLowerCase().includes(String(value).toLowerCase())
+            
+          default:
+            return false
+        }
+      })
+    }
+
     // Build messages with history
     const messages: any[] = []
     if (conversationHistory && Array.isArray(conversationHistory)) {
@@ -414,35 +495,93 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
     // Debug logging
     console.log('TODAY:', today)
     console.log('YESTERDAY:', yesterday)
-    console.log('Sample tasks due dates:', activeTasks.slice(0, 10).map((t: any) => ({ title: t.title.substring(0, 30), due: t.due_date })))
 
-    // Call Claude
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
+    // Call Claude with tools
+    const callClaude = async (msgs: any[], includeTools: boolean = true) => {
+      const requestBody: any = {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: systemPrompt,
-        messages
+        messages: msgs
+      }
+      
+      if (includeTools) {
+        requestBody.tools = tools
+      }
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(requestBody)
       })
-    })
+      
+      if (!response.ok) {
+        const err = await response.text()
+        console.error('Claude API error:', response.status, err)
+        throw new Error('AI service temporarily unavailable')
+      }
+      
+      return response.json()
+    }
 
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('Claude API error:', response.status, err)
+    // Initial call to Claude
+    let data: any
+    try {
+      data = await callClaude(messages)
+      console.log('Claude initial response stop_reason:', data.stop_reason)
+      
+      // Handle tool use - Claude wants to call query_tasks
+      if (data.stop_reason === 'tool_use') {
+        const toolUseBlock = data.content.find((block: any) => block.type === 'tool_use')
+        
+        if (toolUseBlock && toolUseBlock.name === 'query_tasks') {
+          console.log('Tool call:', toolUseBlock.name, toolUseBlock.input)
+          
+          // Execute the query
+          const queryResults = executeQueryTool(toolUseBlock.input)
+          console.log('Query results count:', queryResults.length)
+          
+          // Format results for Claude
+          const formattedResults = queryResults.map((t: any) => 
+            `ID: ${t.id} | "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status}`
+          ).join('\n')
+          
+          // Send tool result back to Claude
+          const toolResultMessages = [
+            ...messages,
+            { role: 'assistant', content: data.content },
+            { 
+              role: 'user', 
+              content: [{
+                type: 'tool_result',
+                tool_use_id: toolUseBlock.id,
+                content: queryResults.length > 0 
+                  ? `Found ${queryResults.length} matching tasks:\n${formattedResults}`
+                  : 'No tasks match that criteria.'
+              }]
+            }
+          ]
+          
+          // Get Claude's final response (no tools on second call)
+          data = await callClaude(toolResultMessages, false)
+          console.log('Claude final response after tool use')
+        }
+      }
+    } catch (error) {
+      console.error('Claude call error:', error)
       return new Response(
         JSON.stringify({ error: 'AI service temporarily unavailable' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const data = await response.json()
-    const rawText = data.content?.[0]?.text || ''
+    // Extract the text response
+    const textBlock = data.content.find((block: any) => block.type === 'text')
+    const rawText = textBlock?.text || ''
     console.log('Claude raw response:', rawText.substring(0, 500))
 
     // Parse JSON response - handle various Claude output formats

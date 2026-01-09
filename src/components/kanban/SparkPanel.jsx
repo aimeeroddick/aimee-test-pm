@@ -170,15 +170,11 @@ export default function SparkPanel({
       .filter(t => t.status !== 'done')
       .map(t => {
         const project = projects.find(p => p.id === t.project_id)
-        const isDueToday = t.due_date === today
-        const isOverdue = t.due_date && t.due_date < today
         return {
           id: t.id,
           title: t.title,
           project_name: project?.name || 'Unknown',
           due_date: t.due_date,
-          is_due_today: isDueToday ? 'YES' : 'no',
-          is_overdue: isOverdue ? 'YES' : 'no',
           start_date: t.start_date,
           status: t.status,
           energy_level: t.energy_level,
@@ -248,12 +244,6 @@ export default function SparkPanel({
           })
         }
       )
-      
-      // Debug: Log what we're sending
-      const ctx = buildContext()
-      console.log('Spark context today:', new Date().toISOString().split('T')[0])
-      console.log('Spark activeTasks with DueToday:', ctx.activeTasks.filter(t => t.is_due_today === 'YES').map(t => ({ title: t.title, due: t.due_date, dueToday: t.is_due_today })))
-      console.log('Spark activeTasks with Overdue:', ctx.activeTasks.filter(t => t.is_overdue === 'YES').map(t => ({ title: t.title, due: t.due_date, overdue: t.is_overdue })))
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
