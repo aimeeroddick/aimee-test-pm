@@ -4280,6 +4280,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [fieldFilters, setFieldFilters] = useState({})
   const [pendingFilterField, setPendingFilterField] = useState('')
   const [pendingFilterOperator, setPendingFilterOperator] = useState('')
+  const [pendingFilterDate, setPendingFilterDate] = useState('')
   
   const [filterReadyToStart, setFilterReadyToStart] = useState(false)
   const [filterTimeOperator, setFilterTimeOperator] = useState('all')
@@ -8629,19 +8630,38 @@ export default function KanbanBoard({ demoMode = false }) {
                     <input
                       type="date"
                       autoFocus
-                      onChange={(e) => {
-                        // Only update if we have a valid date value (prevents Safari crash on partial input)
-                        const newValue = e.target.value
-                        if (newValue && !isNaN(new Date(newValue).getTime())) {
-                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${newValue}` })
+                      value={pendingFilterDate}
+                      onChange={(e) => setPendingFilterDate(e.target.value)}
+                      onBlur={(e) => {
+                        // Apply filter when user finishes editing (clicks away or tabs out)
+                        const val = e.target.value
+                        if (val && !isNaN(new Date(val).getTime())) {
+                          setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${val}` })
                           setPendingFilterField('')
                           setPendingFilterOperator('')
+                          setPendingFilterDate('')
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Also apply on Enter key
+                        if (e.key === 'Enter') {
+                          const val = e.target.value
+                          if (val && !isNaN(new Date(val).getTime())) {
+                            setFieldFilters({ ...fieldFilters, [pendingFilterField]: `${pendingFilterOperator}${val}` })
+                            setPendingFilterField('')
+                            setPendingFilterOperator('')
+                            setPendingFilterDate('')
+                          }
+                        } else if (e.key === 'Escape') {
+                          setPendingFilterField('')
+                          setPendingFilterOperator('')
+                          setPendingFilterDate('')
                         }
                       }}
                       className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700 rounded text-xs text-indigo-700 dark:text-indigo-300 focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
                     />
                     <button
-                      onClick={() => { setPendingFilterField(''); setPendingFilterOperator(''); }}
+                      onClick={() => { setPendingFilterField(''); setPendingFilterOperator(''); setPendingFilterDate(''); }}
                       className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
