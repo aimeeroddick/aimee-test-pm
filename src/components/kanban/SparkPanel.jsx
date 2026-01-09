@@ -192,10 +192,13 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // (activeTasks, formatTask, formatResults defined earlier for compound handlers)
   // =======================================================================
 
-  // Parse date from natural language using chrono
+  // Parse date from natural language using chrono with locale-aware parsing
   const parseDate = (text) => {
     const referenceDate = new Date()
-    const results = chrono.parse(text, referenceDate, { forwardDate: true })
+    // Use locale-appropriate parser based on user's date format setting
+    // chrono.en.GB = UK format (DD/MM/YYYY), chrono.en = US format (MM/DD/YYYY)
+    const parser = isUSFormat ? chrono.en : chrono.en.GB
+    const results = parser.parse(text, referenceDate, { forwardDate: true })
     if (results.length > 0) {
       return results[0].start.date().toISOString().split('T')[0]
     }
