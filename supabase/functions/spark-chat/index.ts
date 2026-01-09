@@ -163,22 +163,29 @@ QUERY TYPES:
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
-- LIMIT to 5 tasks maximum. If more exist, say "Here are the first 5 of [total] tasks:" and offer to show more or take action
+- DISPLAY only first 5 tasks for readability, but track ALL matching task IDs internally
+- If more than 5 exist, say "Here are 5 of [total] matching tasks:" and mention there are more
 - Keep task descriptions short: "Task title (Project) - status"
 
 Example with many results:
-"You have 24 medium effort tasks without time estimates. Here are the first 5:
+"You have 24 medium effort tasks without time estimates. Here are 5 of them:
 1. Review docs (Trackli) - in progress
 2. Call client (Feedback) - todo
 3. Submit report (FIFA) - todo
 4. Update website (Internal) - backlog
 5. Send proposal (Feedback) - todo
 
-Would you like me to update any of these, or see more?"
+Would you like me to update any of these, or all of them?"
+
+BULK UPDATES:
+- When user says "update all" after a query, include ALL matching task IDs (not just the 5 displayed)
+- Filter the ACTIVE TASKS list to find ALL tasks matching the query criteria
+- Maximum 20 tasks per bulk update
+- If more than 20 match, update first 20 and offer to continue
 
 AFTER QUERY FOLLOW-UPS:
 - User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
-- For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with the task IDs from the query results (max 5 at a time)
+- For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with ALL matching task IDs (up to 20)
 
 === TASK MATCHING RULES (for updates) ===
 When user wants to update a task:
@@ -231,8 +238,8 @@ Always respond with valid JSON in one of these formats:
 {"response": "Done! I've updated the task.", "action": {"type": "update_task", "task_id": "uuid-from-activeTasks", "updates": {"field_to_change": "new_value"}}}
 
 4. BULK UPDATING TASKS (when user wants to update multiple tasks from a query):
-{"response": "Done! I've updated 5 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"time_estimate": 60, "energy_level": "medium"}}}
-Note: Only include task IDs that were shown in the numbered list (max 5). Include the IDs from the query results.
+{"response": "Done! I've updated all 24 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", ...all matching IDs up to 20], "updates": {"time_estimate": 60, "energy_level": "medium"}}}
+Note: Include ALL task IDs matching the query criteria (up to 20). Get the IDs from the ACTIVE TASKS list by filtering for the query criteria.
 
 5. ASKING FOR CLARIFICATION (when multiple tasks match or task unclear):
 {"response": "Which task do you mean?\n• Task title 1\n• Task title 2"}
@@ -367,11 +374,11 @@ User: "What's overdue?"
 User: "Move #1 to tomorrow" (after a query)
 {"response": "Done! I've moved 'Review docs' to tomorrow.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"due_date": "${tomorrow}"}}}
 
-User: "Mark all as done" (after a query - bulk update)
-{"response": "Done! I've marked 5 tasks as complete.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"status": "done"}}}
+User: "Mark all as done" (after a query with 8 tasks)
+{"response": "Done! I've marked all 8 tasks as complete.", "action": {"type": "bulk_update_tasks", "task_ids": ["id1", "id2", "id3", "id4", "id5", "id6", "id7", "id8"], "updates": {"status": "done"}}}
 
-User: "Update all of them to 60 minutes" (after a query)
-{"response": "Done! I've updated 5 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"time_estimate": 60, "energy_level": "medium"}}}`
+User: "Update all of them to 60 minutes" (after a query finding 24 medium effort tasks without time estimates)
+{"response": "Done! I've updated all 20 tasks to 60 minutes. There are 4 more - would you like me to update those too?", "action": {"type": "bulk_update_tasks", "task_ids": ["id1", "id2", "id3", ... up to 20 IDs from filtering ACTIVE TASKS where energy_level=medium and time_estimate is not set], "updates": {"time_estimate": 60}}}`
 
     // Build messages with history
     const messages: any[] = []

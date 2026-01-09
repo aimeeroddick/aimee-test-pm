@@ -78,7 +78,8 @@ export default function SparkPanel({
   onTaskCreated,
   onTaskUpdated,
   onTaskCompleted,
-  onProjectCreated 
+  onProjectCreated,
+  onBulkUndo
 }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -264,6 +265,11 @@ export default function SparkPanel({
         const success = typeof result === 'object' ? result.success : result
         const errorMsg = typeof result === 'object' ? result.error : null
         
+        // Handle bulk undo
+        if (result?.bulkUndo && onBulkUndo) {
+          onBulkUndo(result.bulkUndo)
+        }
+        
         if (!success) {
           displayMessage = errorMsg || "Sorry, I couldn't complete that action. Could you try again?"
         }
@@ -311,18 +317,23 @@ export default function SparkPanel({
           console.log('Spark: Bulk updating', action.task_ids.length, 'tasks')
           let successCount = 0
           let errors = []
+          let previousStates = []
+          
           for (const taskId of action.task_ids) {
-            const result = await onTaskUpdated(taskId, action.updates)
+            const result = await onTaskUpdated(taskId, action.updates, { skipUndo: true })
             if (result.success) {
               successCount++
+              previousStates.push({ taskId, previousState: result.previousState, taskTitle: result.taskTitle })
             } else {
               errors.push(result.error)
             }
           }
+          
+          // Return bulk undo data for the parent to handle
           if (successCount === action.task_ids.length) {
-            return { success: true }
+            return { success: true, bulkUndo: { count: successCount, previousStates, updates: action.updates } }
           } else {
-            return { success: false, error: `Updated ${successCount}/${action.task_ids.length} tasks. Errors: ${errors.join(', ')}` }
+            return { success: false, error: `Updated ${successCount}/${action.task_ids.length} tasks. Errors: ${errors.join(', ')}`, bulkUndo: { count: successCount, previousStates, updates: action.updates } }
           }
         }
       } else if (action.type === 'create_project' && action.name) {

@@ -6888,6 +6888,18 @@ export default function KanbanBoard({ demoMode = false }) {
   const handleUndo = async () => {
     if (!undoToast) return
     try {
+      // Handle bulk undo
+      if (undoToast.isBulk && undoToast.previousStates) {
+        console.log('Bulk undo:', undoToast.count, 'tasks')
+        for (const { taskId, previousState } of undoToast.previousStates) {
+          const { id, created_at, user_id, ...revertFields } = previousState
+          await supabase.from('tasks').update(revertFields).eq('id', taskId)
+          setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...revertFields } : t))
+        }
+        setUndoToast(null)
+        return
+      }
+      
       // Support both old format (previousStatus) and new format (previousState)
       if (undoToast.previousState) {
         // New format: revert to full previous state
@@ -7391,7 +7403,12 @@ export default function KanbanBoard({ demoMode = false }) {
       {undoToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
           {ToastIcons.success()}
-          <span className="text-sm font-medium text-gray-900 dark:text-white">"{undoToast.taskTitle}" marked as done</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            {undoToast.isBulk 
+              ? `Updated ${undoToast.count} tasks` 
+              : `"${undoToast.taskTitle}" ${undoToast.updateType === 'status' ? 'marked as done' : 'updated'}`
+            }
+          </span>
           <button
             onClick={handleUndo}
             className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-lg text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
@@ -11422,7 +11439,7 @@ Or we can extract from:
             return { success: false, error: 'Something went wrong creating the task' }
           }
         }}
-        onTaskUpdated={async (taskId, updates) => {
+        onTaskUpdated={async (taskId, updates, options = {}) => {
           console.log('Spark: onTaskUpdated called with:', taskId, updates)
           try {
             const task = tasks.find(t => t.id === taskId)
@@ -11489,16 +11506,18 @@ Or we can extract from:
             
             console.log('Spark: Task updated successfully:', task.title, dbUpdates)
             
-            // Show undo toast
-            setUndoToast({
-              taskId,
-              previousState,
-              taskTitle: task.title,
-              updateType: Object.keys(updates)[0] // e.g., 'due_date', 'status'
-            })
-            setTimeout(() => setUndoToast(null), 5000)
+            // Show undo toast unless skipped (for bulk updates)
+            if (!options.skipUndo) {
+              setUndoToast({
+                taskId,
+                previousState,
+                taskTitle: task.title,
+                updateType: Object.keys(updates)[0] // e.g., 'due_date', 'status'
+              })
+              setTimeout(() => setUndoToast(null), 5000)
+            }
             
-            return { success: true }
+            return { success: true, previousState, taskTitle: task.title }
           } catch (err) {
             console.error('Error updating task:', err)
             return { success: false, error: err.message }
@@ -11541,6 +11560,16 @@ Or we can extract from:
             return false
           }
           return false
+        }}
+        onBulkUndo={(bulkUndoData) => {
+          // Show bulk undo toast
+          setUndoToast({
+            isBulk: true,
+            count: bulkUndoData.count,
+            previousStates: bulkUndoData.previousStates,
+            updates: bulkUndoData.updates
+          })
+          setTimeout(() => setUndoToast(null), 8000) // Longer timeout for bulk
         }}
       />
       
