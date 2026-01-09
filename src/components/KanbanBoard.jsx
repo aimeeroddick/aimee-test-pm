@@ -2726,7 +2726,7 @@ const MenuIcons = {
 
 // Help Modal Component
 // Redesigned Help Modal Component - Colourful Polished LGBTQ Vibes
-const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '⌘⌃' }) => {
+const HelpModal = ({ isOpen, onClose, initialTab = 'getting-started', shortcutModifier = '⌘⌃' }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
   
   useEffect(() => {
@@ -4303,7 +4303,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [clearingTasks, setClearingTasks] = useState(false)
   const [clearTasksAge, setClearTasksAge] = useState('30')
   
-  const [helpModalTab, setHelpModalTab] = useState('board')
+  const [helpModalTab, setHelpModalTab] = useState('getting-started')
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('trackli_onboarding_complete')
   })
@@ -9881,7 +9881,7 @@ export default function KanbanBoard({ demoMode = false }) {
 
       <HelpModal
         isOpen={helpModalOpen}
-        onClose={() => { setHelpModalOpen(false); setHelpModalTab('board') }}
+        onClose={() => { setHelpModalOpen(false); setHelpModalTab('getting-started') }}
         initialTab={helpModalTab}
         shortcutModifier={shortcutModifier}
       />
