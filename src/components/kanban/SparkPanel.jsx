@@ -177,6 +177,7 @@ export default function SparkPanel({
           due_date: t.due_date,
           status: t.status,
           energy_level: t.energy_level,
+          time_estimate: t.time_estimate,
           critical: t.critical,
           my_day_date: t.my_day_date
         }

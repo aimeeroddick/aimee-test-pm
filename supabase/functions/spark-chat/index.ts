@@ -146,7 +146,7 @@ AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'
 PROJECT COUNT: ${projectCount}
 
 === ACTIVE TASKS (for updates and queries) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'}`).join('\n') : 'No active tasks'}
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'}`).join('\n') : 'No active tasks'}
 
 === QUERY TASKS ===
 When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
@@ -157,6 +157,7 @@ QUERY TYPES:
 - "What's in my day?" - Filter where my_day_date is set (not 'no')
 - "What tasks are in [project]?" - Filter by project_name
 - "Show my high/medium/low effort tasks" - Filter by energy_level (Effort field)
+- "Tasks without time estimates" - Filter where Time = 'none'
 - "What's critical/urgent?" - Filter where Critical = yes
 - "What am I working on?" - Filter where status = in_progress
 - "What's in backlog?" - Filter where status = backlog
