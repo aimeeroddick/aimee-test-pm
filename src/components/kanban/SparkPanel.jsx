@@ -236,21 +236,30 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   }
   
   // ==== DUE NEXT WEEK ==== (must check BEFORE "this week" to avoid false matches)
-  // Rolling window: T+8 through T+14 (matches board filter logic)
+  // Calendar week: Sunday through Saturday
   if (/\b(due|for)?\s*next\s*week\b/i.test(query) ||
       /\bnext\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
-    const startDate = new Date(Date.now() + 8 * 86400000).toISOString().split('T')[0]
-    const endDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
+    const now = new Date()
+    const dayOfWeek = now.getDay() // 0 = Sunday
+    const daysUntilSunday = 7 - dayOfWeek // Days until next Sunday
+    const startOfNextWeek = new Date(now.getTime() + daysUntilSunday * 86400000)
+    const endOfNextWeek = new Date(startOfNextWeek.getTime() + 6 * 86400000) // Saturday
+    const startDate = startOfNextWeek.toISOString().split('T')[0]
+    const endDate = endOfNextWeek.toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= startDate && t.due_date <= endDate)
     return formatResults(matching, 'due next week')
   }
 
   // ==== DUE THIS WEEK ====
-  // Rolling window: T through T+7 (matches board filter logic)
+  // Calendar week: Today through Saturday
   if (/\b(due|for)\s*(this\s*)?week\b/i.test(query) ||
       /\bweekly\s*(tasks?|work)\b/i.test(query) ||
       /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
-    const endDate = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+    const now = new Date()
+    const dayOfWeek = now.getDay() // 0 = Sunday
+    const daysUntilSaturday = 6 - dayOfWeek // Days until Saturday
+    const endOfWeek = new Date(now.getTime() + daysUntilSaturday * 86400000)
+    const endDate = endOfWeek.toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
     return formatResults(matching, 'due this week')
   }
