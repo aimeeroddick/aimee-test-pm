@@ -11496,9 +11496,10 @@ Or we can extract from:
           }
         }}
         onTaskCompleted={async (taskId) => {
-          const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
+          const completedAt = new Date().toISOString()
+          const { error } = await supabase.from('tasks').update({ status: 'done', completed_at: completedAt }).eq('id', taskId)
           if (!error) {
-            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t))
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done', completed_at: completedAt } : t))
             setToast({ message: 'Task completed!', type: 'success' })
             return true
           }
