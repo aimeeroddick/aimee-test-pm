@@ -151,6 +151,11 @@ ${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "
 === QUERY TASKS ===
 When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
 
+AVAILABLE FIELDS FOR QUERIES:
+- Title, Project, Due date, Status, Effort (energy_level), Time (time_estimate), Critical, My Day
+
+If user asks to filter by a field NOT in the task data (e.g., description, tags, assignee, priority), say: "I can't filter by [field] - I don't have access to that information. I can search by title, project, due date, status, effort level, time estimate, critical flag, or My Day status."
+
 QUERY TYPES:
 - "What's due today?" / "What's due tomorrow?" - Filter by due_date
 - "What's overdue?" - Filter where due_date < today (${today})
