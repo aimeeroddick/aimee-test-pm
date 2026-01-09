@@ -2540,18 +2540,19 @@ const HelpTabIcons = {
       <rect x="17" y="5" width="3" height="14" rx="1" fill="white" opacity="0.4" />
     </svg>
   ),
-  // Automation & AI - Sparkle icon (orange-amber)
+  // Automation & AI - Spark icon (matches actual app icon)
   sparkle: () => (
-    <svg viewBox="0 0 24 24" className="w-5 h-5">
+    <svg viewBox="0 0 56 56" className="w-5 h-5">
       <defs>
         <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#F97316" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#F97316"/>
+          <stop offset="50%" stopColor="#EC4899"/>
+          <stop offset="100%" stopColor="#F97316"/>
         </linearGradient>
       </defs>
-      <path d="M12 2 L13.5 8 L20 9 L14 12 L16 19 L12 14 L8 19 L10 12 L4 9 L10.5 8 Z" fill="url(#sparkleGrad)" />
-      <circle cx="18" cy="4" r="2" fill="#FCD34D" />
-      <circle cx="6" cy="18" r="1.5" fill="#FCD34D" />
+      <path d="M28 4C28 4 30 18 32 22C34 26 48 28 48 28C48 28 34 30 32 34C30 38 28 52 28 52C28 52 26 38 24 34C22 30 8 28 8 28C8 28 22 26 24 22C26 18 28 4 28 4Z" fill="url(#sparkleGrad)"/>
+      <circle cx="44" cy="16" r="3" fill="#34D399"/>
+      <circle cx="44" cy="44" r="2" fill="#06B6D4"/>
     </svg>
   ),
   // Shortcuts - Keyboard icon (gray-slate)
@@ -2873,23 +2874,31 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
 
-                <SectionCard index={1} title="Spark AI Assistant">
+                <SectionCard index={1} title="Views & Navigation">
                   <div className="space-y-3">
-                    <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
-                      <p className="font-semibold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2">
-                        {HelpTabIcons.sparkle()} Meet Spark
-                      </p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Your AI task assistant. Ask questions, create tasks, and update your board using natural language.</p>
-                    </div>
-                    <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                      <p>• Click the <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/50 dark:to-amber-900/50 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-medium">Spark</span> button or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}S</kbd></p>
-                      <p>• Try: <span className="italic text-gray-500">"what's due today?"</span> or <span className="italic text-gray-500">"create a task to call mom tomorrow"</span></p>
-                      <p>• Update tasks: <span className="italic text-gray-500">"move X to in progress"</span> or <span className="italic text-gray-500">"mark X as done"</span></p>
+                    <p className="text-gray-800 dark:text-gray-300">Switch between views using the menu in the top-left corner:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 text-sm">Board</p>
+                        <p className="text-xs text-gray-500">Kanban columns view</p>
+                      </div>
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                        <p className="font-semibold text-amber-600 dark:text-amber-400 text-sm flex items-center gap-1">{TaskCardIcons.sun("w-3 h-3")} My Day</p>
+                        <p className="text-xs text-gray-500">Daily focus list</p>
+                      </div>
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 text-sm">All Tasks</p>
+                        <p className="text-xs text-gray-500">Table with sorting & export</p>
+                      </div>
+                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 text-sm">Calendar</p>
+                        <p className="text-xs text-gray-500">Visual schedule</p>
+                      </div>
                     </div>
                   </div>
                 </SectionCard>
 
-                <SectionCard index={2} title="My Day Quick Start" icon={TaskCardIcons.sun("w-4 h-4")}>
+                <SectionCard index={2} title="My Day" icon={TaskCardIcons.sun("w-4 h-4")}>
                   <div className="space-y-3">
                     <p className="text-gray-800 dark:text-gray-300">My Day is your daily focus list. Start each day with a clear plan:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2906,11 +2915,24 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                   </div>
                 </SectionCard>
 
-                <SectionCard index={3} title="Quick Create">
+                <SectionCard index={3} title="Creating Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>• Click <span className="px-2 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">+ Task</span> or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd> for the full form</p>
                     <p>• Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Q</kbd> for Quick Add with natural language parsing</p>
-                    <p>• Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd> for the full task form</p>
-                    <p>• Or click <span className="px-2 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">+ Task</span> in the header</p>
+                    <p>• Click <span className="px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-medium">Notes</span> to extract tasks from meeting notes or emails</p>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={4} title="Summary Bar & Filters">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">The summary bar at the top shows task stats. Click any stat to filter:</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium flex items-center gap-1">{TaskCardIcons.flag("w-3 h-3")} Critical</span>
+                      <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-medium">Due Today</span>
+                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium">Overdue</span>
+                      <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg text-sm font-medium flex items-center gap-1">{TaskCardIcons.sun("w-3 h-3")} My Day</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">/</kbd> to search by title, assignee, or customer.</p>
                   </div>
                 </SectionCard>
               </>
