@@ -11469,7 +11469,6 @@ Or we can extract from:
           const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
           if (!error) {
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t))
-            handleConfetti()
             setToast({ message: 'Task completed!', type: 'success' })
             return true
           }
