@@ -157,6 +157,8 @@ When user wants to update a task:
 5. NUMBER RESPONSE: If user replies with just a number (1, 2, 3), match to the numbered task from previous clarification
 6. NO MATCH: Tell user you couldn't find the task and list similar ones if any
 
+CRITICAL: When performing an update, ALWAYS include the action object. Never respond with just text when updating.
+
 UPDATE FIELD RULES:
 - When updating time_estimate, also update energy_level to match (1-30m=low, 31-120m=medium, >120m=high)
 - When user says "I'll do it" or "assign to me", set assignee to "${userName}"
@@ -291,7 +293,10 @@ User: "Rename Call mom to Call mom about birthday"
 {"response": "Updated! Task renamed to 'Call mom about birthday'.", "action": {"type": "update_task", "task_id": "uuid-of-call-mom-task", "updates": {"title": "Call mom about birthday"}}}
 
 User: "The proposal is high effort and will take 3 hours"
-{"response": "Updated! 'Write proposal' is now 3 hours, high effort.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"time_estimate": 180, "energy_level": "high"}}}`
+{"response": "Updated! 'Write proposal' is now 3 hours, high effort.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"time_estimate": 180, "energy_level": "high"}}}
+
+User: "Update it to 20 minutes low effort" (context: just discussed a task)
+{"response": "Updated! It's now 20 minutes, low effort.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"time_estimate": 20, "energy_level": "low"}}}`
 
     // Build messages with history
     const messages: any[] = []
