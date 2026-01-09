@@ -179,6 +179,8 @@ QUERY TYPES:
 - "What tasks are assigned to [name]?" - Filter by Owner field
 - "What's starting this week?" - Filter by start_date
 
+⚠️ STOP: Before listing "due today" tasks, verify EACH task's Due field = "${today}" exactly. If Due = "${yesterday}" or any other date, it is NOT due today.
+
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
 - DISPLAY only first 5 tasks for readability, but track ALL matching task IDs internally
