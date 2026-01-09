@@ -11506,7 +11506,28 @@ Or we can extract from:
               }
             }
             
-            // Handle subtasks APPEND
+            // Handle addSubtask structured operation (new format)
+            if (updates.addSubtask) {
+              const newSubtask = {
+                text: updates.addSubtask.text,
+                completed: false
+              }
+              dbUpdates.subtasks = [...(task.subtasks || []), newSubtask]
+              delete dbUpdates.addSubtask
+            }
+
+            // Handle addComment structured operation (new format)
+            if (updates.addComment) {
+              const newComment = {
+                text: updates.addComment.text,
+                author: profile?.display_name || user?.email?.split('@')[0] || 'User',
+                created_at: new Date().toISOString()
+              }
+              dbUpdates.comments = [...(task.comments || []), newComment]
+              delete dbUpdates.addComment
+            }
+
+            // Legacy: Handle subtasks APPEND (backward compatibility)
             if (typeof updates.subtasks === 'string' && updates.subtasks.startsWith('APPEND:')) {
               try {
                 const newSubtask = JSON.parse(updates.subtasks.replace('APPEND:', ''))
@@ -11516,8 +11537,8 @@ Or we can extract from:
                 return { success: false, error: 'Invalid subtask format' }
               }
             }
-            
-            // Handle comments APPEND
+
+            // Legacy: Handle comments APPEND (backward compatibility)
             if (typeof updates.comments === 'string' && updates.comments.startsWith('APPEND:')) {
               try {
                 const newComment = JSON.parse(updates.comments.replace('APPEND:', ''))
@@ -11569,37 +11590,37 @@ Or we can extract from:
           if (!error) {
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done', completed_at: completedAt } : t))
             setToast({ message: 'Task completed!', type: 'success' })
-            return true
+            return { success: true }
           }
-          return false
+          return { success: false, error: error.message }
         }}
         onProjectCreated={async (projectData) => {
           try {
             const { data, error } = await supabase
               .from('projects')
-              .insert({ 
-                name: projectData.name, 
+              .insert({
+                name: projectData.name,
                 color: projectData.color || PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)],
-                user_id: user.id 
+                user_id: user.id
               })
               .select()
               .single()
             if (error) {
               console.error('Spark project creation error:', error)
               setToast({ message: 'Failed to create project', type: 'error' })
-              return false
+              return { success: false, error: error.message }
             }
             if (data) {
               setProjects(prev => [...prev, data])
               setToast({ message: 'Project created by Spark!', type: 'success' })
-              return true
+              return { success: true }
             }
+            return { success: false, error: 'No data returned' }
           } catch (e) {
             console.error('Spark project creation exception:', e)
             setToast({ message: 'Failed to create project', type: 'error' })
-            return false
+            return { success: false, error: e.message || 'Unknown error' }
           }
-          return false
         }}
         onBulkUndo={(bulkUndoData) => {
           // Show bulk undo toast

@@ -24,7 +24,37 @@ const trackSparkQuery = async (query, handler, success) => {
   }
 }
 
-// Frontend query handler - handles simple queries without API calls
+/**
+ * Spark Query Routing Architecture
+ * =================================
+ *
+ * LOCAL HANDLERS (instant, no API call):
+ * - Simple date queries: "what's due today", "what's overdue", "due tomorrow"
+ * - Compound date queries: "today or overdue" (whitelisted)
+ * - Status filters: "in progress", "backlog", "todo", "critical"
+ * - Project queries: "tasks in [project name]"
+ * - Assignee queries: "assigned to [name]"
+ * - Effort filters: "high effort", "quick tasks"
+ * - Count queries: "how many tasks"
+ * - My Day queries: "what's in my day"
+ *
+ * CLAUDE HANDLERS (API call required):
+ * - Task creation: "create a task to...", "add task..."
+ * - Task updates: "move [task] to...", "mark [task] as..."
+ * - Complex conjunctions (except whitelisted): "critical and overdue but not..."
+ * - Follow-up queries: "#1", "#2", "those", "them", "all of them"
+ * - Judgment queries: "what should I work on", "prioritize", "recommend"
+ * - Natural language requiring interpretation
+ *
+ * ROUTING FLOW:
+ * 1. Check for action patterns with previous results → Claude
+ * 2. Check whitelisted compound patterns → Local handler
+ * 3. Check for conjunctions → Claude
+ * 4. Check for judgment queries → Claude
+ * 5. Check for follow-up references → Claude
+ * 6. Match against simple query patterns → Local handler
+ * 7. No match → Claude (fallback)
+ */
 const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults = []) => {
   const query = input.toLowerCase().trim()
   const today = new Date().toISOString().split('T')[0]
@@ -45,8 +75,74 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     }
   }
   
+  // =======================================================================
+  // COMPOUND QUERY WHITELIST - Handle specific combined patterns locally
+  // These are checked BEFORE the general conjunction rejection below
+  // =======================================================================
+
+  // Get active tasks early for compound pattern handlers
+  const activeTasks = tasks.filter(t => t.status !== 'done')
+
+  // Helper to format task for display (defined early for compound handlers)
+  const formatTask = (task, index) => {
+    const project = projects.find(p => p.id === task.project_id)
+    return `${index + 1}. ${task.title} (${project?.name || 'Unknown'}) - ${task.status.replace('_', ' ')}`
+  }
+
+  // Helper to format results (defined early for compound handlers)
+  const formatResults = (matchingTasks, queryDescription) => {
+    if (matchingTasks.length === 0) {
+      return { response: `No tasks ${queryDescription}.`, tasks: [], handled: true }
+    }
+
+    const displayTasks = matchingTasks.slice(0, 5)
+    const taskList = displayTasks.map((t, i) => formatTask(t, i)).join('\n')
+
+    let response = `You have ${matchingTasks.length} task${matchingTasks.length === 1 ? '' : 's'} ${queryDescription}:`
+    if (matchingTasks.length > 5) {
+      response = `You have ${matchingTasks.length} tasks ${queryDescription}. Here are the first 5:`
+    }
+    response += `\n${taskList}`
+
+    if (matchingTasks.length > 5) {
+      response += `\n\nWould you like to see more or update any of these?`
+    }
+
+    return { response, tasks: matchingTasks, handled: true }
+  }
+
+  // Compound patterns we CAN handle locally (before rejecting conjunctions)
+  const compoundPatterns = [
+    // "today or overdue" / "overdue or today" variants
+    { pattern: /\b(due\s*today|today)\s+(or|and)\s+(overdue|late|past\s*due)\b/i, type: 'todayOrOverdue' },
+    { pattern: /\b(overdue|late|past\s*due)\s+(or|and)\s+(due\s*today|today)\b/i, type: 'todayOrOverdue' },
+    // "critical and in progress" variants
+    { pattern: /\b(critical|urgent)\s+and\s+(in\s*progress|started)\b/i, type: 'criticalInProgress' },
+    { pattern: /\b(in\s*progress|started)\s+and\s+(critical|urgent)\b/i, type: 'criticalInProgress' },
+  ]
+
+  for (const { pattern, type } of compoundPatterns) {
+    if (pattern.test(query)) {
+      console.log(`Spark: Compound pattern matched (${type}), handling locally`)
+
+      if (type === 'todayOrOverdue') {
+        const matching = activeTasks.filter(t =>
+          t.due_date === today || (t.due_date && t.due_date < today)
+        )
+        return formatResults(matching, 'due today or overdue')
+      }
+
+      if (type === 'criticalInProgress') {
+        const matching = activeTasks.filter(t =>
+          t.critical && t.status === 'in_progress'
+        )
+        return formatResults(matching, 'critical and in progress')
+      }
+    }
+  }
+
   // Detect conjunctions that combine conditions - route to Claude
-  // e.g., "today or overdue", "critical and in progress", "due this week but not started"
+  // (compound patterns above are handled first, so this catches remaining complex queries)
   if (/\b(and|or|but|as well as|along with|plus)\b/i.test(query)) {
     console.log('Spark: Complex query with conjunction, falling back to Claude')
     return null
@@ -86,39 +182,9 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // =======================================================================
   // SIMPLE QUERIES - Handle locally only if we're confident
+  // (activeTasks, formatTask, formatResults defined earlier for compound handlers)
   // =======================================================================
-  
-  // Get active tasks (not done)
-  const activeTasks = tasks.filter(t => t.status !== 'done')
-  
-  // Helper to format task for display
-  const formatTask = (task, index) => {
-    const project = projects.find(p => p.id === task.project_id)
-    return `${index + 1}. ${task.title} (${project?.name || 'Unknown'}) - ${task.status.replace('_', ' ')}`
-  }
-  
-  // Helper to format results
-  const formatResults = (matchingTasks, queryDescription) => {
-    if (matchingTasks.length === 0) {
-      return { response: `No tasks ${queryDescription}.`, tasks: [], handled: true }
-    }
-    
-    const displayTasks = matchingTasks.slice(0, 5)
-    const taskList = displayTasks.map((t, i) => formatTask(t, i)).join('\n')
-    
-    let response = `You have ${matchingTasks.length} task${matchingTasks.length === 1 ? '' : 's'} ${queryDescription}:`
-    if (matchingTasks.length > 5) {
-      response = `You have ${matchingTasks.length} tasks ${queryDescription}. Here are the first 5:`
-    }
-    response += `\n${taskList}`
-    
-    if (matchingTasks.length > 5) {
-      response += `\n\nWould you like to see more or update any of these?`
-    }
-    
-    return { response, tasks: matchingTasks, handled: true }
-  }
-  
+
   // Parse date from natural language using chrono
   const parseDate = (text) => {
     const referenceDate = new Date()
@@ -689,63 +755,69 @@ export default function SparkPanel({
   }
 
   // Execute an action from Claude
+  // All callbacks return { success: boolean, error?: string, ...metadata }
   const executeAction = async (action) => {
     console.log('executeAction called with:', action)
-    
+
     try {
-      if (action.type === 'create_task' && action.task) {
-        if (onTaskCreated) {
-          console.log('Spark: Calling onTaskCreated...')
-          const result = await onTaskCreated(action.task)
-          console.log('Spark: onTaskCreated returned:', result)
-          // Handle both old boolean return and new object return
-          if (typeof result === 'object') {
-            return result // { success: boolean, error?: string }
+      switch (action.type) {
+        case 'create_task':
+          if (action.task && onTaskCreated) {
+            console.log('Spark: Calling onTaskCreated...')
+            return await onTaskCreated(action.task)
           }
-          return { success: result }
-        }
-      } else if (action.type === 'complete_task' && action.task_id) {
-        if (onTaskCompleted) {
-          return await onTaskCompleted(action.task_id)
-        }
-      } else if (action.type === 'update_task' && action.task_id) {
-        if (onTaskUpdated) {
-          return await onTaskUpdated(action.task_id, action.updates)
-        }
-      } else if (action.type === 'bulk_update_tasks' && action.task_ids && action.updates) {
-        if (onTaskUpdated) {
-          console.log('Spark: Bulk updating', action.task_ids.length, 'tasks')
-          let successCount = 0
-          let errors = []
-          let previousStates = []
-          
-          for (const taskId of action.task_ids) {
-            const result = await onTaskUpdated(taskId, action.updates, { skipUndo: true })
-            if (result.success) {
-              successCount++
-              previousStates.push({ taskId, previousState: result.previousState, taskTitle: result.taskTitle })
-            } else {
-              errors.push(result.error)
+          break
+
+        case 'complete_task':
+          if (action.task_id && onTaskCompleted) {
+            return await onTaskCompleted(action.task_id)
+          }
+          break
+
+        case 'update_task':
+          if (action.task_id && onTaskUpdated) {
+            return await onTaskUpdated(action.task_id, action.updates)
+          }
+          break
+
+        case 'bulk_update_tasks':
+          if (action.task_ids && action.updates && onTaskUpdated) {
+            console.log('Spark: Bulk updating', action.task_ids.length, 'tasks')
+            let successCount = 0
+            const errors = []
+            const previousStates = []
+
+            for (const taskId of action.task_ids) {
+              const result = await onTaskUpdated(taskId, action.updates, { skipUndo: true })
+              if (result.success) {
+                successCount++
+                previousStates.push({ taskId, previousState: result.previousState, taskTitle: result.taskTitle })
+              } else {
+                errors.push(result.error)
+              }
+            }
+
+            const allSucceeded = successCount === action.task_ids.length
+            return {
+              success: allSucceeded,
+              error: allSucceeded ? undefined : `Updated ${successCount}/${action.task_ids.length} tasks. Errors: ${errors.join(', ')}`,
+              bulkUndo: { count: successCount, previousStates, updates: action.updates }
             }
           }
-          
-          // Return bulk undo data for the parent to handle
-          if (successCount === action.task_ids.length) {
-            return { success: true, bulkUndo: { count: successCount, previousStates, updates: action.updates } }
-          } else {
-            return { success: false, error: `Updated ${successCount}/${action.task_ids.length} tasks. Errors: ${errors.join(', ')}`, bulkUndo: { count: successCount, previousStates, updates: action.updates } }
+          break
+
+        case 'create_project':
+          if (action.name && onProjectCreated) {
+            return await onProjectCreated({ name: action.name })
           }
-        }
-      } else if (action.type === 'create_project' && action.name) {
-        if (onProjectCreated) {
-          return await onProjectCreated({ name: action.name })
-        }
+          break
       }
+
+      return { success: false, error: 'Unknown action type or missing handler' }
     } catch (e) {
       console.error('Action execution error:', e)
       return { success: false, error: 'An error occurred while executing the action' }
     }
-    return { success: false, error: 'Unknown action type' }
   }
 
   const handleKeyDown = (e) => {
