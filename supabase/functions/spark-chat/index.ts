@@ -182,6 +182,7 @@ QUERY TYPES:
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
+- Count the tasks as you list them - the number you report should match the tasks you actually list
 - DISPLAY only first 5 tasks for readability, but track ALL matching task IDs internally
 - If more than 5 exist, say "Here are 5 of [total] matching tasks:" and mention there are more
 - Keep task descriptions short: "Task title (Project) - status"
