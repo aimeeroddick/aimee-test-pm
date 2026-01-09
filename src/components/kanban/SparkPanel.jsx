@@ -254,7 +254,9 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // Calendar week: Today through Saturday
   if (/\b(due|for)\s*(this\s*)?week\b/i.test(query) ||
       /\bweekly\s*(tasks?|work)\b/i.test(query) ||
-      /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
+      /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query) ||
+      /\b(have|got)\s*(this\s*)?week\b/i.test(query) ||
+      /\bthis\s*week\b/i.test(query)) {
     const now = new Date()
     const dayOfWeek = now.getDay() // 0 = Sunday
     const daysUntilSaturday = 6 - dayOfWeek // Days until Saturday
