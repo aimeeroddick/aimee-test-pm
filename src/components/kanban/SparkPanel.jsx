@@ -54,7 +54,9 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // Detect questions requiring judgment - route to Claude
   // e.g., "what should I work on", "which task is most important", "recommend"
-  if (/\b(should|recommend|suggest|prioriti[sz]e|most important|best|next)\b/i.test(query)) {
+  // Note: "next" only triggers if it's "do next" or "work on next", not "next week"
+  if (/\b(should|recommend|suggest|prioriti[sz]e|most important|best)\b/i.test(query) ||
+      /\b(do|work\s*on)\s*next\b/i.test(query)) {
     console.log('Spark: Query requires judgment, falling back to Claude')
     return null
   }
@@ -243,10 +245,12 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   }
   
   // ==== TODO ====
-  // "what's todo", "to do list", "tasks to do"
+  // "what's todo", "to do list", "tasks to do", "need to start"
   if (/\b(to\s*do|todo)\s*(list|tasks?)?\b/i.test(query) ||
       /\bready\s*to\s*(start|do)\b/i.test(query) ||
-      /\bnot\s*yet\s*started\b/i.test(query)) {
+      /\bnot\s*yet\s*started\b/i.test(query) ||
+      /\b(need|have)\s*to\s*start\b/i.test(query) ||
+      /\bwhat\s*(do\s*i\s*)?need\s*to\s*start\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.status === 'todo')
     return formatResults(matching, 'to do')
   }
@@ -274,11 +278,18 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // ==== TIME ESTIMATES ====
   // "tasks without time estimates", "no time estimate", "unestimated"
-  if (/\b(without|no|missing|need)\s*(time)?\s*(estimate)?s?\b/i.test(query) ||
+  if (/\b(without|no|missing)\s+time\s*(estimate)?s?\b/i.test(query) ||
       /\bunestimated\b/i.test(query) ||
-      /\bneed\s*(time)?\s*estimates?\b/i.test(query)) {
+      /\bneed\s+time\s*estimates?\b/i.test(query)) {
     const matching = activeTasks.filter(t => !t.time_estimate)
     return formatResults(matching, 'without time estimates')
+  }
+  
+  // ==== START DATE ====
+  // "tasks without start date", "no start date", "missing start date"
+  if (/\b(without|no|missing)\s+start\s*date\b/i.test(query)) {
+    const matching = activeTasks.filter(t => !t.start_date)
+    return formatResults(matching, 'without start dates')
   }
   
   // ==== PROJECT TASKS ====
@@ -302,12 +313,19 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     // Fall through to Claude
   }
   
+  // Match various assignee patterns:
+  // - "assigned to Harry" / "for Harry"
+  // - "Harry's tasks"
+  // - "<> Harry" or "<>Harry" (shorthand notation)
+  // - "@Harry" (mention style)
   const assigneeMatch = query.match(/\b(?:assigned\s*to|for)\s+([\w]+)/i) || 
-                        query.match(/\b([\w]+)'?s\s+tasks?\b/i)
+                        query.match(/\b([\w]+)'?s\s+tasks?\b/i) ||
+                        query.match(/<>\s*([\w]+)/i) ||
+                        query.match(/@([\w]+)/i)
   if (assigneeMatch) {
     const name = assigneeMatch[1].toLowerCase()
     // Skip common words that aren't names
-    if (!['my', 'the', 'all', 'any', 'some'].includes(name)) {
+    if (!['my', 'the', 'all', 'any', 'some', 'tasks', 'task'].includes(name)) {
       const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
       return formatResults(matching, `assigned to ${assigneeMatch[1]}`)
     }
