@@ -164,17 +164,10 @@ export default function SparkPanel({
     }))
 
     // Active tasks for update matching (not done, not in archived projects)
+    // Note: tasks are pre-filtered to exclude archived projects in KanbanBoard
     // Medium context: id, title, project_name, due_date, status
-    const archivedProjectIds = projects.filter(p => p.archived).map(p => p.id)
-    console.log('Spark: Archived project IDs:', archivedProjectIds)
     const activeTasks = tasks
-      .filter(t => {
-        const isArchived = archivedProjectIds.includes(t.project_id)
-        if (t.title.toLowerCase().includes('vet') && isArchived) {
-          console.log('Spark: Filtering out archived vet task:', t.title, 'project_id:', t.project_id)
-        }
-        return t.status !== 'done' && !isArchived
-      })
+      .filter(t => t.status !== 'done')
       .map(t => {
         const project = projects.find(p => p.id === t.project_id)
         return {

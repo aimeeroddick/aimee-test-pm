@@ -11315,7 +11315,7 @@ Or we can extract from:
       <SparkPanel
         isOpen={sparkPanelOpen}
         onClose={() => setSparkPanelOpen(false)}
-        tasks={tasks}
+        tasks={tasks.filter(t => !projects.find(p => p.id === t.project_id)?.archived)}
         projects={projects.filter(p => !p.archived)}
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
         dateFormat={dateFormat}
