@@ -7071,6 +7071,8 @@ export default function KanbanBoard({ demoMode = false }) {
             const op = value[0]
             const dateStr = value.slice(1)
             const filterDate = new Date(dateStr)
+            // Skip filtering if date is invalid (user still typing)
+            if (isNaN(filterDate.getTime())) return true
             const taskDate = t.due_date ? new Date(t.due_date) : null
             if (!taskDate) return false
             // Normalize to compare just dates
@@ -7088,6 +7090,8 @@ export default function KanbanBoard({ demoMode = false }) {
             const op = value[0]
             const dateStr = value.slice(1)
             const filterDate = new Date(dateStr)
+            // Skip filtering if date is invalid (user still typing)
+            if (isNaN(filterDate.getTime())) return true
             const taskDate = t.start_date ? new Date(t.start_date) : null
             if (!taskDate) return false
             filterDate.setHours(0,0,0,0)
