@@ -1,5 +1,167 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import * as chrono from 'chrono-node'
+
+// Frontend query handler - handles simple queries without API calls
+const handleLocalQuery = (input, tasks, projects, dateFormat) => {
+  const query = input.toLowerCase().trim()
+  const today = new Date().toISOString().split('T')[0]
+  const isUSFormat = dateFormat === 'MM/DD/YYYY'
+  
+  // Get active tasks (not done)
+  const activeTasks = tasks.filter(t => t.status !== 'done')
+  
+  // Helper to format task for display
+  const formatTask = (task, index) => {
+    const project = projects.find(p => p.id === task.project_id)
+    return `${index + 1}. ${task.title} (${project?.name || 'Unknown'}) - ${task.status.replace('_', ' ')}`
+  }
+  
+  // Helper to format results
+  const formatResults = (matchingTasks, queryDescription) => {
+    if (matchingTasks.length === 0) {
+      return { response: `No tasks ${queryDescription}.`, tasks: [] }
+    }
+    
+    const displayTasks = matchingTasks.slice(0, 5)
+    const taskList = displayTasks.map((t, i) => formatTask(t, i)).join('\n')
+    
+    let response = `You have ${matchingTasks.length} task${matchingTasks.length === 1 ? '' : 's'} ${queryDescription}:`
+    if (matchingTasks.length > 5) {
+      response = `You have ${matchingTasks.length} tasks ${queryDescription}. Here are the first 5:`
+    }
+    response += `\n${taskList}`
+    
+    if (matchingTasks.length > 5) {
+      response += `\n\nWould you like to see more or update any of these?`
+    }
+    
+    return { response, tasks: matchingTasks }
+  }
+  
+  // Parse date from natural language using chrono
+  const parseDate = (text) => {
+    // Configure chrono for UK or US format
+    const referenceDate = new Date()
+    const results = chrono.parse(text, referenceDate, { forwardDate: true })
+    if (results.length > 0) {
+      return results[0].start.date().toISOString().split('T')[0]
+    }
+    return null
+  }
+  
+  // Pattern: "what's due today" / "due today" / "tasks due today"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*today\b/i.test(query) || 
+      /\bdue\s*today\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.due_date === today)
+    return formatResults(matching, 'due today')
+  }
+  
+  // Pattern: "what's overdue" / "overdue tasks"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*overdue\b/i.test(query) || 
+      /\boverdue\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.due_date && t.due_date < today)
+    return formatResults(matching, 'overdue')
+  }
+  
+  // Pattern: "what's due tomorrow"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*tomorrow\b/i.test(query) || 
+      /\bdue\s*tomorrow\b/i.test(query)) {
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    const matching = activeTasks.filter(t => t.due_date === tomorrow)
+    return formatResults(matching, 'due tomorrow')
+  }
+  
+  // Pattern: "what's due this week"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*(this\s*)?week\b/i.test(query)) {
+    const endOfWeek = new Date()
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay())) // Sunday
+    const endDate = endOfWeek.toISOString().split('T')[0]
+    const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
+    return formatResults(matching, 'due this week')
+  }
+  
+  // Pattern: "what's due on [date]" / "due [date]" / "due on [date]"
+  const dueDateMatch = query.match(/\b(?:what'?s?|show|list|tasks?)?\s*(?:is|are)?\s*due\s*(?:on)?\s*(.+)/i)
+  if (dueDateMatch) {
+    const dateStr = dueDateMatch[1].trim()
+    // Skip if it's "today", "tomorrow", "this week" - already handled above
+    if (!['today', 'tomorrow', 'this week', 'week'].includes(dateStr)) {
+      const parsedDate = parseDate(dateStr)
+      if (parsedDate) {
+        const matching = activeTasks.filter(t => t.due_date === parsedDate)
+        const dateDisplay = new Date(parsedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+        return formatResults(matching, `due on ${dateDisplay}`)
+      }
+    }
+  }
+  
+  // Pattern: "what's in my day" / "my day tasks"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(in\s*)?(my\s*day)\b/i.test(query) ||
+      /\bmy\s*day\s*(tasks?)?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.my_day_date)
+    return formatResults(matching, 'in My Day')
+  }
+  
+  // Pattern: "what's critical" / "urgent tasks" / "critical tasks"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(critical|urgent)\b/i.test(query) ||
+      /\b(critical|urgent)\s*(tasks?)?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.critical)
+    return formatResults(matching, 'marked as critical')
+  }
+  
+  // Pattern: "what am I working on" / "in progress"
+  if (/\b(what|tasks?)\s*(am\s*i|are)\s*(working\s*on|in\s*progress)\b/i.test(query) ||
+      /\bin\s*progress\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.status === 'in_progress')
+    return formatResults(matching, 'in progress')
+  }
+  
+  // Pattern: "what's in backlog" / "backlog tasks"
+  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(in\s*)?backlog\b/i.test(query) ||
+      /\bbacklog\s*(tasks?)?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.status === 'backlog')
+    return formatResults(matching, 'in backlog')
+  }
+  
+  // Pattern: "high/medium/low effort tasks"
+  const effortMatch = query.match(/\b(high|medium|low)\s*effort\b/i)
+  if (effortMatch) {
+    const effort = effortMatch[1].toLowerCase()
+    const matching = activeTasks.filter(t => t.energy_level === effort)
+    return formatResults(matching, `with ${effort} effort`)
+  }
+  
+  // Pattern: "tasks without time estimates" / "no time estimate"
+  if (/\b(tasks?\s*)?(without|no|missing)\s*time\s*(estimate)?s?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => !t.time_estimate)
+    return formatResults(matching, 'without time estimates')
+  }
+  
+  // Pattern: "tasks in [project]" / "[project] tasks"
+  for (const project of projects) {
+    const projectNameLower = project.name.toLowerCase()
+    if (query.includes(projectNameLower) && 
+        (/\b(what'?s?|show|list|tasks?)\s*(in|for)\b/i.test(query) || /\btasks?\b/i.test(query))) {
+      const matching = activeTasks.filter(t => t.project_id === project.id)
+      return formatResults(matching, `in ${project.name}`)
+    }
+  }
+  
+  // Pattern: "tasks assigned to [name]" / "[name]'s tasks"
+  const assigneeMatch = query.match(/\b(?:assigned\s*to|for)\s+([\w]+)/i) || 
+                        query.match(/\b([\w]+)'?s\s+tasks?\b/i)
+  if (assigneeMatch) {
+    const name = assigneeMatch[1].toLowerCase()
+    const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
+    if (matching.length > 0 || activeTasks.some(t => t.assignee)) {
+      return formatResults(matching, `assigned to ${assigneeMatch[1]}`)
+    }
+  }
+  
+  // No pattern matched - return null to fall back to Claude
+  return null
+}
 
 // The Spark icon - Joyful Spark with gradient and accent dots
 const SparkIcon = ({ className = "w-6 h-6" }) => (
@@ -215,18 +377,32 @@ export default function SparkPanel({
     setInput('')
     setIsLoading(true)
 
-    // Update rate limit
-    const today = new Date().toDateString()
-    const stored = localStorage.getItem('sparkMessageCount')
-    let currentCount = 0
-    if (stored) {
-      const { count, date } = JSON.parse(stored)
-      if (date === today) currentCount = count
-    }
-    localStorage.setItem('sparkMessageCount', JSON.stringify({ count: currentCount + 1, date: today }))
-    setMessagesRemaining(prev => prev - 1)
-
     try {
+      // Try local query handling first (no API call needed)
+      const localResult = handleLocalQuery(trimmedInput, tasks, projects, dateFormat)
+      
+      if (localResult) {
+        // Local handler succeeded - instant response!
+        console.log('Spark: Handled locally, no API call needed')
+        setMessages(prev => [...prev, { role: 'assistant', content: localResult.response }])
+        setIsLoading(false)
+        return
+      }
+      
+      // Local handler couldn't handle it - fall back to Claude API
+      console.log('Spark: Falling back to Claude API')
+      
+      // Update rate limit (only count API calls)
+      const today = new Date().toDateString()
+      const stored = localStorage.getItem('sparkMessageCount')
+      let currentCount = 0
+      if (stored) {
+        const { count, date } = JSON.parse(stored)
+        if (date === today) currentCount = count
+      }
+      localStorage.setItem('sparkMessageCount', JSON.stringify({ count: currentCount + 1, date: today }))
+      setMessagesRemaining(prev => prev - 1)
+
       const { data: { session } } = await supabase.auth.getSession()
       
       const response = await fetch(
