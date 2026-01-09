@@ -11449,6 +11449,29 @@ Or we can extract from:
               }
             }
             
+            // Handle subtasks APPEND
+            if (typeof updates.subtasks === 'string' && updates.subtasks.startsWith('APPEND:')) {
+              try {
+                const newSubtask = JSON.parse(updates.subtasks.replace('APPEND:', ''))
+                dbUpdates.subtasks = [...(task.subtasks || []), newSubtask]
+              } catch (e) {
+                console.error('Failed to parse subtask:', e)
+                return { success: false, error: 'Invalid subtask format' }
+              }
+            }
+            
+            // Handle comments APPEND
+            if (typeof updates.comments === 'string' && updates.comments.startsWith('APPEND:')) {
+              try {
+                const newComment = JSON.parse(updates.comments.replace('APPEND:', ''))
+                newComment.created_at = new Date().toISOString()
+                dbUpdates.comments = [...(task.comments || []), newComment]
+              } catch (e) {
+                console.error('Failed to parse comment:', e)
+                return { success: false, error: 'Invalid comment format' }
+              }
+            }
+            
             const { error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId)
             if (error) throw error
             

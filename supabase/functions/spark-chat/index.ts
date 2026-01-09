@@ -163,9 +163,14 @@ UPDATE FIELD RULES:
 - When updating time_estimate, also update energy_level to match (1-30m=low, 31-120m=medium, >120m=high)
 - When user says "I'll do it" or "assign to me", set assignee to "${userName}"
 - When updating status to "done", use the complete_task action type instead
-- When user asks to "undo", "revert", or "change it back": Do NOT take action. Respond with: "I don't have access to previous values. What would you like to change it to? Or you can use the Undo button that appears right after updates."
+- When user asks to "undo", "revert", or "change it back": Do NOT take action.
+- "Add to my day" or "put in my day": Set my_day_date to today (${today})
+- "Remove from my day": Set my_day_date to null (NOT status change)
+- "Add subtask": Append to existing subtasks array: {"text": "subtask text", "completed": false}
+- "Remove subtask": Remove matching subtask from array
+- "Add comment" or "add note": Append to comments array: {"text": "comment", "created_at": "now", "author": "${userName}"} Respond with: "I don't have access to previous values. What would you like to change it to? Or you can use the Undo button that appears right after updates."
 
-Updatable fields: title, due_date, start_date, start_time, end_time, status, project_name, assignee, time_estimate, energy_level, critical, subtasks, comments
+Updatable fields: title, due_date, start_date, start_time, end_time, status, project_name, assignee, time_estimate, energy_level, critical, subtasks, comments, my_day_date
 
 Status values: backlog, todo, in_progress, done
 
@@ -303,7 +308,19 @@ User: "make it high effort" (context: just discussed a task - MUST include actio
 {"response": "Done! I've updated it to high effort.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"energy_level": "high"}}}
 
 User: "change it to low effort" (context: just discussed a task - MUST include action)
-{"response": "Updated to low effort.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"energy_level": "low"}}}`
+{"response": "Updated to low effort.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"energy_level": "low"}}}
+
+User: "add the proposal task to my day"
+{"response": "Done! I've added 'Write proposal' to your day.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"my_day_date": "${today}"}}}
+
+User: "remove test task from my day"
+{"response": "Done! I've removed 'Test Task' from your day.", "action": {"type": "update_task", "task_id": "uuid-of-test-task", "updates": {"my_day_date": null}}}
+
+User: "add a subtask to review docs: check formatting"
+{"response": "Added subtask 'check formatting' to 'Review docs'.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"subtasks": "APPEND:{\"text\": \"check formatting\", \"completed\": false}"}}}
+
+User: "add a comment to the proposal: waiting on client feedback"
+{"response": "Added note to 'Write proposal'.", "action": {"type": "update_task", "task_id": "uuid-of-proposal", "updates": {"comments": "APPEND:{\"text\": \"waiting on client feedback\", \"author\": \"${userName}\"}"}}}`
 
     // Build messages with history
     const messages: any[] = []
