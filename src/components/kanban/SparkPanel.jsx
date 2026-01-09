@@ -76,8 +76,10 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
 
   // Task update/action intent - ALWAYS route to Claude
   // Patterns like "update X to Y", "set X to Y", "mark X as Y", "move X to Y"
+  // Also catch short follow-up actions like "move to in progress", "set to tomorrow"
   if (/^(update|set|move|mark|change)\s+.+\s+(to|as)\s+/i.test(query) ||
-      /^(complete|finish|done)\s+.+/i.test(query)) {
+      /^(complete|finish|done)\s+.+/i.test(query) ||
+      /^(move|set|change|mark)\s+(it\s+)?(to|as)\s+/i.test(query)) {
     console.log('Spark: Task update intent, routing to Claude')
     return null
   }
