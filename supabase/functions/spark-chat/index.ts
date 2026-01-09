@@ -155,7 +155,7 @@ When user wants to update a task:
 3. SINGLE MATCH (75%+ confidence): Execute immediately
 4. MULTIPLE MATCHES (<75% confidence): List ALL matching tasks with numbers (1, 2, 3...) and ask user to pick
 5. NUMBER RESPONSE: If user replies with just a number (1, 2, 3), match to the numbered task from previous clarification
-6. NO MATCH: Tell user you couldn't find the task and list similar ones if any
+6. NO MATCH: Tell user you couldn't find the task. It may be completed or in an archived project. Spark can only update active tasks.
 
 ⚠️ CRITICAL: EVERY update MUST include an action object with task_id and updates. A response without an action object does NOTHING - the task will NOT be updated. NEVER say "Done" or "Updated" without including the action.
 

@@ -165,8 +165,9 @@ export default function SparkPanel({
 
     // Active tasks for update matching (not done, not in archived projects)
     // Medium context: id, title, project_name, due_date, status
+    const archivedProjectIds = projects.filter(p => p.archived).map(p => p.id)
     const activeTasks = tasks
-      .filter(t => t.status !== 'done')
+      .filter(t => t.status !== 'done' && !archivedProjectIds.includes(t.project_id))
       .map(t => {
         const project = projects.find(p => p.id === t.project_id)
         return {
