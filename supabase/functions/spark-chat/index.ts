@@ -163,7 +163,7 @@ UPDATE FIELD RULES:
 - When updating time_estimate, also update energy_level to match (1-30m=low, 31-120m=medium, >120m=high)
 - When user says "I'll do it" or "assign to me", set assignee to "${userName}"
 - When updating status to "done", use the complete_task action type instead
-- When user asks to "undo" or "revert": Tell them to use the Undo button that appears after updates. Spark cannot undo because it does not know the previous values.
+- When user asks to "undo", "revert", or "change it back": Do NOT take action. Respond with: "I don't have access to previous values. What would you like to change it to? Or you can use the Undo button that appears right after updates."
 
 Updatable fields: title, due_date, start_date, start_time, end_time, status, project_name, assignee, time_estimate, energy_level, critical, subtasks, comments
 
