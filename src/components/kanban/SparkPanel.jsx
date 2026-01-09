@@ -30,8 +30,13 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   const today = new Date().toISOString().split('T')[0]
   const isUSFormat = dateFormat === 'MM/DD/YYYY'
   
+  // =======================================================================
+  // COMPLEXITY DETECTION - Route to Claude if query is not simple/certain
+  // Philosophy: Handle only simple, unambiguous queries locally.
+  // Let Claude handle anything complex or uncertain.
+  // =======================================================================
+  
   // If there are previous query results and this looks like an action, route to Claude
-  // This catches cases like "set all to high effort" or "move #1 to tomorrow" after a query
   if (lastQueryResults.length > 0) {
     const actionPattern = /^(move|set|update|mark|change|add|remove|delete|complete|finish|done)/i
     if (actionPattern.test(query)) {
@@ -40,8 +45,21 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     }
   }
   
-  // Detect follow-up/contextual queries that need Claude
-  // These reference previous results: "those", "them", "of them", "#1", "the first one", etc.
+  // Detect conjunctions that combine conditions - route to Claude
+  // e.g., "today or overdue", "critical and in progress", "due this week but not started"
+  if (/\b(and|or|but|as well as|along with|plus)\b/i.test(query)) {
+    console.log('Spark: Complex query with conjunction, falling back to Claude')
+    return null
+  }
+  
+  // Detect questions requiring judgment - route to Claude
+  // e.g., "what should I work on", "which task is most important", "recommend"
+  if (/\b(should|recommend|suggest|prioriti[sz]e|most important|best|next)\b/i.test(query)) {
+    console.log('Spark: Query requires judgment, falling back to Claude')
+    return null
+  }
+  
+  // Detect follow-up/contextual queries that reference previous results
   const followUpPatterns = [
     /\b(those|them|these|of them|of those)\b/i,
     /\b(the|that)\s*(first|second|third|fourth|fifth|1st|2nd|3rd|4th|5th|one|task)\b/i,
@@ -53,17 +71,20 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     /\b(move|update|mark|set|change|delete|remove)\s*(it|them|those|these|#\d+)\b/i,
     /\ball of them\b/i,
     /\bthe (same|rest)\b/i,
-    // Action + "all" patterns (without "of them")
     /\b(move|update|mark|set|change|delete|remove|add)\s+all\s+(to|as|from)\b/i,
-    /\b(move|set|change)\s+all\b/i, // "set all to high effort", "move all to tomorrow"
+    /\b(move|set|change)\s+all\b/i,
   ]
   
   for (const pattern of followUpPatterns) {
     if (pattern.test(query)) {
       console.log('Spark: Follow-up query detected, falling back to Claude')
-      return null // Fall back to Claude who has lastQueryResults context
+      return null
     }
   }
+  
+  // =======================================================================
+  // SIMPLE QUERIES - Handle locally only if we're confident
+  // =======================================================================
   
   // Get active tasks (not done)
   const activeTasks = tasks.filter(t => t.status !== 'done')
@@ -108,16 +129,6 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // Common query starters - matches "what's", "show", "list", "give me", "any", "do I have", etc.
   const queryStarter = /^(what'?s?|show|list|give\s*me|any|do\s*i\s*have|are\s*there|get|find|display|view|see)\s*(my|the|all)?\s*/i
-  
-  // ==== DUE TODAY OR OVERDUE (combined) ====
-  // "what's due today or overdue", "tasks due today or past due", "today or overdue tasks"
-  if ((/\btoday\b/i.test(query) && /\b(overdue|past\s*due|late)\b/i.test(query)) ||
-      /\b(overdue|late)\b.*\btoday\b/i.test(query)) {
-    const dueToday = activeTasks.filter(t => t.due_date === today)
-    const overdue = activeTasks.filter(t => t.due_date && t.due_date < today)
-    const combined = [...new Set([...dueToday, ...overdue])] // Dedupe
-    return formatResults(combined, 'due today or overdue')
-  }
   
   // ==== DUE TODAY ====
   // "what's due today", "show tasks due today", "today's tasks", "tasks for today", "anything due today"
