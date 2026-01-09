@@ -175,11 +175,13 @@ export default function SparkPanel({
           title: t.title,
           project_name: project?.name || 'Unknown',
           due_date: t.due_date,
+          start_date: t.start_date,
           status: t.status,
           energy_level: t.energy_level,
           time_estimate: t.time_estimate,
           critical: t.critical,
-          my_day_date: t.my_day_date
+          my_day_date: t.my_day_date,
+          assignee: t.assignee
         }
       })
 

@@ -146,15 +146,15 @@ AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'
 PROJECT COUNT: ${projectCount}
 
 === ACTIVE TASKS (for updates and queries) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'}`).join('\n') : 'No active tasks'}
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
 
 === QUERY TASKS ===
 When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
 
 AVAILABLE FIELDS FOR QUERIES:
-- Title, Project, Due date, Status, Effort (energy_level), Time (time_estimate), Critical, My Day
+- Title, Project, Due date, Start date, Status, Effort (energy_level), Time (time_estimate), Critical, My Day, Owner (assignee)
 
-If user asks to filter by a field NOT in the task data (e.g., description, tags, assignee, priority), say: "I can't filter by [field] - I don't have access to that information. I can search by title, project, due date, status, effort level, time estimate, critical flag, or My Day status."
+If user asks to filter by a field NOT in the task data (e.g., description, tags, priority), say: "I can't filter by [field] - I don't have access to that information. I can search by title, project, due date, start date, status, effort level, time estimate, critical flag, My Day status, or owner."
 
 QUERY TYPES:
 - "What's due today?" / "What's due tomorrow?" - Filter by due_date
@@ -166,6 +166,8 @@ QUERY TYPES:
 - "What's critical/urgent?" - Filter where Critical = yes
 - "What am I working on?" - Filter where status = in_progress
 - "What's in backlog?" - Filter where status = backlog
+- "What tasks are assigned to [name]?" - Filter by Owner field
+- "What's starting this week?" - Filter by start_date
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
@@ -192,7 +194,7 @@ BULK UPDATES:
 AFTER QUERY FOLLOW-UPS:
 - User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
 - For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with ALL matching task IDs (up to 20)
-- IMPORTANT: If user wants DIFFERENT updates for different tasks (e.g., "set 1 to 30 mins and 2 to 90 mins"), you can only do ONE action per response. Update the first task and tell user you'll do the second next. They can say "yes" or "continue" to proceed.
+- IMPORTANT: If user wants DIFFERENT updates for different tasks (e.g., "set 1 to 30 mins and 2 to 90 mins"), you can only do ONE action per response. Update the first task, then ALWAYS ask: "Should I update [task 2 name] to [value] now?" Do NOT forget to ask about the remaining tasks.
 
 === TASK MATCHING RULES (for updates) ===
 When user wants to update a task:
@@ -206,6 +208,7 @@ When user wants to update a task:
 ⚠️ CRITICAL: EVERY update MUST include an action object with task_id and updates. A response without an action object does NOTHING - the task will NOT be updated. NEVER say "Done" or "Updated" without including the action.
 
 UPDATE FIELD RULES:
+- When updating time_estimate, use NUMBER only (e.g., 30, 60, 90), NOT strings like "30 minutes" or "INDIVIDUAL"
 - When updating time_estimate, also update energy_level to match (1-30m=low, 31-120m=medium, >120m=high)
 - When user says "I'll do it" or "assign to me", set assignee to "${userName}"
 - When updating status to "done", use the complete_task action type instead
