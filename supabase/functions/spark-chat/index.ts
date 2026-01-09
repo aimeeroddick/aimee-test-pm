@@ -187,6 +187,7 @@ BULK UPDATES:
 AFTER QUERY FOLLOW-UPS:
 - User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
 - For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with ALL matching task IDs (up to 20)
+- IMPORTANT: If user wants DIFFERENT updates for different tasks (e.g., "set 1 to 30 mins and 2 to 90 mins"), you can only do ONE action per response. Update the first task and tell user you'll do the second next. They can say "yes" or "continue" to proceed.
 
 === TASK MATCHING RULES (for updates) ===
 When user wants to update a task:
