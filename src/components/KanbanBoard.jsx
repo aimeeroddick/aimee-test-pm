@@ -11423,9 +11423,14 @@ Or we can extract from:
           }
         }}
         onTaskUpdated={async (taskId, updates) => {
+          console.log('Spark: onTaskUpdated called with:', taskId, updates)
           try {
             const task = tasks.find(t => t.id === taskId)
-            if (!task) return { success: false, error: 'Task not found' }
+            console.log('Spark: Found task:', task?.title || 'NOT FOUND')
+            if (!task) {
+              console.error('Spark: Task not found in tasks array. Available IDs:', tasks.slice(0, 5).map(t => t.id))
+              return { success: false, error: `Task not found. It may have been deleted or completed.` }
+            }
             
             // Store previous state for undo
             const previousState = { ...task }
@@ -11449,6 +11454,8 @@ Or we can extract from:
             
             // Optimistic update
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...dbUpdates } : t))
+            
+            console.log('Spark: Task updated successfully:', task.title, dbUpdates)
             
             // Show undo toast
             setUndoToast({
