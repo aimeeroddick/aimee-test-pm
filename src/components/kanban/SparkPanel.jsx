@@ -337,8 +337,17 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
     return formatResults(matching, 'in backlog')
   }
   
+  // ==== STARTING TODAY (by start_date) ====
+  // "what do I need to start today", "starting today", "tasks to start today"
+  if (/\b(need|have)\s*to\s*start\s*today\b/i.test(query) ||
+      /\bstart(ing)?\s*today\b/i.test(query) ||
+      /\btoday'?s?\s*start\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.start_date === today)
+    return formatResults(matching, 'with start date today')
+  }
+
   // ==== TODO ====
-  // "what's todo", "to do list", "tasks to do", "need to start"
+  // "what's todo", "to do list", "tasks to do", "need to start" (generic, no date)
   if (/\b(to\s*do|todo)\s*(list|tasks?)?\b/i.test(query) ||
       /\bready\s*to\s*(start|do)\b/i.test(query) ||
       /\bnot\s*yet\s*started\b/i.test(query) ||
