@@ -551,10 +551,10 @@ const TypingIndicator = () => (
 )
 
 // Main SparkPanel component
-export default function SparkPanel({ 
-  isOpen, 
-  onClose, 
-  tasks = [], 
+export default function SparkPanel({
+  isOpen,
+  onClose,
+  tasks = [],
   projects = [],
   userName = '',
   dateFormat = 'DD/MM/YYYY',
@@ -562,7 +562,8 @@ export default function SparkPanel({
   onTaskUpdated,
   onTaskCompleted,
   onProjectCreated,
-  onBulkUndo
+  onBulkUndo,
+  onFirstOpen
 }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -584,6 +585,15 @@ export default function SparkPanel({
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [isOpen])
+
+  // Trigger onFirstOpen callback when panel opens for the first time
+  const hasTriggeredFirstOpen = useRef(false)
+  useEffect(() => {
+    if (isOpen && onFirstOpen && !hasTriggeredFirstOpen.current) {
+      hasTriggeredFirstOpen.current = true
+      onFirstOpen()
+    }
+  }, [isOpen, onFirstOpen])
 
   // Load message count from localStorage
   useEffect(() => {

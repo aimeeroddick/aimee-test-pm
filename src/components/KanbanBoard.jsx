@@ -1659,7 +1659,8 @@ const AttachmentViewer = ({ isOpen, onClose, attachment, attachments, onNavigate
 const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const shortcut = isMac ? '⌘⌃T' : 'Ctrl+Alt+T'
-  
+  const sparkShortcut = isMac ? '⌘⌃S' : 'Ctrl+Alt+S'
+
   const steps = [
     {
       target: 'summary-bar',
@@ -1680,6 +1681,12 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'right',
     },
     {
+      target: 'spark-button',
+      title: 'Spark AI ✨',
+      description: `Your AI assistant! Ask "what's due today?", create tasks naturally like "create a task to call mom tomorrow", or update tasks. Press ${sparkShortcut} to open.`,
+      position: 'bottom',
+    },
+    {
       target: 'views',
       title: 'Multiple Views',
       description: 'Switch between Board, My Day, All Tasks (with sorting & CSV export), Calendar, and Progress views using the menu.',
@@ -1698,37 +1705,31 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'bottom',
     },
     {
-      target: 'notes',
-      title: 'Meeting Notes → Tasks',
-      description: 'Click Notes to quickly capture meeting notes - type, paste, or even speak! AI extracts action items as tasks automatically.',
-      position: 'bottom',
-    },
-    {
       target: 'help',
       title: 'Need Help?',
       description: 'Click the ? icon anytime to access the full help guide. You\'re all set!',
       position: 'bottom',
     },
   ]
-  
+
   const currentStep = steps[step]
   if (!currentStep) return null
-  
+
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col">
       {/* Dark overlay with spotlight cutout */}
       <div className="absolute inset-0 bg-black/60" onClick={onSkip} />
-      
+
       {/* Tooltip - positioned based on step */}
-      <div 
+      <div
         className={`absolute z-[1001] max-w-sm animate-fadeIn ${
           step === 0 ? 'top-32 left-1/2 -translate-x-1/2' :
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
-          step === 3 ? 'top-24 left-8' :
-          step === 4 ? 'top-20 right-[180px]' :
-          step === 5 ? 'top-20 right-[100px]' :
-          step === 6 ? 'top-20 right-[40px]' :
+          step === 3 ? 'top-20 right-[280px]' :
+          step === 4 ? 'top-24 left-8' :
+          step === 5 ? 'top-20 right-[180px]' :
+          step === 6 ? 'top-20 right-[100px]' :
           'top-20 right-0'
         }`}
       >
@@ -2204,7 +2205,7 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
       },
       {
         title: 'Plan My Day',
-        description: 'Click the Plan My Day button to get an AI-prioritised task list based on your available time. Critical and overdue tasks are suggested first!',
+        description: 'Set your available hours for the day, then get AI-prioritised suggestions. Critical and overdue tasks rank highest. Drag to reorder, or click the sun to add them to your list!',
         iconComponent: 'sparkle',
       },
       {
@@ -2371,61 +2372,185 @@ const ViewTour = ({ view, step, onNext, onSkip, onComplete }) => {
   )
 }
 
+// Spark Tour Component - Shown on first Spark panel open
+const SparkTour = ({ step, onNext, onSkip, onComplete }) => {
+  const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const sparkShortcut = isMac ? '⌘⌃S' : 'Ctrl+Alt+S'
+
+  const steps = [
+    {
+      title: 'Meet Spark! ✨',
+      description: `Your AI task assistant. Ask questions about your tasks using natural language. Press ${sparkShortcut} anytime to open.`,
+      examples: ['"what\'s due today?"', '"what\'s overdue?"', '"show me critical tasks"'],
+    },
+    {
+      title: 'Create Tasks',
+      description: 'Tell Spark what you need and it will create tasks for you with the right dates and details.',
+      examples: ['"create a task to call mom tomorrow"', '"add a new task to review the proposal by Friday"'],
+    },
+    {
+      title: 'Update Tasks',
+      description: 'Move tasks, mark them complete, change priorities, and more - all with natural language.',
+      examples: ['"move call harry to in progress"', '"mark the email task as done"', '"set budget review to critical"'],
+    },
+    {
+      title: 'Follow-up Actions',
+      description: 'After a query, reference results by number. Spark remembers what you just asked about!',
+      examples: ['"move #1 to tomorrow"', '"complete #2"', '"update all to 60 minutes"'],
+    },
+  ]
+
+  const currentStep = steps[step]
+  if (!currentStep) return null
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex flex-col">
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onSkip} />
+
+      {/* Tour card - centered */}
+      <div className="flex-1 flex items-center justify-center p-4 pb-24">
+        <div className="relative z-[1001] max-w-md w-full animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* Header with orange gradient for Spark */}
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 text-white">
+              <div className="mb-3">
+                <svg viewBox="0 0 24 24" className="w-12 h-12">
+                  <path d="M12 2 L13.5 8 L20 9 L14 12 L16 19 L12 14 L8 19 L10 12 L4 9 L10.5 8 Z" fill="white" />
+                  <circle cx="18" cy="4" r="2" fill="white" opacity="0.6" />
+                  <circle cx="6" cy="18" r="1.5" fill="white" opacity="0.6" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold">{currentStep.title}</h3>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                {currentStep.description}
+              </p>
+
+              {/* Example query chips */}
+              {currentStep.examples && (
+                <div className="space-y-2 mb-4">
+                  {currentStep.examples.map((example, i) => (
+                    <div
+                      key={i}
+                      className="px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-lg text-sm text-gray-700 dark:text-gray-300 font-mono border border-orange-200 dark:border-orange-700"
+                    >
+                      {example}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Progress dots */}
+              <div className="flex items-center justify-center gap-2">
+                {steps.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      i === step ? 'w-8 bg-orange-500' :
+                      i < step ? 'bg-orange-300' : 'bg-gray-200 dark:bg-gray-600'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed bottom navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-[1002] p-4 bg-gradient-to-t from-black/30 to-transparent">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <button
+            onClick={onSkip}
+            className="px-4 py-2.5 text-sm text-white/80 hover:text-white transition-colors"
+          >
+            Skip tour
+          </button>
+          <div className="flex gap-2">
+            {step > 0 && (
+              <button
+                onClick={() => onNext(step - 1)}
+                className="px-5 py-2.5 bg-white/20 text-white rounded-xl font-medium hover:bg-white/30 transition-colors"
+              >
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => step < steps.length - 1 ? onNext(step + 1) : onComplete()}
+              className="px-5 py-2.5 bg-white text-orange-600 rounded-xl font-medium hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              {step < steps.length - 1 ? 'Next' : 'Start Using Spark!'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Help Modal Tab Icons
 const HelpTabIcons = {
+  // Getting Started - Rocket icon (purple-indigo)
+  rocket: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5">
+      <defs>
+        <linearGradient id="rocketGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2 C12 2 7 6 7 12 C7 14 8 16 9 17 L9 20 L12 18 L15 20 L15 17 C16 16 17 14 17 12 C17 6 12 2 12 2 Z" fill="url(#rocketGrad)" />
+      <circle cx="12" cy="10" r="2" fill="white" />
+      <path d="M5 15 L7 12 L9 14" fill="#F59E0B" />
+      <path d="M19 15 L17 12 L15 14" fill="#F59E0B" />
+    </svg>
+  ),
+  // Task Management - Checkbox icon (pink-rose)
   tasks: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="3" y="3" width="18" height="18" rx="3" fill="#10B981" />
+      <rect x="3" y="3" width="18" height="18" rx="3" fill="#EC4899" />
       <path d="M7 12 L10 15 L17 8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   ),
-  board: () => (
+  // Views & Navigation - Grid/Board icon (blue-cyan)
+  views: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="2" y="3" width="20" height="18" rx="2" fill="#6366F1" />
-      <rect x="4" y="6" width="4" height="12" rx="1" fill="white" opacity="0.9" />
-      <rect x="10" y="6" width="4" height="8" rx="1" fill="white" opacity="0.7" />
-      <rect x="16" y="6" width="4" height="5" rx="1" fill="white" opacity="0.5" />
+      <defs>
+        <linearGradient id="viewsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#06B6D4" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="3" width="20" height="18" rx="2" fill="url(#viewsGrad)" />
+      <rect x="4" y="5" width="5" height="7" rx="1" fill="white" opacity="0.9" />
+      <rect x="11" y="5" width="5" height="5" rx="1" fill="white" opacity="0.7" />
+      <rect x="4" y="14" width="5" height="5" rx="1" fill="white" opacity="0.7" />
+      <rect x="11" y="12" width="5" height="7" rx="1" fill="white" opacity="0.5" />
+      <rect x="17" y="5" width="3" height="14" rx="1" fill="white" opacity="0.4" />
     </svg>
   ),
-  myday: () => (
+  // Automation & AI - Sparkle icon (orange-amber)
+  sparkle: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <circle cx="12" cy="12" r="5" fill="#F59E0B" />
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-        <line key={i} x1="12" y1="3" x2="12" y2="5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" transform={`rotate(${angle} 12 12)`} />
-      ))}
+      <defs>
+        <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F97316" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2 L13.5 8 L20 9 L14 12 L16 19 L12 14 L8 19 L10 12 L4 9 L10.5 8 Z" fill="url(#sparkleGrad)" />
+      <circle cx="18" cy="4" r="2" fill="#FCD34D" />
+      <circle cx="6" cy="18" r="1.5" fill="#FCD34D" />
     </svg>
   ),
-  calendar: () => (
-    <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="3" y="5" width="18" height="16" rx="2" fill="#6366F1" />
-      <rect x="3" y="5" width="18" height="5" rx="2" fill="#4F46E5" />
-      <circle cx="7" cy="3" r="1.5" fill="#6366F1" />
-      <circle cx="17" cy="3" r="1.5" fill="#6366F1" />
-      <rect x="6" y="12" width="3" height="2" rx="0.5" fill="white" opacity="0.9" />
-      <rect x="10.5" y="12" width="3" height="2" rx="0.5" fill="white" opacity="0.6" />
-      <rect x="6" y="16" width="3" height="2" rx="0.5" fill="white" opacity="0.6" />
-    </svg>
-  ),
-  alltasks: () => (
-    <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="2" y="3" width="20" height="18" rx="2" fill="#6366F1" />
-      <line x1="5" y1="8" x2="19" y2="8" stroke="white" strokeWidth="1.5" opacity="0.8" />
-      <line x1="5" y1="12" x2="19" y2="12" stroke="white" strokeWidth="1.5" opacity="0.6" />
-      <line x1="5" y1="16" x2="19" y2="16" stroke="white" strokeWidth="1.5" opacity="0.4" />
-    </svg>
-  ),
-  pending: () => (
-    <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="2" y="3" width="20" height="18" rx="2" fill="#F59E0B" />
-      <path d="M8 9 L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <path d="M8 13 L14 13" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-      <circle cx="6" cy="9" r="1.5" fill="white" />
-      <circle cx="6" cy="13" r="1.5" fill="white" opacity="0.7" />
-    </svg>
-  ),
+  // Shortcuts - Keyboard icon (gray-slate)
   shortcuts: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5">
-      <rect x="2" y="6" width="20" height="12" rx="2" fill="#6B7280" />
+      <rect x="2" y="6" width="20" height="12" rx="2" fill="#475569" />
       <rect x="4" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
       <rect x="8" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
       <rect x="12" y="8" width="3" height="2" rx="0.5" fill="white" opacity="0.8" />
@@ -2615,13 +2740,11 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
   ]
   
   const tabs = [
-    { id: 'tasks', label: 'Tasks', icon: () => HelpTabIcons.tasks(), color: 'from-pink-500 to-rose-500' },
-    { id: 'board', label: 'Board', icon: () => HelpTabIcons.board(), color: 'from-orange-500 to-amber-500' },
-    { id: 'myday', label: 'My Day', icon: () => HelpTabIcons.myday(), color: 'from-yellow-500 to-orange-500' },
-    { id: 'calendar', label: 'Calendar', icon: () => HelpTabIcons.calendar(), color: 'from-green-500 to-emerald-500' },
-    { id: 'alltasks', label: 'All Tasks', icon: () => HelpTabIcons.alltasks(), color: 'from-blue-500 to-cyan-500' },
-    { id: 'pending', label: 'Pending', icon: () => HelpTabIcons.pending(), color: 'from-amber-500 to-yellow-500' },
-    { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-purple-500 to-orange-500' },
+    { id: 'getting-started', label: 'Getting Started', icon: () => HelpTabIcons.rocket(), color: 'from-purple-500 to-indigo-500' },
+    { id: 'tasks', label: 'Task Management', icon: () => HelpTabIcons.tasks(), color: 'from-pink-500 to-rose-500' },
+    { id: 'views', label: 'Views', icon: () => HelpTabIcons.views(), color: 'from-blue-500 to-cyan-500' },
+    { id: 'automation', label: 'Automation & AI', icon: () => HelpTabIcons.sparkle(), color: 'from-orange-500 to-amber-500' },
+    { id: 'shortcuts', label: 'Shortcuts', icon: () => HelpTabIcons.shortcuts(), color: 'from-slate-500 to-gray-500' },
   ]
   
   const SectionCard = ({ index, title, children, icon }) => {
@@ -2714,18 +2837,90 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
         {/* Content */}
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto max-h-[calc(85vh-200px)] sm:max-h-[calc(90vh-280px)]">
           <div className="space-y-3 sm:space-y-4">
-            
-            {/* Tasks Tab */}
+
+            {/* Getting Started Tab */}
+            {activeTab === 'getting-started' && (
+              <>
+                <SectionCard index={0} title="Welcome to Trackli">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Trackli helps you stay on top of your tasks with a simple workflow:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="p-3 rounded-xl border-l-4 border-gray-400 bg-gray-100 dark:bg-gray-800 text-center">
+                        <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">Backlog</span>
+                        <p className="text-xs text-gray-500 mt-1">Future work</p>
+                      </div>
+                      <div className="p-3 rounded-xl border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-center">
+                        <span className="font-semibold text-blue-700 dark:text-blue-300 text-sm">To Do</span>
+                        <p className="text-xs text-gray-500 mt-1">Ready to start</p>
+                      </div>
+                      <div className="p-3 rounded-xl border-l-4 border-pink-500 bg-pink-50 dark:bg-pink-900/30 text-center">
+                        <span className="font-semibold text-pink-700 dark:text-pink-300 text-sm">In Progress</span>
+                        <p className="text-xs text-gray-500 mt-1">Working on</p>
+                      </div>
+                      <div className="p-3 rounded-xl border-l-4 border-slate-500 bg-slate-100 dark:bg-slate-800 text-center">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">Done</span>
+                        <p className="text-xs text-gray-500 mt-1">Completed</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Drag tasks between columns or use quick actions to move them through your workflow.</p>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={1} title="Spark AI Assistant">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
+                      <p className="font-semibold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2">
+                        {HelpTabIcons.sparkle()} Meet Spark
+                      </p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Your AI task assistant. Ask questions, create tasks, and update your board using natural language.</p>
+                    </div>
+                    <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                      <p>• Click the <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/50 dark:to-amber-900/50 text-orange-700 dark:text-orange-300 rounded-lg text-sm font-medium">Spark</span> button or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}S</kbd></p>
+                      <p>• Try: <span className="italic text-gray-500">"what's due today?"</span> or <span className="italic text-gray-500">"create a task to call mom tomorrow"</span></p>
+                      <p>• Update tasks: <span className="italic text-gray-500">"move X to in progress"</span> or <span className="italic text-gray-500">"mark X as done"</span></p>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={2} title="My Day Quick Start" icon={TaskCardIcons.sun("w-4 h-4")}>
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">My Day is your daily focus list. Start each day with a clear plan:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                        <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} Add to My Day</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">Click the sun icon on any task to add it to your daily focus</p>
+                      </div>
+                      <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                        <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-1">Plan My Day</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">Let Trackli suggest tasks based on your available time</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Access My Day with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}D</kbd> or from the menu.</p>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={3} title="Quick Create">
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>• Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Q</kbd> for Quick Add with natural language parsing</p>
+                    <p>• Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd> for the full task form</p>
+                    <p>• Or click <span className="px-2 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">+ Task</span> in the header</p>
+                  </div>
+                </SectionCard>
+              </>
+            )}
+
+            {/* Task Management Tab */}
             {activeTab === 'tasks' && (
               <>
                 <SectionCard index={0} title="Creating Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• Click the <span className="px-2 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">+ Task</span> button in the header</p>
-                    <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd></p>
-                    <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Q</kbd> for Quick Add with voice support!</p>
+                    <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}T</kbd> for the full form</p>
+                    <p>• Or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">Q</kbd> for Quick Add with natural date parsing</p>
+                    <p>• Or use Spark: <span className="italic text-gray-500">"create a task to review proposal by Friday"</span></p>
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={1} title="Task Fields">
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -2738,7 +2933,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                       { name: 'Customer', desc: 'Client/customer for the task' },
                       { name: 'Assignee', desc: "Who's responsible" },
                       { name: 'Category', desc: 'Type of work' },
-                      { name: 'Critical', desc: 'Flag as high priority', icon: 'flag' },
+                      { name: 'Critical', desc: 'Flag as high priority' },
                     ].map((field, i) => (
                       <div key={i} className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
                         <p className="font-semibold text-gray-700 dark:text-gray-200">{field.name}</p>
@@ -2747,15 +2942,16 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     ))}
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={2} title="Completing Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• <strong>Hover</strong> over a task and click the <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-sm">✓ Done</span> button</p>
                     <p>• Or <strong>drag</strong> the task to the "Done" column</p>
                     <p>• Or open the task and change its status</p>
+                    <p>• Or use Spark: <span className="italic text-gray-500">"complete the budget review task"</span></p>
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={3} title="Dependencies (Blocking)">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• In the task editor, use "Blocked By" to select tasks that must be completed first</p>
@@ -2763,7 +2959,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <p>• When the blocking task is completed, the blocked task becomes "ready to start"</p>
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={4} title="Recurring Tasks">
                   <div className="space-y-2 text-gray-600 dark:text-gray-300">
                     <p>• Set a recurrence pattern: Daily, Weekly, Bi-weekly, Monthly</p>
@@ -2771,72 +2967,26 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <p className="flex items-center gap-1">• Recurring tasks show {TaskCardIcons.repeat("w-4 h-4 inline")} on the card</p>
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={5} title="Attachments">
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Adding Attachments:</p>
-                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                        <p>• Open a task and go to the Details tab</p>
-                        <p>• Drag & drop files or click "Choose files"</p>
-                        <p>• Supports images, PDFs, documents, and more</p>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Viewing Attachments:</p>
-                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                        <p>• Click any attachment to open the viewer</p>
-                        <p>• PDFs display inline with page navigation</p>
-                        <p>• Use ← → arrow keys to navigate</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">Tasks with attachments show a paperclip icon with count</p>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
+                    <p>• Open a task and go to the Details tab</p>
+                    <p>• Drag & drop files or click "Choose files"</p>
+                    <p>• Supports images, PDFs, documents, and more</p>
+                    <p>• Tasks with attachments show 📎 with count</p>
                   </div>
                 </SectionCard>
               </>
             )}
-            
-            {/* Board Tab */}
-            {activeTab === 'board' && (
+
+            {/* Views & Navigation Tab */}
+            {activeTab === 'views' && (
               <>
-                <SectionCard index={0} title="Kanban Columns">
-                  <p className="text-gray-800 dark:text-gray-300 mb-3">Tasks flow through four columns representing their status:</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div className="p-3 rounded-xl border-l-4 border-gray-400 bg-gray-100 dark:bg-gray-800">
-                      <span className="font-semibold text-gray-700 dark:text-gray-200">Backlog</span>
-                      <p className="text-xs text-gray-700">Future work</p>
-                    </div>
-                    <div className="p-3 rounded-xl border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30">
-                      <span className="font-semibold text-blue-700 dark:text-blue-300">To Do</span>
-                      <p className="text-xs text-gray-700">Ready to start</p>
-                    </div>
-                    <div className="p-3 rounded-xl border-l-4 border-pink-500 bg-pink-50 dark:bg-pink-900/30">
-                      <span className="font-semibold text-pink-700 dark:text-pink-300">In Progress</span>
-                      <p className="text-xs text-gray-700">Active work</p>
-                    </div>
-                    <div className="p-3 rounded-xl border-l-4 border-slate-500 bg-slate-100 dark:bg-slate-800">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">Done</span>
-                      <p className="text-xs text-gray-700">Completed</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
-                    <p className="text-sm text-indigo-700 dark:text-indigo-300"><strong>👆 Drag & Drop:</strong> Drag any task card between columns to change its status instantly.</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={1} title="Task Card Quick Actions">
+                <SectionCard index={0} title="Board View">
                   <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Your main workspace with Kanban columns. Access with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}B</kbd></p>
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click Actions:</p>
-                      <div className="space-y-1 text-sm text-gray-800 dark:text-gray-300">
-                        <p>• <strong>Click card</strong> – Open task to edit all details</p>
-                        <p>• <strong>Click checkbox</strong> – Mark complete/incomplete</p>
-                        <p>• <strong>Double-click title</strong> – Edit title inline (desktop)</p>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Hover Actions (Desktop):</p>
-                      <p className="text-sm text-gray-700 mb-2">Hover over a card to reveal quick action buttons:</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Card Actions:</p>
                       <div className="flex flex-wrap gap-2 text-sm">
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-700 rounded-lg font-medium">▶ Start</span>
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg font-medium">✓ Done</span>
@@ -2844,317 +2994,208 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                         <span className="px-2.5 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 rounded-lg font-medium flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} My Day</span>
                       </div>
                     </div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={2} title="Task Card Indicators">
-                  <div className="space-y-3">
                     <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Left Border {L.Colors}:</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-red-500"></div><span>Red = Overdue or Critical</span></div>
-                        <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-orange-500"></div><span>Orange = Blocked or Due Today</span></div>
-                        <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-green-500"></div><span>Green = Ready to Start</span></div>
-                        <div className="flex items-center gap-2"><div className="w-1 h-6 rounded bg-blue-500"></div><span>Blue/Pink/Gray = Column status</span></div>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Icons & Badges:</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Card Indicators:</p>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-300">
-                        <div className="flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} = Critical/Flagged</div>
-                        <div className="flex items-center gap-1">{TaskCardIcons.lock("w-4 h-4")} = Blocked by another task</div>
-                        <div className="flex items-center gap-1">{TaskCardIcons.repeat("w-4 h-4")} = Recurring task</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} = Critical</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.lock("w-4 h-4")} = Blocked</div>
+                        <div className="flex items-center gap-1">{TaskCardIcons.repeat("w-4 h-4")} = Recurring</div>
                         <div className="flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} = In My Day</div>
-                        <div>▶ = Start date</div>
-                        <div>🗓 = Due date</div>
-                        <div className="flex items-center gap-1">{TaskCardIcons.timer("w-4 h-4")} = Time estimate</div>
-                        <div>📎 = Has attachments</div>
                       </div>
                     </div>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={3} title="Filtering & Search">
+
+                <SectionCard index={1} title="My Day View" icon={TaskCardIcons.sun("w-4 h-4")}>
                   <div className="space-y-3">
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
-                      <p className="text-sm text-gray-700 mb-2">Click any stat in the summary bar to filter:</p>
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
-                        <div className="flex items-center gap-1"><span className="text-red-600 font-medium flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} Critical</span> – Flagged tasks</div>
-                        <div><span className="text-orange-600 font-medium">Due Today</span> – Due today</div>
-                        <div><span className="text-red-600 font-medium">Overdue</span> – Past due date</div>
-                        <div className="flex items-center gap-1"><span className="text-amber-600 font-medium flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} My Day</span> – Daily focus tasks</div>
+                    <p className="text-gray-800 dark:text-gray-300">Your personal daily focus list. Access with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}D</kbd></p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl">
+                        <p className="font-semibold text-green-600 dark:text-green-400 text-sm">Auto-included</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Tasks with start date today or earlier</p>
+                      </div>
+                      <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl">
+                        <p className="font-semibold text-amber-600 dark:text-amber-400 text-sm">Manual</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Click sun icon to add tasks</p>
                       </div>
                     </div>
-                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
-                      <p className="font-semibold text-indigo-700 dark:text-indigo-300 mb-1">🔍 Quick Search</p>
-                      <p className="text-sm text-indigo-600 dark:text-indigo-400">Press <kbd className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-800 rounded text-xs font-mono">/</kbd> to search tasks by title, description, assignee, or customer.</p>
-                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Use "Plan My Day" to get AI-suggested tasks based on your available time.</p>
                   </div>
                 </SectionCard>
-              </>
-            )}
-            
-            {/* My Day Tab */}
-            {activeTab === 'myday' && (
-              <>
-                <SectionCard index={0} title="What is My Day?" icon={TaskCardIcons.sun("w-4 h-4")}>
-                  <p className="text-gray-800 dark:text-gray-300">My Day is your personal daily focus list. It helps you plan what to work on today without cluttering your board view.</p>
-                </SectionCard>
-                
-                <SectionCard index={1} title="Plan My Day">
+
+                <SectionCard index={2} title="Calendar View" icon="🗓">
                   <div className="space-y-3">
-                    <p className="text-gray-800 dark:text-gray-300">Click the <span className="font-semibold text-indigo-600 dark:text-indigo-400">Plan My Day</span> button to get an intelligent task plan based on your available time.</p>
-                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
-                      <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-2">How it works:</p>
-                      <ul className="text-sm text-gray-800 dark:text-gray-300 space-y-1">
-                        <li>1. Enter how much time you have available</li>
-                        <li>2. Get a prioritised list of tasks that fit your time</li>
-                        <li>3. Rearrange or remove tasks as needed</li>
-                        <li>4. Accept to set your day</li>
-                      </ul>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
-                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Priority order:</p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Critical tasks, overdue items, and tasks due today are prioritised first. Tasks with no dates appear last.</p>
-                    </div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={2} title="How Tasks Appear in My Day">
-                  <div className="space-y-3">
-                    <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200 dark:border-green-700">
-                      <p className="font-semibold text-green-600 dark:text-green-400 mb-1">Auto-included:</p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Tasks with a start date of today or earlier automatically appear in My Day</p>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
-                      <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Manually added:</p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the sun button on any task in Recommendations to add it to your focus list</p>
+                    <p className="text-gray-800 dark:text-gray-300">Schedule tasks with times. Access with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}L</kbd></p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center">
+                        <span className="text-xl">📅</span>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">Daily</p>
+                      </div>
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center">
+                        <span className="text-xl">📆</span>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">Weekly</p>
+                      </div>
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center">
+                        <span className="text-xl">🗓️</span>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">Monthly</p>
+                      </div>
                     </div>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={3} title="Sun Icon on Cards">
-                  <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
-                    <p className="text-gray-700 dark:text-gray-300">Tasks in your My Day list show a sun icon on their card in the board view. This helps you quickly identify your daily focus tasks while browsing the board.</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={4} title="Recommendations & All Tasks">
-                  <p className="text-gray-800 dark:text-gray-300 mb-3">The Recommendations section shows tasks organized by urgency:</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><span className="font-semibold text-red-600">🔴 Overdue</span><p className="text-sm text-gray-700">Past due date</p></div>
-                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl"><span className="font-semibold text-orange-600">🟠 Due Today</span><p className="text-sm text-gray-700">Due today</p></div>
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl"><span className="font-semibold text-yellow-600">🟡 Due Soon</span><p className="text-sm text-gray-700">Due in next 3 days</p></div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><span className="font-semibold text-green-600">🟢 Quick Wins</span><p className="text-sm text-gray-700">Low effort tasks</p></div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={5} title="Daily Reset">
-                  <p className="text-gray-800 dark:text-gray-300">Manually added tasks clear from My Day at midnight, giving you a fresh start each day.</p>
-                </SectionCard>
-              </>
-            )}
-            
-            {/* Calendar Tab */}
-            {activeTab === 'calendar' && (
-              <>
-                <SectionCard index={0} title="Calendar View" icon="🗓">
-                  <p className="text-gray-800 dark:text-gray-300">Schedule tasks on your calendar with start times and durations. Access via the menu or press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}L</kbd>.</p>
-                </SectionCard>
-                
-                <SectionCard index={1} title="View Modes">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
-                      <span className="text-3xl">📅</span>
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Daily</p>
-                      <p className="text-xs text-gray-700">Single day view</p>
-                    </div>
-                    <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
-                      <span className="text-3xl">📆</span>
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Weekly</p>
-                      <p className="text-xs text-gray-700">7-day overview</p>
-                    </div>
-                    <div className="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl text-center backdrop-blur-sm">
-                      <span className="text-3xl">🗓️</span>
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">Monthly</p>
-                      <p className="text-xs text-gray-700">Full month grid</p>
-                    </div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={2} title="Scheduling Tasks">
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Click the Calendar Button:</p>
-                      <p className="text-sm text-gray-700">Click the 🗓 button on any task to schedule it.</p>
-                    </div>
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Task Duration:</p>
-                      <p className="text-sm text-gray-700">Set the Time Estimate to control how tall tasks appear on the calendar.</p>
-                    </div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={3} title="Quick Actions">
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl text-center">
-                      <span className="text-xl">▶</span>
-                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Start task</p>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl text-center">
-                      <span className="text-xl">✓</span>
-                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Mark done</p>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 rounded-xl text-center">
-                      <span className="text-xl">✕</span>
-                      <p className="text-gray-800 dark:text-gray-300 text-xs mt-1">Remove</p>
-                    </div>
-                  </div>
-                </SectionCard>
-              </>
-            )}
-            
-            {/* All Tasks Tab */}
-            {activeTab === 'alltasks' && (
-              <>
-                <SectionCard index={0} title="All Tasks View" icon="🗃️">
-                  <p className="text-gray-800 dark:text-gray-300">Access all your tasks in a powerful table format. Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">{shortcutModifier}A</kbd>.</p>
-                </SectionCard>
-                
-                <SectionCard index={1} title="Sorting">
-                  <p className="text-gray-800 dark:text-gray-300">Click any column header to sort. Click again to reverse order.</p>
-                </SectionCard>
-                
-                <SectionCard index={2} title="Filtering">
+
+                <SectionCard index={3} title="All Tasks View" icon="🗃️">
                   <div className="space-y-2 text-gray-800 dark:text-gray-300">
-                    <p>• Click <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium">Filters</span> to show filter inputs</p>
-                    <p>• Type to filter any column</p>
-                    <p>• Click <span className="text-red-600 font-medium">Clear Filters</span> to reset</p>
+                    <p>Powerful table view with sorting and filtering. Access with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}A</kbd></p>
+                    <p>• Click column headers to sort</p>
+                    <p>• Use Filters button to filter by any column</p>
+                    <p>• Export to CSV or Import from CSV</p>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={3} title="Export to CSV" icon="📤">
-                  <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200 dark:border-green-700">
-                    <p className="text-gray-700 dark:text-gray-300">Click <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">Export CSV</span> to download your tasks.</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={4} title="Import from CSV" icon="📥">
-                  <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
-                    <p className="text-gray-700 dark:text-gray-300">Click <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm font-medium">Import CSV</span> to bulk create tasks.</p>
+
+                <SectionCard index={4} title="Projects & Progress">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">Projects View</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{L.Organise} tasks into projects. Create with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}P</kbd></p>
+                    </div>
+                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">Progress Dashboard</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Track streaks, completion rates, and weekly stats</p>
+                    </div>
                   </div>
                 </SectionCard>
               </>
             )}
-            
-            {/* Pending Tab */}
-            {activeTab === 'pending' && (
+
+            {/* Automation & AI Tab */}
+            {activeTab === 'automation' && (
               <>
-                <SectionCard index={0} title="What is Pending?">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>Pending is your inbox for tasks from external sources. Tasks arrive here from:</p>
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email</p>
-                        <p className="text-sm">Forward emails to your Trackli address</p>
-                      </div>
-                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> Slack</p>
-                        <p className="text-sm">Use /trackli commands</p>
-                      </div>
-                    </div>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={1} title="Where to Find Pending">
+                <SectionCard index={0} title="Spark AI Assistant">
                   <div className="space-y-3">
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /><circle cx="18" cy="5" r="3" fill="currentColor" /></svg> Header Badge</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Look for the amber badge with count in the top navigation. Click it for a quick dropdown preview of pending tasks.</p>
+                    <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
+                      <p className="font-semibold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2">
+                        {HelpTabIcons.sparkle()} Open Spark
+                      </p>
+                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the Spark button in the header or press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}S</kbd></p>
                     </div>
-                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg> Board View</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">The full Pending Review section appears above your kanban columns. Expand it to see all pending tasks with full editing options.</p>
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200">Query Examples:</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          '"what\'s due today?"',
+                          '"what\'s overdue?"',
+                          '"show me critical tasks"',
+                          '"what\'s assigned to Harry?"',
+                        ].map((q, i) => (
+                          <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={2} title="Reviewing Tasks">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>• <strong>Checkbox</strong> — Select tasks you want to keep</p>
-                    <p>• <strong>Expand arrow</strong> — Show more fields (effort, time, customer)</p>
-                    <p>• <strong>Project dropdown</strong> — Assign to a project (required to approve)</p>
-                    <p>• <strong>X button</strong> — Remove unwanted tasks</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={3} title="AI Extraction">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>The AI automatically extracts task details from your messages:</p>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
+
+                <SectionCard index={1} title="Creating Tasks with Spark">
+                  <div className="space-y-2">
+                    <p className="text-gray-800 dark:text-gray-300">Just tell Spark what you need:</p>
+                    <div className="grid grid-cols-1 gap-2">
                       {[
-                        { field: 'Title', example: 'Clear task name' },
-                        { field: 'Due Date', example: '"by Friday", "tomorrow"' },
-                        { field: 'Time', example: '"9:30-10:30am"' },
-                        { field: 'Estimate', example: '"30 mins", "2 hours"' },
-                        { field: 'Priority', example: '"urgent", "ASAP"' },
-                        { field: 'Customer', example: 'Client names' },
-                      ].map((item, i) => (
-                        <div key={i} className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                          <span className="font-semibold text-gray-700 dark:text-gray-200">{item.field}</span>
-                          <span className="text-sm text-gray-500 ml-2">{item.example}</span>
-                        </div>
+                        '"create a task to call mom tomorrow"',
+                        '"add a new task to review the proposal by Friday"',
+                        '"new critical task to fix the login bug"',
+                      ].map((q, i) => (
+                        <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
                       ))}
                     </div>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={4} title="Task Routing">
+
+                <SectionCard index={2} title="Updating Tasks with Spark">
                   <div className="space-y-3">
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                      <p className="font-semibold text-green-700 dark:text-green-300">✓ Project Matched</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Task goes directly to your board</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {[
+                        '"move call harry to in progress"',
+                        '"mark the email task as done"',
+                        '"set budget review to critical"',
+                        '"update project report to due tomorrow"',
+                      ].map((q, i) => (
+                        <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
+                      ))}
                     </div>
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                      <p className="font-semibold text-amber-700 dark:text-amber-300">? No Project Match</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Task arrives in Pending for you to assign</p>
+                    <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
+                      <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Follow-up Actions</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">After a query, reference results with #1, #2, etc:</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-1">"move #1 to tomorrow" or "complete #2"</p>
                     </div>
-                    <p className="text-sm text-gray-500">Tip: Mention your project name in Slack commands to route tasks directly!</p>
                   </div>
                 </SectionCard>
-                
-                <SectionCard index={5} title="Approving Tasks">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>1. <strong>Select</strong> the tasks you want (checkbox)</p>
-                    <p>2. <strong>Assign</strong> a project to each task</p>
-                    <p>3. Click <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">Create Tasks</span></p>
-                    <p className="text-sm text-gray-500 mt-2">Tasks due {'>'} 7 days out go to Backlog, others go to To Do.</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={6} title="Email Setup">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>Find your unique email address in <strong>Settings → Integrations</strong></p>
-                    <p>Forward any email to create tasks from action items.</p>
-                    <p className="text-sm">Tip: Add a note at the top like "Add to Demo project, urgent" to help the AI categorise tasks.</p>
-                  </div>
-                </SectionCard>
-                
-                <SectionCard index={7} title="Slack Setup">
-                  <div className="space-y-2 text-gray-600 dark:text-gray-300">
-                    <p>Connect Slack in <strong>Settings → Integrations</strong></p>
-                    <p>Then use these commands anywhere in Slack:</p>
-                    <div className="grid grid-cols-1 gap-2 mt-2">
-                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli Buy milk tomorrow</div>
-                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli today</div>
-                      <div className="p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg font-mono text-sm">/trackli summary</div>
+
+                <SectionCard index={3} title="Plan My Day">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Get an intelligent task plan based on your available time:</p>
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                      <p>1. Go to My Day view and click <span className="font-semibold text-indigo-600 dark:text-indigo-400">Plan My Day</span></p>
+                      <p>2. Enter how much time you have available</p>
+                      <p>3. Review and rearrange the suggested tasks</p>
+                      <p>4. Accept to add them to your day</p>
                     </div>
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Priority Algorithm</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Critical + overdue tasks first, then due today, due soon, and finally tasks without dates.</p>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={4} title="Smart Automation">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl border border-green-200 dark:border-green-700">
+                      <p className="font-semibold text-green-600 dark:text-green-400 mb-1">Auto-move from Backlog</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Tasks in Backlog automatically move to To Do when their start date arrives or they're due within 2 days.</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Auto-add to My Day</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Tasks with a start date of today automatically appear in your My Day list.</p>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={5} title="Filtering System">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary Bar (Quick Filters):</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">Click any stat to filter instantly:</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
+                        <div className="flex items-center gap-1"><span className="text-red-600 font-medium flex items-center gap-1">{TaskCardIcons.flag("w-4 h-4")} Critical</span></div>
+                        <div><span className="text-orange-600 font-medium">Due Today</span></div>
+                        <div><span className="text-red-600 font-medium">Overdue</span></div>
+                        <div className="flex items-center gap-1"><span className="text-amber-600 font-medium flex items-center gap-1">{TaskCardIcons.sun("w-4 h-4")} My Day</span></div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                      <p className="font-semibold text-indigo-700 dark:text-indigo-300 mb-1">🔍 Quick Search</p>
+                      <p className="text-sm text-indigo-600 dark:text-indigo-400">Press <kbd className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-800 rounded text-xs font-mono">/</kbd> to search by title, description, assignee, or customer.</p>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={6} title="Pending & Integrations">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Tasks from external sources arrive in Pending for review:</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Forward emails to your Trackli address</p>
+                      </div>
+                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
+                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> Slack</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Use /trackli commands</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">AI extracts task details automatically. Set up in <strong>Settings → Integrations</strong>.</p>
                   </div>
                 </SectionCard>
               </>
             )}
-            
+
             {/* Shortcuts Tab */}
             {activeTab === 'shortcuts' && (
               <>
@@ -3167,9 +3208,10 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <KeyboardShortcut label="Quick Search" keys="/" icon="🔍" />
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={1} title="Action Shortcuts" icon="⚡">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <KeyboardShortcut label="Spark AI" keys={`${shortcutModifier}S`} icon={HelpTabIcons.sparkle()} />
                     <KeyboardShortcut label="New Task" keys={`${shortcutModifier}T`} icon="✨" />
                     <KeyboardShortcut label="New Project" keys={`${shortcutModifier}P`} icon="📁" />
                     <KeyboardShortcut label="Import Notes" keys={`${shortcutModifier}N`} icon="📝" />
@@ -3178,7 +3220,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                     <KeyboardShortcut label="Close Modal" keys="Esc" icon="✕" />
                   </div>
                 </SectionCard>
-                
+
                 <SectionCard index={2} title="Quick Actions" icon="🖱️">
                   <div className="space-y-2 text-gray-800 dark:text-gray-300">
                     <p>• <strong>Click task</strong> – Open task editor</p>
@@ -3189,7 +3231,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                 </SectionCard>
               </>
             )}
-            
+
           </div>
         </div>
         
@@ -4253,7 +4295,14 @@ export default function KanbanBoard({ demoMode = false }) {
     const saved = localStorage.getItem('trackli_view_tours_completed')
     return saved ? JSON.parse(saved) : {}
   })
-  
+
+  // Spark tour state
+  const [showSparkTour, setShowSparkTour] = useState(false)
+  const [sparkTourStep, setSparkTourStep] = useState(0)
+  const [sparkTourCompleted, setSparkTourCompleted] = useState(() => {
+    return localStorage.getItem('trackli_spark_tour_completed') === 'true'
+  })
+
   const [selectedProjectId, setSelectedProjectId] = useState('all')
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false)
   const [showArchivedProjects, setShowArchivedProjects] = useState(false)
@@ -4630,7 +4679,23 @@ export default function KanbanBoard({ demoMode = false }) {
     setActiveViewTour(null)
     setViewTourStep(0)
   }
-  
+
+  // Spark tour complete handler
+  const handleSparkTourComplete = () => {
+    setSparkTourCompleted(true)
+    localStorage.setItem('trackli_spark_tour_completed', 'true')
+    setShowSparkTour(false)
+    setSparkTourStep(0)
+  }
+
+  // Trigger Spark tour on first open (called from SparkPanel)
+  const triggerSparkTour = () => {
+    if (!sparkTourCompleted) {
+      setShowSparkTour(true)
+      setSparkTourStep(0)
+    }
+  }
+
   // Fetch data on mount
   useEffect(() => {
     fetchData()
@@ -9887,7 +9952,17 @@ export default function KanbanBoard({ demoMode = false }) {
           onComplete={() => handleViewTourComplete(activeViewTour)}
         />
       )}
-      
+
+      {/* Spark AI Tour */}
+      {showSparkTour && (
+        <SparkTour
+          step={sparkTourStep}
+          onNext={setSparkTourStep}
+          onSkip={handleSparkTourComplete}
+          onComplete={handleSparkTourComplete}
+        />
+      )}
+
       {/* Meeting Notes Import Modal */}
       <Modal 
         isOpen={meetingNotesModalOpen} 
@@ -11372,6 +11447,7 @@ Or we can extract from:
       <SparkPanel
         isOpen={sparkPanelOpen}
         onClose={() => setSparkPanelOpen(false)}
+        onFirstOpen={triggerSparkTour}
         tasks={tasks.filter(t => !projects.find(p => p.id === t.project_id)?.archived)}
         projects={projects.filter(p => !p.archived)}
         userName={profile?.display_name || user?.email?.split('@')[0] || ''}
