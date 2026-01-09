@@ -373,7 +373,8 @@ export default function SparkPanel({
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [messagesRemaining, setMessagesRemaining] = useState(200) // Increased for testing
+  const [messagesRemaining, setMessagesRemaining] = useState(200)
+  const [lastQueryResults, setLastQueryResults] = useState([]) // Store tasks from last query for follow-ups
   
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
@@ -513,6 +514,10 @@ export default function SparkPanel({
         console.log('Spark: Handled locally, no API call needed')
         // Track local success
         trackSparkQuery(trimmedInput, 'local', true)
+        // Store tasks for follow-up actions ("move #2 to tomorrow")
+        if (localResult.tasks && localResult.tasks.length > 0) {
+          setLastQueryResults(localResult.tasks)
+        }
         setMessages(prev => [...prev, { role: 'assistant', content: localResult.response }])
         setIsLoading(false)
         return
@@ -547,7 +552,12 @@ export default function SparkPanel({
           body: JSON.stringify({
             message: trimmedInput,
             context: buildContext(),
-            conversationHistory: messages.slice(-10)
+            conversationHistory: messages.slice(-10),
+            lastQueryResults: lastQueryResults.slice(0, 10).map(t => ({
+              id: t.id,
+              title: t.title,
+              position: lastQueryResults.indexOf(t) + 1 // 1-indexed for "#1", "#2" references
+            }))
           })
         }
       )

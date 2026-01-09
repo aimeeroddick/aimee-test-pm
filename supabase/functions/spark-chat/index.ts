@@ -20,7 +20,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { message, context, conversationHistory } = body
+    const { message, context, conversationHistory, lastQueryResults } = body
     
     if (!message?.trim()) {
       return new Response(
@@ -151,7 +151,11 @@ PROJECT COUNT: ${projectCount}
 === ACTIVE TASKS (for updates and queries) ===
 ${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
 
-=== QUERY TASKS ===
+${lastQueryResults && lastQueryResults.length > 0 ? `=== PREVIOUS QUERY RESULTS ===
+The user just saw these tasks from a query. If they reference #1, #2, etc., use these IDs:
+${lastQueryResults.map((t: any) => `#${t.position}: "${t.title}" (ID: ${t.id})`).join('\n')}
+
+` : ''}=== QUERY TASKS ===
 When user asks about their tasks (what's due, what's overdue, show tasks, etc.), use the query_tasks tool to filter tasks. DO NOT try to filter the ACTIVE TASKS list yourself - always use the tool.
 
 The query_tasks tool accepts these parameters:
