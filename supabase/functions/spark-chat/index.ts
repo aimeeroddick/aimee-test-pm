@@ -189,7 +189,7 @@ EXAMPLE: If today is ${today}:
 - Task with Due: ${today} → IS due today ✓
 - Task with Due: ${yesterday} → is OVERDUE, NOT due today ✗
 - Task with Due: ${tomorrow} → is due tomorrow, NOT due today ✗
-- Task with Due: 2025-01-07 → is OVERDUE, NOT due today ✗
+- Task with Due: ${currentYear}-01-07 → is OVERDUE, NOT due today ✗
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
