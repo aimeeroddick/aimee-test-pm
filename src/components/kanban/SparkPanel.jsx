@@ -25,10 +25,20 @@ const trackSparkQuery = async (query, handler, success) => {
 }
 
 // Frontend query handler - handles simple queries without API calls
-const handleLocalQuery = (input, tasks, projects, dateFormat) => {
+const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults = []) => {
   const query = input.toLowerCase().trim()
   const today = new Date().toISOString().split('T')[0]
   const isUSFormat = dateFormat === 'MM/DD/YYYY'
+  
+  // If there are previous query results and this looks like an action, route to Claude
+  // This catches cases like "set all to high effort" or "move #1 to tomorrow" after a query
+  if (lastQueryResults.length > 0) {
+    const actionPattern = /^(move|set|update|mark|change|add|remove|delete|complete|finish|done)/i
+    if (actionPattern.test(query)) {
+      console.log('Spark: Action query with previous results, falling back to Claude')
+      return null
+    }
+  }
   
   // Detect follow-up/contextual queries that need Claude
   // These reference previous results: "those", "them", "of them", "#1", "the first one", etc.
@@ -43,6 +53,9 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
     /\b(move|update|mark|set|change|delete|remove)\s*(it|them|those|these|#\d+)\b/i,
     /\ball of them\b/i,
     /\bthe (same|rest)\b/i,
+    // Action + "all" patterns (without "of them")
+    /\b(move|update|mark|set|change|delete|remove|add)\s+all\s+(to|as|from)\b/i,
+    /\b(move|set|change)\s+all\b/i, // "set all to high effort", "move all to tomorrow"
   ]
   
   for (const pattern of followUpPatterns) {
