@@ -407,16 +407,19 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // - "Harry's tasks"
   // - "<> Harry" or "<>Harry" (shorthand notation)
   // - "@Harry" (mention style)
-  const assigneeMatch = query.match(/\b(?:assigned\s*to|for)\s+([\w]+)/i) || 
-                        query.match(/\b([\w]+)'?s\s+tasks?\b/i) ||
-                        query.match(/<>\s*([\w]+)/i) ||
-                        query.match(/@([\w]+)/i)
-  if (assigneeMatch) {
-    const name = assigneeMatch[1].toLowerCase()
-    // Skip common words that aren't names
-    if (!['my', 'the', 'all', 'any', 'some', 'tasks', 'task'].includes(name)) {
-      const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
-      return formatResults(matching, `assigned to ${assigneeMatch[1]}`)
+  // Skip negation queries - too complex for local handling
+  if (!/\b(other\s*than|not|except|besides|excluding)\b/i.test(query)) {
+    const assigneeMatch = query.match(/\b(?:assigned\s*to|for)\s+([\w]+)/i) ||
+                          query.match(/\b([\w]+)'?s\s+tasks?\b/i) ||
+                          query.match(/<>\s*([\w]+)/i) ||
+                          query.match(/@([\w]+)/i)
+    if (assigneeMatch) {
+      const name = assigneeMatch[1].toLowerCase()
+      // Skip common words that aren't names
+      if (!['my', 'the', 'all', 'any', 'some', 'someone', 'somebody', 'anyone', 'tasks', 'task'].includes(name)) {
+        const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
+        return formatResults(matching, `assigned to ${assigneeMatch[1]}`)
+      }
     }
   }
   

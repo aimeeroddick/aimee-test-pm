@@ -104,7 +104,7 @@ When user asks about their tasks (what's due, what's overdue, show tasks, etc.),
 
 The query_tasks tool accepts these parameters:
 - field: The field to filter on (due_date, start_date, status, project_name, energy_level, time_estimate, critical, my_day_date, assignee)
-- operator: How to compare (equals, before, after, is_null, is_not_null, contains)
+- operator: How to compare (equals, not_equals, before, after, is_null, is_not_null, contains, not_contains)
 - value: The value to compare against (use YYYY-MM-DD format for dates)
 
 Examples of when to use query_tasks:
@@ -119,6 +119,8 @@ Examples of when to use query_tasks:
 - "What's critical?" → query_tasks(field: "critical", operator: "equals", value: "true")
 - "What am I working on?" → query_tasks(field: "status", operator: "equals", value: "in_progress")
 - "What's assigned to Harry?" → query_tasks(field: "assignee", operator: "contains", value: "Harry")
+- "Tasks NOT assigned to Aimee?" → query_tasks(field: "assignee", operator: "not_contains", value: "Aimee")
+- "Tasks in a project other than Work?" → query_tasks(field: "project_name", operator: "not_equals", value: "Work")
 
 After getting results from query_tasks, format them as a numbered list for the user.
 
@@ -337,7 +339,18 @@ User: "Update all to 60 minutes"
               return (taskValue === true || taskValue === 'yes') === (value === 'true' || value === 'yes')
             }
             return taskValue === value
-            
+
+          case 'not_equals':
+            // Case-insensitive string comparison for not equals
+            if (typeof taskValue === 'string' && typeof value === 'string') {
+              return taskValue.toLowerCase() !== value.toLowerCase()
+            }
+            return taskValue !== value
+
+          case 'not_contains':
+            if (!taskValue) return true // If no value, it doesn't contain the search term
+            return !String(taskValue).toLowerCase().includes(String(value).toLowerCase())
+
           case 'before':
             // Date comparison: taskValue < value
             if (!taskValue) return false
