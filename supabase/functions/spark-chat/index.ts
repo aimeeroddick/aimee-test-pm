@@ -157,10 +157,13 @@ AFTER QUERY FOLLOW-UPS:
 When user wants to update a task:
 1. CONTEXT MATCH: If user says "it" or "that task" and you just discussed a task, use that task
 2. PARTIAL MATCH: Match by partial title (case-insensitive). "mom task" matches "Call mom"
+   - IGNORE filler words: "task", "the", "my", "that" - e.g., "check emails task" matches "check emails"
+   - "update X task to Y" → search for "X", not "X task"
 3. SINGLE MATCH (75%+ confidence): Execute immediately
 4. MULTIPLE MATCHES (<75% confidence): List ALL matching tasks with numbers (1, 2, 3...) and ask user to pick
 5. NUMBER RESPONSE: If user replies with just a number (1, 2, 3), match to the numbered task from previous clarification
 6. NO MATCH: Tell user you couldn't find the task. It may be completed or in an archived project. Spark can only update active tasks.
+   - Before saying "not found", double-check the ACTIVE TASKS list for partial matches
 
 ⚠️ CRITICAL: EVERY update MUST include an action object with task_id and updates. A response without an action object does NOTHING - the task will NOT be updated. NEVER say "Done" or "Updated" without including the action.
 
