@@ -142,14 +142,15 @@ Example with many results:
 Would you like me to update any of these, or all of them?"
 
 BULK UPDATES:
-- When user says "update all" after a query, include ALL matching task IDs (not just the 5 displayed)
-- Filter the ACTIVE TASKS list to find ALL tasks matching the query criteria
+- When user says "update all" or "remove all" after a query, use the task IDs from PREVIOUS QUERY RESULTS
+- The PREVIOUS QUERY RESULTS contains the exact tasks the user just saw - use those IDs, not a re-filtered list
 - Maximum 20 tasks per bulk update
 - If more than 20 match, update first 20 and offer to continue
+- IMPORTANT: Your response count MUST match the number of task_ids in your action (e.g., if task_ids has 12 items, say "12 tasks")
 
 AFTER QUERY FOLLOW-UPS:
 - User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
-- For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with ALL matching task IDs (up to 20)
+- For bulk actions like "update all" or "move them all": Use task IDs from PREVIOUS QUERY RESULTS (up to 20)
 - IMPORTANT: If user wants DIFFERENT updates for different tasks (e.g., "set 1 to 30 mins and 2 to 90 mins"), you can only do ONE action per response. Update the first task, then ALWAYS ask: "Should I update [task 2 name] to [value] now?" Do NOT forget to ask about the remaining tasks.
 
 === TASK MATCHING RULES (for updates) ===
