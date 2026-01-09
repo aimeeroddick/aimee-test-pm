@@ -3077,61 +3077,70 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
             {/* Automation & AI Tab */}
             {activeTab === 'automation' && (
               <>
-                <SectionCard index={0} title="Spark AI Assistant">
+                <SectionCard index={0} title="Email & Slack Integrations">
                   <div className="space-y-3">
-                    <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
-                      <p className="font-semibold text-orange-600 dark:text-orange-400 mb-2 flex items-center gap-2">
-                        {HelpTabIcons.sparkle()} Open Spark
+                    <p className="text-gray-800 dark:text-gray-300">Turn emails and Slack messages into tasks automatically.</p>
+
+                    <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
+                      <p className="font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        Email Integration
                       </p>
-                      <p className="text-sm text-gray-800 dark:text-gray-300">Click the Spark button in the header or press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}S</kbd></p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="font-semibold text-gray-700 dark:text-gray-200">Query Examples:</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        {[
-                          '"what\'s due today?"',
-                          '"what\'s overdue?"',
-                          '"show me critical tasks"',
-                          '"what\'s assigned to Harry?"',
-                        ].map((q, i) => (
-                          <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
-                        ))}
+                      <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Setup:</strong> Go to <span className="text-indigo-600 dark:text-indigo-400">Settings → Integrations → Email</span> to get your unique Trackli email address.</p>
+                        <p><strong>Use:</strong> Forward any email to this address and AI will extract tasks with due dates, priorities, and context.</p>
                       </div>
                     </div>
-                  </div>
-                </SectionCard>
 
-                <SectionCard index={1} title="Creating Tasks with Spark">
-                  <div className="space-y-2">
-                    <p className="text-gray-800 dark:text-gray-300">Just tell Spark what you need:</p>
-                    <div className="grid grid-cols-1 gap-2">
-                      {[
-                        '"create a task to call mom tomorrow"',
-                        '"add a new task to review the proposal by Friday"',
-                        '"new critical task to fix the login bug"',
-                      ].map((q, i) => (
-                        <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
-                      ))}
+                    <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border border-purple-200 dark:border-purple-700">
+                      <p className="font-semibold text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        Slack Integration
+                      </p>
+                      <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>Setup:</strong> Go to <span className="text-indigo-600 dark:text-indigo-400">Settings → Integrations → Slack</span> and connect your workspace.</p>
+                        <p><strong>Use:</strong> Type <code className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">/trackli</code> in any channel to create tasks from messages.</p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        Finding Pending Tasks
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Look for the <span className="text-amber-600 dark:text-amber-400 font-medium">email badge</span> in the header bar. Click it to review, edit, and accept or reject incoming tasks.</p>
                     </div>
                   </div>
                 </SectionCard>
 
-                <SectionCard index={2} title="Updating Tasks with Spark">
+                <SectionCard index={1} title="Import Notes">
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 gap-2">
+                    <p className="text-gray-800 dark:text-gray-300">Extract tasks from meeting notes, emails, or any text.</p>
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                      <p>1. Click the <span className="font-semibold text-amber-600 dark:text-amber-400">Notes</span> button or press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}N</kbd></p>
+                      <p>2. Paste your meeting notes, email, or any text</p>
+                      <p>3. AI extracts action items with dates and context</p>
+                      <p>4. Review and select which tasks to create</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl border border-amber-200 dark:border-amber-700">
+                      <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Pro Tip</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">Works great with meeting transcripts, email threads, project briefs, or even voice memo transcriptions!</p>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard index={2} title="Spark AI">
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-gray-300">Your AI assistant for quick queries and task management. Press <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}S</kbd> to open.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
-                        '"move call harry to in progress"',
-                        '"mark the email task as done"',
-                        '"set budget review to critical"',
-                        '"update project report to due tomorrow"',
+                        '"what\'s due today?"',
+                        '"create task to call mom"',
+                        '"mark email task done"',
+                        '"move #1 to tomorrow"',
                       ].map((q, i) => (
                         <div key={i} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono">{q}</div>
                       ))}
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
-                      <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">Follow-up Actions</p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">After a query, reference results with #1, #2, etc:</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-1">"move #1 to tomorrow" or "complete #2"</p>
                     </div>
                   </div>
                 </SectionCard>
@@ -3181,23 +3190,6 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'tasks', shortcutModifier = '
                       <p className="font-semibold text-indigo-700 dark:text-indigo-300 mb-1">🔍 Quick Search</p>
                       <p className="text-sm text-indigo-600 dark:text-indigo-400">Press <kbd className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-800 rounded text-xs font-mono">/</kbd> to search by title, description, assignee, or customer.</p>
                     </div>
-                  </div>
-                </SectionCard>
-
-                <SectionCard index={6} title="Pending & Integrations">
-                  <div className="space-y-3">
-                    <p className="text-gray-800 dark:text-gray-300">Tasks from external sources arrive in Pending for review:</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> Email</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Forward emails to your Trackli address</p>
-                      </div>
-                      <div className="p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl backdrop-blur-sm">
-                        <p className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2"><svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> Slack</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Use /trackli commands</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">AI extracts task details automatically. Set up in <strong>Settings → Integrations</strong>.</p>
                   </div>
                 </SectionCard>
               </>
