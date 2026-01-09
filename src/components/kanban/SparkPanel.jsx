@@ -2,6 +2,28 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import * as chrono from 'chrono-node'
 
+// Track Spark query analytics - helps understand what's falling through to Claude
+const trackSparkQuery = async (query, handler, success) => {
+  try {
+    // Log to console for immediate visibility
+    console.log(`Spark Analytics: query="${query.substring(0, 50)}" handler=${handler} success=${success}`)
+    
+    // Store in Supabase for analysis
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      await supabase.from('spark_analytics').insert({
+        user_id: session.user.id,
+        query_text: query.substring(0, 200), // Truncate for storage
+        handler: handler, // 'local' or 'claude'
+        success: success,
+        created_at: new Date().toISOString()
+      }).catch(() => {}) // Silently fail - analytics shouldn't break the app
+    }
+  } catch (e) {
+    // Silently fail - don't let analytics break the user experience
+  }
+}
+
 // Frontend query handler - handles simple queries without API calls
 const handleLocalQuery = (input, tasks, projects, dateFormat) => {
   const query = input.toLowerCase().trim()
@@ -20,7 +42,7 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
   // Helper to format results
   const formatResults = (matchingTasks, queryDescription) => {
     if (matchingTasks.length === 0) {
-      return { response: `No tasks ${queryDescription}.`, tasks: [] }
+      return { response: `No tasks ${queryDescription}.`, tasks: [], handled: true }
     }
     
     const displayTasks = matchingTasks.slice(0, 5)
@@ -36,12 +58,11 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
       response += `\n\nWould you like to see more or update any of these?`
     }
     
-    return { response, tasks: matchingTasks }
+    return { response, tasks: matchingTasks, handled: true }
   }
   
   // Parse date from natural language using chrono
   const parseDate = (text) => {
-    // Configure chrono for UK or US format
     const referenceDate = new Date()
     const results = chrono.parse(text, referenceDate, { forwardDate: true })
     if (results.length > 0) {
@@ -50,113 +71,219 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
     return null
   }
   
-  // Pattern: "what's due today" / "due today" / "tasks due today"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*today\b/i.test(query) || 
-      /\bdue\s*today\b/i.test(query)) {
+  // Common query starters - matches "what's", "show", "list", "give me", "any", "do I have", etc.
+  const queryStarter = /^(what'?s?|show|list|give\s*me|any|do\s*i\s*have|are\s*there|get|find|display|view|see)\s*(my|the|all)?\s*/i
+  
+  // ==== DUE TODAY ====
+  // "what's due today", "show tasks due today", "today's tasks", "tasks for today", "anything due today"
+  if (/\b(due|for|tasks?)\s*today\b/i.test(query) || 
+      /\btoday'?s\s*(tasks?|work|stuff|things)\b/i.test(query) ||
+      /\b(anything|something|stuff|things)\s*(due|for)\s*today\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.due_date === today)
     return formatResults(matching, 'due today')
   }
   
-  // Pattern: "what's overdue" / "overdue tasks"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*overdue\b/i.test(query) || 
-      /\boverdue\b/i.test(query)) {
+  // ==== OVERDUE ====
+  // "what's overdue", "overdue tasks", "past due", "late tasks", "missed deadlines"
+  if (/\boverdue\b/i.test(query) || 
+      /\bpast\s*due\b/i.test(query) ||
+      /\blate\s*(tasks?)?\b/i.test(query) ||
+      /\bmissed\s*(deadlines?|due\s*dates?)\b/i.test(query) ||
+      /\bbehind\s*(schedule|on)?\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.due_date && t.due_date < today)
     return formatResults(matching, 'overdue')
   }
   
-  // Pattern: "what's due tomorrow"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*tomorrow\b/i.test(query) || 
-      /\bdue\s*tomorrow\b/i.test(query)) {
+  // ==== DUE TOMORROW ====
+  // "what's due tomorrow", "tomorrow's tasks", "tasks for tomorrow"
+  if (/\b(due|for|tasks?)\s*tomorrow\b/i.test(query) || 
+      /\btomorrow'?s\s*(tasks?|work|stuff|things)\b/i.test(query) ||
+      /\b(anything|something)\s*(due|for)\s*tomorrow\b/i.test(query)) {
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date === tomorrow)
     return formatResults(matching, 'due tomorrow')
   }
   
-  // Pattern: "what's due this week"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*due\s*(this\s*)?week\b/i.test(query)) {
+  // ==== DUE THIS WEEK ====
+  // "what's due this week", "this week's tasks", "tasks for this week"
+  if (/\b(due|for)?\s*(this\s*)?week\b/i.test(query) ||
+      /\bweekly\s*(tasks?|work)\b/i.test(query) ||
+      /\bthis\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
     const endOfWeek = new Date()
-    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay())) // Sunday
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
     const endDate = endOfWeek.toISOString().split('T')[0]
     const matching = activeTasks.filter(t => t.due_date && t.due_date >= today && t.due_date <= endDate)
     return formatResults(matching, 'due this week')
   }
   
-  // Pattern: "what's due on [date]" / "due [date]" / "due on [date]"
-  const dueDateMatch = query.match(/\b(?:what'?s?|show|list|tasks?)?\s*(?:is|are)?\s*due\s*(?:on)?\s*(.+)/i)
+  // ==== DUE NEXT WEEK ====
+  if (/\b(due|for)?\s*next\s*week\b/i.test(query) ||
+      /\bnext\s*week'?s?\s*(tasks?|work|stuff)\b/i.test(query)) {
+    const startOfNextWeek = new Date()
+    startOfNextWeek.setDate(startOfNextWeek.getDate() + (7 - startOfNextWeek.getDay()) + 1)
+    const endOfNextWeek = new Date(startOfNextWeek)
+    endOfNextWeek.setDate(endOfNextWeek.getDate() + 6)
+    const startDate = startOfNextWeek.toISOString().split('T')[0]
+    const endDate = endOfNextWeek.toISOString().split('T')[0]
+    const matching = activeTasks.filter(t => t.due_date && t.due_date >= startDate && t.due_date <= endDate)
+    return formatResults(matching, 'due next week')
+  }
+  
+  // ==== DUE ON SPECIFIC DATE ====
+  // "what's due Friday", "due on January 15", "tasks for Monday"
+  const dueDateMatch = query.match(/\b(?:due|for)\s*(?:on)?\s*(.+)/i)
   if (dueDateMatch) {
     const dateStr = dueDateMatch[1].trim()
-    // Skip if it's "today", "tomorrow", "this week" - already handled above
-    if (!['today', 'tomorrow', 'this week', 'week'].includes(dateStr)) {
+    // Skip if it matches already-handled patterns
+    if (!/(today|tomorrow|this\s*week|next\s*week)$/i.test(dateStr)) {
       const parsedDate = parseDate(dateStr)
       if (parsedDate) {
         const matching = activeTasks.filter(t => t.due_date === parsedDate)
-        const dateDisplay = new Date(parsedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+        const dateDisplay = new Date(parsedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
         return formatResults(matching, `due on ${dateDisplay}`)
       }
     }
   }
   
-  // Pattern: "what's in my day" / "my day tasks"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(in\s*)?(my\s*day)\b/i.test(query) ||
-      /\bmy\s*day\s*(tasks?)?\b/i.test(query)) {
+  // ==== MY DAY ====
+  // "what's in my day", "my day tasks", "show my day", "today's plan"
+  if (/\b(in\s*)?(my\s*day)\b/i.test(query) ||
+      /\bmy\s*day\s*(tasks?|list)?\b/i.test(query) ||
+      /\b(today'?s?|daily)\s*(plan|focus|priorities)\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.my_day_date)
     return formatResults(matching, 'in My Day')
   }
   
-  // Pattern: "what's critical" / "urgent tasks" / "critical tasks"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(critical|urgent)\b/i.test(query) ||
-      /\b(critical|urgent)\s*(tasks?)?\b/i.test(query)) {
+  // ==== CRITICAL / URGENT ====
+  // "what's critical", "urgent tasks", "high priority", "important tasks"
+  if (/\b(critical|urgent)\b/i.test(query) ||
+      /\bhigh\s*priority\b/i.test(query) ||
+      /\bimportant\s*(tasks?)?\b/i.test(query) ||
+      /\bpriority\s*(tasks?|items?)\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.critical)
     return formatResults(matching, 'marked as critical')
   }
   
-  // Pattern: "what am I working on" / "in progress"
-  if (/\b(what|tasks?)\s*(am\s*i|are)\s*(working\s*on|in\s*progress)\b/i.test(query) ||
-      /\bin\s*progress\b/i.test(query)) {
+  // ==== IN PROGRESS ====
+  // "what am I working on", "in progress", "currently working", "active tasks"
+  if (/\b(what('?s|\s*am\s*i)|show)\s*(working\s*on|in\s*progress)\b/i.test(query) ||
+      /\bin\s*progress\b/i.test(query) ||
+      /\bcurrently\s*(working|doing)\b/i.test(query) ||
+      /\bactive\s*(tasks?|work)?\b/i.test(query) ||
+      /\bstarted\s*(tasks?)?\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.status === 'in_progress')
     return formatResults(matching, 'in progress')
   }
   
-  // Pattern: "what's in backlog" / "backlog tasks"
-  if (/\b(what'?s?|show|list|tasks?)\s*(is|are)?\s*(in\s*)?backlog\b/i.test(query) ||
-      /\bbacklog\s*(tasks?)?\b/i.test(query)) {
+  // ==== BACKLOG ====
+  // "what's in backlog", "backlog tasks", "not started"
+  if (/\b(in\s*)?backlog\b/i.test(query) ||
+      /\bnot\s*started\b/i.test(query) ||
+      /\bqueued\b/i.test(query) ||
+      /\bwaiting\s*(to\s*start)?\b/i.test(query)) {
     const matching = activeTasks.filter(t => t.status === 'backlog')
     return formatResults(matching, 'in backlog')
   }
   
-  // Pattern: "high/medium/low effort tasks"
-  const effortMatch = query.match(/\b(high|medium|low)\s*effort\b/i)
+  // ==== TODO ====
+  // "what's todo", "to do list", "tasks to do"
+  if (/\b(to\s*do|todo)\s*(list|tasks?)?\b/i.test(query) ||
+      /\bready\s*to\s*(start|do)\b/i.test(query) ||
+      /\bnot\s*yet\s*started\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.status === 'todo')
+    return formatResults(matching, 'to do')
+  }
+  
+  // ==== EFFORT LEVELS ====
+  // "high effort tasks", "quick tasks", "easy tasks", "big tasks"
+  const effortMatch = query.match(/\b(high|medium|low)\s*(effort|energy)\b/i)
   if (effortMatch) {
     const effort = effortMatch[1].toLowerCase()
     const matching = activeTasks.filter(t => t.energy_level === effort)
     return formatResults(matching, `with ${effort} effort`)
   }
   
-  // Pattern: "tasks without time estimates" / "no time estimate"
-  if (/\b(tasks?\s*)?(without|no|missing)\s*time\s*(estimate)?s?\b/i.test(query)) {
+  // Quick/easy = low effort
+  if (/\b(quick|easy|simple|small|short)\s*(tasks?|ones?)?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.energy_level === 'low')
+    return formatResults(matching, 'that are quick (low effort)')
+  }
+  
+  // Big/complex = high effort
+  if (/\b(big|complex|difficult|hard|long)\s*(tasks?|ones?)?\b/i.test(query)) {
+    const matching = activeTasks.filter(t => t.energy_level === 'high')
+    return formatResults(matching, 'that are complex (high effort)')
+  }
+  
+  // ==== TIME ESTIMATES ====
+  // "tasks without time estimates", "no time estimate", "unestimated"
+  if (/\b(without|no|missing|need)\s*(time)?\s*(estimate)?s?\b/i.test(query) ||
+      /\bunestimated\b/i.test(query) ||
+      /\bneed\s*(time)?\s*estimates?\b/i.test(query)) {
     const matching = activeTasks.filter(t => !t.time_estimate)
     return formatResults(matching, 'without time estimates')
   }
   
-  // Pattern: "tasks in [project]" / "[project] tasks"
+  // ==== PROJECT TASKS ====
+  // "tasks in [project]", "[project] tasks", "show [project]"
   for (const project of projects) {
     const projectNameLower = project.name.toLowerCase()
-    if (query.includes(projectNameLower) && 
-        (/\b(what'?s?|show|list|tasks?)\s*(in|for)\b/i.test(query) || /\btasks?\b/i.test(query))) {
-      const matching = activeTasks.filter(t => t.project_id === project.id)
-      return formatResults(matching, `in ${project.name}`)
+    // Check if project name appears in query
+    if (query.includes(projectNameLower)) {
+      // Make sure it's a task query, not something else
+      if (/\b(tasks?|show|list|what'?s?|in|for)\b/i.test(query)) {
+        const matching = activeTasks.filter(t => t.project_id === project.id)
+        return formatResults(matching, `in ${project.name}`)
+      }
     }
   }
   
-  // Pattern: "tasks assigned to [name]" / "[name]'s tasks"
+  // ==== ASSIGNED TO ====
+  // "tasks assigned to Harry", "Harry's tasks", "my tasks", "assigned to me"
+  if (/\b(assigned\s*to\s*me|my\s+tasks?)\b/i.test(query)) {
+    // "my tasks" - would need userName, skip for now unless we have it
+    // Fall through to Claude
+  }
+  
   const assigneeMatch = query.match(/\b(?:assigned\s*to|for)\s+([\w]+)/i) || 
                         query.match(/\b([\w]+)'?s\s+tasks?\b/i)
   if (assigneeMatch) {
     const name = assigneeMatch[1].toLowerCase()
-    const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
-    if (matching.length > 0 || activeTasks.some(t => t.assignee)) {
+    // Skip common words that aren't names
+    if (!['my', 'the', 'all', 'any', 'some'].includes(name)) {
+      const matching = activeTasks.filter(t => t.assignee && t.assignee.toLowerCase().includes(name))
       return formatResults(matching, `assigned to ${assigneeMatch[1]}`)
     }
+  }
+  
+  // ==== ALL TASKS / EVERYTHING ====
+  if (/\b(all|every)\s*(my\s*)?(tasks?|work|stuff)\b/i.test(query) ||
+      /\beverything\b/i.test(query) ||
+      /\bshow\s*(me\s*)?(all|everything)\b/i.test(query)) {
+    return formatResults(activeTasks, 'active (not completed)')
+  }
+  
+  // ==== HOW MANY / COUNT ====
+  if (/\bhow\s*many\s*(tasks?)?\b/i.test(query) ||
+      /\bcount\s*(of)?\s*(my)?\s*(tasks?)?\b/i.test(query) ||
+      /\btask\s*count\b/i.test(query)) {
+    const total = activeTasks.length
+    const byStatus = {
+      todo: activeTasks.filter(t => t.status === 'todo').length,
+      in_progress: activeTasks.filter(t => t.status === 'in_progress').length,
+      backlog: activeTasks.filter(t => t.status === 'backlog').length
+    }
+    const overdue = activeTasks.filter(t => t.due_date && t.due_date < today).length
+    
+    let response = `You have ${total} active tasks:\n`
+    response += `• ${byStatus.in_progress} in progress\n`
+    response += `• ${byStatus.todo} to do\n`
+    response += `• ${byStatus.backlog} in backlog`
+    if (overdue > 0) {
+      response += `\n\n⚠️ ${overdue} ${overdue === 1 ? 'is' : 'are'} overdue!`
+    }
+    
+    return { response, tasks: [], handled: true }
   }
   
   // No pattern matched - return null to fall back to Claude
@@ -384,6 +511,8 @@ export default function SparkPanel({
       if (localResult) {
         // Local handler succeeded - instant response!
         console.log('Spark: Handled locally, no API call needed')
+        // Track local success
+        trackSparkQuery(trimmedInput, 'local', true)
         setMessages(prev => [...prev, { role: 'assistant', content: localResult.response }])
         setIsLoading(false)
         return
@@ -391,6 +520,8 @@ export default function SparkPanel({
       
       // Local handler couldn't handle it - fall back to Claude API
       console.log('Spark: Falling back to Claude API')
+      // Track fallback to Claude
+      trackSparkQuery(trimmedInput, 'claude', null) // null = pending
       
       // Update rate limit (only count API calls)
       const today = new Date().toDateString()
@@ -430,6 +561,9 @@ export default function SparkPanel({
       // Parse the JSON response (non-streaming)
       const data = await response.json()
       console.log('Spark raw response:', data)
+      
+      // Track Claude success
+      trackSparkQuery(trimmedInput, 'claude', true)
 
       // Handle the response
       let displayMessage = data.response || data.error || "I didn't quite catch that."
@@ -458,6 +592,8 @@ export default function SparkPanel({
 
     } catch (error) {
       console.error('Spark error:', error)
+      // Track Claude failure
+      trackSparkQuery(trimmedInput, 'claude', false)
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: "Oops, I'm having trouble connecting. Could you try again?"
