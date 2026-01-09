@@ -165,6 +165,11 @@ When user wants to update a task:
 6. NO MATCH: Tell user you couldn't find the task. It may be completed or in an archived project. Spark can only update active tasks.
    - Before saying "not found", double-check the ACTIVE TASKS list for partial matches
 
+PARSING "assign X to Y":
+- "assign call harry to aimee" → task is "call harry", assignee is "aimee"
+- The LAST name after "to" is the assignee, everything between "assign" and "to [name]" is the task
+- Search ACTIVE TASKS for a task matching "call harry"
+
 ⚠️ CRITICAL: EVERY update MUST include an action object with task_id and updates. A response without an action object does NOTHING - the task will NOT be updated. NEVER say "Done" or "Updated" without including the action.
 
 UPDATE FIELD RULES:
