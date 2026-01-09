@@ -68,8 +68,8 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // =======================================================================
 
   // Task creation intent - ALWAYS route to Claude
-  // Allow adjectives between "a" and "task" (e.g., "create a quick task", "add a new task")
-  if (/\b(create|add|make|new)\s+(a\s+)?(\w+\s+)?(task|todo|item)\b/i.test(query)) {
+  // Allow multiple adjectives between "a" and "task" (e.g., "new high priority task", "create a quick simple task")
+  if (/\b(create|add|make|new)\s+(a\s+)?(\w+\s+)*(task|todo|item)\b/i.test(query)) {
     console.log('Spark: Task creation intent, routing to Claude')
     return null
   }
