@@ -30,6 +30,28 @@ const handleLocalQuery = (input, tasks, projects, dateFormat) => {
   const today = new Date().toISOString().split('T')[0]
   const isUSFormat = dateFormat === 'MM/DD/YYYY'
   
+  // Detect follow-up/contextual queries that need Claude
+  // These reference previous results: "those", "them", "of them", "#1", "the first one", etc.
+  const followUpPatterns = [
+    /\b(those|them|these|of them|of those)\b/i,
+    /\b(the|that)\s*(first|second|third|fourth|fifth|1st|2nd|3rd|4th|5th|one|task)\b/i,
+    /\b#\d+\b/, // #1, #2, etc.
+    /\b(it|that one|this one)\b/i,
+    /\bhow many of\b/i,
+    /\bwhich (one|of)\b/i,
+    /\b(from|of) (the|that|this) (list|query|result)\b/i,
+    /\b(move|update|mark|set|change|delete|remove)\s*(it|them|those|these|#\d+)\b/i,
+    /\ball of them\b/i,
+    /\bthe (same|rest)\b/i,
+  ]
+  
+  for (const pattern of followUpPatterns) {
+    if (pattern.test(query)) {
+      console.log('Spark: Follow-up query detected, falling back to Claude')
+      return null // Fall back to Claude who has lastQueryResults context
+    }
+  }
+  
   // Get active tasks (not done)
   const activeTasks = tasks.filter(t => t.status !== 'done')
   
