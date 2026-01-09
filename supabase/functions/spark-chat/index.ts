@@ -145,8 +145,32 @@ USER NAME: ${userName}
 AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'}
 PROJECT COUNT: ${projectCount}
 
-=== ACTIVE TASKS (for updates) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status}`).join('\n') : 'No active tasks'}
+=== ACTIVE TASKS (for updates and queries) ===
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'}`).join('\n') : 'No active tasks'}
+
+=== QUERY TASKS ===
+When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
+
+QUERY TYPES:
+- "What's due today?" / "What's due tomorrow?" - Filter by due_date
+- "What's overdue?" - Filter where due_date < today (${today})
+- "What's in my day?" - Filter where my_day_date is set (not 'no')
+- "What tasks are in [project]?" - Filter by project_name
+- "Show my high/medium/low effort tasks" - Filter by energy_level (Effort field)
+- "What's critical/urgent?" - Filter where Critical = yes
+- "What am I working on?" - Filter where status = in_progress
+- "What's in backlog?" - Filter where status = backlog
+
+QUERY RESPONSE FORMAT:
+Always use numbered lists so user can reference tasks by number:
+"You have 3 tasks due today:
+1. Review docs (Trackli) - in progress
+2. Call client (Feedback) - todo  
+3. Submit report (FIFA) - todo"
+
+AFTER QUERY FOLLOW-UPS:
+- User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
+- For bulk actions like "move them all" or "mark all as done": Say "I can only update one task at a time right now. Which one would you like me to update first?"
 
 === TASK MATCHING RULES (for updates) ===
 When user wants to update a task:
@@ -320,7 +344,19 @@ User: "add a subtask to review docs: check formatting"
 {"response": "Added subtask 'check formatting' to 'Review docs'.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"subtasks": "APPEND:{\"text\": \"check formatting\", \"completed\": false}"}}}
 
 User: "add a comment to the proposal: waiting on client feedback"
-{"response": "Added note to 'Write proposal'.", "action": {"type": "update_task", "task_id": "uuid-of-proposal", "updates": {"comments": "APPEND:{\"text\": \"waiting on client feedback\", \"author\": \"${userName}\"}"}}}`
+{"response": "Added note to 'Write proposal'.", "action": {"type": "update_task", "task_id": "uuid-of-proposal", "updates": {"comments": "APPEND:{\"text\": \"waiting on client feedback\", \"author\": \"${userName}\"}"}}}
+
+User: "What's due today?"
+{"response": "You have 3 tasks due today:\n1. Review docs (Trackli) - in progress\n2. Call client (Feedback) - todo\n3. Submit report (FIFA) - todo"}
+
+User: "What's overdue?"
+{"response": "You have 2 overdue tasks:\n1. Fix bug (Trackli) - was due Jan 5th\n2. Send invoice (Feedback) - was due Jan 7th"}
+
+User: "Move #1 to tomorrow" (after a query)
+{"response": "Done! I've moved 'Review docs' to tomorrow.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"due_date": "${tomorrow}"}}}
+
+User: "Mark all as done" (after a query - bulk not supported)
+{"response": "I can only update one task at a time right now. Which one would you like me to mark as done first?"}`
 
     // Build messages with history
     const messages: any[] = []

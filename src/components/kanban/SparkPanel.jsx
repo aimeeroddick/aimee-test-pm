@@ -163,9 +163,8 @@ export default function SparkPanel({
       task_count: tasks.filter(t => t.project_id === p.id).length
     }))
 
-    // Active tasks for update matching (not done, not in archived projects)
+    // Active tasks for update matching and queries (not done, not in archived projects)
     // Note: tasks are pre-filtered to exclude archived projects in KanbanBoard
-    // Medium context: id, title, project_name, due_date, status
     const activeTasks = tasks
       .filter(t => t.status !== 'done')
       .map(t => {
@@ -175,7 +174,10 @@ export default function SparkPanel({
           title: t.title,
           project_name: project?.name || 'Unknown',
           due_date: t.due_date,
-          status: t.status
+          status: t.status,
+          energy_level: t.energy_level,
+          critical: t.critical,
+          my_day_date: t.my_day_date
         }
       })
 
