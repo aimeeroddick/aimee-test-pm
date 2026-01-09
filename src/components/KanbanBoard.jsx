@@ -1681,12 +1681,6 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'right',
     },
     {
-      target: 'spark-button',
-      title: 'Spark AI ✨',
-      description: `Your AI assistant! Ask "what's due today?", create tasks naturally like "create a task to call mom tomorrow", or update tasks. Press ${sparkShortcut} to open.`,
-      position: 'bottom',
-    },
-    {
       target: 'views',
       title: 'Multiple Views',
       description: 'Switch between Board, My Day, All Tasks (with sorting & CSV export), Calendar, and Progress views using the menu.',
@@ -1711,6 +1705,12 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
       position: 'bottom',
     },
     {
+      target: 'spark-button',
+      title: 'Spark AI ✨',
+      description: `Your AI assistant! Ask "what's due today?", create tasks naturally like "create a task to call mom tomorrow", or update tasks. Press ${sparkShortcut} to open.`,
+      position: 'bottom',
+    },
+    {
       target: 'help-button',
       title: 'Need Help?',
       description: 'Click the ? icon anytime to access the full help guide. You\'re all set!',
@@ -1732,11 +1732,11 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
           step === 0 ? 'top-32 left-1/2 -translate-x-1/2' :
           step === 1 ? 'top-40 left-1/2 -translate-x-1/2' :
           step === 2 ? 'top-60 left-[340px]' :
-          step === 3 ? 'top-20 right-[280px]' :
-          step === 4 ? 'top-24 left-8' :
-          step === 5 ? 'top-20 right-[180px]' :
-          step === 6 ? 'top-20 right-[140px]' :
-          step === 7 ? 'top-20 right-[80px]' :
+          step === 3 ? 'top-24 left-8' :
+          step === 4 ? 'top-20 right-[220px]' :
+          step === 5 ? 'top-20 right-[160px]' :
+          step === 6 ? 'top-20 right-[100px]' :
+          step === 7 ? 'top-20 right-[50px]' :
           'top-20 right-4'
         }`}
       >
