@@ -40,6 +40,7 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0]
     const currentYear = new Date().getFullYear()
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
     const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
     
     // Pre-calculate relative dates
@@ -98,6 +99,7 @@ serve(async (req) => {
 
 === DATE REFERENCE ===
 TODAY: ${today}
+YESTERDAY: ${yesterday}
 TOMORROW: ${tomorrow}
 NEXT WEEK: ${nextWeek}
 CURRENT YEAR: ${currentYear}
@@ -162,8 +164,9 @@ If user asks to filter by a field in the NOT AVAILABLE list, say: "I can't searc
 Do NOT say "no tasks have [field]" if the field isn't in your data - that's misleading. Only report on fields you can actually see.
 
 QUERY TYPES:
-- "What's due today?" / "What's due tomorrow?" - Filter by due_date
-- "What's overdue?" - Filter where due_date < today (${today})
+- "What's due today?" - Filter where Due = EXACTLY "${today}" (not before, not after)
+- "What's due tomorrow?" - Filter where Due = EXACTLY "${tomorrow}"
+- "What's overdue?" - Filter where Due date is BEFORE today - dates like ${yesterday} or earlier (anything < ${today})
 - "What's in my day?" - Filter where my_day_date is set (not 'no')
 - "What tasks are in [project]?" - Filter by project_name
 - "Show my high/medium/low effort tasks" - Filter by energy_level (Effort field)
@@ -173,6 +176,13 @@ QUERY TYPES:
 - "What's in backlog?" - Filter where status = backlog
 - "What tasks are assigned to [name]?" - Filter by Owner field
 - "What's starting this week?" - Filter by start_date
+
+IMPORTANT DATE FILTERING:
+- Dates are in YYYY-MM-DD format (e.g., ${today})
+- "Due today" means Due = "${today}" EXACTLY
+- "Due tomorrow" means Due = "${tomorrow}" EXACTLY  
+- "Overdue" means Due < "${today}" (e.g., ${yesterday} or earlier)
+- A task due "${yesterday}" is OVERDUE, not due today
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
