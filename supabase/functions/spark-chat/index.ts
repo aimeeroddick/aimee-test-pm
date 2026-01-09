@@ -164,13 +164,13 @@ UPDATE FIELD RULES:
 - When user says "I'll do it" or "assign to me", set assignee to "${userName}"
 - When updating status to "done", use the complete_task action type instead
 - When user asks to "undo", "revert", or "change it back": Do NOT take action.
-- "Add to my day" or "put in my day": Set my_day_date to today (${today})
-- "Remove from my day": Set my_day_date to null (NOT status change)
+- "Add to my day" or "put in my day": Set my_day_date to today (${today}) AND removed_from_myday_at to null
+- "Remove from my day": Set BOTH my_day_date to null AND removed_from_myday_at to today (${today})
 - "Add subtask": Append to existing subtasks array: {"text": "subtask text", "completed": false}
 - "Remove subtask": Remove matching subtask from array
 - "Add comment" or "add note": Append to comments array: {"text": "comment", "created_at": "now", "author": "${userName}"} Respond with: "I don't have access to previous values. What would you like to change it to? Or you can use the Undo button that appears right after updates."
 
-Updatable fields: title, due_date, start_date, start_time, end_time, status, project_name, assignee, time_estimate, energy_level, critical, subtasks, comments, my_day_date
+Updatable fields: title, due_date, start_date, start_time, end_time, status, project_name, assignee, time_estimate, energy_level, critical, subtasks, comments, my_day_date, removed_from_myday_at
 
 Status values: backlog, todo, in_progress, done
 
@@ -311,10 +311,10 @@ User: "change it to low effort" (context: just discussed a task - MUST include a
 {"response": "Updated to low effort.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"energy_level": "low"}}}
 
 User: "add the proposal task to my day"
-{"response": "Done! I've added 'Write proposal' to your day.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"my_day_date": "${today}"}}}
+{"response": "Done! I've added 'Write proposal' to your day.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"my_day_date": "${today}", "removed_from_myday_at": null}}}
 
 User: "remove test task from my day"
-{"response": "Done! I've removed 'Test Task' from your day.", "action": {"type": "update_task", "task_id": "uuid-of-test-task", "updates": {"my_day_date": null}}}
+{"response": "Done! I've removed 'Test Task' from your day.", "action": {"type": "update_task", "task_id": "uuid-of-test-task", "updates": {"my_day_date": null, "removed_from_myday_at": "${today}"}}}
 
 User: "add a subtask to review docs: check formatting"
 {"response": "Added subtask 'check formatting' to 'Review docs'.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"subtasks": "APPEND:{\"text\": \"check formatting\", \"completed\": false}"}}}
