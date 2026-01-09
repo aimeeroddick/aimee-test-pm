@@ -412,6 +412,11 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
     }
     messages.push({ role: 'user', content: message })
 
+    // Debug logging
+    console.log('TODAY:', today)
+    console.log('YESTERDAY:', yesterday)
+    console.log('Sample tasks due dates:', activeTasks.slice(0, 10).map((t: any) => ({ title: t.title.substring(0, 30), due: t.due_date })))
+
     // Call Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -439,6 +444,7 @@ User: "Update all of them to 60 minutes" (after a query finding 24 medium effort
 
     const data = await response.json()
     const rawText = data.content?.[0]?.text || ''
+    console.log('Claude raw response:', rawText.substring(0, 500))
 
     // Parse JSON response - handle various Claude output formats
     let result: any
