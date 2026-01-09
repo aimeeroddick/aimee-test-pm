@@ -407,14 +407,17 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   
   // ==== PROJECT TASKS ====
   // "tasks in [project]", "[project] tasks", "show [project]"
-  for (const project of projects) {
-    const projectNameLower = project.name.toLowerCase()
-    // Check if project name appears in query
-    if (query.includes(projectNameLower)) {
-      // Make sure it's a task query, not something else
-      if (/\b(tasks?|show|list|what'?s?|in|for)\b/i.test(query)) {
-        const matching = activeTasks.filter(t => t.project_id === project.id)
-        return formatResults(matching, `in ${project.name}`)
+  // Skip negation queries - too complex for local handling
+  if (!/\b(not\s+in|not|except|other\s+than|besides|excluding)\b/i.test(query)) {
+    for (const project of projects) {
+      const projectNameLower = project.name.toLowerCase()
+      // Check if project name appears in query
+      if (query.includes(projectNameLower)) {
+        // Make sure it's a task query, not something else
+        if (/\b(tasks?|show|list|what'?s?|in|for)\b/i.test(query)) {
+          const matching = activeTasks.filter(t => t.project_id === project.id)
+          return formatResults(matching, `in ${project.name}`)
+        }
       }
     }
   }
