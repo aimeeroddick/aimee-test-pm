@@ -166,8 +166,15 @@ export default function SparkPanel({
     // Active tasks for update matching (not done, not in archived projects)
     // Medium context: id, title, project_name, due_date, status
     const archivedProjectIds = projects.filter(p => p.archived).map(p => p.id)
+    console.log('Spark: Archived project IDs:', archivedProjectIds)
     const activeTasks = tasks
-      .filter(t => t.status !== 'done' && !archivedProjectIds.includes(t.project_id))
+      .filter(t => {
+        const isArchived = archivedProjectIds.includes(t.project_id)
+        if (t.title.toLowerCase().includes('vet') && isArchived) {
+          console.log('Spark: Filtering out archived vet task:', t.title, 'project_id:', t.project_id)
+        }
+        return t.status !== 'done' && !isArchived
+      })
       .map(t => {
         const project = projects.find(p => p.id === t.project_id)
         return {
