@@ -170,11 +170,15 @@ export default function SparkPanel({
       .filter(t => t.status !== 'done')
       .map(t => {
         const project = projects.find(p => p.id === t.project_id)
+        const isDueToday = t.due_date === today
+        const isOverdue = t.due_date && t.due_date < today
         return {
           id: t.id,
           title: t.title,
           project_name: project?.name || 'Unknown',
           due_date: t.due_date,
+          is_due_today: isDueToday ? 'YES' : 'no',
+          is_overdue: isOverdue ? 'YES' : 'no',
           start_date: t.start_date,
           status: t.status,
           energy_level: t.energy_level,

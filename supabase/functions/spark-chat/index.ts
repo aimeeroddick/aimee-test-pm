@@ -149,12 +149,12 @@ AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'
 PROJECT COUNT: ${projectCount}
 
 === ACTIVE TASKS (for updates and queries) ===
-${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | DueToday: ${t.is_due_today} | Overdue: ${t.is_overdue} | Start: ${t.start_date || 'none'} | Status: ${t.status} | Effort: ${t.energy_level || 'none'} | Time: ${t.time_estimate || 'none'} | Critical: ${t.critical ? 'yes' : 'no'} | My Day: ${t.my_day_date || 'no'} | Owner: ${t.assignee || 'none'}`).join('\n') : 'No active tasks'}
 
 === QUERY TASKS ===
-⚠️ CRITICAL RULE: "Due today" means Due = "${today}" ONLY. Tasks with Due = "${yesterday}" are OVERDUE, not due today. NEVER include overdue tasks in "due today" results.
-
 When user asks about their tasks (what's due, what's overdue, show tasks, etc.), filter the ACTIVE TASKS list above and respond with a numbered list.
+
+⚠️ For "due today" queries: ONLY include tasks where DueToday = "YES". If DueToday = "no", do NOT include that task.
 
 AVAILABLE FIELDS FOR QUERIES:
 - Title, Project, Due date, Start date, Status, Effort (energy_level), Time (time_estimate), Critical, My Day, Owner (assignee)
@@ -167,9 +167,9 @@ If user asks to filter by a field in the NOT AVAILABLE list, say: "I can't searc
 Do NOT say "no tasks have [field]" if the field isn't in your data - that's misleading. Only report on fields you can actually see.
 
 QUERY TYPES:
-- "What's due today?" - ONLY tasks where Due = "${today}" exactly
+- "What's due today?" - ONLY tasks where DueToday = "YES"
 - "What's due tomorrow?" - ONLY tasks where Due = "${tomorrow}" exactly
-- "What's overdue?" - ONLY tasks where Due < "${today}" (dates like ${yesterday} or earlier)
+- "What's overdue?" - ONLY tasks where Overdue = "YES"
 - "What's in my day?" - Filter where my_day_date is set (not 'no')
 - "What tasks are in [project]?" - Filter by project_name
 - "Show my high/medium/low effort tasks" - Filter by energy_level (Effort field)
@@ -179,8 +179,6 @@ QUERY TYPES:
 - "What's in backlog?" - Filter where status = backlog
 - "What tasks are assigned to [name]?" - Filter by Owner field
 - "What's starting this week?" - Filter by start_date
-
-⚠️ STOP: Before listing "due today" tasks, verify EACH task's Due field = "${today}" exactly. If Due = "${yesterday}" or any other date, it is NOT due today.
 
 QUERY RESPONSE FORMAT:
 - Always use numbered lists so user can reference tasks by number
