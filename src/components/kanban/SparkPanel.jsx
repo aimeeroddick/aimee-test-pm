@@ -47,13 +47,14 @@ const trackSparkQuery = async (query, handler, success) => {
  * - Natural language requiring interpretation
  *
  * ROUTING FLOW:
- * 1. Check for action patterns with previous results → Claude
- * 2. Check whitelisted compound patterns → Local handler
- * 3. Check for conjunctions → Claude
- * 4. Check for judgment queries → Claude
- * 5. Check for follow-up references → Claude
- * 6. Match against simple query patterns → Local handler
- * 7. No match → Claude (fallback)
+ * 1. Check for task creation intent ("create a task") → Claude
+ * 2. Check for action patterns with previous results → Claude
+ * 3. Check whitelisted compound patterns → Local handler
+ * 4. Check for conjunctions → Claude
+ * 5. Check for judgment queries → Claude
+ * 6. Check for follow-up references → Claude
+ * 7. Match against simple query patterns → Local handler
+ * 8. No match → Claude (fallback)
  */
 const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults = []) => {
   const query = input.toLowerCase().trim()
@@ -65,7 +66,13 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // Philosophy: Handle only simple, unambiguous queries locally.
   // Let Claude handle anything complex or uncertain.
   // =======================================================================
-  
+
+  // Task creation intent - ALWAYS route to Claude
+  if (/\b(create|add|make|new)\s+(a\s+)?(task|todo|item)/i.test(query)) {
+    console.log('Spark: Task creation intent, routing to Claude')
+    return null
+  }
+
   // If there are previous query results and this looks like an action, route to Claude
   if (lastQueryResults.length > 0) {
     const actionPattern = /^(move|set|update|mark|change|add|remove|delete|complete|finish|done)/i
