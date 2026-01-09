@@ -553,7 +553,7 @@ export default function SparkPanel({
 
     try {
       // Try local query handling first (no API call needed)
-      const localResult = handleLocalQuery(trimmedInput, tasks, projects, dateFormat)
+      const localResult = handleLocalQuery(trimmedInput, tasks, projects, dateFormat, lastQueryResults)
       
       if (localResult) {
         // Local handler succeeded - instant response!
