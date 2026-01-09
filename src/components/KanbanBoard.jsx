@@ -11472,6 +11472,15 @@ Or we can extract from:
               }
             }
             
+            // If status is being set to 'done', add completed_at timestamp
+            if (dbUpdates.status === 'done') {
+              dbUpdates.completed_at = new Date().toISOString()
+            }
+            // If status is being changed from 'done' to something else, clear completed_at
+            if (dbUpdates.status && dbUpdates.status !== 'done' && task.status === 'done') {
+              dbUpdates.completed_at = null
+            }
+            
             const { error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId)
             if (error) throw error
             
