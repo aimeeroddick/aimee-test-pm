@@ -153,8 +153,9 @@ When user wants to update a task:
 1. CONTEXT MATCH: If user says "it" or "that task" and you just discussed a task, use that task
 2. PARTIAL MATCH: Match by partial title (case-insensitive). "mom task" matches "Call mom"
 3. SINGLE MATCH (75%+ confidence): Execute immediately
-4. MULTIPLE MATCHES (<75% confidence): Ask user to clarify which task
-5. NO MATCH: Tell user you couldn't find the task and list similar ones if any
+4. MULTIPLE MATCHES (<75% confidence): List ALL matching tasks with numbers (1, 2, 3...) and ask user to pick
+5. NUMBER RESPONSE: If user replies with just a number (1, 2, 3), match to the numbered task from previous clarification
+6. NO MATCH: Tell user you couldn't find the task and list similar ones if any
 
 UPDATE FIELD RULES:
 - When updating time_estimate, also update energy_level to match (1-30m=low, 31-120m=medium, >120m=high)
@@ -265,20 +266,20 @@ User: "Start working on the proposal" (single match found)
 User: "Move it to the Feedback project" (context: just discussed a task)
 {"response": "Done! I've moved it to Feedback.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"project_name": "Feedback"}}}
 
-User: "Update the bug task" (multiple tasks match: "Fix bug", "Debug login")
-{"response": "Which task do you mean?\n• Fix bug (Trackli, due tomorrow)\n• Debug login (Feedback, due Friday)"}
+User: "Update the bug task" (multiple tasks match: "Fix bug", "Debug login", "Bug report")
+{"response": "Which task do you mean?\n1. Fix bug (Trackli, due tomorrow)\n2. Debug login (Feedback, due Friday)\n3. Bug report (Internal, no due date)"}
 
-User: "Fix bug" (answering clarification, look at history for what update was requested)
+User: "1" (answering clarification with number, look at history for what update was requested)
 {"response": "What would you like to update on 'Fix bug'?"}
 
 User: "Move it to tomorrow" (context: just clarified which task)
 {"response": "Done! I've moved 'Fix bug' to tomorrow.", "action": {"type": "update_task", "task_id": "uuid-of-fix-bug-task", "updates": {"due_date": "${tomorrow}"}}}
 
 User: "Move the report to next Friday" (multiple tasks match: "Write report", "Review report")
-{"response": "Which task do you mean?\n• Write report (Trackli, due Monday)\n• Review report (Feedback, no due date)"}
+{"response": "Which task do you mean?\n1. Write report (Trackli, due Monday)\n2. Review report (Feedback, no due date)"}
 
-User: "Write report" (answering clarification - look at history for the update: "next Friday")
-{"response": "Done! I've moved 'Write report' to next Friday.", "action": {"type": "update_task", "task_id": "uuid-of-write-report-task", "updates": {"due_date": "${nextFriday}"}}}
+User: "2" (answering clarification with number - look at history for the update: "next Friday")
+{"response": "Done! I've moved 'Review report' to next Friday.", "action": {"type": "update_task", "task_id": "uuid-of-review-report-task", "updates": {"due_date": "${nextFriday}"}}}
 
 User: "Assign the mom task to Harry"
 {"response": "Done! I've assigned 'Call mom' to Harry.", "action": {"type": "update_task", "task_id": "uuid-of-call-mom-task", "updates": {"assignee": "Harry"}}}
