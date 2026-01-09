@@ -90,6 +90,7 @@ serve(async (req) => {
     const projects = context?.projects || []
     const projectNames = projects.map((p: any) => p.name)
     const userName = context?.userName || 'User'
+    const activeTasks = context?.activeTasks || []
     const projectCount = projects.length
 
     // System prompt - aligned with email extraction approach
@@ -144,6 +145,21 @@ USER NAME: ${userName}
 AVAILABLE PROJECTS: ${projectNames.length > 0 ? projectNames.join(', ') : 'None'}
 PROJECT COUNT: ${projectCount}
 
+=== ACTIVE TASKS (for updates) ===
+${activeTasks.length > 0 ? activeTasks.map((t: any) => `- ID: ${t.id} | Title: "${t.title}" | Project: ${t.project_name} | Due: ${t.due_date || 'none'} | Status: ${t.status}`).join('\n') : 'No active tasks'}
+
+=== TASK MATCHING RULES (for updates) ===
+When user wants to update a task:
+1. CONTEXT MATCH: If user says "it" or "that task" and you just discussed a task, use that task
+2. PARTIAL MATCH: Match by partial title (case-insensitive). "mom task" matches "Call mom"
+3. SINGLE MATCH (75%+ confidence): Execute immediately
+4. MULTIPLE MATCHES (<75% confidence): Ask user to clarify which task
+5. NO MATCH: Tell user you couldn't find the task and list similar ones if any
+
+Updatable fields: title, due_date, start_date, start_time, end_time, status, project_id, assignee, time_estimate, energy_level, critical, subtasks, comments
+
+Status values: backlog, todo, in_progress, done
+
 === RESPONSE FORMAT ===
 Always respond with valid JSON in one of these formats:
 
@@ -164,6 +180,12 @@ Always respond with valid JSON in one of these formats:
 
 2. ASKING FOR PROJECT (when project is needed but not specified):
 {"response": "Which project should this go in?\n• Project1\n• Project2"}
+
+3. UPDATING A TASK (when user wants to change an existing task):
+{"response": "Done! I've updated the task.", "action": {"type": "update_task", "task_id": "uuid-from-activeTasks", "updates": {"field_to_change": "new_value"}}}
+
+4. ASKING FOR CLARIFICATION (when multiple tasks match or task unclear):
+{"response": "Which task do you mean?\n• Task title 1\n• Task title 2"}
 
 === CRITICAL: PROJECT HANDLING ===
 ${projectCount === 0 ? 'No projects exist. Set project_name to null.' : ''}
@@ -222,7 +244,36 @@ User: "Quick task to reply to email in Feedback"
 {"response": "Created your task!", "action": {"type": "create_task", "task": {"title": "Reply to email", "project_name": "Feedback", "time_estimate": 15, "energy_level": "low", "status": "todo", "critical": false}}}
 
 User: "Urgent task to fix bug in Trackli"
-{"response": "Created your urgent task!", "action": {"type": "create_task", "task": {"title": "Fix bug", "project_name": "Trackli", "energy_level": "medium", "status": "todo", "critical": true}}}`
+{"response": "Created your urgent task!", "action": {"type": "create_task", "task": {"title": "Fix bug", "project_name": "Trackli", "energy_level": "medium", "status": "todo", "critical": true}}}
+
+=== UPDATE TASK EXAMPLES ===
+
+User: "Move Call mom to tomorrow"
+{"response": "Done! I've moved 'Call mom' to tomorrow.", "action": {"type": "update_task", "task_id": "uuid-of-call-mom-task", "updates": {"due_date": "${tomorrow}"}}}
+
+User: "Change the review docs task to Friday"
+{"response": "Updated! 'Review docs' is now due Friday.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs-task", "updates": {"due_date": "${thisFriday}"}}}
+
+User: "Start working on the proposal" (single match found)
+{"response": "Got it! I've moved 'Write proposal' to In Progress.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"status": "in_progress"}}}
+
+User: "Move it to the Feedback project" (context: just discussed a task)
+{"response": "Done! I've moved it to Feedback.", "action": {"type": "update_task", "task_id": "uuid-from-context", "updates": {"project_name": "Feedback"}}}
+
+User: "Update the bug task" (multiple tasks match: "Fix bug", "Debug login")
+{"response": "Which task do you mean?\n• Fix bug (Trackli, due tomorrow)\n• Debug login (Feedback, due Friday)"}
+
+User: "Assign the mom task to Harry"
+{"response": "Done! I've assigned 'Call mom' to Harry.", "action": {"type": "update_task", "task_id": "uuid-of-call-mom-task", "updates": {"assignee": "Harry"}}}
+
+User: "Mark review docs as done"
+{"response": "Great job! I've marked 'Review docs' as complete. 🎉", "action": {"type": "update_task", "task_id": "uuid-of-review-docs-task", "updates": {"status": "done"}}}
+
+User: "Rename Call mom to Call mom about birthday"
+{"response": "Updated! Task renamed to 'Call mom about birthday'.", "action": {"type": "update_task", "task_id": "uuid-of-call-mom-task", "updates": {"title": "Call mom about birthday"}}}
+
+User: "The proposal is high effort and will take 3 hours"
+{"response": "Updated! 'Write proposal' is now 3 hours, high effort.", "action": {"type": "update_task", "task_id": "uuid-of-proposal-task", "updates": {"time_estimate": 180, "energy_level": "high"}}}`
 
     // Build messages with history
     const messages: any[] = []

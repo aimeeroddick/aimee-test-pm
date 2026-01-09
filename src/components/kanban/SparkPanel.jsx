@@ -163,11 +163,27 @@ export default function SparkPanel({
       task_count: tasks.filter(t => t.project_id === p.id).length
     }))
 
+    // Active tasks for update matching (not done, not in archived projects)
+    // Medium context: id, title, project_name, due_date, status
+    const activeTasks = tasks
+      .filter(t => t.status !== 'done')
+      .map(t => {
+        const project = projects.find(p => p.id === t.project_id)
+        return {
+          id: t.id,
+          title: t.title,
+          project_name: project?.name || 'Unknown',
+          due_date: t.due_date,
+          status: t.status
+        }
+      })
+
     return { 
       projects: projectSummaries, 
-      taskSummary, 
-      overdueTasks, 
+      taskSummary,
+      overdueTasks,
       myDayTasks,
+      activeTasks,
       userName: userName || 'User',
       dateFormat: dateFormat
     }

@@ -6888,8 +6888,17 @@ export default function KanbanBoard({ demoMode = false }) {
   const handleUndo = async () => {
     if (!undoToast) return
     try {
-      await supabase.from('tasks').update({ status: undoToast.previousStatus }).eq('id', undoToast.taskId)
-      setTasks(prev => prev.map(t => t.id === undoToast.taskId ? { ...t, status: undoToast.previousStatus } : t))
+      // Support both old format (previousStatus) and new format (previousState)
+      if (undoToast.previousState) {
+        // New format: revert to full previous state
+        const { id, created_at, user_id, ...revertFields } = undoToast.previousState
+        await supabase.from('tasks').update(revertFields).eq('id', undoToast.taskId)
+        setTasks(prev => prev.map(t => t.id === undoToast.taskId ? { ...t, ...revertFields } : t))
+      } else if (undoToast.previousStatus) {
+        // Old format: just revert status
+        await supabase.from('tasks').update({ status: undoToast.previousStatus }).eq('id', undoToast.taskId)
+        setTasks(prev => prev.map(t => t.id === undoToast.taskId ? { ...t, status: undoToast.previousStatus } : t))
+      }
       setUndoToast(null)
     } catch (err) {
       console.error('Error undoing:', err)
@@ -11414,12 +11423,47 @@ Or we can extract from:
           }
         }}
         onTaskUpdated={async (taskId, updates) => {
-          const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)
-          if (!error) {
-            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t))
-            return true
+          try {
+            const task = tasks.find(t => t.id === taskId)
+            if (!task) return { success: false, error: 'Task not found' }
+            
+            // Store previous state for undo
+            const previousState = { ...task }
+            
+            // Convert project_name to project_id if provided
+            const dbUpdates = { ...updates }
+            if (updates.project_name) {
+              const project = projects.find(p => 
+                p.name.toLowerCase() === updates.project_name.toLowerCase()
+              )
+              if (project) {
+                dbUpdates.project_id = project.id
+                delete dbUpdates.project_name
+              } else {
+                return { success: false, error: `Project "${updates.project_name}" not found` }
+              }
+            }
+            
+            const { error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId)
+            if (error) throw error
+            
+            // Optimistic update
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...dbUpdates } : t))
+            
+            // Show undo toast
+            setUndoToast({
+              taskId,
+              previousState,
+              taskTitle: task.title,
+              updateType: Object.keys(updates)[0] // e.g., 'due_date', 'status'
+            })
+            setTimeout(() => setUndoToast(null), 5000)
+            
+            return { success: true }
+          } catch (err) {
+            console.error('Error updating task:', err)
+            return { success: false, error: err.message }
           }
-          return false
         }}
         onTaskCompleted={async (taskId) => {
           const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
