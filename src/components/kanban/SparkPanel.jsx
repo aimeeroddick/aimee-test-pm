@@ -306,6 +306,25 @@ export default function SparkPanel({
         if (onTaskUpdated) {
           return await onTaskUpdated(action.task_id, action.updates)
         }
+      } else if (action.type === 'bulk_update_tasks' && action.task_ids && action.updates) {
+        if (onTaskUpdated) {
+          console.log('Spark: Bulk updating', action.task_ids.length, 'tasks')
+          let successCount = 0
+          let errors = []
+          for (const taskId of action.task_ids) {
+            const result = await onTaskUpdated(taskId, action.updates)
+            if (result.success) {
+              successCount++
+            } else {
+              errors.push(result.error)
+            }
+          }
+          if (successCount === action.task_ids.length) {
+            return { success: true }
+          } else {
+            return { success: false, error: `Updated ${successCount}/${action.task_ids.length} tasks. Errors: ${errors.join(', ')}` }
+          }
+        }
       } else if (action.type === 'create_project' && action.name) {
         if (onProjectCreated) {
           return await onProjectCreated({ name: action.name })

@@ -178,7 +178,7 @@ Would you like me to update any of these, or see more?"
 
 AFTER QUERY FOLLOW-UPS:
 - User can say "move #2 to tomorrow" or "mark 1 as done" to act on specific tasks
-- For bulk actions like "move them all" or "mark all as done": Say "I can only update one task at a time right now. Which one would you like me to update first?"
+- For bulk actions like "update all" or "move them all": Use the bulk_update_tasks action with the task IDs from the query results (max 5 at a time)
 
 === TASK MATCHING RULES (for updates) ===
 When user wants to update a task:
@@ -230,7 +230,11 @@ Always respond with valid JSON in one of these formats:
 3. UPDATING A TASK (when user wants to change an existing task):
 {"response": "Done! I've updated the task.", "action": {"type": "update_task", "task_id": "uuid-from-activeTasks", "updates": {"field_to_change": "new_value"}}}
 
-4. ASKING FOR CLARIFICATION (when multiple tasks match or task unclear):
+4. BULK UPDATING TASKS (when user wants to update multiple tasks from a query):
+{"response": "Done! I've updated 5 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"time_estimate": 60, "energy_level": "medium"}}}
+Note: Only include task IDs that were shown in the numbered list (max 5). Include the IDs from the query results.
+
+5. ASKING FOR CLARIFICATION (when multiple tasks match or task unclear):
 {"response": "Which task do you mean?\n• Task title 1\n• Task title 2"}
 
 === CRITICAL: PROJECT HANDLING ===
@@ -363,8 +367,11 @@ User: "What's overdue?"
 User: "Move #1 to tomorrow" (after a query)
 {"response": "Done! I've moved 'Review docs' to tomorrow.", "action": {"type": "update_task", "task_id": "uuid-of-review-docs", "updates": {"due_date": "${tomorrow}"}}}
 
-User: "Mark all as done" (after a query - bulk not supported)
-{"response": "I can only update one task at a time right now. Which one would you like me to mark as done first?"}`
+User: "Mark all as done" (after a query - bulk update)
+{"response": "Done! I've marked 5 tasks as complete.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"status": "done"}}}
+
+User: "Update all of them to 60 minutes" (after a query)
+{"response": "Done! I've updated 5 tasks to 60 minutes.", "action": {"type": "bulk_update_tasks", "task_ids": ["uuid1", "uuid2", "uuid3", "uuid4", "uuid5"], "updates": {"time_estimate": 60, "energy_level": "medium"}}}`
 
     // Build messages with history
     const messages: any[] = []
