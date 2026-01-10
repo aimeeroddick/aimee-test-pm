@@ -3,7 +3,6 @@
 
 -- ============================================================================
 -- TABLE: project_tags
--- Stores available tags per project (similar to project_customers)
 -- ============================================================================
 
 CREATE TABLE project_tags (
@@ -11,14 +10,13 @@ CREATE TABLE project_tags (
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(project_id, name)  -- No duplicate tag names within a project
+    UNIQUE(project_id, name)
 );
 
 CREATE INDEX idx_project_tags_project_id ON project_tags(project_id);
 
 -- ============================================================================
 -- TABLE: task_tags
--- Junction table linking tasks to tags (many-to-many)
 -- ============================================================================
 
 CREATE TABLE task_tags (
@@ -32,7 +30,6 @@ CREATE INDEX idx_task_tags_tag_id ON task_tags(tag_id);
 
 -- ============================================================================
 -- RLS POLICIES: project_tags
--- Users can manage tags for projects they own
 -- ============================================================================
 
 ALTER TABLE project_tags ENABLE ROW LEVEL SECURITY;
@@ -75,7 +72,7 @@ CREATE POLICY "Users can delete project tags" ON project_tags
 
 -- ============================================================================
 -- RLS POLICIES: task_tags
--- Users can manage tags on their own tasks
+-- Users can manage tags on tasks belonging to their projects
 -- ============================================================================
 
 ALTER TABLE task_tags ENABLE ROW LEVEL SECURITY;
@@ -84,8 +81,9 @@ CREATE POLICY "Users can view task tags" ON task_tags
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM tasks
+            JOIN projects ON projects.id = tasks.project_id
             WHERE tasks.id = task_tags.task_id
-            AND tasks.user_id = auth.uid()
+            AND projects.user_id = auth.uid()
         )
     );
 
@@ -93,8 +91,9 @@ CREATE POLICY "Users can insert task tags" ON task_tags
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM tasks
+            JOIN projects ON projects.id = tasks.project_id
             WHERE tasks.id = task_tags.task_id
-            AND tasks.user_id = auth.uid()
+            AND projects.user_id = auth.uid()
         )
     );
 
@@ -102,7 +101,8 @@ CREATE POLICY "Users can delete task tags" ON task_tags
     FOR DELETE USING (
         EXISTS (
             SELECT 1 FROM tasks
+            JOIN projects ON projects.id = tasks.project_id
             WHERE tasks.id = task_tags.task_id
-            AND tasks.user_id = auth.uid()
+            AND projects.user_id = auth.uid()
         )
     );
