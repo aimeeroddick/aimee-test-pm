@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     // Refresh project list from Jira (add new projects, remove deleted ones)
-    await refreshJiraProjects(supabase, accessToken, connection.site_id, user.id)
+    await refreshJiraProjects(supabase, accessToken, connection.site_id, user.id, connection.id)
 
     // Re-fetch enabled projects (list may have changed)
     const { data: refreshedProjects } = await supabase
@@ -291,7 +291,8 @@ async function refreshJiraProjects(
   supabase: any,
   accessToken: string,
   siteId: string,
-  userId: string
+  userId: string,
+  connectionId: string
 ): Promise<void> {
   try {
     // Fetch all projects from Jira
@@ -330,6 +331,7 @@ async function refreshJiraProjects(
     if (newProjects.length > 0) {
       const toInsert = newProjects.map((p: any) => ({
         user_id: userId,
+        connection_id: connectionId,
         jira_project_id: p.id,
         jira_project_key: p.key,
         jira_project_name: p.name,
