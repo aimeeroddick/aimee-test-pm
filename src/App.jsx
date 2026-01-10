@@ -24,6 +24,7 @@ const Login = lazy(() => import('./components/Login'))
 const KanbanBoard = lazy(() => import('./components/KanbanBoard'))
 const LandingPage = lazy(() => import('./components/LandingPage'))
 const OutlookAddin = lazy(() => import('./components/OutlookAddin'))
+const AtlassianCallback = lazy(() => import('./components/auth/AtlassianCallback'))
 
 // Prefetch KanbanBoard in background after initial render
 const prefetchKanbanBoard = () => import('./components/KanbanBoard')
@@ -149,6 +150,18 @@ function App() {
               <OutlookAddin />
             </Suspense>
           } 
+        />
+        
+        {/* OAuth callback routes */}
+        <Route
+          path="/auth/atlassian/callback"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<LoadingSpinner />}>
+                <AtlassianCallback />
+              </Suspense>
+            </ProtectedRoute>
+          }
         />
         
         {/* Legal pages (public, no auth needed) */}

@@ -4127,6 +4127,79 @@ export default function KanbanBoard({ demoMode = false }) {
     return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
   }
 
+  // Fetch Atlassian connections
+  const fetchAtlassianConnections = async () => {
+    if (demoMode) return
+    try {
+      const { data, error } = await supabase
+        .from('atlassian_connections')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('connected_at', { ascending: false })
+      
+      if (error) throw error
+      setAtlassianConnections(data || [])
+    } catch (err) {
+      console.error('Error fetching Atlassian connections:', err)
+    }
+  }
+
+  // Connect to Atlassian - initiate OAuth flow
+  const handleConnectAtlassian = async () => {
+    setAtlassianLoading(true)
+    setAtlassianError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      const { data, error } = await supabase.functions.invoke('atlassian-auth-init', {
+        body: { redirectPath: '/app' },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      })
+      
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      
+      // Redirect to Atlassian OAuth
+      if (data?.authUrl) {
+        window.location.href = data.authUrl
+      }
+    } catch (err) {
+      console.error('Error initiating Atlassian OAuth:', err)
+      setAtlassianError(err.message || 'Failed to connect to Atlassian')
+      setTimeout(() => setAtlassianError(''), 5000)
+    } finally {
+      setAtlassianLoading(false)
+    }
+  }
+
+  // Disconnect from Atlassian
+  const handleDisconnectAtlassian = async (connectionId) => {
+    if (!connectionId) return
+    setAtlassianLoading(true)
+    setAtlassianError('')
+    try {
+      const { error } = await supabase
+        .from('atlassian_connections')
+        .delete()
+        .eq('id', connectionId)
+        .eq('user_id', user?.id)
+      
+      if (error) throw error
+      
+      setAtlassianConnections(prev => prev.filter(c => c.id !== connectionId))
+      setAtlassianSuccess('Atlassian disconnected successfully')
+      setTimeout(() => setAtlassianSuccess(''), 3000)
+    } catch (err) {
+      console.error('Error disconnecting Atlassian:', err)
+      setAtlassianError('Failed to disconnect Atlassian')
+      setTimeout(() => setAtlassianError(''), 3000)
+    } finally {
+      setAtlassianLoading(false)
+    }
+  }
+
   // Handle saving display name
   const handleSaveDisplayName = async () => {
     setSavingProfile(true)
@@ -4287,6 +4360,12 @@ export default function KanbanBoard({ demoMode = false }) {
   const [slackLoading, setSlackLoading] = useState(false)
   const [slackError, setSlackError] = useState('')
   const [slackSuccess, setSlackSuccess] = useState('')
+  
+  // Atlassian integration state
+  const [atlassianConnections, setAtlassianConnections] = useState([])
+  const [atlassianLoading, setAtlassianLoading] = useState(false)
+  const [atlassianError, setAtlassianError] = useState('')
+  const [atlassianSuccess, setAtlassianSuccess] = useState('')
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -4980,6 +5059,12 @@ export default function KanbanBoard({ demoMode = false }) {
       }
     }
     fetchSlackConnection()
+  }, [demoMode])
+
+  // Fetch Atlassian connections on mount
+  useEffect(() => {
+    if (demoMode) return
+    fetchAtlassianConnections()
   }, [demoMode])
 
   // Refresh pending tasks periodically (every 60 seconds)
@@ -11298,6 +11383,59 @@ Or we can extract from:
                   {slackError && (
                     <div className="mt-3 text-sm text-red-600 dark:text-red-400">
                       ✗ {slackError}
+                    </div>
+                  )}
+                  
+                  {/* Atlassian Divider */}
+                  <div className="my-4 border-t border-gray-200 dark:border-gray-600" />
+                  
+                  {/* Atlassian */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#0052CC] rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M11.571 11.429L0 23h6.857l9.714-9.857-5-1.714zM24 1L12.429 12.571l5 1.715L24 7.857V1z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Atlassian (Jira & Confluence)</div>
+                        {atlassianConnections.length > 0 ? (
+                          <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            Connected to {atlassianConnections.map(c => c.site_name || c.site_url).join(', ')}
+                          </div>
+                        ) : (
+                          <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Sync Jira tasks and Confluence action items
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {atlassianConnections.length > 0 ? (
+                      <button
+                        onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
+                        disabled={atlassianLoading}
+                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        {atlassianLoading ? '...' : 'Disconnect'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectAtlassian}
+                        disabled={atlassianLoading}
+                        className="px-3 py-1.5 bg-[#0052CC] text-white text-sm font-medium rounded-lg hover:bg-[#0747A6] transition-colors disabled:opacity-50"
+                      >
+                        {atlassianLoading ? 'Connecting...' : 'Connect'}
+                      </button>
+                    )}
+                  </div>
+                  {atlassianSuccess && (
+                    <div className="mt-3 text-sm text-green-600 dark:text-green-400">
+                      ✓ {atlassianSuccess}
+                    </div>
+                  )}
+                  {atlassianError && (
+                    <div className="mt-3 text-sm text-red-600 dark:text-red-400">
+                      ✗ {atlassianError}
                     </div>
                   )}
                 </div>
