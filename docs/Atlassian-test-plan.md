@@ -1,7 +1,7 @@
-# Atlassian Integration - Test Plan
+# Atlassian Integration - Comprehensive Test Plan
 
 ## Overview
-This document outlines all tests needed to verify the Atlassian integration functionality.
+This document outlines all positive and negative tests needed to verify the Atlassian integration functionality.
 
 **Last Updated:** January 10, 2026
 
@@ -11,386 +11,381 @@ This document outlines all tests needed to verify the Atlassian integration func
 
 Before testing, ensure:
 - [ ] You have a Jira account with at least one project
-- [ ] You have Jira issues assigned to you (create some test issues if needed)
+- [ ] You have Jira issues in various statuses (To Do, In Progress, Done)
+- [ ] You have at least one issue assigned to you
 - [ ] The app is running (localhost:5173 or Vercel preview)
 - [ ] Edge Functions are deployed to Supabase
 
 ---
 
-## Step 1: Test Connection Button
+## 1. OAuth Connection Flow
 
-### 1.1 Test Button Appears When Connected
-- [ ] Go to Settings → Integrations → Atlassian section
-- [ ] When connected, both "Test" and "Disconnect" buttons should appear
-- [ ] Both buttons should be Jira blue and gray respectively
+### 1.1 Positive Tests - Connect Flow
 
-### 1.2 Test Connection Success
-- [ ] Click "Test" button
-- [ ] Button should show "..." while loading
-- [ ] Should see green success message: "Found X Jira issues assigned to you"
-- [ ] Open browser console (F12) - should see full response logged
-- [ ] Response should include: `{ success: true, connection: {...}, totalIssues: X, issues: [...] }`
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Initial connect button | Go to Settings → Integrations | See "Connect" button for Atlassian |
+| OAuth redirect | Click "Connect" button | Redirects to Atlassian authorization page |
+| Successful authorization | Authorize the app in Atlassian | Redirects back to Trackli with success |
+| Connection displayed | After authorization | Shows "Connected to [Site Name]" in green |
+| Multiple Jira sites | Have access to multiple sites | All sites connected and stored |
 
-### 1.3 Test Connection When No Issues
-- [ ] If you have no unresolved issues assigned, should still succeed
-- [ ] Message should show "Found 0 Jira issues assigned to you"
+### 1.2 Negative Tests - Connect Flow
 
-### 1.4 Test Connection Errors
-- [ ] Disconnect from Atlassian
-- [ ] Try to call jira-test-fetch directly (via console) - should get "No Atlassian connection found" error
-- [ ] Connect and test - should work again
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| User denies authorization | Click "Deny" on Atlassian auth page | Redirects back with error message, no connection created |
+| Cancel during OAuth | Close browser during OAuth flow | No connection created, can try again |
+| Invalid state parameter | Manually corrupt the OAuth state | Error: "Invalid OAuth state", connection rejected |
+| Expired OAuth state | Wait >10 minutes, then authorize | Error: "OAuth state expired", prompt to retry |
+| Network failure during callback | Disconnect internet during callback | Graceful error, prompt to retry |
 
----
+### 1.3 Positive Tests - Disconnect Flow
 
-## Step 2: Token Refresh
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Disconnect button visible | When connected | "Disconnect" button appears |
+| Successful disconnect | Click "Disconnect" | Connection removed, shows "Connect" button |
+| Database cleanup | After disconnect | `atlassian_connections` record deleted |
+| Vault cleanup | After disconnect | Access and refresh tokens deleted from Vault |
 
-### 2.1 Token Expiry Check
-- [ ] After connecting, check `atlassian_connections` table in Supabase
-- [ ] `token_expires_at` should be ~1 hour from connection time
-- [ ] `access_token_secret_id` and `refresh_token_secret_id` should have UUID values
+### 1.4 Negative Tests - Disconnect Flow
 
-### 2.2 Automatic Refresh (Simulated)
-To test without waiting 1 hour:
-1. [ ] In Supabase SQL Editor, manually set token to expire soon:
-   ```sql
-   UPDATE atlassian_connections
-   SET token_expires_at = NOW() + INTERVAL '2 minutes'
-   WHERE user_id = 'your-user-id';
-   ```
-2. [ ] Wait 2 minutes (or set to past time)
-3. [ ] Click "Test" button
-4. [ ] Should still work (token auto-refreshed)
-5. [ ] Check `token_expires_at` - should be updated to new time (~1 hour from now)
-6. [ ] Check `integration_audit_log` - should have `oauth.token_refreshed` event
-
-### 2.3 Refresh Token Revoked
-To test refresh failure:
-1. [ ] Revoke access in Atlassian account settings (https://id.atlassian.com/manage-profile/apps)
-2. [ ] Manually expire the token (see SQL above)
-3. [ ] Click "Test" button
-4. [ ] Should get error: "Token expired and refresh failed. Please reconnect Atlassian."
-5. [ ] Response should include `needsReconnect: true`
-
-### 2.4 Audit Logging
-- [ ] Check `integration_audit_log` table for:
-  - `oauth.token_refreshed` events (success = true)
-  - `oauth.token_refresh_failed` events if refresh failed (success = false)
-- [ ] Events should have correct `user_id`, `site_id`, and `details`
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Disconnect during sync | Click disconnect while sync running | Waits for sync to complete, then disconnects |
+| Network failure during disconnect | Disconnect internet, click Disconnect | Shows error, connection may remain (retry needed) |
 
 ---
 
-## Step 3: Jira Project Selection UI
+## 2. Token Management
 
-### 3.1 Projects Section Appears
-- [ ] Connect to Atlassian
-- [ ] Below the Test/Disconnect buttons, should see "Jira Projects (X/Y syncing)"
-- [ ] Click to expand the section
-- [ ] Should see list of all Jira projects with toggle switches
+### 2.1 Positive Tests - Token Storage
 
-### 3.2 Project Toggle
-- [ ] Each project shows: project key (e.g., "PROJ") and project name
-- [ ] Toggle switch shows Jira blue when enabled, gray when disabled
-- [ ] Click toggle to disable a project
-- [ ] Toggle should animate and update immediately
-- [ ] Header should update count (e.g., "2/3 syncing")
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Tokens in Vault | After connecting, check Vault | Access & refresh tokens encrypted |
+| Token expiry set | Check `atlassian_connections` | `token_expires_at` ~1 hour from connection |
+| Secret IDs stored | Check connection record | `access_token_secret_id` and `refresh_token_secret_id` populated |
 
-### 3.3 Toggle Persistence
-- [ ] Toggle a project off
-- [ ] Refresh the page
-- [ ] Expand Jira Projects section
-- [ ] Toggle state should persist (project still off)
+### 2.2 Positive Tests - Token Refresh
 
-### 3.4 Database Verification
-- [ ] Check `jira_project_sync` table in Supabase
-- [ ] `sync_enabled` column should match toggle state
-- [ ] `updated_at` should update when toggled
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Auto-refresh before expiry | Set token to expire in 2 min, call API | Token auto-refreshes, API succeeds |
+| New tokens stored | After refresh | New tokens in Vault, old ones deleted |
+| Expiry updated | After refresh | `token_expires_at` updated to new time |
+| Audit log entry | After refresh | `oauth.token_refreshed` event logged |
 
-### 3.5 Dark Mode
-- [ ] Toggle dark mode in settings
-- [ ] Jira Projects section should have proper dark mode styling
-- [ ] Text readable, backgrounds correct
+### 2.3 Negative Tests - Token Refresh
 
----
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Refresh token revoked | Revoke access in Atlassian settings, expire token | Error: "Token expired and refresh failed. Please reconnect Atlassian." |
+| Invalid refresh token | Corrupt refresh token in Vault | Error with `needsReconnect: true` |
+| Atlassian API down | Simulate Atlassian outage during refresh | Error: "Failed to refresh token", logged to audit |
+| Missing client credentials | Remove ATLASSIAN_CLIENT_ID env var | Error: "Missing Atlassian credentials" |
+| Rate limited during refresh | Make many rapid refresh calls | Handles 429 response gracefully |
 
-## Step 4: Jira Sync (Import Issues)
-
-### 4.1 Sync Button Appears
-- [ ] When connected and projects enabled, "Sync Now" button appears
-- [ ] Button is disabled if no projects are enabled for sync
-- [ ] Hover tooltip explains the sync action
-
-### 4.2 First Sync
-- [ ] Enable at least one Jira project for sync
-- [ ] Click "Sync Now" button
-- [ ] Button shows "..." while loading
-- [ ] Should see success message: "Sync complete: X created, Y updated"
-- [ ] Open browser console - should see full response logged
-- [ ] Response should include: `{ success: true, totalFetched: X, created: Y, updated: Z }`
-
-### 4.3 Verify Tasks Created
-- [ ] Navigate to Kanban board
-- [ ] Should see a "Jira" project created (with Jira blue color #0052CC)
-- [ ] Tasks from Jira should appear in the appropriate columns:
-  - "To Do" status → Backlog column
-  - "In Progress" status → In Progress column
-  - "Done" status → Done column
-- [ ] Tasks should have Jira metadata:
-  - `source` = "jira"
-  - `jira_issue_key` populated (e.g., "PROJ-123")
-  - `jira_status` matches Jira
-  - `jira_issue_type` populated
-
-### 4.4 Sync Again (No Duplicates)
-- [ ] Click "Sync Now" again
-- [ ] Should see message: "Sync complete: 0 created, X updated"
-- [ ] No duplicate tasks should be created
-- [ ] Existing tasks should be updated if Jira status changed
-
-### 4.5 Status Updates
-- [ ] In Jira, move an issue to a different status
-- [ ] Click "Sync Now" in Trackli
-- [ ] Task should move to correct column based on new status
-- [ ] `jira_status` should be updated
-
-### 4.6 Database Verification
-- [ ] Check `tasks` table for synced issues:
-  - `jira_issue_id` should match Jira issue ID
-  - `jira_issue_key` should match (e.g., "PROJ-123")
-  - `jira_site_id` should match connection site_id
-  - `source` should be "jira"
-- [ ] Check `atlassian_connections` table:
-  - `last_sync_at` should be updated
-  - `sync_error` should be null on success
-- [ ] Check `integration_audit_log` for `jira.sync_completed` event
-
-### 4.7 Error Handling
-- [ ] Disable all projects for sync
-- [ ] Click "Sync Now"
-- [ ] Should see message: "No projects enabled for sync"
-- [ ] No errors thrown
-
----
-
-## Step 5: Jira Badge on Task Cards
-
-### 5.1 Badge Appears on Synced Tasks
-- [ ] Sync Jira issues (click "Sync Now")
-- [ ] Navigate to Kanban board
-- [ ] Jira-synced tasks should show a blue Jira badge
-- [ ] Badge shows the issue key (e.g., "PROJ-123")
-- [ ] Badge has Jira logo icon
-
-### 5.2 Badge Clickable
-- [ ] Click on the Jira badge
-- [ ] Should open Jira issue in a new browser tab
-- [ ] URL should be correct: `https://[site].atlassian.net/browse/[issue-key]`
-- [ ] Click should NOT trigger task edit modal
-
-### 5.3 Non-Jira Tasks Unaffected
-- [ ] Create a new task manually (not from Jira)
-- [ ] Task should NOT have Jira badge
-- [ ] Task should function normally
-
-### 5.4 Dark Mode
-- [ ] Toggle dark mode
-- [ ] Jira badge should be visible and styled correctly
-- [ ] Text should use lighter blue (#4C9AFF) in dark mode
-
----
-
-## Step 6: Scheduled Auto-Sync
-
-### 6.1 Last Sync Display
-- [ ] After running "Sync Now", the UI should show "Last sync: [timestamp]"
-- [ ] Timestamp updates after each sync
-- [ ] Format is readable (e.g., "1/10/2026, 2:30:00 PM")
-
-### 6.2 Scheduled Function Deployment
-Deploy the scheduled sync function:
-```bash
-npx supabase functions deploy jira-sync-scheduled --no-verify-jwt
-```
-
-### 6.3 Cron Job Setup
-The migration creates a cron job that runs every 15 minutes. Verify in Supabase:
-- [ ] Go to Supabase Dashboard → Database → Extensions
-- [ ] Verify `pg_cron` extension is enabled
-- [ ] Check `cron.job` table for `jira-scheduled-sync` job
-
-### 6.4 Manual Trigger Test
-Test the scheduled function manually:
-```javascript
-// In browser console (with admin/service role access)
-const result = await supabase.functions.invoke('jira-sync-scheduled', {
-  headers: { 'X-Supabase-Cron': 'true' }
-})
-console.log(result)
-```
-- [ ] Should see sync results for all active connections
-- [ ] Check `integration_audit_log` for `jira.scheduled_sync_completed` events
-
-### 6.5 Automatic Sync Verification
-- [ ] Wait 15 minutes after cron job is set up
-- [ ] Check `atlassian_connections.last_sync_at` - should update automatically
-- [ ] New Jira issues should appear without manual sync
-- [ ] Check Supabase logs for scheduled sync execution
-
-### 6.6 Error Handling
-- [ ] If token expires during scheduled sync, should log error
-- [ ] Should not crash or affect other users' syncs
-- [ ] `sync_error` column should capture failure details
-
----
-
-## Step 7: Two-Way Sync (Trackli → Jira)
-
-### 7.1 Status Change Syncs to Jira
-- [ ] Sync a Jira issue to create a task in Trackli
-- [ ] Drag the task to a different column (e.g., Backlog → In Progress)
-- [ ] Check browser console - should see "Synced [PROJ-123] to Jira: Success"
-- [ ] Open the issue in Jira - status should be updated
-
-### 7.2 Status Mapping (Trackli → Jira)
-Test each status transition:
-- [ ] Backlog → should transition to a "To Do" or "Open" status in Jira
-- [ ] In Progress → should transition to an "In Progress" status
-- [ ] Done → should transition to a "Done" or "Closed" status
-
-### 7.3 Bulk Status Change
-- [ ] Select multiple Jira-linked tasks
-- [ ] Use bulk status change to move them to Done
-- [ ] All selected Jira issues should update (check console for sync logs)
-
-### 7.4 Non-Blocking Sync
-- [ ] Drag a Jira task to a new column
-- [ ] UI should update immediately (not wait for Jira)
-- [ ] Even if Jira sync fails, Trackli task should still move
-
-### 7.5 No Transition Available
-If an issue can't transition (e.g., workflow restrictions):
-- [ ] Console should log "No transition needed or available"
-- [ ] Trackli task status should still update
-- [ ] No error shown to user
-
-### 7.6 Audit Logging
-- [ ] Check `integration_audit_log` for `jira.issue_transitioned` events
-- [ ] Event should include: issueKey, fromTrackliStatus, toJiraStatus, transitionName
-
-### 7.7 Edge Function Deployment
-```bash
-npx supabase functions deploy jira-update-issue --no-verify-jwt
+**How to test token refresh:**
+```sql
+-- Force token expiry in Supabase SQL Editor
+UPDATE atlassian_connections
+SET token_expires_at = NOW() - INTERVAL '1 minute'
+WHERE user_id = 'your-user-id';
 ```
 
 ---
 
-## Step 8: OAuth Flow (Existing - Verification)
+## 3. Test Connection Button
 
-### 8.1 Connect Flow
-- [ ] If not connected, click "Connect" button
-- [ ] Should redirect to Atlassian authorization page
-- [ ] Authorize the app
-- [ ] Should redirect back to Trackli
-- [ ] Should see "Connected to [Site Name]" in green
+### 3.1 Positive Tests
 
-### 8.2 Disconnect Flow
-- [ ] Click "Disconnect" button
-- [ ] Should remove connection
-- [ ] Should see "Connect" button again
-- [ ] Check `atlassian_connections` table - record should be deleted
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Button appears | When connected | "Test" button visible next to Disconnect |
+| Loading state | Click Test | Button shows "..." while loading |
+| Success with issues | Have assigned issues | "Found X Jira issues assigned to you" |
+| Success with zero issues | No assigned issues | "Found 0 Jira issues assigned to you" |
+| Console logging | Click Test | Full response logged to browser console |
 
-### 8.3 Multiple Sites
-If you have access to multiple Atlassian sites:
-- [ ] Connect and verify all sites appear in connection
-- [ ] Check `atlassian_connections` table - should have one record per site
-- [ ] Check `jira_project_sync` table - should have projects from all sites
+### 3.2 Negative Tests
 
----
-
-## Edge Function Deployment Verification
-
-Before testing, deploy the Edge Functions:
-
-```bash
-cd ~/Desktop/Trackli
-
-# Deploy jira-test-fetch (updated with token refresh)
-npx supabase functions deploy jira-test-fetch --no-verify-jwt
-
-# Deploy atlassian-token-refresh (new)
-npx supabase functions deploy atlassian-token-refresh --no-verify-jwt
-
-# Deploy jira-sync (imports issues as tasks)
-npx supabase functions deploy jira-sync --no-verify-jwt
-
-# Deploy jira-sync-scheduled (cron job for auto-sync)
-npx supabase functions deploy jira-sync-scheduled --no-verify-jwt
-
-# Deploy jira-update-issue (two-way sync: Trackli → Jira)
-npx supabase functions deploy jira-update-issue --no-verify-jwt
-```
-
-### Verify Deployment
-- [ ] `jira-test-fetch` appears in Supabase Dashboard → Edge Functions
-- [ ] `atlassian-token-refresh` appears in Supabase Dashboard → Edge Functions
-- [ ] `jira-sync` appears in Supabase Dashboard → Edge Functions
-- [ ] `jira-sync-scheduled` appears in Supabase Dashboard → Edge Functions
-- [ ] `jira-update-issue` appears in Supabase Dashboard → Edge Functions
-- [ ] All show recent deployment timestamp
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| No auth header | Call function without auth | 401: "No authorization header" |
+| Invalid JWT | Call with invalid token | 401: "Invalid token" |
+| No connection | Delete connection, call function | 404: "No Atlassian connection found" |
+| Jira API error | Atlassian returns 500 | Error displayed to user with details |
+| Network timeout | Slow/no network | Timeout error after 30s |
+| Invalid site_id | Corrupt site_id in database | Error: Jira API returns 404 |
 
 ---
 
-## Database Verification
+## 4. Jira Project Selection
 
-### Tables Should Exist
-- [ ] `atlassian_connections` - stores connection info
-- [ ] `jira_project_sync` - stores project sync settings
-- [ ] `oauth_states` - stores OAuth CSRF tokens (temporary)
-- [ ] `integration_audit_log` - stores audit events
-- [ ] `confluence_pending_tasks` - stores Confluence tasks (future use)
+### 4.1 Positive Tests
 
-### Connection Record Fields
-After connecting, verify `atlassian_connections` has:
-- [ ] `user_id` - your Supabase user ID
-- [ ] `site_id` - Atlassian cloud ID
-- [ ] `site_name` - e.g., "Spicy Mango"
-- [ ] `site_url` - e.g., "https://spicymango.atlassian.net"
-- [ ] `access_token_secret_id` - UUID (not null)
-- [ ] `refresh_token_secret_id` - UUID (not null)
-- [ ] `token_expires_at` - timestamp ~1 hour from connection
-- [ ] `atlassian_account_id` - Atlassian user ID
-- [ ] `atlassian_email` - your Atlassian email
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Projects section visible | After connecting | "Jira Projects (X/Y syncing)" header |
+| Expand/collapse | Click header | Section expands/collapses smoothly |
+| Project list | Expand section | All Jira projects listed with key and name |
+| Toggle on | Enable a project | Toggle turns Jira blue, count updates |
+| Toggle off | Disable a project | Toggle turns gray, count updates |
+| Persistence | Refresh page | Toggle states persist |
+| Dark mode styling | Enable dark mode | Proper colors and contrast |
 
-### Vault Secrets
-Tokens should be encrypted in Vault:
-- [ ] Run: `SELECT * FROM vault.decrypted_secrets WHERE name LIKE 'atlassian%';`
-- [ ] Should see access and refresh token secrets
-- [ ] Actual token values should be visible (for debugging only!)
+### 4.2 Negative Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| No projects in Jira | User has no Jira projects | Shows "No projects found" message |
+| Database error on toggle | Simulate DB failure | Error toast, toggle reverts |
+| Very long project name | Project with 100+ char name | Name truncates with ellipsis |
+| Special characters in name | Project name with emoji/unicode | Displays correctly |
+| Rapid toggle clicking | Click toggle 10x quickly | Only final state saved, no race conditions |
 
 ---
 
-## Error Scenarios
+## 5. Jira Sync (Import Issues)
 
-### No Authorization Header
-```javascript
-// In browser console (without auth)
-fetch('https://YOUR_PROJECT.supabase.co/functions/v1/jira-test-fetch')
-  .then(r => r.json()).then(console.log)
-```
-- [ ] Should return `{ error: "No authorization header" }` with status 401
+### 5.1 Positive Tests - Sync Button
 
-### Invalid Token
-```javascript
-// With invalid token
-fetch('https://YOUR_PROJECT.supabase.co/functions/v1/jira-test-fetch', {
-  headers: { 'Authorization': 'Bearer invalid-token' }
-}).then(r => r.json()).then(console.log)
-```
-- [ ] Should return `{ error: "Invalid token" }` with status 401
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Button visible | Projects enabled | "Sync Now" button appears |
+| Button disabled | No projects enabled | Button disabled or hidden |
+| Loading state | Click Sync Now | Button shows "..." while syncing |
+| Success message | Sync completes | "Sync complete: X created, Y updated" |
 
-### No Connection
-- [ ] Disconnect from Atlassian
-- [ ] Try Test button (shouldn't appear, but if calling directly)
-- [ ] Should return `{ error: "No Atlassian connection found" }` with status 404
+### 5.2 Positive Tests - Task Creation
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Tasks created | After first sync | Jira issues appear as Trackli tasks |
+| Jira project created | First sync | "Jira" project created with #0052CC color |
+| Status mapping - To Do | Jira issue in "To Do" | Task in Backlog column |
+| Status mapping - In Progress | Jira issue in "In Progress" | Task in In Progress column |
+| Status mapping - Done | Jira issue in "Done" | Task in Done column |
+| Title mapping | Issue with summary | Task title = issue summary |
+| Description mapping | Issue with description | Task description = issue description |
+| Priority mapping | Highest priority issue | Task marked as critical |
+| Due date mapping | Issue with due date | Task due date matches |
+| Jira metadata | After sync | `jira_issue_key`, `jira_status`, `jira_issue_type` populated |
+| Source link | After sync | `source_link` = correct Jira URL |
+
+### 5.3 Positive Tests - Re-sync
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| No duplicates | Sync twice | Same tasks, not duplicated |
+| Status updates | Change status in Jira, re-sync | Task moves to correct column |
+| Title updates | Change summary in Jira, re-sync | Task title updated |
+| New issues | Create issue in Jira, re-sync | New task created |
+| Last sync timestamp | After sync | UI shows "Last sync: [timestamp]" |
+
+### 5.4 Negative Tests - Sync Failures
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| No projects enabled | Disable all projects, sync | "No projects enabled for sync" |
+| Jira API error | Atlassian returns 500 | Error message, no partial data |
+| Rate limited | Hit Jira rate limit | Graceful error, retry later message |
+| Token expired during sync | Long sync with expired token | Auto-refresh, sync continues |
+| Network failure mid-sync | Disconnect during sync | Error message, partial sync may complete |
+| Invalid issue data | Jira returns malformed issue | Skip bad issue, continue with others |
+| Very long description | Issue with 100KB description | Truncates to fit Trackli limits |
+| Missing required fields | Issue with no summary | Uses fallback title like "[No Title]" |
+
+### 5.5 Negative Tests - Edge Cases
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| 1000+ issues | Project with many issues | Pagination works, all issues synced |
+| Unicode in summary | Issue with emoji/CJK characters | Displays correctly |
+| HTML in description | Issue with HTML tags | Renders or strips HTML appropriately |
+| Deleted issue in Jira | Delete issue, re-sync | Task remains in Trackli (no auto-delete) |
+| Moved issue between projects | Move issue, re-sync | Task updates with new project info |
+| Issue type changed | Change type in Jira, re-sync | `jira_issue_type` updates |
+
+---
+
+## 6. Jira Badge on Task Cards
+
+### 6.1 Positive Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Badge visible | View synced task | Blue Jira badge with issue key |
+| Jira logo | View badge | Small Jira logo icon in badge |
+| Click opens Jira | Click badge | Opens Jira issue in new tab |
+| Correct URL | Click badge | URL is `https://[site].atlassian.net/browse/[key]` |
+| Click doesn't open modal | Click badge | Task edit modal does NOT open |
+| Non-Jira tasks | View manual task | No Jira badge |
+| Dark mode | Enable dark mode | Badge uses lighter blue (#4C9AFF) |
+
+### 6.2 Negative Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Missing source_link | Task with null source_link | Falls back to constructed URL |
+| Invalid URL | Corrupted source_link | Still attempts to open, browser handles error |
+| Very long issue key | Unusual key like "VERYLONGPROJECT-99999" | Badge truncates or wraps gracefully |
+| Popup blocked | Browser blocks popup | User can right-click to open |
+
+---
+
+## 7. Two-Way Sync (Trackli → Jira)
+
+### 7.1 Positive Tests - Status Sync
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Backlog → To Do | Move task to Backlog | Jira issue transitions to "To Do" category |
+| In Progress → In Progress | Move task to In Progress | Jira issue transitions to "In Progress" |
+| Done → Done | Move task to Done | Jira issue transitions to "Done" category |
+| Console logging | Move task | "Synced [KEY] to Jira: Success" in console |
+| Audit logging | Move task | `jira.issue_transitioned` event in audit log |
+| jira_status updated | After sync | Task's `jira_status` matches new Jira status |
+
+### 7.2 Positive Tests - Bulk Actions
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Bulk status change | Select multiple Jira tasks, bulk move to Done | All Jira issues transition |
+| Mixed selection | Select Jira + non-Jira tasks, bulk move | Only Jira tasks sync to Jira |
+
+### 7.3 Positive Tests - Non-Blocking
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Immediate UI update | Drag task | Task moves immediately, doesn't wait for Jira |
+| Background sync | Drag task | Jira syncs in background |
+| Sync failure doesn't revert | Simulate Jira failure | Task stays in new column |
+
+### 7.4 Negative Tests - Sync Failures
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| No valid transition | Move to status with no Jira path | Console logs "No transition needed or available" |
+| Workflow restriction | Issue requires fields for transition | Sync fails gracefully, task stays moved |
+| Permission denied | User can't transition issue | Console error, task stays moved |
+| Token expired | Move task with expired token | Auto-refresh attempt, retry sync |
+| Network failure | Move task offline | Console error, task stays moved |
+| Jira API error | Atlassian returns 500 | Console error, task stays moved |
+
+### 7.5 Negative Tests - Edge Cases
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Rapid moves | Drag same task 5x quickly | Only final state synced to Jira |
+| Move during sync | Move task while previous sync running | Queued or latest state wins |
+| Non-Jira task | Move manual task | No Jira sync attempted |
+| Deleted Jira issue | Move task whose issue was deleted | Error logged, task stays moved |
+
+---
+
+## 8. Scheduled Auto-Sync
+
+### 8.1 Positive Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Last sync display | After manual sync | "Last sync: [timestamp]" shown in UI |
+| Cron job exists | Check Supabase cron.job table | `jira-scheduled-sync` job present |
+| Manual trigger | Invoke function with X-Supabase-Cron header | Syncs all active connections |
+| Per-user isolation | Multiple users connected | Each user's tasks sync independently |
+| Skip inactive connections | Connection with sync_enabled=false | Connection skipped in scheduled sync |
+
+### 8.2 Positive Tests - Automatic Execution
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Auto-sync runs | Wait 15 minutes | `last_sync_at` updates automatically |
+| New issues appear | Create issue in Jira, wait for cron | Task appears without manual sync |
+| Status updates | Change status in Jira, wait for cron | Task moves to correct column |
+
+### 8.3 Negative Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| One user fails | User A's token expired | User A fails, User B still syncs |
+| All connections fail | Simulate total failure | Errors logged, no crash |
+| Function timeout | Sync takes >60 seconds | Timeout, partial sync logged |
+| Cron job disabled | Disable pg_cron job | No auto-sync, manual still works |
+| Invalid cron secret | Missing X-Supabase-Cron header | Function rejects request |
+
+---
+
+## 9. Database Integrity
+
+### 9.1 Positive Tests - Tables
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| atlassian_connections | After connect | Record with all fields populated |
+| jira_project_sync | After connect | One record per Jira project |
+| integration_audit_log | After any action | Events logged with correct details |
+| tasks.jira_* fields | After sync | Jira metadata populated correctly |
+
+### 9.2 Positive Tests - RLS
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| User A can't see User B | Log in as different user | Only own connections visible |
+| User A can't modify User B | Try to update other user's data | RLS blocks the operation |
+
+### 9.3 Negative Tests - Data Corruption
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Missing Vault secret | Delete secret, try to use connection | Error: "Failed to get access token" |
+| NULL site_id | Corrupt connection record | Jira API calls fail gracefully |
+| Invalid JSON in details | Corrupt audit log entry | Other operations unaffected |
+| Orphaned projects | Delete connection | jira_project_sync records cleaned up |
+
+---
+
+## 10. Security Tests
+
+### 10.1 Positive Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Tokens encrypted | Check Vault | Tokens stored encrypted, not plaintext |
+| Tokens not in response | Call any Edge Function | Response never contains access/refresh tokens |
+| RLS enforced | Query from frontend | Only user's own data returned |
+| Audit trail | Perform OAuth actions | All events logged with user_id |
+
+### 10.2 Negative Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| SQL injection in state | Inject SQL in OAuth state | State sanitized, no injection |
+| XSS in site_name | Site name with <script> tag | Escaped in UI, no execution |
+| CSRF on disconnect | Try to disconnect without session | Requires valid auth |
+| Replay attack | Reuse OAuth callback URL | State already used, rejected |
+
+---
+
+## 11. Performance Tests
+
+### 11.1 Positive Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Fast initial load | Open Settings with connection | UI loads in <1 second |
+| Fast sync (small) | Sync 10 issues | Completes in <5 seconds |
+| Fast sync (medium) | Sync 100 issues | Completes in <30 seconds |
+
+### 11.2 Negative Tests
+
+| Test | Steps | Expected Result |
+|------|-------|-----------------|
+| Slow network | Throttle to 3G | Operations complete (slower), no timeout |
+| Large sync | Sync 1000+ issues | Pagination works, may take minutes |
+| Concurrent syncs | Two users sync simultaneously | Both complete successfully |
 
 ---
 
@@ -401,108 +396,147 @@ fetch('https://YOUR_PROJECT.supabase.co/functions/v1/jira-test-fetch', {
 // Get auth token
 const { data: { session } } = await supabase.auth.getSession()
 
-// Call jira-test-fetch
-const result = await supabase.functions.invoke('jira-test-fetch', {
+// Test connection
+const test = await supabase.functions.invoke('jira-test-fetch', {
   headers: { Authorization: `Bearer ${session.access_token}` }
 })
-console.log(result)
+console.log('Test result:', test)
+
+// Manual sync
+const sync = await supabase.functions.invoke('jira-sync', {
+  headers: { Authorization: `Bearer ${session.access_token}` }
+})
+console.log('Sync result:', sync)
+
+// Force token refresh
+const refresh = await supabase.functions.invoke('atlassian-token-refresh', {
+  headers: { Authorization: `Bearer ${session.access_token}` }
+})
+console.log('Refresh result:', refresh)
 ```
 
-### Force Token Refresh
-```javascript
-const { data: { session } } = await supabase.auth.getSession()
-const result = await supabase.functions.invoke('atlassian-token-refresh', {
-  headers: { Authorization: `Bearer ${session.access_token}` }
-})
-console.log(result)
+### Force Token Expiry (in Supabase SQL Editor)
+```sql
+-- Expire token to test refresh
+UPDATE atlassian_connections
+SET token_expires_at = NOW() - INTERVAL '1 minute'
+WHERE user_id = 'your-user-id';
+
+-- Check audit log
+SELECT * FROM integration_audit_log
+ORDER BY created_at DESC
+LIMIT 20;
+
+-- Check connection status
+SELECT id, site_name, token_expires_at, last_sync_at, sync_error
+FROM atlassian_connections
+WHERE user_id = 'your-user-id';
 ```
+
+---
+
+## Edge Function Deployment
+
+Deploy all functions before testing:
+```bash
+cd ~/Desktop/Trackli
+
+npx supabase functions deploy jira-test-fetch --no-verify-jwt
+npx supabase functions deploy atlassian-token-refresh --no-verify-jwt
+npx supabase functions deploy jira-sync --no-verify-jwt
+npx supabase functions deploy jira-sync-scheduled --no-verify-jwt
+npx supabase functions deploy jira-update-issue --no-verify-jwt
+```
+
+Verify in Supabase Dashboard → Edge Functions:
+- [ ] All 5 functions listed
+- [ ] Recent deployment timestamps
+- [ ] No deployment errors
 
 ---
 
 ## Common Issues & Troubleshooting
 
-### "Failed to get access token"
-- Check `access_token_secret_id` is not null in `atlassian_connections`
-- Verify Vault secrets exist: `SELECT * FROM vault.decrypted_secrets;`
-- Re-connect to Atlassian if secrets are missing
-
-### "Jira token expired, need to refresh"
-- Token refresh should happen automatically now
-- If still failing, check `refresh_token_secret_id` exists
-- Check `integration_audit_log` for refresh failure details
-
-### "No Atlassian connection found"
-- Verify you're logged in as the correct user
-- Check `atlassian_connections` table for your user_id
-
-### CORS Errors
-- Ensure Edge Functions have CORS headers
-- Check browser network tab for actual error response
+| Issue | Possible Cause | Solution |
+|-------|---------------|----------|
+| "Failed to get access token" | Vault secret missing or deleted | Reconnect to Atlassian |
+| "Token expired and refresh failed" | Refresh token revoked or expired | Reconnect to Atlassian |
+| "No Atlassian connection found" | Wrong user or connection deleted | Reconnect to Atlassian |
+| Tasks not appearing | Projects not enabled for sync | Enable projects in Settings |
+| Jira status not updating | No valid transition available | Check Jira workflow restrictions |
+| CORS errors | Edge Function deployment issue | Redeploy Edge Functions |
+| Cron not running | pg_cron not enabled | Enable pg_cron extension |
 
 ---
 
 ## Test Completion Checklist
 
-### Step 1 (Test Button)
-- [ ] Button appears when connected
-- [ ] Shows issue count on success
-- [ ] Logs response to console
-- [ ] Handles no issues gracefully
+### OAuth Flow
+- [ ] Connect succeeds
+- [ ] Disconnect succeeds
+- [ ] Handles user denial gracefully
+- [ ] Handles expired state gracefully
 
-### Step 2 (Token Refresh)
-- [ ] Tokens stored with expiry
-- [ ] Auto-refresh when token expires
-- [ ] Audit log captures refresh events
-- [ ] Graceful error when refresh fails
-- [ ] Suggests reconnect when refresh fails
+### Token Management
+- [ ] Tokens stored in Vault
+- [ ] Auto-refresh works
+- [ ] Refresh failure handled
+- [ ] Audit events logged
 
-### Step 3 (Project Selection)
-- [ ] Projects section shows after connecting
-- [ ] Toggle switches work
-- [ ] Settings persist after refresh
-- [ ] Count updates correctly (X/Y syncing)
+### Test Connection
+- [ ] Shows issue count
+- [ ] Handles zero issues
+- [ ] Handles API errors
 
-### Step 4 (Jira Sync)
-- [ ] Sync Now button works
-- [ ] Tasks created with correct Jira fields
+### Project Selection
+- [ ] Projects listed
+- [ ] Toggle works
+- [ ] Persistence works
+- [ ] Count updates correctly
+
+### Jira Sync
+- [ ] Tasks created correctly
+- [ ] Status mapping correct
 - [ ] No duplicates on re-sync
-- [ ] Status mapping correct (To Do→Backlog, In Progress→In Progress, Done→Done)
-- [ ] Jira project created with blue color
-- [ ] Audit log captures sync events
+- [ ] Updates existing tasks
+- [ ] Last sync timestamp shown
 
-### Step 5 (Jira Badge)
-- [ ] Badge appears on synced tasks
-- [ ] Badge shows issue key with Jira logo
-- [ ] Click opens Jira issue in new tab
+### Jira Badge
+- [ ] Badge visible on synced tasks
+- [ ] Click opens Jira
 - [ ] Non-Jira tasks unaffected
-- [ ] Dark mode styling correct
 
-### Step 6 (Scheduled Auto-Sync)
-- [ ] Last sync timestamp displayed in UI
-- [ ] Cron job created in database
-- [ ] Scheduled function can be triggered manually
-- [ ] Auto-sync updates tasks without user action
-- [ ] Errors logged per-connection, don't affect others
+### Two-Way Sync
+- [ ] Status changes sync to Jira
+- [ ] Bulk actions work
+- [ ] Non-blocking (UI immediate)
+- [ ] Failures don't revert UI
 
-### Step 7 (Two-Way Sync)
-- [ ] Status changes sync to Jira automatically
-- [ ] Jira transitions execute correctly
-- [ ] Bulk status changes sync all Jira tasks
-- [ ] Sync is non-blocking (UI updates immediately)
-- [ ] Audit log captures `jira.issue_transitioned` events
+### Scheduled Sync
+- [ ] Cron job created
+- [ ] Manual trigger works
+- [ ] Auto-sync updates tasks
+- [ ] Per-user isolation works
 
 ### Security
-- [ ] Tokens encrypted in Vault (not plaintext)
-- [ ] Tokens never sent to frontend
-- [ ] RLS prevents accessing other users' connections
-- [ ] Audit log tracks all OAuth events
+- [ ] Tokens encrypted
+- [ ] RLS enforced
+- [ ] Audit trail complete
 
 ---
 
-## Next Steps After Testing
+## Sign-Off
 
-Once all tests pass:
-1. Commit changes to `test-develop`
-2. Deploy to Vercel preview
-3. Test on preview URL
-4. Merge to `main` for production
+| Area | Tester | Date | Pass/Fail | Notes |
+|------|--------|------|-----------|-------|
+| OAuth Flow | | | | |
+| Token Management | | | | |
+| Test Connection | | | | |
+| Project Selection | | | | |
+| Jira Sync | | | | |
+| Jira Badge | | | | |
+| Two-Way Sync | | | | |
+| Scheduled Sync | | | | |
+| Security | | | | |
+
+**Overall Status:** [ ] Ready for Production / [ ] Needs Fixes
