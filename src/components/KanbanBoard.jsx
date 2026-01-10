@@ -4283,9 +4283,12 @@ export default function KanbanBoard({ demoMode = false }) {
       console.log('Jira sync result:', data)
 
       if (data?.success) {
-        setAtlassianSuccess(data.message || `Synced: ${data.created} created, ${data.updated} updated`)
+        const msg = data.created === 0 && data.updated === 0
+          ? 'Sync complete - already up to date'
+          : data.message || `Synced: ${data.created} created, ${data.updated} updated`
+        setAtlassianSuccess(msg)
         // Refresh tasks to show newly synced items
-        fetchData()
+        await fetchData()
         setTimeout(() => setAtlassianSuccess(''), 5000)
       } else {
         throw new Error('Unexpected response from sync')
