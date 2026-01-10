@@ -135,7 +135,7 @@ export default function Login() {
         {/* Logo above card */}
         <div className="text-center mb-6 animate-gentle-pulse">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <img src="/logo.png" alt="trackli" className="w-12 h-12 drop-shadow-lg" />
+            <img src="/logo-white.png" alt="trackli" className="w-12 h-12 drop-shadow-lg" />
             <span className="text-2xl font-semibold text-white drop-shadow-lg" style={{ fontFamily: 'Rubik, sans-serif' }}>trackli</span>
           </Link>
           <p className="text-white/70 text-sm mt-1">Task management that sparks joy</p>

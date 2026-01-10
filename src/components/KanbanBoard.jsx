@@ -3703,11 +3703,13 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             )}
           </div>
           
-          {/* Project and Customer at bottom - hidden on mobile */}
+          {/* Project, Customer, and Tags at bottom - hidden on mobile */}
           {showProject && project && (
             <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
-              <span className="text-[10px] text-gray-500 dark:text-gray-300">
-                {project.name}{task.customer && ` • ${task.customer}`}
+              <span className="text-[10px] text-gray-500 dark:text-gray-300 truncate block">
+                {project.name}
+                {task.customer && ` · ${task.customer}`}
+                {task.tags?.length > 0 && ` · ${task.tags.map(t => typeof t === 'string' ? t : t.name).join(', ')}`}
               </span>
             </div>
           )}
@@ -6487,6 +6489,41 @@ export default function KanbanBoard({ demoMode = false }) {
     }
   }
 
+  // Add tag to project
+  const handleAddTagToProject = async (projectId, tagName) => {
+    if (!projectId || !tagName.trim()) return null
+
+    try {
+      // Check if tag already exists in this project
+      const project = projects.find(p => p.id === projectId)
+      const existingTag = project?.tags?.find(t => (typeof t === 'string' ? t : t.name) === tagName.trim())
+      if (existingTag) {
+        return tagName.trim() // Already exists, just return it
+      }
+
+      // Insert into database
+      const { data, error } = await supabase
+        .from('project_tags')
+        .insert({ project_id: projectId, name: tagName.trim() })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state
+      setProjects(projects.map(p =>
+        p.id === projectId
+          ? { ...p, tags: [...(p.tags || []), { id: data.id, name: tagName.trim() }] }
+          : p
+      ))
+
+      return tagName.trim()
+    } catch (err) {
+      console.error('Error adding tag:', err)
+      return null
+    }
+  }
+
   // Task CRUD
   const handleSaveTask = async (taskData, newFiles = [], existingAttachments = []) => {
     setSaving(true)
@@ -6531,6 +6568,21 @@ export default function KanbanBoard({ demoMode = false }) {
           await supabase.from('task_dependencies').insert(
             taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
           )
+        }
+
+        // Update task tags
+        await supabase.from('task_tags').delete().eq('task_id', taskId)
+        if (taskData.tags && taskData.tags.length > 0) {
+          // Resolve tag names to tag IDs from the project
+          const project = projects.find(p => p.id === taskData.project_id)
+          const tagInserts = taskData.tags.map(tagName => {
+            const projectTag = project?.tags?.find(t => (typeof t === 'string' ? t : t.name) === tagName)
+            return projectTag ? { task_id: taskId, tag_id: typeof projectTag === 'string' ? null : projectTag.id } : null
+          }).filter(t => t && t.tag_id)
+
+          if (tagInserts.length > 0) {
+            await supabase.from('task_tags').insert(tagInserts)
+          }
         }
 
         const existingIds = existingAttachments.map(a => a.id)
@@ -6584,7 +6636,20 @@ export default function KanbanBoard({ demoMode = false }) {
             taskData.dependencies.map(depId => ({ task_id: taskId, depends_on_id: depId }))
           )
         }
-        
+
+        // Insert task tags for new task
+        if (taskData.tags && taskData.tags.length > 0) {
+          const project = projects.find(p => p.id === taskData.project_id)
+          const tagInserts = taskData.tags.map(tagName => {
+            const projectTag = project?.tags?.find(t => (typeof t === 'string' ? t : t.name) === tagName)
+            return projectTag ? { task_id: taskId, tag_id: typeof projectTag === 'string' ? null : projectTag.id } : null
+          }).filter(t => t && t.tag_id)
+
+          if (tagInserts.length > 0) {
+            await supabase.from('task_tags').insert(tagInserts)
+          }
+        }
+
         // Create future occurrences for recurring tasks
         if (taskData.recurrence_type && taskData.start_date) {
           // Use user's settings: either count or end date
@@ -9835,6 +9900,7 @@ export default function KanbanBoard({ demoMode = false }) {
         loading={saving}
         onShowConfirm={setConfirmDialog}
         onAddCustomer={handleAddCustomerToProject}
+        onAddTag={handleAddTagToProject}
       />
       
       <ProjectModal

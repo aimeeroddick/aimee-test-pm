@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png', 'logo-white.png', 'icons/*.png'],
       manifest: {
         name: 'trackli - Task Management',
         short_name: 'trackli',

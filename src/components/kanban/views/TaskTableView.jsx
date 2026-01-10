@@ -14,6 +14,13 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
   
   // Get unique values for filter dropdowns
   const getUniqueValues = (field) => {
+    if (field === 'tags') {
+      // Tags is an array, so we need to flatten and get unique tag names
+      const allTags = tasks.flatMap(t =>
+        (t.tags || []).map(tag => typeof tag === 'string' ? tag : tag.name)
+      ).filter(Boolean)
+      return [...new Set(allTags)].sort()
+    }
     const values = tasks.map(t => {
       if (field === 'project') return projects.find(p => p.id === t.project_id)?.name
       if (field === 'category') return CATEGORIES.find(c => c.id === t.category)?.label
@@ -38,7 +45,18 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     return tasks.filter(task => {
       for (const [field, value] of Object.entries(columnFilters)) {
         if (!value) continue
-        
+
+        // Special handling for tags (array field)
+        if (field === 'tags') {
+          const taskTags = (task.tags || []).map(t => typeof t === 'string' ? t : t.name)
+          if (value === '__blank__') {
+            if (taskTags.length > 0) return false
+          } else {
+            if (!taskTags.some(t => t.toLowerCase() === value.toLowerCase())) return false
+          }
+          continue
+        }
+
         let taskValue
         if (field === 'project') {
           taskValue = projects.find(p => p.id === task.project_id)?.name || ''
@@ -49,7 +67,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
         } else {
           taskValue = task[field] || ''
         }
-        
+
         if (value === '__blank__' && taskValue) return false
         if (value !== '__blank__' && String(taskValue).toLowerCase() !== String(value).toLowerCase()) return false
       }
@@ -339,6 +357,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
     { key: 'start_date', label: 'Start Date', width: 'min-w-[100px]' },
     { key: 'assignee', label: 'Assignee', width: 'min-w-[120px]' },
     { key: 'customer', label: 'Customer', width: 'min-w-[120px]' },
+    { key: 'tags', label: 'Tags', width: 'min-w-[150px]' },
     { key: 'energy_level', label: 'Effort', width: 'min-w-[100px]' },
     { key: 'time_estimate', label: 'Est. Time', width: 'min-w-[85px]' },
     { key: 'created_at', label: 'Created', width: 'min-w-[100px]' },
@@ -361,6 +380,10 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
         return task.time_estimate ? formatTimeEstimate(task.time_estimate) : '-'
       case 'created_at':
         return task.created_at ? new Date(task.created_at).toLocaleDateString(getDateLocale()) : '-'
+      case 'tags':
+        return task.tags?.length > 0
+          ? task.tags.map(t => typeof t === 'string' ? t : t.name).join(', ')
+          : '-'
       default:
         return task[key] || '-'
     }
@@ -567,7 +590,7 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
                             <option value="low">Low</option>
                           </>
                         )}
-                        {['project', 'assignee', 'customer', 'category', 'source'].includes(col.key) && 
+                        {['project', 'assignee', 'customer', 'tags', 'category', 'source'].includes(col.key) &&
                           getUniqueValues(col.key).map(v => (
                             <option key={v} value={v}>{v}</option>
                           ))
