@@ -4584,6 +4584,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const [filterDueToday, setFilterDueToday] = useState(false)
   const [filterDueThisWeek, setFilterDueThisWeek] = useState(false)
   const [filterMyDay, setFilterMyDay] = useState(false)
+  const [filterSprint, setFilterSprint] = useState('') // '', 'active', 'none'
   const [searchQuery, setSearchQuery] = useState('')
   
   // Field filters - supports multiple (e.g., { assignee: 'John', customer: 'Acme' })
@@ -7559,7 +7560,7 @@ export default function KanbanBoard({ demoMode = false }) {
   const allCustomers = [...new Set(tasks.map(t => t.customer).filter(Boolean))]
   
   // Check if any filters are active
-  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || filterDueThisWeek || filterMyDay || searchQuery.trim() || Object.keys(fieldFilters).length > 0
+  const hasActiveFilters = filterCritical || filterOverdue || filterBlocked || filterActive || filterBacklog || filterDueToday || filterDueThisWeek || filterMyDay || filterSprint || searchQuery.trim() || Object.keys(fieldFilters).length > 0
   
   // Clear all filters
   const clearFilters = () => {
@@ -7571,6 +7572,7 @@ export default function KanbanBoard({ demoMode = false }) {
     setFilterDueToday(false)
     setFilterDueThisWeek(false)
     setFilterMyDay(false)
+    setFilterSprint('')
     setSearchQuery('')
     setFieldFilters({})
     setPendingFilterField('')
@@ -7590,6 +7592,7 @@ export default function KanbanBoard({ demoMode = false }) {
         filterBacklog,
         filterDueToday,
         filterMyDay,
+        filterSprint,
         searchQuery,
         fieldFilters
       }
@@ -7610,6 +7613,7 @@ export default function KanbanBoard({ demoMode = false }) {
     setFilterBacklog(view.filters.filterBacklog || false)
     setFilterDueToday(view.filters.filterDueToday || false)
     setFilterMyDay(view.filters.filterMyDay || false)
+    setFilterSprint(view.filters.filterSprint || '')
     setSearchQuery(view.filters.searchQuery || '')
     setFieldFilters(view.filters.fieldFilters || {})
   }
@@ -7653,6 +7657,11 @@ export default function KanbanBoard({ demoMode = false }) {
       if (dueDate < today || dueDate > endOfWeek) return false
     }
     if (filterMyDay && !isInMyDay(t)) return false
+    
+    // Sprint filter (for Jira tasks)
+    if (filterSprint === 'active' && (!t.jira_sprint_state || t.jira_sprint_state !== 'active')) return false
+    if (filterSprint === 'none' && t.jira_sprint_id) return false
+    if (filterSprint === 'has_sprint' && !t.jira_sprint_id) return false
     
     // Search filter
     if (searchQuery.trim()) {
@@ -8725,6 +8734,20 @@ export default function KanbanBoard({ demoMode = false }) {
                         <option value="medium">Medium Effort</option>
                         <option value="low">Low Effort</option>
                       </select>
+                      
+                      {/* Sprint (Jira tasks only) */}
+                      {atlassianConnection && (
+                        <select
+                          value={filterSprint}
+                          onChange={(e) => setFilterSprint(e.target.value)}
+                          className="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 border-0"
+                        >
+                          <option value="">Sprint: All</option>
+                          <option value="active">In Active Sprint</option>
+                          <option value="has_sprint">Has Sprint (any)</option>
+                          <option value="none">No Sprint</option>
+                        </select>
+                      )}
                       
                       {/* Due Date */}
                       <div className="space-y-2">
