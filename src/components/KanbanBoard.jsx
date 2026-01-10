@@ -8736,7 +8736,7 @@ export default function KanbanBoard({ demoMode = false }) {
                       </select>
                       
                       {/* Sprint (Jira tasks only) */}
-                      {atlassianConnection && (
+                      {atlassianConnections.length > 0 && (
                         <select
                           value={filterSprint}
                           onChange={(e) => setFilterSprint(e.target.value)}

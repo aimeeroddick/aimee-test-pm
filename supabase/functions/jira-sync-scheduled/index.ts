@@ -445,7 +445,7 @@ async function fetchJiraIssues(
   status?: number
 }> {
   const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'customfield_10015', 'customfield_10020', 'comment']
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'assignee', 'customfield_10015', 'customfield_10020', 'comment']
 
   const jiraResponse = await fetch(
     `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
