@@ -6897,6 +6897,19 @@ export default function KanbanBoard({ demoMode = false }) {
         
         if (updateError) throw updateError
         
+        // Sync relevant fields to Jira if this is a Jira-linked task
+        const existingTask = tasks.find(t => t.id === taskId)
+        if (existingTask?.jira_issue_key) {
+          const jiraUpdates = {}
+          if (taskData.title !== existingTask.title) jiraUpdates.title = taskData.title
+          if (taskData.due_date !== existingTask.due_date) jiraUpdates.due_date = taskData.due_date || null
+          if (taskData.start_date !== existingTask.start_date) jiraUpdates.start_date = taskData.start_date || null
+          
+          if (Object.keys(jiraUpdates).length > 0) {
+            syncFieldsToJira(existingTask.jira_issue_key, jiraUpdates)
+          }
+        }
+        
         await supabase.from('task_dependencies').delete().eq('task_id', taskId)
         if (taskData.dependencies && taskData.dependencies.length > 0) {
           await supabase.from('task_dependencies').insert(
@@ -7322,10 +7335,40 @@ export default function KanbanBoard({ demoMode = false }) {
       console.error('Error syncing to Jira:', err)
     }
   }
+
+  // Sync field updates to Jira (runs in background, doesn't block UI)
+  const syncFieldsToJira = async (issueKey, updates) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      console.log(`Syncing fields to Jira: ${issueKey}`, updates)
+
+      const { data, error } = await supabase.functions.invoke('jira-update-issue', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { issueKey, updates },
+      })
+
+      if (error) {
+        console.error('Failed to sync fields to Jira:', error)
+        return
+      }
+
+      if (data?.fieldUpdate?.success) {
+        console.log(`Synced fields to Jira for ${issueKey}:`, data.fieldUpdate.updatedFields)
+      } else {
+        console.error('Jira field sync error:', data?.fieldUpdate?.error)
+      }
+    } catch (err) {
+      console.error('Error syncing fields to Jira:', err)
+    }
+  }
   
   // Quick set due date (for "Add to My Day" feature)
   const handleSetDueDate = async (taskId, dueDate) => {
     try {
+      const task = tasks.find(t => t.id === taskId)
+      
       const { error } = await supabase
         .from('tasks')
         .update({ due_date: dueDate })
@@ -7334,6 +7377,11 @@ export default function KanbanBoard({ demoMode = false }) {
       if (error) throw error
       
       setTasks(tasks.map(t => t.id === taskId ? { ...t, due_date: dueDate } : t))
+      
+      // Sync to Jira if this is a Jira-linked task
+      if (task?.jira_issue_key) {
+        syncFieldsToJira(task.jira_issue_key, { due_date: dueDate })
+      }
     } catch (err) {
       console.error('Error setting due date:', err)
       setError(err.message)
@@ -7343,6 +7391,8 @@ export default function KanbanBoard({ demoMode = false }) {
   // Update task title (for inline editing)
   const handleUpdateTaskTitle = async (taskId, newTitle) => {
     try {
+      const task = tasks.find(t => t.id === taskId)
+      
       const { error } = await supabase
         .from('tasks')
         .update({ title: newTitle })
@@ -7351,6 +7401,11 @@ export default function KanbanBoard({ demoMode = false }) {
       if (error) throw error
       
       setTasks(tasks.map(t => t.id === taskId ? { ...t, title: newTitle } : t))
+      
+      // Sync to Jira if this is a Jira-linked task
+      if (task?.jira_issue_key) {
+        syncFieldsToJira(task.jira_issue_key, { title: newTitle })
+      }
     } catch (err) {
       console.error('Error updating task title:', err)
       setError(err.message)

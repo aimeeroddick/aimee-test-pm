@@ -41,11 +41,19 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body = await req.json()
-    const { issueKey, targetStatus, taskId } = body
+    const { issueKey, targetStatus, taskId, updates } = body
 
-    console.log(`jira-update-issue called: issueKey=${issueKey}, targetStatus=${targetStatus}, taskId=${taskId}`)
+    console.log(`jira-update-issue called: issueKey=${issueKey}, targetStatus=${targetStatus}, taskId=${taskId}, updates=${JSON.stringify(updates)}`)
 
-    if (!issueKey || !targetStatus) {
+    if (!issueKey) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required field: issueKey' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Must have either targetStatus or updates
+    if (!targetStatus && !updates) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: issueKey, targetStatus' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -96,8 +104,52 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Map Trackli status to Jira status category
-    const targetCategory = mapTrackliStatusToJiraCategory(targetStatus)
+    let statusResult = null
+    let fieldResult = null
+
+    // Handle field updates (title, due date, start date, etc.)
+    if (updates && Object.keys(updates).length > 0) {
+      fieldResult = await updateIssueFields(accessToken, connection.site_id, issueKey, updates)
+      if (!fieldResult.success) {
+        console.error('Field update failed:', fieldResult.error)
+      }
+    }
+
+    // If no status change requested, return field update result
+    if (!targetStatus) {
+      // Log the sync event for field updates
+      if (fieldResult) {
+        await supabase.from('integration_audit_log').insert({
+          user_id: user.id,
+          event_type: 'jira.issue_fields_updated',
+          provider: 'atlassian',
+          site_id: connection.site_id,
+          details: {
+            issueKey,
+            updates,
+            success: fieldResult.success,
+            error: fieldResult.error,
+          },
+          success: fieldResult.success,
+        })
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: fieldResult?.success ?? true,
+          fieldUpdate: {
+            success: fieldResult?.success ?? true,
+            updatedFields: Object.keys(updates || {}),
+            error: fieldResult?.error,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Handle status transition
+      // Map Trackli status to Jira status category
+      const targetCategory = mapTrackliStatusToJiraCategory(targetStatus)
 
     // Get available transitions for the issue
     const transitionsResult = await getAvailableTransitions(accessToken, connection.site_id, issueKey)
@@ -275,6 +327,87 @@ function findTransitionForCategory(transitions: any[], targetCategory: string): 
   })
 
   return keywordMatch || null
+}
+
+/**
+ * Update issue fields (title, due date, start date)
+ */
+async function updateIssueFields(
+  accessToken: string,
+  siteId: string,
+  issueKey: string,
+  updates: { title?: string; due_date?: string | null; start_date?: string | null }
+): Promise<{ success: boolean; error?: string; status?: number }> {
+  // Build the fields object for Jira API
+  const fields: any = {}
+
+  if (updates.title !== undefined) {
+    fields.summary = updates.title
+  }
+
+  if (updates.due_date !== undefined) {
+    // Jira expects date in YYYY-MM-DD format or null
+    fields.duedate = updates.due_date ? updates.due_date.split('T')[0] : null
+  }
+
+  if (updates.start_date !== undefined) {
+    // Start date might be in a custom field (customfield_10015) or native field
+    // Try the native startDate field first
+    fields.startDate = updates.start_date ? updates.start_date.split('T')[0] : null
+  }
+
+  if (Object.keys(fields).length === 0) {
+    return { success: true } // Nothing to update
+  }
+
+  console.log(`Updating Jira issue ${issueKey} with fields:`, JSON.stringify(fields))
+
+  const response = await fetch(
+    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/issue/${issueKey}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error(`Failed to update issue ${issueKey}:`, response.status, errorText)
+    
+    // If startDate failed, try with customfield_10015
+    if (updates.start_date !== undefined && errorText.includes('startDate')) {
+      console.log('Retrying start date with customfield_10015...')
+      const retryFields: any = { ...fields }
+      delete retryFields.startDate
+      retryFields.customfield_10015 = updates.start_date ? updates.start_date.split('T')[0] : null
+
+      const retryResponse = await fetch(
+        `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/issue/${issueKey}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields: retryFields }),
+        }
+      )
+
+      if (retryResponse.ok) {
+        return { success: true }
+      }
+      const retryError = await retryResponse.text()
+      return { success: false, error: retryError, status: retryResponse.status }
+    }
+
+    return { success: false, error: errorText, status: response.status }
+  }
+
+  return { success: true }
 }
 
 /**
