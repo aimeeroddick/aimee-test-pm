@@ -433,17 +433,7 @@ async function fetchJiraIssues(
 
   const jiraData = await jiraResponse.json()
 
-  const issues = jiraData.issues?.map((issue: any) => {
-    // Debug: log start date fields for first issue
-    if (jiraData.issues.indexOf(issue) === 0) {
-      console.log(`Start date debug for ${issue.key}:`, {
-        startDate: issue.fields.startDate,
-        customfield_10015: issue.fields.customfield_10015,
-        duedate: issue.fields.duedate,
-      })
-    }
-    
-    return {
+  const issues = jiraData.issues?.map((issue: any) => ({
     id: issue.id,
     key: issue.key,
     summary: issue.fields.summary,
@@ -463,8 +453,7 @@ async function fetchJiraIssues(
     parentKey: issue.fields.parent?.key,
     storyPoints: issue.fields.customfield_10016,
     comments: extractComments(issue.fields.comment?.comments),
-  }
-  }) || []
+  })) || []
 
   return {
     success: true,
