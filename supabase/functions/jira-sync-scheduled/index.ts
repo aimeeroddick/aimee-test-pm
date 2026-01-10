@@ -149,14 +149,14 @@ Deno.serve(async (req) => {
           continue
         }
 
-        // Get or create Trackli project for Jira tasks
-        const trackliProject = await getOrCreateJiraProject(supabase, connection.user_id)
+        // Cache for Trackli project and tag lookups (per Jira project)
+        const projectCache = new Map<string, { projectId: string; tagId: string | null }>()
 
-        // Get existing Jira tasks for this user
+        // Get all existing Jira tasks for this user
         const { data: existingTasks } = await supabase
           .from('tasks')
-          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, comments, updated_at')
-          .eq('project_id', trackliProject.id)
+          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, comments, updated_at, project_id')
+          .eq('user_id', connection.user_id)
           .not('jira_issue_key', 'is', null)
 
         const existingByKey = new Map(
@@ -168,11 +168,28 @@ Deno.serve(async (req) => {
 
         // Process each issue
         for (const issue of jiraResult.issues || []) {
+          // Get or create Trackli project for this Jira project (cached)
+          let projectData = projectCache.get(issue.projectKey)
+          if (!projectData) {
+            const trackliProject = await getOrCreateProjectForJiraProject(
+              supabase, connection.user_id, issue.projectKey, issue.projectName
+            )
+            const jiraTagId = await getOrCreateJiraTag(supabase, trackliProject.id)
+            projectData = { projectId: trackliProject.id, tagId: jiraTagId }
+            projectCache.set(issue.projectKey, projectData)
+          }
+
           const existing = existingByKey.get(issue.key)
 
           if (existing) {
             // Build updates for all changed fields
             const updates = buildTaskUpdates(issue, existing)
+            
+            // Check if project changed
+            if (existing.project_id !== projectData.projectId) {
+              updates.project_id = projectData.projectId
+            }
+            
             if (Object.keys(updates).length > 0) {
               const { error: updateError } = await supabase
                 .from('tasks')
@@ -182,16 +199,33 @@ Deno.serve(async (req) => {
                 })
                 .eq('id', existing.id)
 
-              if (!updateError) updated++
+              if (!updateError) {
+                if (projectData.tagId) {
+                  await addTagToTask(supabase, existing.id, projectData.tagId)
+                }
+                updated++
+              }
+            } else {
+              // Ensure tag exists even if no changes
+              if (projectData.tagId) {
+                await addTagToTask(supabase, existing.id, projectData.tagId)
+              }
             }
           } else {
             // Create new task
-            const newTask = buildNewTask(issue, connection.user_id, trackliProject.id, connection.site_id, connection.site_url)
-            const { error: insertError } = await supabase
+            const newTask = buildNewTask(issue, connection.user_id, projectData.projectId, connection.site_id, connection.site_url)
+            const { data: inserted, error: insertError } = await supabase
               .from('tasks')
               .insert(newTask)
+              .select('id')
+              .single()
 
-            if (!insertError) created++
+            if (!insertError && inserted?.id) {
+              if (projectData.tagId) {
+                await addTagToTask(supabase, inserted.id, projectData.tagId)
+              }
+              created++
+            }
           }
         }
 
@@ -452,6 +486,7 @@ async function fetchJiraIssues(
     issueType: issue.fields.issuetype?.name,
     projectId: issue.fields.project?.id,
     projectKey: issue.fields.project?.key,
+    projectName: issue.fields.project?.name,
     dueDate: issue.fields.duedate,
     startDate: issue.fields.startDate,
     parentId: issue.fields.parent?.id,
@@ -523,14 +558,21 @@ function extractComments(jiraComments: any[]): any[] {
 }
 
 /**
- * Get or create Jira project for a user
+ * Get or create a Trackli project for a specific Jira project
  */
-async function getOrCreateJiraProject(supabase: any, userId: string): Promise<{ id: string }> {
+async function getOrCreateProjectForJiraProject(
+  supabase: any,
+  userId: string,
+  jiraProjectKey: string,
+  jiraProjectName: string
+): Promise<{ id: string }> {
+  const projectName = jiraProjectName || jiraProjectKey
+
   const { data: existing } = await supabase
     .from('projects')
     .select('id')
     .eq('user_id', userId)
-    .eq('name', 'Jira')
+    .eq('name', projectName)
     .single()
 
   if (existing) return existing
@@ -539,13 +581,65 @@ async function getOrCreateJiraProject(supabase: any, userId: string): Promise<{ 
     .from('projects')
     .insert({
       user_id: userId,
-      name: 'Jira',
+      name: projectName,
       color: '#0052CC',
     })
     .select('id')
     .single()
 
   return newProject || { id: '' }
+}
+
+/**
+ * Get or create a "jira" tag for the project
+ */
+async function getOrCreateJiraTag(
+  supabase: any,
+  projectId: string
+): Promise<string | null> {
+  const { data: existing } = await supabase
+    .from('project_tags')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('name', 'jira')
+    .single()
+
+  if (existing) return existing.id
+
+  const { data: newTag, error } = await supabase
+    .from('project_tags')
+    .insert({ project_id: projectId, name: 'jira' })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Failed to create jira tag:', error)
+    return null
+  }
+
+  return newTag?.id || null
+}
+
+/**
+ * Add a tag to a task (idempotent)
+ */
+async function addTagToTask(
+  supabase: any,
+  taskId: string,
+  tagId: string
+): Promise<void> {
+  const { data: existing } = await supabase
+    .from('task_tags')
+    .select('task_id')
+    .eq('task_id', taskId)
+    .eq('tag_id', tagId)
+    .single()
+
+  if (existing) return
+
+  await supabase
+    .from('task_tags')
+    .insert({ task_id: taskId, tag_id: tagId })
 }
 
 /**
