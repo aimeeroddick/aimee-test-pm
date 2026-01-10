@@ -7,6 +7,7 @@ import PrivacyPolicy from './components/PrivacyPolicy'
 import Terms from './components/Terms'
 import BetaTester from './components/BetaTester'
 import UpdateNotification from './components/UpdateNotification'
+import { initCacheManager } from './utils/cacheManager'
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -88,8 +89,9 @@ function PublicRoute({ children }) {
 }
 
 function App() {
-  // Prefetch KanbanBoard after page is idle - don't compete with initial load
+  // Initialize cache manager and prefetch KanbanBoard after page is idle
   useEffect(() => {
+    initCacheManager()
     const timer = setTimeout(prefetchKanbanBoard, 3000)
     return () => clearTimeout(timer)
   }, [])
