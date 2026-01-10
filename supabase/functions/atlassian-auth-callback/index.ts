@@ -359,7 +359,7 @@ async function registerJiraWebhook(
             'jira:issue_updated', 
             'jira:issue_deleted',
           ],
-          jqlFilter: 'assignee is not EMPTY',  // Required field - filter to assigned issues
+          jqlFilter: 'project != "ZZZZNONEXISTENT"',  // Matches all projects (only project/status/assignee clauses supported)
         }
       ]
     }
@@ -396,7 +396,9 @@ async function registerJiraWebhook(
     }
 
     const webhookData = await response.json()
+    console.log('Webhook registration response:', JSON.stringify(webhookData))
     const webhookId = webhookData.webhookRegistrationResult?.[0]?.createdWebhookId
+    console.log('Extracted webhook ID:', webhookId)
 
     if (webhookId) {
       // Store webhook ID for later cleanup on disconnect
