@@ -451,6 +451,8 @@ async function fetchJiraIssues(
     updated: issue.fields.updated,
     parentId: issue.fields.parent?.id,
     parentKey: issue.fields.parent?.key,
+    parentName: issue.fields.parent?.fields?.summary,
+    parentType: issue.fields.parent?.fields?.issuetype?.name,
     storyPoints: issue.fields.customfield_10016,
     comments: extractComments(issue.fields.comment?.comments),
   })) || []
@@ -690,6 +692,8 @@ function buildNewTask(
     jira_sync_status: 'active',
     jira_assigned_at: new Date().toISOString(),
     jira_parent_id: issue.parentId || null,
+    jira_parent_key: issue.parentKey || null,
+    jira_parent_name: issue.parentName || null,
     jira_issue_type: issue.issueType,
     jira_tshirt_size: sizeMapping.jira_tshirt_size,
     jira_site_id: siteId,

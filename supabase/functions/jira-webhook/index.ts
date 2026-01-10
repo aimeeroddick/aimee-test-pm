@@ -553,6 +553,8 @@ function buildTaskFromIssue(
     jira_sync_status: 'active',
     jira_assigned_at: new Date().toISOString(),
     jira_parent_id: fields.parent?.id || null,
+    jira_parent_key: fields.parent?.key || null,
+    jira_parent_name: fields.parent?.fields?.summary || null,
     jira_issue_type: fields.issuetype?.name,
     jira_site_id: siteId,
     created_at: new Date().toISOString(),

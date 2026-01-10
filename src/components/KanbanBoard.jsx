@@ -3637,6 +3637,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 {task.jira_tshirt_size && (
                   <p className="text-[10px] text-gray-600 dark:text-gray-300">Size: <span className="font-medium">{task.jira_tshirt_size}</span></p>
                 )}
+                {task.jira_parent_name && (
+                  <p className="text-[10px] text-gray-600 dark:text-gray-300">Parent: <span className="font-medium">{task.jira_parent_key} - {task.jira_parent_name}</span></p>
+                )}
               </div>
             )}
           </div>
