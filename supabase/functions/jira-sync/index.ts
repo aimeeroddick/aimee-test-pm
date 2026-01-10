@@ -492,18 +492,30 @@ async function getOrCreateJiraProject(
 }
 
 /**
- * Map Jira status category to Trackli status
+ * Map Jira status to Trackli status using keyword matching + category fallback
+ *
+ * Layer 1: Keyword matching on status name (case-insensitive)
+ * Layer 2: Fall back to Jira status category if no keyword match
  */
-function mapStatusCategoryToTrackliStatus(statusCategory: string): string {
+function mapStatusToTrackli(statusName: string, statusCategory: string): string {
+  const lowerName = (statusName || '').toLowerCase()
+
+  // Layer 1: Keyword matching
+  if (lowerName.includes('backlog')) return 'backlog'
+  if (lowerName.includes('to do') || lowerName.includes('todo') ||
+      lowerName.includes('open') || lowerName.includes('ready')) return 'todo'
+  if (lowerName.includes('progress') || lowerName.includes('review') ||
+      lowerName.includes('test') || lowerName.includes('dev') ||
+      lowerName.includes('design')) return 'in_progress'
+  if (lowerName.includes('done') || lowerName.includes('closed') ||
+      lowerName.includes('complete') || lowerName.includes('resolved')) return 'done'
+
+  // Layer 2: Category fallback (note: 'new' now maps to 'todo' not 'backlog')
   switch (statusCategory) {
-    case 'new':
-      return 'backlog'
-    case 'indeterminate':
-      return 'in_progress'
-    case 'done':
-      return 'done'
-    default:
-      return 'backlog'
+    case 'new': return 'todo'
+    case 'indeterminate': return 'in_progress'
+    case 'done': return 'done'
+    default: return 'backlog'
   }
 }
 
@@ -524,7 +536,7 @@ function buildNewTask(
     project_id: projectId,
     title: issue.summary,
     description: issue.description || null,
-    status: mapStatusCategoryToTrackliStatus(issue.statusCategory),
+    status: mapStatusToTrackli(issue.status, issue.statusCategory),
     critical: issue.priority === 'Highest' || issue.priority === 'Critical',
     due_date: issue.dueDate || null,
     source: 'jira',
@@ -554,7 +566,7 @@ function buildTaskUpdates(
   const updates: Record<string, any> = {}
 
   // Update status if it changed in Jira
-  const newStatus = mapStatusCategoryToTrackliStatus(issue.statusCategory)
+  const newStatus = mapStatusToTrackli(issue.status, issue.statusCategory)
   if (existingTask.jira_status !== issue.status) {
     updates.jira_status = issue.status
     updates.jira_status_category = issue.statusCategory
