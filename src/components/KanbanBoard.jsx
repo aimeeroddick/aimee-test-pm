@@ -3661,6 +3661,14 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 {task.jira_issue_key}
               </a>
             )}
+            {task.jira_status && (
+              <span
+                title={`Jira Status: ${task.jira_status}`}
+                className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 flex-shrink-0 truncate max-w-[100px]"
+              >
+                {task.jira_status.toUpperCase()}
+              </span>
+            )}
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
