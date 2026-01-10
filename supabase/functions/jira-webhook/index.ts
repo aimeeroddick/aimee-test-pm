@@ -474,6 +474,7 @@ function buildTaskFromIssue(
     status: mapStatusToTrackli(status.name, status.statusCategory?.key),
     critical: priority === 'Highest' || priority === 'Critical',
     due_date: fields.duedate || null,
+    start_date: fields.startDate || null,
     source: 'jira',
     source_link: jiraUrl,
     jira_issue_id: issue.id,
@@ -528,6 +529,12 @@ function buildTaskUpdates(
   const newDueDate = fields.duedate || null
   if (existingTask.due_date !== newDueDate) {
     updates.due_date = newDueDate
+  }
+
+  // Update start date if changed
+  const newStartDate = fields.startDate || null
+  if (existingTask.start_date !== newStartDate) {
+    updates.start_date = newStartDate
   }
 
   // Update priority/critical if changed

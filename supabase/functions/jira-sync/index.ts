@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     // Get existing Jira tasks for this user (by jira_issue_key, not project)
     const { data: existingTasks } = await supabase
       .from('tasks')
-      .select('id, jira_issue_key, jira_status, updated_at, project_id')
+      .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, updated_at, project_id')
       .eq('project_id', trackliProject.id)
       .not('jira_issue_key', 'is', null)
 
@@ -370,7 +370,7 @@ async function fetchJiraIssues(
   // JQL: project IN (keys) AND assignee = currentUser() AND resolution = Unresolved
   // Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
   const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016']
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016']
 
   const jiraResponse = await fetch(
     `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
@@ -414,6 +414,7 @@ async function fetchJiraIssues(
     projectKey: issue.fields.project?.key,
     projectName: issue.fields.project?.name,
     dueDate: issue.fields.duedate,
+    startDate: issue.fields.startDate,
     created: issue.fields.created,
     updated: issue.fields.updated,
     parentId: issue.fields.parent?.id,
@@ -533,12 +534,14 @@ function buildNewTask(
   const jiraUrl = siteUrl ? `${siteUrl}/browse/${issue.key}` : `https://atlassian.net/browse/${issue.key}`
 
   return {
+    user_id: userId,
     project_id: projectId,
     title: issue.summary,
     description: issue.description || null,
     status: mapStatusToTrackli(issue.status, issue.statusCategory),
     critical: issue.priority === 'Highest' || issue.priority === 'Critical',
     due_date: issue.dueDate || null,
+    start_date: issue.startDate || null,
     source: 'jira',
     source_link: jiraUrl,
     jira_issue_id: issue.id,
@@ -571,6 +574,42 @@ function buildTaskUpdates(
     updates.jira_status = issue.status
     updates.jira_status_category = issue.statusCategory
     updates.status = newStatus
+    
+    // Set completed_at when moving to done, clear when moving away
+    if (newStatus === 'done') {
+      updates.completed_at = new Date().toISOString()
+    } else if (existingTask.status === 'done') {
+      updates.completed_at = null
+    }
+  }
+
+  // Update title if changed
+  if (existingTask.title !== issue.summary) {
+    updates.title = issue.summary
+  }
+
+  // Update description if changed
+  const newDescription = issue.description || null
+  if (existingTask.description !== newDescription) {
+    updates.description = newDescription
+  }
+
+  // Update due date if changed
+  const newDueDate = issue.dueDate || null
+  if (existingTask.due_date !== newDueDate) {
+    updates.due_date = newDueDate
+  }
+
+  // Update start date if changed
+  const newStartDate = issue.startDate || null
+  if (existingTask.start_date !== newStartDate) {
+    updates.start_date = newStartDate
+  }
+
+  // Update critical flag if priority changed
+  const newCritical = issue.priority === 'Highest' || issue.priority === 'Critical'
+  if (existingTask.critical !== newCritical) {
+    updates.critical = newCritical
   }
 
   return updates
