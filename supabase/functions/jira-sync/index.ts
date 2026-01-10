@@ -312,7 +312,8 @@ async function refreshJiraProjects(
 
     const data = await response.json()
     const jiraProjects = data.values || []
-    const jiraProjectIds = new Set(jiraProjects.map((p: any) => p.id))
+    console.log(`Jira returned ${jiraProjects.length} projects:`, jiraProjects.map((p: any) => p.key).join(', '))
+    const jiraProjectIds = new Set(jiraProjects.map((p: any) => String(p.id)))
 
     // Get existing projects in our DB
     const { data: existingProjects } = await supabase
@@ -320,10 +321,12 @@ async function refreshJiraProjects(
       .select('id, jira_project_id, jira_project_key')
       .eq('user_id', userId)
 
-    const existingProjectIds = new Set((existingProjects || []).map((p: any) => p.jira_project_id))
+    const existingProjectIds = new Set((existingProjects || []).map((p: any) => String(p.jira_project_id)))
+    console.log(`Existing projects in DB:`, (existingProjects || []).map((p: any) => p.jira_project_key).join(', '))
 
     // Add new projects
-    const newProjects = jiraProjects.filter((p: any) => !existingProjectIds.has(p.id))
+    const newProjects = jiraProjects.filter((p: any) => !existingProjectIds.has(String(p.id)))
+    console.log(`New projects to add: ${newProjects.length}`, newProjects.map((p: any) => `${p.key} (id: ${p.id})`).join(', '))
     if (newProjects.length > 0) {
       const toInsert = newProjects.map((p: any) => ({
         user_id: userId,
@@ -333,12 +336,16 @@ async function refreshJiraProjects(
         sync_enabled: true, // Enable by default
       }))
 
-      await supabase.from('jira_project_sync').insert(toInsert)
-      console.log(`Added ${newProjects.length} new Jira projects`)
+      const { error: insertError } = await supabase.from('jira_project_sync').insert(toInsert)
+      if (insertError) {
+        console.error('Error inserting new projects:', insertError)
+      } else {
+        console.log(`Added ${newProjects.length} new Jira projects`)
+      }
     }
 
     // Remove deleted projects
-    const deletedProjects = (existingProjects || []).filter((p: any) => !jiraProjectIds.has(p.jira_project_id))
+    const deletedProjects = (existingProjects || []).filter((p: any) => !jiraProjectIds.has(String(p.jira_project_id)))
     if (deletedProjects.length > 0) {
       const idsToDelete = deletedProjects.map((p: any) => p.id)
       await supabase.from('jira_project_sync').delete().in('id', idsToDelete)
