@@ -240,7 +240,9 @@ Deno.serve(async (req) => {
     }, true)
 
     // 8. Auto-register webhooks for real-time sync
+    console.log(`Attempting to register webhooks for ${connectionsCreated.length} connections`)
     for (const conn of connectionsCreated) {
+      console.log(`Registering webhook for site ${conn.site_id}...`)
       await registerJiraWebhook(supabase, accessToken, conn.site_id, userId, supabaseUrl!)
     }
 
@@ -327,8 +329,10 @@ async function registerJiraWebhook(
   userId: string,
   supabaseUrl: string
 ) {
+  console.log(`registerJiraWebhook called for site ${siteId}, user ${userId}`)
   try {
     const webhookUrl = `${supabaseUrl}/functions/v1/jira-webhook`
+    console.log(`Webhook URL: ${webhookUrl}`)
     
     // Check if we already have a webhook registered
     const { data: existingConn } = await supabase
@@ -372,6 +376,8 @@ async function registerJiraWebhook(
         body: JSON.stringify(webhookPayload),
       }
     )
+
+    console.log(`Webhook registration response status: ${response.status}`)
 
     if (!response.ok) {
       const errorText = await response.text()
