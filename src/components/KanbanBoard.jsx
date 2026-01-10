@@ -3652,7 +3652,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                title={`Open ${task.jira_issue_key} in Jira`}
+                title={`${task.jira_issue_key}${task.jira_status ? ` • ${task.jira_status}` : ''}${task.jira_issue_type ? ` • ${task.jira_issue_type}` : ''}`}
                 className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-medium rounded bg-[#0052CC]/10 text-[#0052CC] dark:bg-[#0052CC]/30 dark:text-[#4C9AFF] hover:bg-[#0052CC]/20 dark:hover:bg-[#0052CC]/40 transition-colors flex-shrink-0"
               >
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
@@ -3660,14 +3660,6 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 </svg>
                 {task.jira_issue_key}
               </a>
-            )}
-            {task.jira_status && (
-              <span
-                title={`Jira Status: ${task.jira_status}`}
-                className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 flex-shrink-0 truncate max-w-[100px]"
-              >
-                {task.jira_status.toUpperCase()}
-              </span>
             )}
             {isEditingTitle ? (
               <input
