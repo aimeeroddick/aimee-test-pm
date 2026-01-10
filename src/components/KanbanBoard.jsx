@@ -6436,7 +6436,93 @@ export default function KanbanBoard({ demoMode = false }) {
       setSaving(false)
     }
   }
-  
+
+  const handleBulkCustomer = async (customer) => {
+    if (selectedTaskIds.size === 0) return
+
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ customer: customer || null })
+        .in('id', ids)
+
+      if (error) throw error
+
+      setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, customer: customer || null } : t))
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks ${customer ? `assigned to ${customer}` : 'customer cleared'}` })
+      setTimeout(() => setUndoToast(null), 3000)
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk setting customer:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBulkAddTag = async (tagName) => {
+    if (selectedTaskIds.size === 0 || !tagName) return
+
+    setSaving(true)
+    try {
+      const ids = Array.from(selectedTaskIds)
+      const selectedTasks = tasks.filter(t => selectedTaskIds.has(t.id))
+
+      // Find the tag across all projects (use the first match)
+      let tagId = null
+      for (const project of projects) {
+        const tag = project.tags?.find(t => (typeof t === 'string' ? t : t.name) === tagName)
+        if (tag && typeof tag !== 'string') {
+          tagId = tag.id
+          break
+        }
+      }
+
+      if (!tagId) {
+        throw new Error('Tag not found')
+      }
+
+      // For each selected task, add the tag if not already present and under limit
+      let addedCount = 0
+      for (const task of selectedTasks) {
+        const currentTags = task.tags || []
+        const hasTag = currentTags.some(t => (typeof t === 'string' ? t : t.name) === tagName)
+
+        if (!hasTag && currentTags.length < 3) {
+          const { error } = await supabase
+            .from('task_tags')
+            .insert({ task_id: task.id, tag_id: tagId })
+
+          if (!error) {
+            addedCount++
+          }
+        }
+      }
+
+      // Update local state
+      setTasks(tasks.map(t => {
+        if (!selectedTaskIds.has(t.id)) return t
+        const currentTags = t.tags || []
+        const hasTag = currentTags.some(tag => (typeof tag === 'string' ? tag : tag.name) === tagName)
+        if (hasTag || currentTags.length >= 3) return t
+        return { ...t, tags: [...currentTags, { id: tagId, name: tagName }] }
+      }))
+
+      setUndoToast({ taskId: null, previousStatus: null, taskTitle: `Tag "${tagName}" added to ${addedCount} task${addedCount !== 1 ? 's' : ''}` })
+      setTimeout(() => setUndoToast(null), 3000)
+      setBulkSelectMode(false)
+      setSelectedTaskIds(new Set())
+    } catch (err) {
+      console.error('Error bulk adding tag:', err)
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const toggleTaskSelection = (taskId) => {
     setSelectedTaskIds(prev => {
       const newSet = new Set(prev)
@@ -9023,6 +9109,27 @@ export default function KanbanBoard({ demoMode = false }) {
                       <option value="">Unassign</option>
                       {allAssignees.map(a => (
                         <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                    <select
+                      onChange={(e) => handleBulkCustomer(e.target.value)}
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Customer...</option>
+                      <option value="">No customer</option>
+                      {allCustomers.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <select
+                      onChange={(e) => handleBulkAddTag(e.target.value)}
+                      className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-white text-sm focus:ring-2 focus:ring-white/50 focus:border-transparent [&>option]:bg-gray-800 [&>option]:text-white"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Add tag...</option>
+                      {[...new Set(projects.flatMap(p => (p.tags || []).map(t => typeof t === 'string' ? t : t.name)))].sort().map(tag => (
+                        <option key={tag} value={tag}>{tag}</option>
                       ))}
                     </select>
                     <button
