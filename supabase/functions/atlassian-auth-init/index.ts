@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
 
     // Build Atlassian authorization URL
     const scopes = [
+      'read:me',
       'read:jira-work',
       'write:jira-work',
       'read:jira-user',
