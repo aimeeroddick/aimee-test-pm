@@ -4317,6 +4317,8 @@ export default function KanbanBoard({ demoMode = false }) {
         setAtlassianSuccess(msg)
         // Refresh tasks to show newly synced items
         await fetchData()
+        // Refresh project list (may have new/deleted projects)
+        await fetchAtlassianConnections()
         setTimeout(() => setAtlassianSuccess(''), 5000)
       } else {
         throw new Error('Unexpected response from sync')

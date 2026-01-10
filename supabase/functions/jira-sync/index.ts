@@ -98,8 +98,32 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Refresh project list from Jira (add new projects, remove deleted ones)
+    await refreshJiraProjects(supabase, accessToken, connection.site_id, user.id)
+
+    // Re-fetch enabled projects (list may have changed)
+    const { data: refreshedProjects } = await supabase
+      .from('jira_project_sync')
+      .select('jira_project_id, jira_project_key, jira_project_name')
+      .eq('user_id', user.id)
+      .eq('sync_enabled', true)
+
+    const projectsToSync = refreshedProjects || enabledProjects
+
+    if (!projectsToSync || projectsToSync.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'No projects enabled for sync',
+          created: 0,
+          updated: 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Build project keys filter for JQL
-    const projectKeys = enabledProjects.map(p => p.jira_project_key).join(', ')
+    const projectKeys = projectsToSync.map(p => p.jira_project_key).join(', ')
 
     // Fetch issues from Jira
     const jiraResult = await fetchJiraIssues(accessToken, connection.site_id, projectKeys)
@@ -257,6 +281,73 @@ Deno.serve(async (req) => {
     )
   }
 })
+
+/**
+ * Refresh the project list from Jira
+ * - Adds new projects (with sync_enabled = true by default)
+ * - Removes projects that no longer exist in Jira
+ */
+async function refreshJiraProjects(
+  supabase: any,
+  accessToken: string,
+  siteId: string,
+  userId: string
+): Promise<void> {
+  try {
+    // Fetch all projects from Jira
+    const response = await fetch(
+      `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/project/search?maxResults=100`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      console.error('Failed to fetch Jira projects:', await response.text())
+      return
+    }
+
+    const data = await response.json()
+    const jiraProjects = data.values || []
+    const jiraProjectIds = new Set(jiraProjects.map((p: any) => p.id))
+
+    // Get existing projects in our DB
+    const { data: existingProjects } = await supabase
+      .from('jira_project_sync')
+      .select('id, jira_project_id, jira_project_key')
+      .eq('user_id', userId)
+
+    const existingProjectIds = new Set((existingProjects || []).map((p: any) => p.jira_project_id))
+
+    // Add new projects
+    const newProjects = jiraProjects.filter((p: any) => !existingProjectIds.has(p.id))
+    if (newProjects.length > 0) {
+      const toInsert = newProjects.map((p: any) => ({
+        user_id: userId,
+        jira_project_id: p.id,
+        jira_project_key: p.key,
+        jira_project_name: p.name,
+        sync_enabled: true, // Enable by default
+      }))
+
+      await supabase.from('jira_project_sync').insert(toInsert)
+      console.log(`Added ${newProjects.length} new Jira projects`)
+    }
+
+    // Remove deleted projects
+    const deletedProjects = (existingProjects || []).filter((p: any) => !jiraProjectIds.has(p.jira_project_id))
+    if (deletedProjects.length > 0) {
+      const idsToDelete = deletedProjects.map((p: any) => p.id)
+      await supabase.from('jira_project_sync').delete().in('id', idsToDelete)
+      console.log(`Removed ${deletedProjects.length} deleted Jira projects`)
+    }
+  } catch (err) {
+    console.error('Error refreshing Jira projects:', err)
+  }
+}
 
 /**
  * Get a valid access token, refreshing if needed
