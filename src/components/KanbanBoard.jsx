@@ -4213,15 +4213,16 @@ export default function KanbanBoard({ demoMode = false }) {
     setAtlassianLoading(true)
     setAtlassianError('')
     try {
-      const { error } = await supabase
-        .from('atlassian_connections')
-        .delete()
-        .eq('id', connectionId)
-        .eq('user_id', user?.id)
+      // Use Edge Function to properly clean up webhook and tokens
+      const { data, error } = await supabase.functions.invoke('atlassian-disconnect', {
+        body: { connectionId }
+      })
       
       if (error) throw error
+      if (data?.error) throw new Error(data.error)
       
       setAtlassianConnections(prev => prev.filter(c => c.id !== connectionId))
+      setJiraProjects([])
       setAtlassianSuccess('Atlassian disconnected successfully')
       setTimeout(() => setAtlassianSuccess(''), 3000)
     } catch (err) {
@@ -4495,8 +4496,6 @@ export default function KanbanBoard({ demoMode = false }) {
   const [atlassianSuccess, setAtlassianSuccess] = useState('')
   const [jiraProjects, setJiraProjects] = useState([])
   const [jiraProjectsExpanded, setJiraProjectsExpanded] = useState(false)
-  const [webhookInstructionsExpanded, setWebhookInstructionsExpanded] = useState(false)
-  const [webhookUrlCopied, setWebhookUrlCopied] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -11690,76 +11689,37 @@ Or we can extract from:
                     </div>
                   )}
 
-                  {/* Real-Time Webhook Section */}
+                  {/* Real-Time Sync Status */}
                   {atlassianConnections.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                      <button
-                        onClick={() => setWebhookInstructionsExpanded(!webhookInstructionsExpanded)}
-                        className={`flex items-center gap-2 w-full text-left text-sm font-medium ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors`}
-                      >
-                        <svg
-                          className={`w-4 h-4 transition-transform ${webhookInstructionsExpanded ? 'rotate-90' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                      <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Real-Time Sync (Optional)
-                      </button>
-                      
-                      {webhookInstructionsExpanded && (
-                        <div className="mt-3 space-y-3">
-                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Enable instant sync from Jira by adding a webhook. Without this, Trackli syncs every 15 minutes.
-                          </p>
-                          
-                          {/* Webhook URL */}
-                          <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <div className={`text-xs font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Webhook URL</div>
-                                <code className={`text-xs break-all ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                                  {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jira-webhook`}
-                                </code>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jira-webhook`)
-                                  setWebhookUrlCopied(true)
-                                  setTimeout(() => setWebhookUrlCopied(false), 2000)
-                                }}
-                                className={`shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                  webhookUrlCopied
-                                    ? 'bg-green-500 text-white'
-                                    : darkMode
-                                      ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
-                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                              >
-                                {webhookUrlCopied ? '✓ Copied' : 'Copy'}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Setup Instructions */}
-                          <div className={`text-xs space-y-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            <p className="font-medium">Setup in Jira:</p>
-                            <ol className="list-decimal list-inside space-y-1 ml-1">
-                              <li>Go to <strong>Jira Settings</strong> → <strong>System</strong> → <strong>Webhooks</strong></li>
-                              <li>Click <strong>Create a webhook</strong></li>
-                              <li>Paste the URL above</li>
-                              <li>Select events: <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue created</code>, <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue updated</code>, <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue deleted</code></li>
-                              <li>Filter by your enabled projects (optional)</li>
-                              <li>Save the webhook</li>
-                            </ol>
-                            <p className="mt-2 italic">Changes in Jira will now sync to Trackli instantly!</p>
-                          </div>
-                        </div>
-                      )}
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Real-Time Sync
+                        </span>
+                        {atlassianConnections[0]?.webhook_id ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            15-min polling
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                        {atlassianConnections[0]?.webhook_id 
+                          ? 'Jira changes sync instantly to Trackli'
+                          : 'Reconnect to enable instant sync'}
+                      </p>
                     </div>
                   )}
                 </div>

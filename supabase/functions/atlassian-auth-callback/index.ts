@@ -239,7 +239,12 @@ Deno.serve(async (req) => {
       atlassian_account_id: atlassianUser.account_id,
     }, true)
 
-    // 8. Return success response
+    // 8. Auto-register webhooks for real-time sync
+    for (const conn of connectionsCreated) {
+      await registerJiraWebhook(supabase, accessToken, conn.site_id, userId, supabaseUrl!)
+    }
+
+    // 9. Return success response
     return new Response(JSON.stringify({
       success: true,
       connections: connectionsCreated,
@@ -309,6 +314,110 @@ async function fetchAndStoreJiraProjects(
     console.log(`Stored ${projects.length} Jira projects for site ${siteId}`)
   } catch (error) {
     console.error('Error fetching Jira projects:', error)
+  }
+}
+
+/**
+ * Register a Jira webhook for real-time sync
+ */
+async function registerJiraWebhook(
+  supabase: any,
+  accessToken: string,
+  siteId: string,
+  userId: string,
+  supabaseUrl: string
+) {
+  try {
+    const webhookUrl = `${supabaseUrl}/functions/v1/jira-webhook`
+    
+    // Check if we already have a webhook registered
+    const { data: existingConn } = await supabase
+      .from('atlassian_connections')
+      .select('webhook_id')
+      .eq('user_id', userId)
+      .eq('site_id', siteId)
+      .single()
+
+    if (existingConn?.webhook_id) {
+      console.log(`Webhook already registered for site ${siteId}`)
+      return
+    }
+
+    // Register webhook with Jira
+    // Using the dynamic webhook registration API
+    const webhookPayload = {
+      url: webhookUrl,
+      webhooks: [
+        {
+          events: [
+            'jira:issue_created',
+            'jira:issue_updated', 
+            'jira:issue_deleted',
+          ],
+          // Filter to only issues assigned to this user would be ideal,
+          // but Jira webhooks don't support that filter directly.
+          // Our webhook handler filters by assignee.
+        }
+      ]
+    }
+
+    const response = await fetch(
+      `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/webhook`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookPayload),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Failed to register webhook for site ${siteId}:`, errorText)
+      
+      // Log but don't fail - webhook is optional, cron sync will still work
+      await supabase.from('integration_audit_log').insert({
+        user_id: userId,
+        event_type: 'webhook.registration_failed',
+        provider: 'atlassian',
+        site_id: siteId,
+        details: { error: errorText, status: response.status },
+        success: false,
+      })
+      return
+    }
+
+    const webhookData = await response.json()
+    const webhookId = webhookData.webhookRegistrationResult?.[0]?.createdWebhookId
+
+    if (webhookId) {
+      // Store webhook ID for later cleanup on disconnect
+      await supabase
+        .from('atlassian_connections')
+        .update({ 
+          webhook_id: String(webhookId),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+        .eq('site_id', siteId)
+
+      console.log(`Registered webhook ${webhookId} for site ${siteId}`)
+      
+      await supabase.from('integration_audit_log').insert({
+        user_id: userId,
+        event_type: 'webhook.registered',
+        provider: 'atlassian',
+        site_id: siteId,
+        details: { webhook_id: webhookId, url: webhookUrl },
+        success: true,
+      })
+    }
+  } catch (error) {
+    console.error('Error registering webhook:', error)
+    // Don't throw - webhook is optional enhancement
   }
 }
 

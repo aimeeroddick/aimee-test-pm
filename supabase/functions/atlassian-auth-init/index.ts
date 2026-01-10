@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
       'read:jira-work',
       'write:jira-work',
       'read:jira-user',
+      'manage:jira-webhook',  // Required for auto-registering webhooks
       'read:confluence-content.all',
       'write:confluence-content',
       'read:confluence-user',
