@@ -433,14 +433,14 @@ async function getOrCreateJiraTag(
     .from('project_tags')
     .select('id')
     .eq('project_id', projectId)
-    .eq('name', 'jira')
+    .eq('name', 'Jira')
     .single()
 
   if (existing) return existing.id
 
   const { data: newTag, error } = await supabase
     .from('project_tags')
-    .insert({ project_id: projectId, name: 'jira' })
+    .insert({ project_id: projectId, name: 'Jira' })
     .select('id')
     .single()
 
@@ -543,7 +543,7 @@ function buildTaskFromIssue(
     critical: priority === 'Highest' || priority === 'Critical',
     due_date: fields.duedate || null,
     start_date: fields.startDate || null,
-    source: 'jira',
+    source: 'Jira',
     source_link: jiraUrl,
     jira_issue_id: issue.id,
     jira_issue_key: issue.key,

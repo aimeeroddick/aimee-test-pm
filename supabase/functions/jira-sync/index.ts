@@ -519,7 +519,7 @@ function extractComments(jiraComments: any[]): any[] {
     text: extractDescription(comment.body),
     author: comment.author?.displayName || 'Unknown',
     created_at: comment.created,
-    source: 'jira',
+    source: 'Jira',
     jira_comment_id: comment.id,
   })).filter(c => c.text) // Only include comments with text
 }
@@ -575,7 +575,7 @@ async function getOrCreateJiraTag(
     .from('project_tags')
     .select('id')
     .eq('project_id', projectId)
-    .eq('name', 'jira')
+    .eq('name', 'Jira')
     .single()
 
   if (existing) {
@@ -587,7 +587,7 @@ async function getOrCreateJiraTag(
     .from('project_tags')
     .insert({
       project_id: projectId,
-      name: 'jira',
+      name: 'Jira',
     })
     .select('id')
     .single()
@@ -680,7 +680,7 @@ function buildNewTask(
     due_date: issue.dueDate || null,
     start_date: issue.startDate || null,
     comments: issue.comments || [],
-    source: 'jira',
+    source: 'Jira',
     source_link: jiraUrl,
     jira_issue_id: issue.id,
     jira_issue_key: issue.key,
