@@ -5359,13 +5359,15 @@ export default function KanbanBoard({ demoMode = false }) {
       const projectsWithRelations = DEMO_PROJECTS.map(project => ({
         ...project,
         members: project.team_members || [],
-        customers: project.customers || []
+        customers: project.customers || [],
+        tags: project.tags || []
       }))
-      
+
       const tasksWithRelations = DEMO_TASKS.map(task => ({
         ...task,
         attachments: [],
-        dependencies: []
+        dependencies: [],
+        tags: task.tags || []
       }))
       
       setProjects(projectsWithRelations)
@@ -5377,11 +5379,13 @@ export default function KanbanBoard({ demoMode = false }) {
     try {
       // Fetch all data in parallel with bulk queries (fixes N+1 query problem)
       // Include user check in parallel to avoid sequential delay
-      const [projectsRes, tasksRes, membersRes, customersRes, attachmentsRes, dependenciesRes, userRes] = await Promise.all([
+      const [projectsRes, tasksRes, membersRes, customersRes, projectTagsRes, taskTagsRes, attachmentsRes, dependenciesRes, userRes] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.from('tasks').select('*').order('created_at', { ascending: false }),
         supabase.from('project_members').select('project_id, name'),
         supabase.from('project_customers').select('project_id, name'),
+        supabase.from('project_tags').select('id, project_id, name'),
+        supabase.from('task_tags').select('task_id, tag_id'),
         supabase.from('attachments').select('*'),
         supabase.from('task_dependencies').select('task_id, depends_on_id'),
         supabase.auth.getUser()
@@ -5403,12 +5407,34 @@ export default function KanbanBoard({ demoMode = false }) {
         if (!customersByProject[c.project_id]) customersByProject[c.project_id] = []
         customersByProject[c.project_id].push(c.name)
       })
-      
+
+      // Group project tags by project_id and build lookup by tag id
+      const tagsByProject = {}
+      const tagLookup = {}  // tag_id -> tag object (for resolving task tags)
+
+      projectTagsRes.data?.forEach(tag => {
+        if (!tagsByProject[tag.project_id]) tagsByProject[tag.project_id] = []
+        tagsByProject[tag.project_id].push({ id: tag.id, name: tag.name })
+        tagLookup[tag.id] = tag
+      })
+
+      // Group task tags by task_id (resolved to tag names)
+      const tagsByTask = {}
+
+      taskTagsRes.data?.forEach(tt => {
+        if (!tagsByTask[tt.task_id]) tagsByTask[tt.task_id] = []
+        const tag = tagLookup[tt.tag_id]
+        if (tag) {
+          tagsByTask[tt.task_id].push({ id: tag.id, name: tag.name })
+        }
+      })
+
       // Map projects with their relations
       const projectsWithRelations = projectsRes.data.map(project => ({
         ...project,
         members: membersByProject[project.id] || [],
-        customers: customersByProject[project.id] || []
+        customers: customersByProject[project.id] || [],
+        tags: tagsByProject[project.id] || []
       }))
       
       // Group attachments and dependencies by task_id
@@ -5432,7 +5458,8 @@ export default function KanbanBoard({ demoMode = false }) {
       const tasksWithRelations = tasksRes.data.map(task => ({
         ...task,
         attachments: attachmentsByTask[task.id] || [],
-        dependencies: dependenciesByTask[task.id] || []
+        dependencies: dependenciesByTask[task.id] || [],
+        tags: tagsByTask[task.id] || []
       }))
       
       setProjects(projectsWithRelations)
@@ -6155,6 +6182,7 @@ export default function KanbanBoard({ demoMode = false }) {
 
         await supabase.from('project_members').delete().eq('project_id', projectData.id)
         await supabase.from('project_customers').delete().eq('project_id', projectData.id)
+        await supabase.from('project_tags').delete().eq('project_id', projectData.id)
 
         if (projectData.members.length > 0) {
           await supabase.from('project_members').insert(
@@ -6165,6 +6193,12 @@ export default function KanbanBoard({ demoMode = false }) {
         if (projectData.customers.length > 0) {
           await supabase.from('project_customers').insert(
             projectData.customers.map(name => ({ project_id: projectData.id, name }))
+          )
+        }
+
+        if (projectData.tags?.length > 0) {
+          await supabase.from('project_tags').insert(
+            projectData.tags.map(name => ({ project_id: projectData.id, name }))
           )
         }
       } else {
@@ -6185,6 +6219,12 @@ export default function KanbanBoard({ demoMode = false }) {
         if (projectData.customers.length > 0) {
           await supabase.from('project_customers').insert(
             projectData.customers.map(name => ({ project_id: newProject.id, name }))
+          )
+        }
+
+        if (projectData.tags?.length > 0) {
+          await supabase.from('project_tags').insert(
+            projectData.tags.map(name => ({ project_id: newProject.id, name }))
           )
         }
       }

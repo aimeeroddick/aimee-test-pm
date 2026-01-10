@@ -4,23 +4,26 @@ import { L } from '../../../lib/locale'
 import Modal from '../ui/Modal'
 
 const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, loading, onShowConfirm, user }) => {
-  const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
+  const [formData, setFormData] = useState({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [], tags: [] })
   const [newMember, setNewMember] = useState('')
   const [newCustomer, setNewCustomer] = useState('')
-  
+  const [newTag, setNewTag] = useState('')
+
   useEffect(() => {
     if (project) {
-      setFormData({ 
+      setFormData({
         name: project.name,
         color: project.color || DEFAULT_PROJECT_COLOR,
         members: [...(project.members || [])],
         customers: [...(project.customers || [])],
+        tags: [...(project.tags || [])].map(t => typeof t === 'string' ? t : t.name),
       })
     } else {
-      setFormData({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [] })
+      setFormData({ name: '', color: DEFAULT_PROJECT_COLOR, members: [], customers: [], tags: [] })
     }
     setNewMember('')
     setNewCustomer('')
+    setNewTag('')
   }, [project, isOpen])
   
   // Ctrl/Cmd + S to save
@@ -63,7 +66,18 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
   const removeCustomer = (customer) => {
     setFormData({ ...formData, customers: formData.customers.filter((c) => c !== customer) })
   }
-  
+
+  const addTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] })
+      setNewTag('')
+    }
+  }
+
+  const removeTag = (tag) => {
+    setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     await onSave({ ...formData, id: project?.id })
@@ -161,7 +175,36 @@ const ProjectModal = ({ isOpen, onClose, project, onSave, onDelete, onArchive, l
             ))}
           </div>
         </div>
-        
+
+        <div>
+          <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">Tags</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              placeholder="Add tag (e.g. Website, Phase 1, UAT)"
+            />
+            <button type="button" onClick={addTag} className="px-3 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm">
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.tags.map((tag) => (
+              <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 rounded-full text-sm">
+                {tag}
+                <button type="button" onClick={() => removeTag(tag)} className="hover:text-sky-900 dark:hover:text-sky-100">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="flex gap-3 pt-4">
           {project && (
             <>

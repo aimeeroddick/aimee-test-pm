@@ -12,7 +12,7 @@ import {
 } from '../utils'
 import { TaskCardIcons } from '../icons'
 
-const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer }) => {
+const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete, loading, onShowConfirm, onAddCustomer, onAddTag }) => {
   const fileInputRef = useRef(null)
   const startDateRef = useRef(null)
   const dueDateRef = useRef(null)
@@ -45,6 +45,9 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
     recurrence_end_date: '',
   })
   const [selectedDependencies, setSelectedDependencies] = useState([])
+  const [selectedTags, setSelectedTags] = useState([])
+  const [isAddingNewTag, setIsAddingNewTag] = useState(false)
+  const [newTagName, setNewTagName] = useState('')
   const [attachments, setAttachments] = useState([])
   const [newFiles, setNewFiles] = useState([])
   const [activeTab, setActiveTab] = useState('details')
@@ -159,6 +162,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
         setExpandedSections(prev => ({ ...prev, more: true }))
       }
       setSelectedDependencies(task.dependencies?.map(d => d.depends_on_id) || [])
+      setSelectedTags(task.tags?.map(t => typeof t === 'string' ? t : t.name) || [])
       setUseCustomAssignee(isCustomAssignee)
       setCustomAssignee(isCustomAssignee ? task.assignee : '')
       setUseCustomCustomer(isCustomCustomer)
@@ -211,12 +215,15 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       })
       setAttachments([])
       setSelectedDependencies([])
+      setSelectedTags([])
       setUseCustomAssignee(false)
       setCustomAssignee('')
       setUseCustomCustomer(false)
       setCustomCustomer('')
       setIsAddingNewCustomer(false)
       setNewCustomerName('')
+      setIsAddingNewTag(false)
+      setNewTagName('')
       setSubtasks([])
       setComments([])
     }
@@ -330,6 +337,7 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
       time_estimate: formData.time_estimate ? parseInt(formData.time_estimate) : null,
       id: task?.id,
       dependencies: selectedDependencies,
+      tags: selectedTags,
       subtasks: subtasks,
       comments: comments,
     }, newFiles, attachments)
@@ -425,7 +433,8 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
           value={formData.project_id}
           onChange={(e) => {
             setFormData({ ...formData, project_id: e.target.value, assignee: '', customer: '' })
-          if (e.target.value) setShowProjectError(false)
+            setSelectedTags([])  // Clear tags when project changes (tags are project-specific)
+            if (e.target.value) setShowProjectError(false)
           }}
           className={`text-xs font-medium pl-2.5 pr-6 py-1.5 rounded-md border cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 appearance-none bg-no-repeat bg-[length:16px] bg-[center_right_4px] ${
             showProjectError && !formData.project_id
@@ -611,7 +620,112 @@ const TaskModal = ({ isOpen, onClose, task, projects, allTasks, onSave, onDelete
                 )}
               </div>
             </div>
-            
+
+            {/* Tags - full width */}
+            <div>
+              <label className="block text-xs font-semibold text-indigo-600/80 dark:text-indigo-400 uppercase tracking-wider mb-1.5">
+                Tags {selectedTags.length > 0 && <span className="text-gray-400 font-normal">({selectedTags.length}/3)</span>}
+              </label>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* Selected tags as pills */}
+                {selectedTags.map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 rounded-full text-sm">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                      className="hover:text-sky-900 dark:hover:text-sky-100"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+
+                {/* Add tag dropdown/input - only show if under 3 tags */}
+                {selectedTags.length < 3 && (
+                  isAddingNewTag ? (
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter' && newTagName.trim()) {
+                            e.preventDefault()
+                            if (onAddTag) {
+                              const savedTag = await onAddTag(formData.project_id, newTagName.trim())
+                              if (savedTag && !selectedTags.includes(savedTag)) {
+                                setSelectedTags([...selectedTags, savedTag])
+                              }
+                            }
+                            setIsAddingNewTag(false)
+                            setNewTagName('')
+                          } else if (e.key === 'Escape') {
+                            setIsAddingNewTag(false)
+                            setNewTagName('')
+                          }
+                        }}
+                        className="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        placeholder="New tag name"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (newTagName.trim() && onAddTag) {
+                            const savedTag = await onAddTag(formData.project_id, newTagName.trim())
+                            if (savedTag && !selectedTags.includes(savedTag)) {
+                              setSelectedTags([...selectedTags, savedTag])
+                            }
+                          }
+                          setIsAddingNewTag(false)
+                          setNewTagName('')
+                        }}
+                        className="px-2.5 py-1.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingNewTag(false); setNewTagName('') }}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value === '__add_new__') {
+                            setIsAddingNewTag(true)
+                          } else if (e.target.value && !selectedTags.includes(e.target.value)) {
+                            setSelectedTags([...selectedTags, e.target.value])
+                          }
+                        }}
+                        className="pl-3 pr-8 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 appearance-none cursor-pointer"
+                      >
+                        <option value="">+ Add tag</option>
+                        {selectedProject?.tags?.filter(t => !selectedTags.includes(typeof t === 'string' ? t : t.name)).map((tag) => {
+                          const tagName = typeof tag === 'string' ? tag : tag.name
+                          return <option key={tagName} value={tagName}>{tagName}</option>
+                        })}
+                        <option value="__add_new__">+ Create new tag</option>
+                      </select>
+                      <svg className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
             {/* Effort Level & Time Estimate - side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
