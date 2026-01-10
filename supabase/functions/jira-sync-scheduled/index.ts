@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         // Get existing Jira tasks for this user
         const { data: existingTasks } = await supabase
           .from('tasks')
-          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, comments, updated_at')
+          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, comments, updated_at')
           .eq('project_id', trackliProject.id)
           .not('jira_issue_key', 'is', null)
 
@@ -455,6 +455,7 @@ async function fetchJiraIssues(
     dueDate: issue.fields.duedate,
     startDate: issue.fields.startDate,
     parentId: issue.fields.parent?.id,
+    storyPoints: issue.fields.customfield_10016,
     comments: extractComments(issue.fields.comment?.comments),
   })) || []
 
@@ -474,6 +475,36 @@ function extractDescription(adf: any): string {
     }).join('')
   }
   return extractText(adf.content).trim()
+}
+
+/**
+ * Map Jira T-Shirt Size to Trackli effort and time estimate
+ * Per PRD: XS=30m/Low, S=1h/Low, M=2h/Medium, L=4h/High, XL=8h/High
+ */
+function mapTshirtSize(storyPoints: any): { energy_level: string; time_estimate: number; jira_tshirt_size: string | null } {
+  const size = String(storyPoints || '').toUpperCase().trim()
+  
+  switch (size) {
+    case 'XS':
+    case '1':
+      return { energy_level: 'low', time_estimate: 30, jira_tshirt_size: 'XS' }
+    case 'S':
+    case '2':
+      return { energy_level: 'low', time_estimate: 60, jira_tshirt_size: 'S' }
+    case 'M':
+    case '3':
+    case '5':
+      return { energy_level: 'medium', time_estimate: 120, jira_tshirt_size: 'M' }
+    case 'L':
+    case '8':
+      return { energy_level: 'high', time_estimate: 240, jira_tshirt_size: 'L' }
+    case 'XL':
+    case '13':
+    case '21':
+      return { energy_level: 'high', time_estimate: 480, jira_tshirt_size: 'XL' }
+    default:
+      return { energy_level: 'medium', time_estimate: 0, jira_tshirt_size: size || null }
+  }
 }
 
 /**
@@ -554,6 +585,9 @@ function buildNewTask(
 ): any {
   const jiraUrl = siteUrl ? `${siteUrl}/browse/${issue.key}` : `https://atlassian.net/browse/${issue.key}`
 
+  // Map T-shirt size to effort and time estimate
+  const sizeMapping = mapTshirtSize(issue.storyPoints)
+
   return {
     user_id: userId,
     project_id: projectId,
@@ -561,6 +595,8 @@ function buildNewTask(
     description: issue.description || null,
     status: mapStatusToTrackli(issue.status, issue.statusCategory),
     critical: issue.priority === 'Highest' || issue.priority === 'Critical',
+    energy_level: sizeMapping.energy_level,
+    time_estimate: sizeMapping.time_estimate,
     due_date: issue.dueDate || null,
     start_date: issue.startDate || null,
     comments: issue.comments || [],
@@ -575,6 +611,7 @@ function buildNewTask(
     jira_assigned_at: new Date().toISOString(),
     jira_parent_id: issue.parentId || null,
     jira_issue_type: issue.issueType,
+    jira_tshirt_size: sizeMapping.jira_tshirt_size,
     jira_site_id: siteId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -632,6 +669,14 @@ function buildTaskUpdates(
   const newCritical = issue.priority === 'Highest' || issue.priority === 'Critical'
   if (existingTask.critical !== newCritical) {
     updates.critical = newCritical
+  }
+
+  // Update T-shirt size / effort / time estimate if changed
+  const sizeMapping = mapTshirtSize(issue.storyPoints)
+  if (existingTask.jira_tshirt_size !== sizeMapping.jira_tshirt_size) {
+    updates.jira_tshirt_size = sizeMapping.jira_tshirt_size
+    updates.energy_level = sizeMapping.energy_level
+    updates.time_estimate = sizeMapping.time_estimate
   }
 
   // Sync comments - merge Jira comments with existing Trackli comments
