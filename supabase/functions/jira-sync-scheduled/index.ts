@@ -47,11 +47,11 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting scheduled Jira sync...')
 
-    // Get all active Atlassian connections
+    // Get all active Atlassian connections (those with valid tokens)
     const { data: connections, error: connError } = await supabase
       .from('atlassian_connections')
       .select('*')
-      .eq('sync_enabled', true)
+      .not('access_token_secret_id', 'is', null)
 
     if (connError) {
       console.error('Error fetching connections:', connError)
@@ -78,11 +78,11 @@ Deno.serve(async (req) => {
       try {
         console.log(`Syncing connection ${connection.id} for user ${connection.user_id}...`)
 
-        // Get enabled projects for this connection
+        // Get enabled projects for this user
         const { data: enabledProjects } = await supabase
           .from('jira_project_sync')
           .select('*')
-          .eq('connection_id', connection.id)
+          .eq('user_id', connection.user_id)
           .eq('sync_enabled', true)
 
         if (!enabledProjects || enabledProjects.length === 0) {
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
                 .update({
                   jira_status: issue.status,
                   jira_status_category: issue.statusCategory,
-                  status: mapStatusCategoryToTrackliStatus(issue.statusCategory),
+                  status: mapStatusToTrackli(issue.status, issue.statusCategory),
                   updated_at: new Date().toISOString(),
                 })
                 .eq('id', existing.id)
@@ -502,11 +502,24 @@ async function getOrCreateJiraProject(supabase: any, userId: string): Promise<{ 
 }
 
 /**
- * Map Jira status category to Trackli status
+ * Map Jira status to Trackli status using keyword matching + category fallback
  */
-function mapStatusCategoryToTrackliStatus(statusCategory: string): string {
+function mapStatusToTrackli(statusName: string, statusCategory: string): string {
+  const lowerName = (statusName || '').toLowerCase()
+
+  // Layer 1: Keyword matching
+  if (lowerName.includes('backlog')) return 'backlog'
+  if (lowerName.includes('to do') || lowerName.includes('todo') ||
+      lowerName.includes('open') || lowerName.includes('ready')) return 'todo'
+  if (lowerName.includes('progress') || lowerName.includes('review') ||
+      lowerName.includes('test') || lowerName.includes('dev') ||
+      lowerName.includes('design')) return 'in_progress'
+  if (lowerName.includes('done') || lowerName.includes('closed') ||
+      lowerName.includes('complete') || lowerName.includes('resolved')) return 'done'
+
+  // Layer 2: Category fallback
   switch (statusCategory) {
-    case 'new': return 'backlog'
+    case 'new': return 'todo'
     case 'indeterminate': return 'in_progress'
     case 'done': return 'done'
     default: return 'backlog'
@@ -529,7 +542,7 @@ function buildNewTask(
     project_id: projectId,
     title: issue.summary,
     description: issue.description || null,
-    status: mapStatusCategoryToTrackliStatus(issue.statusCategory),
+    status: mapStatusToTrackli(issue.status, issue.statusCategory),
     critical: issue.priority === 'Highest' || issue.priority === 'Critical',
     due_date: issue.dueDate || null,
     source: 'jira',
