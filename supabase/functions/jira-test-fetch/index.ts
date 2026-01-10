@@ -98,8 +98,13 @@ Deno.serve(async (req) => {
       accessToken = tokenData
     }
 
+    // First verify who the token thinks the user is
+    const myselfResult = await fetchJiraMyself(accessToken, connection.site_id)
+    console.log('Token identity:', myselfResult)
+
     // Fetch issues assigned to user from Jira
     const jiraResult = await fetchJiraIssues(accessToken, connection.site_id)
+    console.log('Jira query result - total:', jiraResult.total, 'issues count:', jiraResult.issues?.length)
 
     if (!jiraResult.success) {
       // If 401, token might have been revoked - suggest reconnecting
@@ -125,7 +130,13 @@ Deno.serve(async (req) => {
         connection: {
           site: connection.site_name || connection.site_url,
           email: connection.atlassian_email,
+          storedAccountId: connection.atlassian_account_id,
         },
+        tokenIdentity: myselfResult.success ? {
+          accountId: myselfResult.accountId,
+          email: myselfResult.email,
+          displayName: myselfResult.displayName,
+        } : { error: myselfResult.error },
         totalIssues: jiraResult.total,
         issues: jiraResult.issues,
       }),
@@ -335,5 +346,50 @@ async function fetchJiraIssues(
     success: true,
     total: jiraData.total,
     issues,
+  }
+}
+
+/**
+ * Fetch current user info from Jira /myself endpoint
+ * This verifies whose identity the token represents
+ */
+async function fetchJiraMyself(
+  accessToken: string,
+  siteId: string
+): Promise<{
+  success: boolean;
+  accountId?: string;
+  email?: string;
+  displayName?: string;
+  error?: string;
+}> {
+  try {
+    const response = await fetch(
+      `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/myself`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Jira /myself error:', errorText)
+      return { success: false, error: errorText }
+    }
+
+    const data = await response.json()
+    return {
+      success: true,
+      accountId: data.accountId,
+      email: data.emailAddress,
+      displayName: data.displayName,
+    }
+  } catch (error) {
+    console.error('fetchJiraMyself error:', error)
+    return { success: false, error: error.message }
   }
 }

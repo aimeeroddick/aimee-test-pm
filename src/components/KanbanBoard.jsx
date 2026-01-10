@@ -4239,13 +4239,8 @@ export default function KanbanBoard({ demoMode = false }) {
     setAtlassianError('')
     setAtlassianSuccess('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-
-      const { data, error } = await supabase.functions.invoke('jira-test-fetch', {
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-      })
+      // Let Supabase client handle auth automatically
+      const { data, error } = await supabase.functions.invoke('jira-test-fetch')
 
       if (error) throw error
       if (data?.error) throw new Error(data.error)

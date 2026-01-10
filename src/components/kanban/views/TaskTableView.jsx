@@ -2,11 +2,11 @@ import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { supabase } from '../../../lib/supabase'
 import { COLUMNS, COLUMN_COLORS, CATEGORIES, SOURCES, ENERGY_LEVELS } from '../constants'
-import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate, getDateLocale } from '../utils'
+import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate, getDateLocale, isUSDateFormat } from '../utils'
 
 
 const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [sortField, setSortField] = useState('created_at')
   const [sortDirection, setSortDirection] = useState('desc')
   const [columnFilters, setColumnFilters] = useState({})
@@ -274,13 +274,15 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           // Already in YYYY-MM-DD format
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
           
-          // Detect locale for date parsing
-          const isUSLocale = isUSDateFormat()
+          // Use user's date format preference, fall back to locale detection
+          const dateFormatPref = profile?.date_format
+          const isUSFormat = dateFormatPref === 'MM/DD/YYYY' || 
+            ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
           
           const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
           if (match) {
             let day, month
-            if (isUSLocale) {
+            if (isUSFormat) {
               // US: MM/DD/YYYY
               month = match[1].padStart(2, '0')
               day = match[2].padStart(2, '0')
