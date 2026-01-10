@@ -4285,7 +4285,7 @@ export default function KanbanBoard({ demoMode = false }) {
       if (data?.success) {
         setAtlassianSuccess(data.message || `Synced: ${data.created} created, ${data.updated} updated`)
         // Refresh tasks to show newly synced items
-        fetchTasks()
+        fetchData()
         setTimeout(() => setAtlassianSuccess(''), 5000)
       } else {
         throw new Error('Unexpected response from sync')
