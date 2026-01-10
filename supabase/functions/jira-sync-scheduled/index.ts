@@ -399,6 +399,7 @@ async function getValidToken(supabase: any, connection: any): Promise<string | n
 
 /**
  * Fetch issues from Jira API
+ * Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
  */
 async function fetchJiraIssues(
   accessToken: string,
@@ -410,18 +411,23 @@ async function fetchJiraIssues(
   error?: string
   status?: number
 }> {
-  const jql = encodeURIComponent(
-    `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  )
-  const fields = 'summary,description,status,priority,duedate,created,updated,issuetype,project,parent,customfield_10016'
+  const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016']
 
   const jiraResponse = await fetch(
-    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search?jql=${jql}&fields=${fields}&maxResults=100`,
+    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
     {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        jql,
+        fields,
+        maxResults: 100,
+      }),
     }
   )
 

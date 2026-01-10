@@ -270,6 +270,7 @@ async function refreshToken(
 
 /**
  * Fetch issues from Jira API
+ * Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
  */
 async function fetchJiraIssues(
   accessToken: string,
@@ -282,16 +283,23 @@ async function fetchJiraIssues(
   status?: number;
 }> {
   // JQL: assignee = currentUser() AND resolution = Unresolved
-  const jql = encodeURIComponent('assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC')
-  const fields = 'summary,status,priority,duedate,created,updated,issuetype,project,parent,customfield_10016'
+  const jql = 'assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC'
+  const fields = ['summary', 'status', 'priority', 'duedate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016']
 
   const jiraResponse = await fetch(
-    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search?jql=${jql}&fields=${fields}&maxResults=50`,
+    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
     {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        jql,
+        fields,
+        maxResults: 50,
+      }),
     }
   )
 
