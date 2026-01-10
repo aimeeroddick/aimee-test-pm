@@ -3530,7 +3530,7 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
   const accentColor = isOverdue ? '#DC2626' : isDueToday ? '#D97706' : blocked ? '#F97316' : task.critical ? '#EF4444' : readyToStart ? '#10B981' : COLUMN_COLORS[task.status]
   
   const hasExtraInfo = task.description || task.assignee || task.notes ||
-    (task.subtasks?.length > 0) || (task.attachments?.length > 0) || (task.dependencies?.length > 0)
+    (task.subtasks?.length > 0) || (task.attachments?.length > 0) || (task.dependencies?.length > 0) || task.jira_issue_key
 
   return (
     <div
@@ -3618,6 +3618,27 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 </div>
               )
             })()}
+            
+            {/* Jira Details */}
+            {task.jira_issue_key && (
+              <div className="p-2 bg-[#0052CC]/10 dark:bg-[#0052CC]/20 rounded-lg space-y-1">
+                <p className="text-[10px] font-medium text-[#0052CC] dark:text-[#4C9AFF] flex items-center gap-1">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V2.84a.84.84 0 0 0-.84-.84H11.53zM6.77 6.8a4.36 4.36 0 0 0 4.34 4.34h1.8v1.72a4.36 4.36 0 0 0 4.34 4.34V7.63a.84.84 0 0 0-.83-.83H6.77zM2 11.6c0 2.4 1.95 4.34 4.35 4.34h1.78v1.72c.01 2.39 1.95 4.34 4.35 4.34v-9.57a.84.84 0 0 0-.84-.83H2z"/>
+                  </svg>
+                  {task.jira_issue_key}
+                </p>
+                {task.jira_status && (
+                  <p className="text-[10px] text-gray-600 dark:text-gray-300">Status: <span className="font-medium">{task.jira_status}</span></p>
+                )}
+                {task.jira_issue_type && (
+                  <p className="text-[10px] text-gray-600 dark:text-gray-300">Type: <span className="font-medium">{task.jira_issue_type}</span></p>
+                )}
+                {task.jira_tshirt_size && (
+                  <p className="text-[10px] text-gray-600 dark:text-gray-300">Size: <span className="font-medium">{task.jira_tshirt_size}</span></p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
