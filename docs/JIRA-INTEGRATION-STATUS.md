@@ -8,27 +8,36 @@ Last updated: January 10, 2026
 
 Trackli integrates with Jira to sync issues bidirectionally. Users can connect their Atlassian account, select which Jira projects to sync, and have their assigned issues appear as Trackli tasks.
 
+**Key Features:**
+- OAuth 2.0 connection with automatic token refresh
+- Two-way sync: Jira ↔ Trackli
+- Real-time updates via webhooks (instant)
+- Scheduled sync as fallback (every 15 minutes)
+- Automatic webhook registration on connect
+
 ---
 
 ## Completed Features
 
 ### Step 1: OAuth Connection
-**Status: Complete**
+**Status: ✅ Complete**
 
 - Users can connect Atlassian account via Settings
 - OAuth 2.0 flow with PKCE
 - Tokens stored securely in Supabase Vault
 - Automatic token refresh when expired
+- **Auto-registers webhooks on connect** (no manual setup needed)
 
 **Files:**
 - `supabase/functions/atlassian-auth-init/index.ts` - Starts OAuth flow
-- `supabase/functions/atlassian-auth-callback/index.ts` - Handles callback, stores tokens
+- `supabase/functions/atlassian-auth-callback/index.ts` - Handles callback, stores tokens, registers webhooks
+- `supabase/functions/atlassian-disconnect/index.ts` - Cleanup on disconnect (removes webhooks, tokens)
 - `src/components/auth/AtlassianCallback.jsx` - Frontend callback handler
 
 ---
 
 ### Step 2: Token Refresh
-**Status: Complete**
+**Status: ✅ Complete**
 
 - Tokens auto-refresh 5 minutes before expiry
 - Refresh logic built into all Edge Functions
@@ -39,7 +48,7 @@ Trackli integrates with Jira to sync issues bidirectionally. Users can connect t
 ---
 
 ### Step 3: Project Selection UI
-**Status: Complete**
+**Status: ✅ Complete**
 
 - Settings shows list of user's Jira projects
 - Toggle switches to enable/disable sync per project
@@ -50,7 +59,7 @@ Trackli integrates with Jira to sync issues bidirectionally. Users can connect t
 ---
 
 ### Step 4: Import Jira Issues (Sync Now)
-**Status: Complete**
+**Status: ✅ Complete**
 
 - "Sync Now" button in Settings
 - Fetches unresolved issues assigned to user from enabled projects
@@ -76,7 +85,7 @@ Trackli integrates with Jira to sync issues bidirectionally. Users can connect t
 ---
 
 ### Step 5: Jira Badge on Task Cards
-**Status: Complete**
+**Status: ✅ Complete**
 
 - Tasks from Jira show blue Jira icon + issue key
 - Clicking opens Jira issue in new tab
@@ -87,7 +96,7 @@ Trackli integrates with Jira to sync issues bidirectionally. Users can connect t
 ---
 
 ### Step 6: Status Mapping (Keyword-Based)
-**Status: Complete**
+**Status: ✅ Complete**
 
 Smart status mapping using keyword matching with category fallback.
 
@@ -106,17 +115,18 @@ Smart status mapping using keyword matching with category fallback.
 | `indeterminate` | `in_progress` |
 | `done` | `done` |
 
-**Function:** `mapStatusToTrackli()` in `jira-sync/index.ts` and `jira-sync-scheduled/index.ts`
+**Function:** `mapStatusToTrackli()` in `jira-sync/index.ts`, `jira-sync-scheduled/index.ts`, and `jira-webhook/index.ts`
 
 ---
 
 ### Step 7: Scheduled Auto-Sync
-**Status: Complete**
+**Status: ✅ Complete**
 
 - Cron job runs every 15 minutes
 - Syncs all users with active Atlassian connections
 - Updates `last_sync_at` on connection
 - Logs to `integration_audit_log`
+- **Serves as fallback if webhooks miss events**
 
 **Files:**
 - `supabase/functions/jira-sync-scheduled/index.ts`
@@ -139,7 +149,7 @@ SELECT * FROM cron.job WHERE jobname = 'jira-scheduled-sync';
 ---
 
 ### Step 8: Two-Way Sync (Trackli → Jira)
-**Status: Complete**
+**Status: ✅ Complete**
 
 - When task status changes in Trackli, updates Jira
 - Uses Jira transitions API (not direct status set)
@@ -160,32 +170,53 @@ SELECT * FROM cron.job WHERE jobname = 'jira-scheduled-sync';
 ---
 
 ### Step 9: Real-Time Webhooks (Jira → Trackli)
-**Status: Complete**
+**Status: ✅ Complete**
 
-Instant sync from Jira via webhooks (vs 15-minute polling fallback).
+Instant sync from Jira via webhooks with Supabase Realtime for UI updates.
+
+**Architecture:**
+```
+Jira Issue Changed
+        ↓
+Jira Sends Webhook
+        ↓
+jira-webhook Edge Function
+        ↓
+Updates tasks table (with user_id)
+        ↓
+Supabase Realtime broadcasts change
+        ↓
+Browser receives update
+        ↓
+UI updates instantly (no refresh needed)
+```
 
 **Files:**
 - `supabase/functions/jira-webhook/index.ts` - Webhook receiver
-- Settings UI shows webhook URL + setup instructions
+- `supabase/functions/atlassian-auth-callback/index.ts` - Auto-registers webhook on connect
+- `supabase/functions/atlassian-disconnect/index.ts` - Removes webhook on disconnect
+- `src/components/KanbanBoard.jsx` - Realtime subscription (~line 4940)
 
 **Events Handled:**
-- `jira:issue_created` - Creates new Trackli task
-- `jira:issue_updated` - Updates status, title, due date, priority
-- `jira:issue_deleted` - Marks task as `jira_sync_status = 'deleted'`
+| Jira Event | Action |
+|------------|--------|
+| `jira:issue_created` | Creates new Trackli task |
+| `jira:issue_updated` | Updates status, title, due date, priority |
+| `jira:issue_deleted` | Marks task as `jira_sync_status = 'deleted'` |
 
-**Setup (Manual):**
-1. User goes to Jira Settings → System → Webhooks
-2. Creates webhook with Trackli URL
-3. Selects events: issue created, updated, deleted
-4. Saves webhook
+**Auto-Registration Details:**
+- Webhooks are registered automatically during OAuth callback
+- Uses JQL filter: `project != "ZZZZNONEXISTENT"` (matches all projects)
+- Webhook ID stored in `atlassian_connections.webhook_id`
+- Cleaned up when user disconnects
 
-**Note:** 15-minute cron sync remains as fallback.
+**UI Indicator:**
+- Settings shows "Real-Time Sync: Active" (green) when webhook_id exists
+- Falls back to "15-min polling" (yellow) if webhook registration failed
 
 ---
 
 ## Not Yet Implemented
-
----
 
 ### Project Mapping (User Choice)
 **Status: Discussed, Not Implemented**
@@ -196,11 +227,6 @@ Currently all Jira issues go into a single "Jira" project in Trackli.
 - Default: Issues go to "Jira" project
 - Optional: User can map each Jira project to a specific Trackli project
 
-**Would require:**
-1. Add `trackli_project_id` column to `jira_project_sync` table
-2. Add dropdown in Settings UI next to each Jira project toggle
-3. Update sync logic to use mapped project if set
-
 ---
 
 ### Subtask Handling
@@ -209,10 +235,6 @@ Currently all Jira issues go into a single "Jira" project in Trackli.
 - Subtasks sync as regular tasks (if assigned to user)
 - `jira_parent_id` is stored but not used
 - No hierarchical display
-
-**Future options:**
-- Create Trackli subtasks under parent task
-- Show parent reference in task detail
 
 ---
 
@@ -223,21 +245,6 @@ If same issue is changed in both systems:
 - Jira → Trackli sync overwrites Trackli status
 - Trackli → Jira sync overwrites Jira status
 - No conflict detection or user prompt
-
-**Future:** Could compare `updated_at` timestamps and prompt user.
-
----
-
-### Resolved Issues Handling
-**Status: Not Specified**
-
-When a Jira issue is resolved/closed:
-- Currently stays in Trackli (moves to Done column)
-- Not automatically archived or removed
-
-**Future options:**
-- Auto-archive after X days in Done
-- Remove from Trackli when unassigned in Jira
 
 ---
 
@@ -259,6 +266,7 @@ Stores OAuth tokens and connection metadata.
 | token_expires_at | When access token expires |
 | last_sync_at | Last successful sync |
 | sync_error | Last error message |
+| **webhook_id** | Registered Jira webhook ID |
 
 ### `jira_project_sync`
 Per-project sync settings.
@@ -274,6 +282,7 @@ Per-project sync settings.
 ### `tasks` (Jira-related columns)
 | Column | Description |
 |--------|-------------|
+| **user_id** | Owner (required for Realtime) |
 | jira_issue_id | Jira issue ID |
 | jira_issue_key | e.g., "ATTP-1" |
 | jira_project_id | Jira project ID |
@@ -282,7 +291,7 @@ Per-project sync settings.
 | jira_issue_type | Task/Story/Bug/etc. |
 | jira_site_id | Which Jira site |
 | jira_parent_id | Parent issue ID (subtasks) |
-| jira_sync_status | active/paused |
+| jira_sync_status | active/paused/deleted/unassigned |
 | jira_assigned_at | When first synced |
 | source | "jira" for synced tasks |
 | source_link | URL to Jira issue |
@@ -304,9 +313,14 @@ Tracks all sync events for debugging.
 - `oauth.disconnected` - User disconnected
 - `oauth.token_refreshed` - Token was refreshed
 - `oauth.token_refresh_failed` - Refresh failed
+- `webhook.registered` - Webhook auto-registered
+- `webhook.registration_failed` - Webhook registration failed
 - `jira.sync_completed` - Manual sync finished
 - `jira.scheduled_sync_completed` - Cron sync finished
 - `jira.issue_transitioned` - Status pushed to Jira
+- `jira.webhook.issue_created` - Webhook received for new issue
+- `jira.webhook.issue_updated` - Webhook received for update
+- `jira.webhook.issue_deleted` - Webhook received for deletion
 
 ---
 
@@ -315,7 +329,8 @@ Tracks all sync events for debugging.
 | Function | Purpose | Auth |
 |----------|---------|------|
 | `atlassian-auth-init` | Start OAuth flow | User |
-| `atlassian-auth-callback` | Handle OAuth callback | None (state param) |
+| `atlassian-auth-callback` | Handle OAuth callback, register webhooks | None (state param) |
+| `atlassian-disconnect` | Cleanup on disconnect (webhooks, tokens) | User |
 | `jira-test-fetch` | Test connection, show issue count | User |
 | `jira-sync` | Manual sync (Sync Now button) | User |
 | `jira-sync-scheduled` | Cron sync (every 15 min) | Cron header |
@@ -331,40 +346,7 @@ npx supabase functions deploy <function-name> --no-verify-jwt
 
 ## Testing Checklist
 
-### Connection
-- [ ] Connect Atlassian account
-- [ ] See list of Jira projects
-- [ ] Disconnect and reconnect
-
-### Sync (Jira → Trackli)
-- [ ] Enable a project, click Sync Now
-- [ ] Verify issues appear in correct columns
-- [ ] Verify Jira badge and link work
-- [ ] Test with different status names
-- [ ] Wait 15 min, verify auto-sync works
-
-### Sync (Trackli → Jira)
-- [ ] Move Jira task to In Progress
-- [ ] Check Jira - should be In Progress
-- [ ] Move to Done in Trackli
-- [ ] Check Jira - should be Done
-- [ ] Move back to To Do
-- [ ] Check Jira - should be To Do
-
-### Webhooks (Real-Time Sync)
-- [ ] Create issue in Jira → appears in Trackli instantly
-- [ ] Update issue status in Jira → task moves columns
-- [ ] Update issue title in Jira → task title changes
-- [ ] Delete issue in Jira → task marked as deleted
-- [ ] Unassign issue in Jira → task marked unassigned
-
-### Edge Cases
-- [ ] Token refresh (wait 1+ hour)
-- [ ] Disable project, sync - issues shouldn't update
-- [ ] Assign new issue in Jira, wait for auto-sync
-- [ ] Bulk status change with mixed Jira/non-Jira tasks
-- [ ] Webhook for non-enabled project → ignored
-- [ ] Webhook for non-connected user → ignored
+See `docs/JIRA-TESTING-CHECKLIST.md` for comprehensive test scenarios.
 
 ---
 
@@ -383,6 +365,17 @@ npx supabase functions deploy <function-name> --no-verify-jwt
 - Check if status name matches keywords in `mapStatusToTrackli()`
 - Falls back to category if no keyword match
 - Add new keywords if needed
+
+### Real-time sync not working
+1. Check Settings shows "Real-Time Sync: Active"
+2. Check browser console for "Realtime tasks subscription: SUBSCRIBED"
+3. Check jira-webhook logs in Supabase for errors
+4. Verify task has `user_id` set (required for Realtime filter)
+
+### Webhook not registered
+- Check `atlassian_connections.webhook_id` is not null
+- Check `integration_audit_log` for `webhook.registration_failed`
+- Try disconnecting and reconnecting
 
 ### Cron not running
 ```sql
@@ -410,7 +403,7 @@ ORDER BY start_time DESC LIMIT 10;
 4. **Assignee sync** - When assigned in Trackli, assign in Jira
 5. **Custom field mapping** - Map Jira custom fields to Trackli fields
 6. **Multi-site support** - Connect multiple Jira sites
-7. **Auto-register webhooks** - Automatically set up webhooks on connect
+7. **Webhook refresh** - Auto-extend webhook expiry (30 days)
 
 ---
 
@@ -422,6 +415,9 @@ ORDER BY start_time DESC LIMIT 10;
 | Test button handler | KanbanBoard.jsx | `handleTestAtlassian` ~4232 |
 | Status change → Jira | KanbanBoard.jsx | `syncStatusToJira` ~7270 |
 | Project toggle | KanbanBoard.jsx | `handleToggleJiraProjectSync` ~4302 |
+| Realtime subscription | KanbanBoard.jsx | ~4940 |
 | Settings UI | KanbanBoard.jsx | ~11500-11650 |
 | Status mapping | jira-sync/index.ts | `mapStatusToTrackli` ~500 |
+| Webhook handler | jira-webhook/index.ts | main handler |
+| Auto-register webhook | atlassian-auth-callback/index.ts | `registerJiraWebhook` ~330 |
 | Token refresh | (all Edge Functions) | `getValidToken` function |
