@@ -467,6 +467,7 @@ function buildTaskFromIssue(
     : `https://atlassian.net/browse/${issue.key}`
 
   return {
+    user_id: userId,
     project_id: projectId,
     title: fields.summary || issue.key,
     description: extractDescription(fields.description) || null,
