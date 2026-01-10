@@ -37,13 +37,19 @@ Deno.serve(async (req) => {
     // Extract webhook info
     const webhookEvent = payload.webhookEvent
     const issue = payload.issue
+    const sprint = payload.sprint
     const changelog = payload.changelog
 
-    console.log(`Webhook received: ${webhookEvent} for ${issue?.key || 'unknown'}`)
+    console.log(`Webhook received: ${webhookEvent} for ${issue?.key || sprint?.name || 'unknown'}`)
     console.log(`issue.self: ${issue?.self || 'undefined'}`)
     console.log(`payload.baseUrl: ${payload.baseUrl || 'undefined'}`)
 
-    // Validate required fields
+    // Handle sprint events separately (they don't have issue data)
+    if (webhookEvent === 'sprint_started' || webhookEvent === 'sprint_closed') {
+      return await handleSprintEvent(supabase, payload, webhookEvent, startTime)
+    }
+
+    // Validate required fields for issue events
     if (!webhookEvent || !issue) {
       console.log('Invalid webhook payload - missing required fields')
       return new Response(
@@ -620,4 +626,250 @@ function buildTaskUpdates(
   }
 
   return updates
+}
+
+/**
+ * Handle sprint_started or sprint_closed events
+ * When a sprint starts, import all issues in that sprint for all connected users
+ */
+async function handleSprintEvent(
+  supabase: any,
+  payload: any,
+  webhookEvent: string,
+  startTime: number
+): Promise<Response> {
+  const sprint = payload.sprint
+  const baseUrl = payload.baseUrl
+
+  console.log(`Sprint event: ${webhookEvent}, sprint: ${sprint?.name || 'unknown'}`)
+
+  if (!sprint?.id) {
+    console.log('Sprint event missing sprint data')
+    return new Response(
+      JSON.stringify({ received: true, processed: false, reason: 'no_sprint_data' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
+  // Get site ID from baseUrl
+  let siteId: string | null = null
+  if (baseUrl) {
+    const { data: connectionByUrl } = await supabase
+      .from('atlassian_connections')
+      .select('site_id')
+      .eq('site_url', baseUrl)
+      .limit(1)
+      .single()
+
+    if (connectionByUrl) {
+      siteId = connectionByUrl.site_id
+    }
+  }
+
+  if (!siteId) {
+    console.log('Could not determine site ID for sprint event')
+    return new Response(
+      JSON.stringify({ received: true, processed: false, reason: 'unknown_site' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
+  // Get all users with connections to this site
+  const { data: connections } = await supabase
+    .from('atlassian_connections')
+    .select('*')
+    .eq('site_id', siteId)
+
+  if (!connections || connections.length === 0) {
+    console.log('No users connected to this site')
+    return new Response(
+      JSON.stringify({ received: true, processed: false, reason: 'no_users' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
+  let totalCreated = 0
+  let totalUpdated = 0
+  const results: any[] = []
+
+  // Process each connected user
+  for (const connection of connections) {
+    try {
+      // Get valid access token
+      const accessToken = await getValidToken(supabase, connection)
+      if (!accessToken) {
+        console.log(`No valid token for user ${connection.user_id}`)
+        continue
+      }
+
+      // Get user's enabled projects
+      const { data: enabledProjects } = await supabase
+        .from('jira_project_sync')
+        .select('jira_project_key')
+        .eq('user_id', connection.user_id)
+        .eq('sync_enabled', true)
+
+      if (!enabledProjects || enabledProjects.length === 0) {
+        console.log(`No enabled projects for user ${connection.user_id}`)
+        continue
+      }
+
+      const projectKeys = enabledProjects.map((p: any) => p.jira_project_key)
+
+      // Fetch issues in sprint assigned to this user
+      const jql = `sprint = ${sprint.id} AND assignee = currentUser() AND project IN (${projectKeys.join(', ')}) ORDER BY updated DESC`
+      const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'issuetype', 'project', 'parent', 'customfield_10016', 'customfield_10015', 'customfield_10020']
+
+      const jiraResponse = await fetch(
+        `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ jql, fields, maxResults: 100 }),
+        }
+      )
+
+      if (!jiraResponse.ok) {
+        console.error(`Jira API error for user ${connection.user_id}:`, await jiraResponse.text())
+        continue
+      }
+
+      const jiraData = await jiraResponse.json()
+      console.log(`Found ${jiraData.issues?.length || 0} sprint issues for user ${connection.user_id}`)
+
+      // Process each issue
+      for (const issue of jiraData.issues || []) {
+        // Check if task exists
+        const { data: existing } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('jira_issue_key', issue.key)
+          .eq('jira_site_id', siteId)
+          .single()
+
+        if (existing) {
+          // Update sprint info on existing task
+          const sprintData = extractActiveSprint(issue.fields.customfield_10020)
+          await supabase
+            .from('tasks')
+            .update({
+              jira_sprint_id: sprintData?.id || null,
+              jira_sprint_name: sprintData?.name || null,
+              jira_sprint_state: sprintData?.state || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id)
+          totalUpdated++
+        } else {
+          // Create new task - get/create project first
+          const jiraProjectKey = issue.fields.project?.key
+          const jiraProjectName = issue.fields.project?.name
+          const trackliProject = await getOrCreateProjectForJiraProject(
+            supabase, connection.user_id, jiraProjectKey, jiraProjectName
+          )
+          const jiraTagId = await getOrCreateJiraTag(supabase, trackliProject.id)
+
+          const newTask = buildTaskFromIssue(issue, connection.user_id, trackliProject.id, siteId, connection.site_url)
+          
+          // Add sprint info
+          const sprintData = extractActiveSprint(issue.fields.customfield_10020)
+          newTask.jira_sprint_id = sprintData?.id || null
+          newTask.jira_sprint_name = sprintData?.name || null
+          newTask.jira_sprint_state = sprintData?.state || null
+
+          const { data: inserted, error: insertError } = await supabase
+            .from('tasks')
+            .insert(newTask)
+            .select('id')
+            .single()
+
+          if (!insertError && inserted?.id && jiraTagId) {
+            await addTagToTask(supabase, inserted.id, jiraTagId)
+          }
+          totalCreated++
+        }
+      }
+
+      results.push({
+        userId: connection.user_id,
+        issuesFound: jiraData.issues?.length || 0,
+      })
+
+    } catch (err) {
+      console.error(`Error processing sprint for user ${connection.user_id}:`, err)
+    }
+  }
+
+  // Log to audit
+  await supabase.from('integration_audit_log').insert({
+    user_id: connections[0]?.user_id, // Log under first user
+    event_type: `jira.webhook.${webhookEvent}`,
+    provider: 'atlassian',
+    site_id: siteId,
+    details: {
+      sprint_id: sprint.id,
+      sprint_name: sprint.name,
+      users_processed: results.length,
+      total_created: totalCreated,
+      total_updated: totalUpdated,
+      processing_time_ms: Date.now() - startTime,
+    },
+    success: true,
+  })
+
+  return new Response(
+    JSON.stringify({
+      received: true,
+      processed: true,
+      event: webhookEvent,
+      sprint: sprint.name,
+      created: totalCreated,
+      updated: totalUpdated,
+    }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+/**
+ * Get a valid access token, refreshing if needed
+ */
+async function getValidToken(supabase: any, connection: any): Promise<string | null> {
+  const tokenExpiresAt = new Date(connection.token_expires_at)
+  const now = new Date()
+  const bufferMinutes = 5
+
+  // If token is still valid, get it from Vault
+  if (tokenExpiresAt.getTime() - now.getTime() >= bufferMinutes * 60 * 1000) {
+    const { data: tokenData } = await supabase
+      .rpc('get_vault_secret', { p_id: connection.access_token_secret_id })
+    return tokenData || null
+  }
+
+  // Token expired - would need refresh, but for webhook we'll skip
+  console.log('Token expired for sprint sync, skipping user')
+  return null
+}
+
+/**
+ * Extract the active sprint from Jira sprint field
+ */
+function extractActiveSprint(sprints: any[]): { id: string; name: string; state: string } | null {
+  if (!sprints || !Array.isArray(sprints) || sprints.length === 0) return null
+
+  const activeSprint = sprints.find(s => s.state === 'active')
+  if (activeSprint) {
+    return { id: String(activeSprint.id), name: activeSprint.name, state: activeSprint.state }
+  }
+
+  const futureSprint = sprints.find(s => s.state === 'future')
+  if (futureSprint) {
+    return { id: String(futureSprint.id), name: futureSprint.name, state: futureSprint.state }
+  }
+
+  const lastSprint = sprints[sprints.length - 1]
+  return { id: String(lastSprint.id), name: lastSprint.name, state: lastSprint.state }
 }

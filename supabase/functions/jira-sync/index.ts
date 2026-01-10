@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     // Get all existing Jira tasks for this user
     const { data: existingTasks } = await supabase
       .from('tasks')
-      .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, comments, updated_at, project_id')
+      .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, jira_sprint_id, comments, updated_at, project_id')
       .eq('user_id', user.id)
       .not('jira_issue_key', 'is', null)
 
@@ -402,7 +402,7 @@ async function fetchJiraIssues(
   // JQL: project IN (keys) AND assignee = currentUser() AND resolution = Unresolved
   // Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
   const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'customfield_10015', 'comment']
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'customfield_10015', 'customfield_10020', 'comment']
 
   const jiraResponse = await fetch(
     `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
@@ -453,6 +453,7 @@ async function fetchJiraIssues(
     parentKey: issue.fields.parent?.key,
     parentName: issue.fields.parent?.fields?.summary,
     parentType: issue.fields.parent?.fields?.issuetype?.name,
+    sprint: extractActiveSprint(issue.fields.customfield_10020),
     storyPoints: issue.fields.customfield_10016,
     comments: extractComments(issue.fields.comment?.comments),
   })) || []
@@ -524,6 +525,43 @@ function extractComments(jiraComments: any[]): any[] {
     source: 'Jira',
     jira_comment_id: comment.id,
   })).filter(c => c.text) // Only include comments with text
+}
+
+/**
+ * Extract the active sprint from Jira sprint field
+ * Sprint field (customfield_10020) is an array of sprints
+ * We want the active one, or the most recent future one
+ */
+function extractActiveSprint(sprints: any[]): { id: string; name: string; state: string } | null {
+  if (!sprints || !Array.isArray(sprints) || sprints.length === 0) return null
+
+  // First look for active sprint
+  const activeSprint = sprints.find(s => s.state === 'active')
+  if (activeSprint) {
+    return {
+      id: String(activeSprint.id),
+      name: activeSprint.name,
+      state: activeSprint.state,
+    }
+  }
+
+  // Then look for future sprint (scheduled but not started)
+  const futureSprint = sprints.find(s => s.state === 'future')
+  if (futureSprint) {
+    return {
+      id: String(futureSprint.id),
+      name: futureSprint.name,
+      state: futureSprint.state,
+    }
+  }
+
+  // Fall back to most recent (last in array, usually most recent closed)
+  const lastSprint = sprints[sprints.length - 1]
+  return {
+    id: String(lastSprint.id),
+    name: lastSprint.name,
+    state: lastSprint.state,
+  }
 }
 
 /**
@@ -694,6 +732,9 @@ function buildNewTask(
     jira_parent_id: issue.parentId || null,
     jira_parent_key: issue.parentKey || null,
     jira_parent_name: issue.parentName || null,
+    jira_sprint_id: issue.sprint?.id || null,
+    jira_sprint_name: issue.sprint?.name || null,
+    jira_sprint_state: issue.sprint?.state || null,
     jira_issue_type: issue.issueType,
     jira_tshirt_size: sizeMapping.jira_tshirt_size,
     jira_site_id: siteId,
@@ -781,6 +822,14 @@ function buildTaskUpdates(
   
   if (newComments.length > 0) {
     updates.comments = [...existingComments, ...newComments]
+  }
+
+  // Update sprint if changed
+  const newSprintId = issue.sprint?.id || null
+  if (existingTask.jira_sprint_id !== newSprintId) {
+    updates.jira_sprint_id = newSprintId
+    updates.jira_sprint_name = issue.sprint?.name || null
+    updates.jira_sprint_state = issue.sprint?.state || null
   }
 
   return updates

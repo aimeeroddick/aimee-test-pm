@@ -358,6 +358,8 @@ async function registerJiraWebhook(
             'jira:issue_created',
             'jira:issue_updated', 
             'jira:issue_deleted',
+            'sprint_started',
+            'sprint_closed',
           ],
           jqlFilter: 'project != "ZZZZNONEXISTENT"',  // Matches all projects (only project/status/assignee clauses supported)
         }

@@ -3640,6 +3640,9 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 {task.jira_parent_name && (
                   <p className="text-[10px] text-gray-600 dark:text-gray-300">Parent: <span className="font-medium">{task.jira_parent_key} - {task.jira_parent_name}</span></p>
                 )}
+                {task.jira_sprint_name && (
+                  <p className="text-[10px] text-gray-600 dark:text-gray-300">Sprint: <span className="font-medium">{task.jira_sprint_name}</span></p>
+                )}
               </div>
             )}
           </div>
