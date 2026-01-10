@@ -345,6 +345,7 @@ async function registerJiraWebhook(
 
     // Register webhook with Jira
     // Using the dynamic webhook registration API
+    // jqlFilter is required - we use a broad filter and handle filtering in our webhook handler
     const webhookPayload = {
       url: webhookUrl,
       webhooks: [
@@ -354,9 +355,7 @@ async function registerJiraWebhook(
             'jira:issue_updated', 
             'jira:issue_deleted',
           ],
-          // Filter to only issues assigned to this user would be ideal,
-          // but Jira webhooks don't support that filter directly.
-          // Our webhook handler filters by assignee.
+          jqlFilter: 'assignee is not EMPTY',  // Required field - filter to assigned issues
         }
       ]
     }
@@ -376,7 +375,7 @@ async function registerJiraWebhook(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`Failed to register webhook for site ${siteId}:`, errorText)
+      console.error(`Failed to register webhook for site ${siteId}:`, response.status, errorText)
       
       // Log but don't fail - webhook is optional, cron sync will still work
       await supabase.from('integration_audit_log').insert({
@@ -384,7 +383,7 @@ async function registerJiraWebhook(
         event_type: 'webhook.registration_failed',
         provider: 'atlassian',
         site_id: siteId,
-        details: { error: errorText, status: response.status },
+        details: { error: errorText, status: response.status, url: webhookUrl },
         success: false,
       })
       return
@@ -417,6 +416,19 @@ async function registerJiraWebhook(
     }
   } catch (error) {
     console.error('Error registering webhook:', error)
+    // Log the error so we can see what went wrong
+    try {
+      await supabase.from('integration_audit_log').insert({
+        user_id: userId,
+        event_type: 'webhook.registration_error',
+        provider: 'atlassian',
+        site_id: siteId,
+        details: { error: error.message || String(error) },
+        success: false,
+      })
+    } catch (logErr) {
+      console.error('Failed to log webhook error:', logErr)
+    }
     // Don't throw - webhook is optional enhancement
   }
 }
