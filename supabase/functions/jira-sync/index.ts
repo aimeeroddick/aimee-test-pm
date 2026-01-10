@@ -402,7 +402,7 @@ async function fetchJiraIssues(
   // JQL: project IN (keys) AND assignee = currentUser() AND resolution = Unresolved
   // Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
   const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'comment']
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'customfield_10015', 'comment']
 
   const jiraResponse = await fetch(
     `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
@@ -433,7 +433,17 @@ async function fetchJiraIssues(
 
   const jiraData = await jiraResponse.json()
 
-  const issues = jiraData.issues?.map((issue: any) => ({
+  const issues = jiraData.issues?.map((issue: any) => {
+    // Debug: log start date fields for first issue
+    if (jiraData.issues.indexOf(issue) === 0) {
+      console.log(`Start date debug for ${issue.key}:`, {
+        startDate: issue.fields.startDate,
+        customfield_10015: issue.fields.customfield_10015,
+        duedate: issue.fields.duedate,
+      })
+    }
+    
+    return {
     id: issue.id,
     key: issue.key,
     summary: issue.fields.summary,
@@ -446,14 +456,15 @@ async function fetchJiraIssues(
     projectKey: issue.fields.project?.key,
     projectName: issue.fields.project?.name,
     dueDate: issue.fields.duedate,
-    startDate: issue.fields.startDate,
+    startDate: issue.fields.startDate || issue.fields.customfield_10015,
     created: issue.fields.created,
     updated: issue.fields.updated,
     parentId: issue.fields.parent?.id,
     parentKey: issue.fields.parent?.key,
     storyPoints: issue.fields.customfield_10016,
     comments: extractComments(issue.fields.comment?.comments),
-  })) || []
+  }
+  }) || []
 
   return {
     success: true,
