@@ -3645,6 +3645,21 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
             {blocked && <span title="Blocked" className="flex-shrink-0">{TaskCardIcons.lock()}</span>}
             {task.critical && <span title="Critical" className="flex-shrink-0">{TaskCardIcons.flag()}</span>}
             {recurrence && <span title={recurrence.label} className="flex-shrink-0">{TaskCardIcons.repeat()}</span>}
+            {task.jira_issue_key && (
+              <a
+                href={task.source_link || `https://atlassian.net/browse/${task.jira_issue_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                title={`Open ${task.jira_issue_key} in Jira`}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-medium rounded bg-[#0052CC]/10 text-[#0052CC] dark:bg-[#0052CC]/30 dark:text-[#4C9AFF] hover:bg-[#0052CC]/20 dark:hover:bg-[#0052CC]/40 transition-colors flex-shrink-0"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V2.84a.84.84 0 0 0-.84-.84H11.53zM6.77 6.8a4.36 4.36 0 0 0 4.34 4.34h1.8v1.72a4.36 4.36 0 0 0 4.34 4.34V7.63a.84.84 0 0 0-.83-.83H6.77zM2 11.6c0 2.4 1.95 4.34 4.35 4.34h1.78v1.72c.01 2.39 1.95 4.34 4.35 4.34v-9.57a.84.84 0 0 0-.84-.83H2z"/>
+                </svg>
+                {task.jira_issue_key}
+              </a>
+            )}
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
@@ -4127,7 +4142,7 @@ export default function KanbanBoard({ demoMode = false }) {
     return `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
   }
 
-  // Fetch Atlassian connections
+  // Fetch Atlassian connections and Jira projects
   const fetchAtlassianConnections = async () => {
     if (demoMode) return
     try {
@@ -4136,9 +4151,24 @@ export default function KanbanBoard({ demoMode = false }) {
         .select('*')
         .eq('user_id', user?.id)
         .order('connected_at', { ascending: false })
-      
+
       if (error) throw error
       setAtlassianConnections(data || [])
+
+      // Also fetch Jira projects for sync settings
+      if (data && data.length > 0) {
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('jira_project_sync')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('jira_project_name', { ascending: true })
+
+        if (!projectsError) {
+          setJiraProjects(projectsData || [])
+        }
+      } else {
+        setJiraProjects([])
+      }
     } catch (err) {
       console.error('Error fetching Atlassian connections:', err)
     }
@@ -4199,6 +4229,101 @@ export default function KanbanBoard({ demoMode = false }) {
       setTimeout(() => setAtlassianError(''), 3000)
     } finally {
       setAtlassianLoading(false)
+    }
+  }
+
+  // Test Atlassian connection by fetching Jira issues
+  const handleTestAtlassian = async () => {
+    setAtlassianLoading(true)
+    setAtlassianError('')
+    setAtlassianSuccess('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const { data, error } = await supabase.functions.invoke('jira-test-fetch', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      })
+
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+
+      console.log('Jira test fetch result:', data)
+
+      if (data?.success) {
+        setAtlassianSuccess(`Found ${data.totalIssues || 0} Jira issues assigned to you`)
+        setTimeout(() => setAtlassianSuccess(''), 5000)
+      } else {
+        throw new Error('Unexpected response from Jira')
+      }
+    } catch (err) {
+      console.error('Error testing Atlassian connection:', err)
+      setAtlassianError(err.message || 'Failed to fetch Jira issues')
+      setTimeout(() => setAtlassianError(''), 5000)
+    } finally {
+      setAtlassianLoading(false)
+    }
+  }
+
+  // Sync Jira issues to Trackli tasks
+  const handleSyncJira = async () => {
+    setAtlassianLoading(true)
+    setAtlassianError('')
+    setAtlassianSuccess('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const { data, error } = await supabase.functions.invoke('jira-sync', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      })
+
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+
+      console.log('Jira sync result:', data)
+
+      if (data?.success) {
+        setAtlassianSuccess(data.message || `Synced: ${data.created} created, ${data.updated} updated`)
+        // Refresh tasks to show newly synced items
+        fetchTasks()
+        setTimeout(() => setAtlassianSuccess(''), 5000)
+      } else {
+        throw new Error('Unexpected response from sync')
+      }
+    } catch (err) {
+      console.error('Error syncing Jira:', err)
+      setAtlassianError(err.message || 'Failed to sync Jira issues')
+      setTimeout(() => setAtlassianError(''), 5000)
+    } finally {
+      setAtlassianLoading(false)
+    }
+  }
+
+  // Toggle Jira project sync enabled/disabled
+  const handleToggleJiraProjectSync = async (projectId, currentEnabled) => {
+    try {
+      const { error } = await supabase
+        .from('jira_project_sync')
+        .update({
+          sync_enabled: !currentEnabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+
+      // Update local state
+      setJiraProjects(prev => prev.map(p =>
+        p.id === projectId ? { ...p, sync_enabled: !currentEnabled } : p
+      ))
+    } catch (err) {
+      console.error('Error toggling project sync:', err)
+      setAtlassianError('Failed to update project sync setting')
+      setTimeout(() => setAtlassianError(''), 3000)
     }
   }
 
@@ -4368,6 +4493,8 @@ export default function KanbanBoard({ demoMode = false }) {
   const [atlassianLoading, setAtlassianLoading] = useState(false)
   const [atlassianError, setAtlassianError] = useState('')
   const [atlassianSuccess, setAtlassianSuccess] = useState('')
+  const [jiraProjects, setJiraProjects] = useState([])
+  const [jiraProjectsExpanded, setJiraProjectsExpanded] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -6380,7 +6507,7 @@ export default function KanbanBoard({ demoMode = false }) {
   // Bulk actions
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedTaskIds.size === 0) return
-    
+
     setSaving(true)
     try {
       const ids = Array.from(selectedTaskIds)
@@ -6388,9 +6515,15 @@ export default function KanbanBoard({ demoMode = false }) {
         .from('tasks')
         .update({ status: newStatus })
         .in('id', ids)
-      
+
       if (error) throw error
-      
+
+      // Sync Jira-linked tasks in background
+      const jiraTasks = tasks.filter(t => selectedTaskIds.has(t.id) && t.jira_issue_key)
+      jiraTasks.forEach(task => {
+        syncStatusToJira(task.jira_issue_key, newStatus, task.id)
+      })
+
       setTasks(tasks.map(t => selectedTaskIds.has(t.id) ? { ...t, status: newStatus } : t))
       setUndoToast({ taskId: null, previousStatus: null, taskTitle: `${ids.length} tasks moved to ${newStatus.replace('_', ' ')}` })
       setTimeout(() => setUndoToast(null), 3000)
@@ -7085,32 +7218,37 @@ export default function KanbanBoard({ demoMode = false }) {
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
       const task = tasks.find(t => t.id === taskId)
-      
+
       // Note: Future recurring occurrences are pre-created when the task is saved,
       // so we don't need to create a new task here when marking done
-      
+
       const { error } = await supabase
         .from('tasks')
-        .update({ 
+        .update({
           status: newStatus,
           completed_at: newStatus === 'done' ? new Date().toISOString() : null
         })
         .eq('id', taskId)
-      
+
       if (error) throw error
-      
+
       const previousStatus = task?.status
-      
+
       if (newStatus === 'done' && task?.recurrence_type) {
         await fetchData()
       } else {
-        setTasks(tasks.map(t => t.id === taskId ? { 
-          ...t, 
+        setTasks(tasks.map(t => t.id === taskId ? {
+          ...t,
           status: newStatus,
           completed_at: newStatus === 'done' ? new Date().toISOString() : null
         } : t))
       }
-      
+
+      // Sync status change to Jira if this is a Jira-linked task
+      if (task?.jira_issue_key && previousStatus !== newStatus) {
+        syncStatusToJira(task.jira_issue_key, newStatus, taskId)
+      }
+
       // Show undo toast
       if (newStatus === 'done') {
         trackEvent('task_completed', { had_subtasks: (task?.subtasks?.length || 0) > 0 })
@@ -7125,6 +7263,34 @@ export default function KanbanBoard({ demoMode = false }) {
     } catch (err) {
       console.error('Error updating task status:', err)
       setError(err.message)
+    }
+  }
+
+  // Sync task status change to Jira (runs in background, doesn't block UI)
+  const syncStatusToJira = async (issueKey, targetStatus, taskId) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const { data, error } = await supabase.functions.invoke('jira-update-issue', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { issueKey, targetStatus, taskId },
+      })
+
+      if (error) {
+        console.error('Failed to sync status to Jira:', error)
+        return
+      }
+
+      if (data?.error) {
+        console.error('Jira sync error:', data.error)
+        return
+      }
+
+      console.log(`Synced ${issueKey} to Jira:`, data?.message || 'Success')
+    } catch (err) {
+      // Don't show error to user - this is background sync
+      console.error('Error syncing to Jira:', err)
     }
   }
   
@@ -11402,8 +11568,15 @@ Or we can extract from:
                       <div>
                         <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Atlassian (Jira & Confluence)</div>
                         {atlassianConnections.length > 0 ? (
-                          <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                            Connected to {atlassianConnections.map(c => c.site_name || c.site_url).join(', ')}
+                          <div className="space-y-0.5">
+                            <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                              Connected to {atlassianConnections.map(c => c.site_name || c.site_url).join(', ')}
+                            </div>
+                            {atlassianConnections[0]?.last_sync_at && (
+                              <div className={`text-[10px] ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Last sync: {new Date(atlassianConnections[0].last_sync_at).toLocaleString()}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -11413,13 +11586,30 @@ Or we can extract from:
                       </div>
                     </div>
                     {atlassianConnections.length > 0 ? (
-                      <button
-                        onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
-                        disabled={atlassianLoading}
-                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-                      >
-                        {atlassianLoading ? '...' : 'Disconnect'}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSyncJira}
+                          disabled={atlassianLoading || jiraProjects.filter(p => p.sync_enabled).length === 0}
+                          className="px-3 py-1.5 bg-[#0052CC] text-white text-sm font-medium rounded-lg hover:bg-[#0747A6] transition-colors disabled:opacity-50"
+                          title={jiraProjects.filter(p => p.sync_enabled).length === 0 ? 'Enable at least one project to sync' : 'Import Jira issues as tasks'}
+                        >
+                          {atlassianLoading ? '...' : 'Sync Now'}
+                        </button>
+                        <button
+                          onClick={handleTestAtlassian}
+                          disabled={atlassianLoading}
+                          className="px-3 py-1.5 bg-[#0052CC]/70 text-white text-sm font-medium rounded-lg hover:bg-[#0052CC] transition-colors disabled:opacity-50"
+                        >
+                          {atlassianLoading ? '...' : 'Test'}
+                        </button>
+                        <button
+                          onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
+                          disabled={atlassianLoading}
+                          className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        >
+                          {atlassianLoading ? '...' : 'Disconnect'}
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={handleConnectAtlassian}
@@ -11440,9 +11630,66 @@ Or we can extract from:
                       ✗ {atlassianError}
                     </div>
                   )}
+
+                  {/* Jira Projects Section */}
+                  {atlassianConnections.length > 0 && jiraProjects.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => setJiraProjectsExpanded(!jiraProjectsExpanded)}
+                        className={`flex items-center gap-2 w-full text-left text-sm font-medium ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors`}
+                      >
+                        <svg
+                          className={`w-4 h-4 transition-transform ${jiraProjectsExpanded ? 'rotate-90' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        Jira Projects ({jiraProjects.filter(p => p.sync_enabled).length}/{jiraProjects.length} syncing)
+                      </button>
+
+                      {jiraProjectsExpanded && (
+                        <div className="mt-3 space-y-2">
+                          {jiraProjects.map(project => (
+                            <div
+                              key={project.id}
+                              className={`flex items-center justify-between p-2 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-white border border-gray-200'}`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                                  {project.jira_project_key}
+                                </span>
+                                <span className={`text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                  {project.jira_project_name}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => handleToggleJiraProjectSync(project.id, project.sync_enabled)}
+                                className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  project.sync_enabled
+                                    ? 'bg-[#0052CC]'
+                                    : darkMode ? 'bg-gray-600' : 'bg-gray-300'
+                                }`}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    project.sync_enabled ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          ))}
+                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
+                            Toggle which Jira projects to sync with Trackli
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-              
+
               {/* Data Section */}
               <div>
                 <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
