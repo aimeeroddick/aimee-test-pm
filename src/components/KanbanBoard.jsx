@@ -4151,8 +4151,10 @@ export default function KanbanBoard({ demoMode = false }) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
+      const callbackUrl = `${window.location.origin}/auth/atlassian/callback`
+      
       const { data, error } = await supabase.functions.invoke('atlassian-auth-init', {
-        body: { redirectPath: '/app' },
+        body: { redirectPath: '/app', callbackUrl },
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },

@@ -60,15 +60,19 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Parse request body for redirect path
+    // Parse request body
     let redirectPath = '/settings'
+    let callbackUrl = 'https://www.gettrackli.com/auth/atlassian/callback'
     try {
       const body = await req.json()
       if (body.redirectPath) {
         redirectPath = body.redirectPath
       }
+      if (body.callbackUrl) {
+        callbackUrl = body.callbackUrl
+      }
     } catch {
-      // No body or invalid JSON, use default
+      // No body or invalid JSON, use defaults
     }
 
     // Generate secure random state
@@ -104,15 +108,6 @@ Deno.serve(async (req) => {
       details: { redirect_path: redirectPath },
       success: true,
     })
-
-    // Determine callback URL based on request origin
-    const origin = req.headers.get('origin') || 'https://www.gettrackli.com'
-    let callbackUrl = 'https://www.gettrackli.com/auth/atlassian/callback'
-    if (origin.includes('localhost')) {
-      callbackUrl = 'http://localhost:5173/auth/atlassian/callback'
-    } else if (origin.includes('test.trackli')) {
-      callbackUrl = 'https://test.trackli.com/auth/atlassian/callback'
-    }
 
     // Build Atlassian authorization URL
     const scopes = [
