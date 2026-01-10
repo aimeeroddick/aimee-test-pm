@@ -278,7 +278,7 @@ async function handleIssueUpdated(
     // Find existing task
     const { data: existing, error: findError } = await supabase
       .from('tasks')
-      .select('id, status, jira_status, title, due_date, critical, updated_at')
+      .select('id, status, jira_status, title, due_date, start_date, critical, updated_at')
       .eq('jira_issue_key', issue.key)
       .eq('jira_site_id', connection.site_id)
       .single()
@@ -503,6 +503,9 @@ function buildTaskUpdates(
   const fields = issue.fields || {}
   const status = fields.status || {}
 
+  // Debug: log all field names to find start date field
+  console.log(`All fields in webhook: ${Object.keys(fields).join(', ')}`)
+
   // Update status if changed
   const newJiraStatus = status.name
   if (existingTask.jira_status !== newJiraStatus) {
@@ -532,7 +535,9 @@ function buildTaskUpdates(
   }
 
   // Update start date if changed
-  const newStartDate = fields.startDate || null
+  // Note: Jira may send this as 'startDate' or in a custom field
+  const newStartDate = fields.startDate || fields.customfield_10015 || null
+  console.log(`Start date debug: fields.startDate=${fields.startDate}, existing=${existingTask.start_date}, new=${newStartDate}`)
   if (existingTask.start_date !== newStartDate) {
     updates.start_date = newStartDate
   }
