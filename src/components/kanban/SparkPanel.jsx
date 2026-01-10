@@ -409,7 +409,10 @@ const handleLocalQuery = (input, tasks, projects, dateFormat, lastQueryResults =
   // "tasks in [project]", "[project] tasks", "show [project]"
   // Skip negation queries - too complex for local handling
   if (!/\b(not\s+in|not|except|other\s+than|besides|excluding)\b/i.test(query)) {
-    for (const project of projects) {
+    // Sort projects by name length (longest first) to match most specific name first
+    // This prevents "Internal" from matching before "Internal - Gameday"
+    const sortedProjects = [...projects].sort((a, b) => b.name.length - a.name.length)
+    for (const project of sortedProjects) {
       const projectNameLower = project.name.toLowerCase()
       // Check if project name appears in query
       if (query.includes(projectNameLower)) {
