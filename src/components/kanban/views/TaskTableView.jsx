@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { supabase } from '../../../lib/supabase'
 import { COLUMNS, COLUMN_COLORS, CATEGORIES, SOURCES, ENERGY_LEVELS } from '../constants'
-import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate, getDateLocale, isUSDateFormat } from '../utils'
+import { getDueDateStatus, isBlocked, formatDate, formatTimeEstimate, getDateLocale } from '../utils'
 
 
 const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
@@ -274,23 +274,44 @@ const TaskTableView = ({ tasks, projects, onEditTask, allTasks }) => {
           // Already in YYYY-MM-DD format
           if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr
           
-          // Use user's date format preference, fall back to locale detection
-          const dateFormatPref = profile?.date_format
-          const isUSFormat = dateFormatPref === 'MM/DD/YYYY' || 
-            ((!dateFormatPref || dateFormatPref === 'auto') && isUSDateFormat())
-          
           const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
           if (match) {
+            const first = parseInt(match[1])
+            const second = parseInt(match[2])
             let day, month
-            if (isUSFormat) {
-              // US: MM/DD/YYYY
+            
+            // Smart detection: if first number > 12, it must be a day (DD/MM/YYYY)
+            // If second number > 12, it must be a day (MM/DD/YYYY)
+            if (first > 12) {
+              // Must be DD/MM/YYYY (UK format)
+              day = match[1].padStart(2, '0')
+              month = match[2].padStart(2, '0')
+            } else if (second > 12) {
+              // Must be MM/DD/YYYY (US format)
               month = match[1].padStart(2, '0')
               day = match[2].padStart(2, '0')
             } else {
-              // UK/EU: DD/MM/YYYY
-              day = match[1].padStart(2, '0')
-              month = match[2].padStart(2, '0')
+              // Ambiguous (both <= 12), use user preference
+              const dateFormatPref = profile?.date_format
+              const isUSFormat = dateFormatPref === 'MM/DD/YYYY'
+              // Default to UK format (DD/MM/YYYY) if no preference or auto
+              if (isUSFormat) {
+                month = match[1].padStart(2, '0')
+                day = match[2].padStart(2, '0')
+              } else {
+                day = match[1].padStart(2, '0')
+                month = match[2].padStart(2, '0')
+              }
             }
+            
+            // Validate the parsed date
+            const monthNum = parseInt(month)
+            const dayNum = parseInt(day)
+            if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+              console.warn(`Invalid date: ${dateStr} -> day=${day}, month=${month}`)
+              return null
+            }
+            
             return `${match[3]}-${month}-${day}`
           }
           return null
