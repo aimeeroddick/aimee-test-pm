@@ -7274,6 +7274,7 @@ export default function KanbanBoard({ demoMode = false }) {
 
       // Sync status change to Jira if this is a Jira-linked task
       if (task?.jira_issue_key && previousStatus !== newStatus) {
+        console.log(`Triggering Jira sync: ${task.jira_issue_key}, ${previousStatus} -> ${newStatus}`)
         syncStatusToJira(task.jira_issue_key, newStatus, taskId)
       }
 

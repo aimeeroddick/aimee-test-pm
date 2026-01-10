@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
     const body = await req.json()
     const { issueKey, targetStatus, taskId } = body
 
+    console.log(`jira-update-issue called: issueKey=${issueKey}, targetStatus=${targetStatus}, taskId=${taskId}`)
+
     if (!issueKey || !targetStatus) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: issueKey, targetStatus' }),
@@ -72,6 +74,8 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .single()
+
+    console.log(`Connection lookup: found=${!!connection}, error=${connError?.message || 'none'}`)
 
     if (connError || !connection) {
       return new Response(
