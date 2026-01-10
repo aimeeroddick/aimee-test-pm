@@ -507,7 +507,15 @@ function buildTaskUpdates(
   if (existingTask.jira_status !== newJiraStatus) {
     updates.jira_status = newJiraStatus
     updates.jira_status_category = status.statusCategory?.key
-    updates.status = mapStatusToTrackli(newJiraStatus, status.statusCategory?.key)
+    const newStatus = mapStatusToTrackli(newJiraStatus, status.statusCategory?.key)
+    updates.status = newStatus
+    
+    // Set completed_at when moving to done, clear it when moving away
+    if (newStatus === 'done') {
+      updates.completed_at = new Date().toISOString()
+    } else if (existingTask.status === 'done') {
+      updates.completed_at = null
+    }
   }
 
   // Update title if changed
