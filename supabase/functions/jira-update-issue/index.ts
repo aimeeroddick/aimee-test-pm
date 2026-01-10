@@ -149,7 +149,6 @@ Deno.serve(async (req) => {
 
     // Handle status transition
       // Map Trackli status to Jira status category
-      const targetCategory = mapTrackliStatusToJiraCategory(targetStatus)
 
     // Get available transitions for the issue
     const transitionsResult = await getAvailableTransitions(accessToken, connection.site_id, issueKey)
@@ -161,20 +160,20 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Find a transition that leads to the target status category
-    const targetTransition = findTransitionForCategory(transitionsResult.transitions, targetCategory)
+    // Find a transition that leads to the target status
+    const targetTransition = findTransitionForStatus(transitionsResult.transitions, targetStatus)
 
     if (!targetTransition) {
       // No transition available - this might mean the issue is already in the right state
       // or there's no valid path to the target status
-      console.log(`No transition found for ${issueKey} to category ${targetCategory}`)
+      console.log(`No transition found for ${issueKey} to status ${targetStatus}`)
 
       return new Response(
         JSON.stringify({
           success: true,
           message: 'No transition needed or available',
           issueKey,
-          targetCategory,
+          targetStatus,
           availableTransitions: transitionsResult.transitions.map((t: any) => ({
             name: t.name,
             toStatus: t.to.name,
@@ -300,33 +299,71 @@ async function getAvailableTransitions(
 }
 
 /**
- * Find a transition that leads to the target status category
+ * Find a transition that leads to the target Trackli status
+ * Priority:
+ * 1. Exact status name match (case-insensitive)
+ * 2. Keyword match based on Trackli status
+ * 3. Category fallback
  */
-function findTransitionForCategory(transitions: any[], targetCategory: string): any | null {
-  // Priority order for finding transitions:
-  // 1. Exact category match
-  // 2. Status name contains relevant keywords
-
-  // First, try exact category match
-  const exactMatch = transitions.find(
-    t => t.to?.statusCategory?.key === targetCategory
-  )
-  if (exactMatch) return exactMatch
-
-  // If no exact match, try keyword matching
-  const keywords: Record<string, string[]> = {
-    'new': ['backlog', 'to do', 'todo', 'open', 'new'],
-    'indeterminate': ['in progress', 'in review', 'working', 'started', 'active'],
+function findTransitionForStatus(transitions: any[], trackliStatus: string): any | null {
+  // Define keywords for each Trackli status
+  const statusKeywords: Record<string, string[]> = {
+    'backlog': ['backlog'],
+    'todo': ['to do', 'todo', 'open', 'new', 'ready'],
+    'in_progress': ['in progress', 'in review', 'in testing', 'working', 'started', 'active', 'development'],
     'done': ['done', 'complete', 'closed', 'resolved', 'finished'],
   }
 
-  const targetKeywords = keywords[targetCategory] || []
-  const keywordMatch = transitions.find(t => {
-    const statusName = t.to?.name?.toLowerCase() || ''
-    return targetKeywords.some(kw => statusName.includes(kw))
+  // Define category for fallback
+  const statusCategory: Record<string, string> = {
+    'backlog': 'new',
+    'todo': 'new',
+    'in_progress': 'indeterminate',
+    'done': 'done',
+  }
+
+  const keywords = statusKeywords[trackliStatus] || []
+  const category = statusCategory[trackliStatus] || 'new'
+
+  console.log(`Finding transition for trackliStatus=${trackliStatus}, keywords=${keywords.join(',')}, category=${category}`)
+  console.log(`Available transitions: ${transitions.map(t => `${t.name} -> ${t.to?.name} (${t.to?.statusCategory?.key})`).join(', ')}`)
+
+  // Priority 1: Exact keyword match on destination status name
+  for (const keyword of keywords) {
+    const match = transitions.find(t => {
+      const statusName = t.to?.name?.toLowerCase() || ''
+      return statusName === keyword || statusName.includes(keyword)
+    })
+    if (match) {
+      console.log(`Found keyword match: ${match.name} -> ${match.to?.name}`)
+      return match
+    }
+  }
+
+  // Priority 2: Category fallback (but exclude 'backlog' if we're looking for 'todo')
+  const categoryMatch = transitions.find(t => {
+    const toCategory = t.to?.statusCategory?.key
+    const toName = t.to?.name?.toLowerCase() || ''
+    
+    // If looking for todo, don't match backlog even though both are 'new' category
+    if (trackliStatus === 'todo' && toName.includes('backlog')) {
+      return false
+    }
+    // If looking for backlog, don't match to do
+    if (trackliStatus === 'backlog' && (toName.includes('to do') || toName === 'todo')) {
+      return false
+    }
+    
+    return toCategory === category
   })
 
-  return keywordMatch || null
+  if (categoryMatch) {
+    console.log(`Found category match: ${categoryMatch.name} -> ${categoryMatch.to?.name}`)
+    return categoryMatch
+  }
+
+  console.log('No transition found')
+  return null
 }
 
 /**
