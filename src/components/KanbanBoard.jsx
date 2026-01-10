@@ -4248,7 +4248,8 @@ export default function KanbanBoard({ demoMode = false }) {
       console.log('Jira test fetch result:', data)
 
       if (data?.success) {
-        setAtlassianSuccess(`Found ${data.totalIssues || 0} Jira issues assigned to you`)
+        const issueCount = data.issues?.length || data.totalIssues || 0
+        setAtlassianSuccess(`Found ${issueCount} Jira issue${issueCount !== 1 ? 's' : ''} assigned to you`)
         setTimeout(() => setAtlassianSuccess(''), 5000)
       } else {
         throw new Error('Unexpected response from Jira')
