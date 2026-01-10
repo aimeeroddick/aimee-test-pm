@@ -8148,7 +8148,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Action buttons */}
               <button
                 onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg sm:rounded-xl hover:from-teal-600 hover:to-emerald-600 active:from-teal-700 active:to-emerald-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-teal-500/25 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700/50 rounded-lg sm:rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:bg-emerald-200 dark:active:bg-emerald-900/70 transition-all text-sm font-medium items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 title={`${shortcutModifier}P`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8160,7 +8160,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <button
                 onClick={() => { setEditingTask(selectedProjectId !== 'all' ? { project_id: selectedProjectId } : null); setTaskModalOpen(true) }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-lg sm:rounded-xl transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-purple-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                className="hidden sm:flex px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-700/50 rounded-lg sm:rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-900/70 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 title={`${shortcutModifier}T`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8177,7 +8177,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   }
                 }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-2 py-1.5 sm:py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg sm:rounded-xl hover:from-cyan-600 hover:to-blue-600 active:from-cyan-700 active:to-blue-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-cyan-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+                className="hidden sm:flex px-2 py-1.5 sm:py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50 rounded-lg sm:rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/50 active:bg-amber-200 dark:active:bg-amber-900/70 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 title={`Quick Add (Q or ${shortcutModifier}Q) - with voice support`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8196,7 +8196,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   setMeetingNotesModalOpen(true)
                 }}
                 disabled={projects.length === 0}
-                className="hidden sm:flex px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 transition-all text-sm font-medium items-center gap-1.5 shadow-lg shadow-amber-500/25 hover:shadow-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                className="hidden sm:flex px-3 py-2 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 border border-pink-200 dark:border-pink-700/50 rounded-xl hover:bg-pink-100 dark:hover:bg-pink-900/50 active:bg-pink-200 dark:active:bg-pink-900/70 transition-all text-sm font-medium items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                 title={`Import Meeting Notes (${shortcutModifier}N)`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

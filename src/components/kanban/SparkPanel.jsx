@@ -508,7 +508,7 @@ export const SparkButton = ({ onClick, id }) => (
   <button
     id={id}
     onClick={onClick}
-    className="hidden sm:flex p-1.5 bg-pink-50 hover:bg-pink-100 active:bg-pink-200 border border-pink-200 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-2"
+    className="hidden sm:flex p-1.5 bg-gradient-to-br from-pink-50 to-amber-50 dark:from-pink-900/30 dark:to-amber-900/30 hover:from-pink-100 hover:to-amber-100 dark:hover:from-pink-900/50 dark:hover:to-amber-900/50 active:from-pink-200 active:to-amber-200 dark:active:from-pink-900/70 dark:active:to-amber-900/70 border border-pink-200 dark:border-pink-700/50 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-pink-300 dark:focus:ring-pink-600 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
     title="Spark AI Assistant (⌃⌘S)"
   >
     <svg className="w-7 h-7" viewBox="0 0 56 56" fill="none">
