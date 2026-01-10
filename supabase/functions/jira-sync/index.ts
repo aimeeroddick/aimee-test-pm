@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     // Get existing Jira tasks for this user (by jira_issue_key, not project)
     const { data: existingTasks } = await supabase
       .from('tasks')
-      .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, updated_at, project_id')
+      .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, comments, updated_at, project_id')
       .eq('project_id', trackliProject.id)
       .not('jira_issue_key', 'is', null)
 
@@ -370,7 +370,7 @@ async function fetchJiraIssues(
   // JQL: project IN (keys) AND assignee = currentUser() AND resolution = Unresolved
   // Note: Uses /rest/api/3/search/jql (the old /rest/api/3/search endpoint is deprecated and returns 410)
   const jql = `project IN (${projectKeys}) AND assignee = currentUser() AND resolution = Unresolved ORDER BY updated DESC`
-  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016']
+  const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'customfield_10016', 'comment']
 
   const jiraResponse = await fetch(
     `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
@@ -420,6 +420,7 @@ async function fetchJiraIssues(
     parentId: issue.fields.parent?.id,
     parentKey: issue.fields.parent?.key,
     storyPoints: issue.fields.customfield_10016,
+    comments: extractComments(issue.fields.comment?.comments),
   })) || []
 
   return {
@@ -443,6 +444,21 @@ function extractDescription(adf: any): string {
   }
 
   return extractText(adf.content).trim()
+}
+
+/**
+ * Extract comments from Jira format to Trackli format
+ */
+function extractComments(jiraComments: any[]): any[] {
+  if (!jiraComments || !Array.isArray(jiraComments)) return []
+
+  return jiraComments.map(comment => ({
+    text: extractDescription(comment.body),
+    author: comment.author?.displayName || 'Unknown',
+    created_at: comment.created,
+    source: 'jira',
+    jira_comment_id: comment.id,
+  })).filter(c => c.text) // Only include comments with text
 }
 
 /**
@@ -542,6 +558,7 @@ function buildNewTask(
     critical: issue.priority === 'Highest' || issue.priority === 'Critical',
     due_date: issue.dueDate || null,
     start_date: issue.startDate || null,
+    comments: issue.comments || [],
     source: 'jira',
     source_link: jiraUrl,
     jira_issue_id: issue.id,
@@ -610,6 +627,26 @@ function buildTaskUpdates(
   const newCritical = issue.priority === 'Highest' || issue.priority === 'Critical'
   if (existingTask.critical !== newCritical) {
     updates.critical = newCritical
+  }
+
+  // Sync comments - merge Jira comments with existing Trackli comments
+  const existingComments = existingTask.comments || []
+  const newJiraComments = issue.comments || []
+  
+  // Get IDs of existing Jira comments
+  const existingJiraCommentIds = new Set(
+    existingComments
+      .filter((c: any) => c.jira_comment_id)
+      .map((c: any) => c.jira_comment_id)
+  )
+  
+  // Find new Jira comments that don't exist yet
+  const newComments = newJiraComments.filter(
+    (c: any) => !existingJiraCommentIds.has(c.jira_comment_id)
+  )
+  
+  if (newComments.length > 0) {
+    updates.comments = [...existingComments, ...newComments]
   }
 
   return updates
