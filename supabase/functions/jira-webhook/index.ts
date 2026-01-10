@@ -240,8 +240,17 @@ async function handleIssueCreated(
       return { action: 'already_exists', taskId: existing.id }
     }
 
-    // Get or create Jira project in Trackli
-    const trackliProject = await getOrCreateJiraProject(supabase, userId)
+    // Get project info from issue
+    const jiraProjectKey = issue.fields?.project?.key || ''
+    const jiraProjectName = issue.fields?.project?.name || ''
+
+    // Get or create Trackli project for this Jira project
+    const trackliProject = await getOrCreateProjectForJiraProject(
+      supabase, userId, jiraProjectKey, jiraProjectName
+    )
+
+    // Get or create jira tag for the project
+    const jiraTagId = await getOrCreateJiraTag(supabase, trackliProject.id)
 
     // Build task from issue
     const newTask = buildTaskFromIssue(issue, userId, trackliProject.id, connection.site_id, connection.site_url)
@@ -254,6 +263,11 @@ async function handleIssueCreated(
 
     if (insertError) {
       return { action: 'create_failed', error: insertError.message }
+    }
+
+    // Add jira tag to the new task
+    if (jiraTagId && inserted?.id) {
+      await addTagToTask(supabase, inserted.id, jiraTagId)
     }
 
     console.log(`Created task ${inserted.id} for ${issue.key}`)
@@ -376,34 +390,88 @@ async function handleIssueDeleted(
 }
 
 /**
- * Get or create a Trackli project for Jira tasks
+ * Get or create a Trackli project for a specific Jira project
  */
-async function getOrCreateJiraProject(
+async function getOrCreateProjectForJiraProject(
   supabase: any,
-  userId: string
+  userId: string,
+  jiraProjectKey: string,
+  jiraProjectName: string
 ): Promise<{ id: string }> {
+  const projectName = jiraProjectName || jiraProjectKey
+
   const { data: existing } = await supabase
     .from('projects')
     .select('id')
     .eq('user_id', userId)
-    .eq('name', 'Jira')
+    .eq('name', projectName)
     .single()
 
-  if (existing) {
-    return existing
-  }
+  if (existing) return existing
 
   const { data: newProject } = await supabase
     .from('projects')
     .insert({
       user_id: userId,
-      name: 'Jira',
+      name: projectName,
       color: '#0052CC',
     })
     .select('id')
     .single()
 
   return newProject || { id: '' }
+}
+
+/**
+ * Get or create a "jira" tag for the project
+ */
+async function getOrCreateJiraTag(
+  supabase: any,
+  projectId: string
+): Promise<string | null> {
+  const { data: existing } = await supabase
+    .from('project_tags')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('name', 'jira')
+    .single()
+
+  if (existing) return existing.id
+
+  const { data: newTag, error } = await supabase
+    .from('project_tags')
+    .insert({ project_id: projectId, name: 'jira' })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Failed to create jira tag:', error)
+    return null
+  }
+
+  return newTag?.id || null
+}
+
+/**
+ * Add a tag to a task (idempotent)
+ */
+async function addTagToTask(
+  supabase: any,
+  taskId: string,
+  tagId: string
+): Promise<void> {
+  const { data: existing } = await supabase
+    .from('task_tags')
+    .select('task_id')
+    .eq('task_id', taskId)
+    .eq('tag_id', tagId)
+    .single()
+
+  if (existing) return
+
+  await supabase
+    .from('task_tags')
+    .insert({ task_id: taskId, tag_id: tagId })
 }
 
 /**
