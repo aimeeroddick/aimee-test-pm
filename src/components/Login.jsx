@@ -135,15 +135,8 @@ export default function Login() {
         {/* Logo above card */}
         <div className="text-center mb-6 animate-gentle-pulse">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10">
-              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full drop-shadow-lg">
-                <path d="M6 18L28 6L28 38L6 26Z" fill="white" fillOpacity="0.95"/>
-                <path d="M28 6L50 18L50 46L28 38Z" fill="white" fillOpacity="0.8"/>
-                <path d="M6 18L28 6L50 18L28 30Z" fill="white" fillOpacity="0.6"/>
-                <path d="M18 19L25 26L36 14" fill="none" stroke="rgba(251, 146, 60, 0.9)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-2xl font-bold text-white drop-shadow-lg">Trackli</span>
+            <img src="/logo.png" alt="trackli" className="w-12 h-12 drop-shadow-lg" />
+            <span className="text-2xl font-semibold text-white drop-shadow-lg" style={{ fontFamily: 'Rubik, sans-serif' }}>trackli</span>
           </Link>
           <p className="text-white/70 text-sm mt-1">Task management that sparks joy</p>
         </div>

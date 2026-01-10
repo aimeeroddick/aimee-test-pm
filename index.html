@@ -7,46 +7,48 @@
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://quzfljuvpvevvvdnsktd.supabase.co" />
     <link rel="dns-prefetch" href="https://quzfljuvpvevvvdnsktd.supabase.co" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Primary Meta Tags -->
-    <title>Trackli - Task management that sparks joy</title>
-    <meta name="title" content="Trackli - Task management that sparks joy" />
-    <meta name="description" content="Streamline your workflow with Trackli. Kanban boards, calendar views, My Day planning, and smart task management for individuals and teams." />
+    <title>trackli - Task management that sparks joy</title>
+    <meta name="title" content="trackli - Task management that sparks joy" />
+    <meta name="description" content="Streamline your workflow with trackli. Kanban boards, calendar views, My Day planning, and smart task management for individuals and teams." />
     <meta name="keywords" content="task management, kanban, project management, productivity, todo, calendar, planning" />
-    <meta name="author" content="Trackli" />
+    <meta name="author" content="trackli" />
     <meta name="robots" content="index, follow" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.gettrackli.com/" />
-    <meta property="og:title" content="Trackli - Task management that sparks joy" />
-    <meta property="og:description" content="Streamline your workflow with Trackli. Kanban boards, calendar views, My Day planning, and smart task management." />
+    <meta property="og:title" content="trackli - Task management that sparks joy" />
+    <meta property="og:description" content="Streamline your workflow with trackli. Kanban boards, calendar views, My Day planning, and smart task management." />
     <meta property="og:image" content="https://www.gettrackli.com/og-image.png" />
-    <meta property="og:site_name" content="Trackli" />
+    <meta property="og:site_name" content="trackli" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://www.gettrackli.com/" />
-    <meta property="twitter:title" content="Trackli - Task management that sparks joy" />
-    <meta property="twitter:description" content="Streamline your workflow with Trackli. Kanban boards, calendar views, My Day planning, and smart task management." />
+    <meta property="twitter:title" content="trackli - Task management that sparks joy" />
+    <meta property="twitter:description" content="Streamline your workflow with trackli. Kanban boards, calendar views, My Day planning, and smart task management." />
     <meta property="twitter:image" content="https://www.gettrackli.com/og-image.png" />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://www.gettrackli.com/" />
     
     <!-- Favicon - ico for Safari, PNG fallback, SVG for modern browsers -->
-    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
-    <link rel="shortcut icon" href="/favicon.ico?v=2" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png?v=2" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png?v=2" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+    <link rel="shortcut icon" href="/favicon.ico?v=3" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png?v=3" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png?v=3" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#7C3AED" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Trackli" />
+    <meta name="apple-mobile-web-app-title" content="trackli" />
     <meta name="mobile-web-app-capable" content="yes" />
     
     <!-- Inline Critical CSS for instant loading skeleton -->
@@ -102,12 +104,10 @@
         50% { opacity: 0.1; transform: scale(1.05); }
       }
       .brand-text {
+        font-family: 'Rubik', sans-serif;
         font-size: 1.5rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #7C3AED, #9333EA, #EA580C);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-weight: 600;
+        color: #1f2937;
         margin-bottom: 0.5rem;
       }
       .loading-text {
@@ -122,25 +122,10 @@
       <div class="loading-skeleton">
         <div class="loading-content">
           <div class="logo-container">
-            <svg class="logo-svg" viewBox="0 0 56 56" fill="none">
-              <defs>
-                <linearGradient id="lg-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#7C3AED"/>
-                  <stop offset="100%" stop-color="#9333EA"/>
-                </linearGradient>
-                <linearGradient id="lg-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#EA580C"/>
-                  <stop offset="100%" stop-color="#F97316"/>
-                </linearGradient>
-              </defs>
-              <path d="M6 18L28 6L28 38L6 26Z" fill="url(#lg-left)"/>
-              <path d="M28 6L50 18L50 46L28 38Z" fill="url(#lg-right)"/>
-              <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-              <path d="M18 19L25 26L36 14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="/logo.png" alt="trackli" class="logo-svg" />
             <div class="pulse-ring"></div>
           </div>
-          <h1 class="brand-text">Trackli</h1>
+          <h1 class="brand-text">trackli</h1>
           <p class="loading-text">Loading your tasks...</p>
         </div>
       </div>

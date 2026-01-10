@@ -110,25 +110,8 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="glass-card rounded-2xl px-4 md:px-6 py-3 flex justify-between items-center shadow-lg shadow-black/5">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 md:w-9 md:h-9">
-                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                  <defs>
-                    <linearGradient id="nav-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#7C3AED"/>
-                      <stop offset="100%" stopColor="#9333EA"/>
-                    </linearGradient>
-                    <linearGradient id="nav-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#EA580C"/>
-                      <stop offset="100%" stopColor="#F97316"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M6 18L28 6L28 38L6 26Z" fill="url(#nav-left)"/>
-                  <path d="M28 6L50 18L50 46L28 38Z" fill="url(#nav-right)"/>
-                  <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                  <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">Trackli</span>
+              <img src="/logo.png" alt="trackli" className="w-8 h-8 md:w-9 md:h-9" />
+              <span className="text-lg md:text-xl font-semibold text-gray-800" style={{ fontFamily: 'Rubik, sans-serif' }}>trackli</span>
             </Link>
             <div className="flex items-center gap-2 md:gap-4">
               <a href="#features" className="hidden sm:block text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">Features</a>
@@ -453,22 +436,15 @@ Everyone needs to review the proposal before Monday.`}
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8">
-                <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                  <path d="M6 18L28 6L28 38L6 26Z" fill="#A78BFA"/>
-                  <path d="M28 6L50 18L50 46L28 38Z" fill="#FB923C"/>
-                  <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                  <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-white">Trackli</span>
+              <img src="/logo.png" alt="trackli" className="w-8 h-8" />
+              <span className="text-lg font-semibold text-white" style={{ fontFamily: 'Rubik, sans-serif' }}>trackli</span>
             </div>
             <div className="flex gap-6 md:gap-8 text-gray-400 text-sm">
               <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
               <a href="mailto:hello@gettrackli.com" className="hover:text-white transition-colors">Contact</a>
             </div>
-            <p className="text-gray-500 text-sm">© {new Date().getFullYear()} Trackli</p>
+            <p className="text-gray-500 text-sm">© {new Date().getFullYear()} trackli</p>
           </div>
         </div>
       </footer>

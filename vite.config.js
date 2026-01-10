@@ -12,10 +12,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.png', 'icons/*.png'],
       manifest: {
-        name: 'Trackli - Task Management',
-        short_name: 'Trackli',
+        name: 'trackli - Task Management',
+        short_name: 'trackli',
         description: 'Task management that just works with Kanban boards, calendar, and AI-powered features',
         theme_color: '#6366f1',
         background_color: '#ffffff',

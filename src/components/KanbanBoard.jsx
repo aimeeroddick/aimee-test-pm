@@ -135,7 +135,7 @@ const PWAInstallPrompt = ({ onDismiss }) => {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Get Trackli on your phone</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Get trackli on your phone</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {isIOS 
                 ? "Add to home screen for quick access & notifications"
@@ -724,7 +724,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                   </svg>
                 </button>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Help us make Trackli better!</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300 mt-1">Help us make trackli better!</p>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6">
@@ -1664,7 +1664,7 @@ const OnboardingOverlay = ({ step, onNext, onSkip, onComplete }) => {
   const steps = [
     {
       target: 'summary-bar',
-      title: 'Welcome to Trackli!',
+      title: 'Welcome to trackli!',
       description: 'This is your Summary Bar - click any stat to filter tasks. Use the My Day filter to see your daily focus, or filter by assignee, customer, category and more.',
       position: 'bottom',
     },
@@ -2808,7 +2808,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'getting-started', shortcutMo
                 <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
                   Help Guide
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Master your productivity with Trackli</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Master your productivity with trackli</p>
               </div>
             </div>
             <button 
@@ -2849,9 +2849,9 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'getting-started', shortcutMo
             {/* Getting Started Tab */}
             {activeTab === 'getting-started' && (
               <>
-                <SectionCard index={0} title="Welcome to Trackli">
+                <SectionCard index={0} title="Welcome to trackli">
                   <div className="space-y-3">
-                    <p className="text-gray-800 dark:text-gray-300">Trackli helps you stay on top of your tasks with a simple workflow:</p>
+                    <p className="text-gray-800 dark:text-gray-300">trackli helps you stay on top of your tasks with a simple workflow:</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <div className="p-3 rounded-xl border-l-4 border-gray-400 bg-gray-100 dark:bg-gray-800 text-center">
                         <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">Backlog</span>
@@ -2908,7 +2908,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'getting-started', shortcutMo
                       </div>
                       <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
                         <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-1">Plan My Day</p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">Let Trackli suggest tasks based on your available time</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">Let trackli suggest tasks based on your available time</p>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Access My Day with <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">{shortcutModifier}D</kbd> or from the menu.</p>
@@ -3109,7 +3109,7 @@ const HelpModal = ({ isOpen, onClose, initialTab = 'getting-started', shortcutMo
                         Email Integration
                       </p>
                       <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                        <p><strong>Setup:</strong> Go to <span className="text-indigo-600 dark:text-indigo-400">Settings → Integrations → Email</span> to get your unique Trackli email address.</p>
+                        <p><strong>Setup:</strong> Go to <span className="text-indigo-600 dark:text-indigo-400">Settings → Integrations → Email</span> to get your unique trackli email address.</p>
                         <p><strong>Use:</strong> Forward any email to this address and AI will extract tasks with due dates, priorities, and context.</p>
                       </div>
                     </div>
@@ -7389,31 +7389,14 @@ export default function KanbanBoard({ demoMode = false }) {
         <div className="text-center">
           {/* Animated Logo */}
           <div className="relative mb-6">
-            <div className="w-20 h-20 mx-auto">
-              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full drop-shadow-xl">
-                <defs>
-                  <linearGradient id="loading-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#7C3AED"/>
-                    <stop offset="100%" stopColor="#9333EA"/>
-                  </linearGradient>
-                  <linearGradient id="loading-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#EA580C"/>
-                    <stop offset="100%" stopColor="#F97316"/>
-                  </linearGradient>
-                </defs>
-                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#loading-left)"/>
-                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#loading-right)"/>
-                <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
+            <img src="/logo.png" alt="trackli" className="w-20 h-20 mx-auto drop-shadow-xl" />
             {/* Pulse ring */}
             <div className="absolute inset-0 w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-orange-500 animate-ping opacity-20" />
           </div>
           
           {/* Brand name */}
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500 bg-clip-text text-transparent mb-2">
-            Trackli
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2" style={{ fontFamily: 'Rubik, sans-serif' }}>
+            trackli
           </h1>
           
           {/* Loading text */}
@@ -7449,7 +7432,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              You're exploring Trackli in demo mode — changes won't be saved
+              You're exploring trackli in demo mode — changes won't be saved
             </span>
             <a
               href="/login?signup=true"
@@ -7694,24 +7677,7 @@ export default function KanbanBoard({ demoMode = false }) {
               
               {/* Logo - shows in left section on smaller screens */}
               <div className="flex xl:hidden items-center gap-2">
-                <div className="w-8 h-8">
-                  <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                    <defs>
-                      <linearGradient id="logo-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#7C3AED"/>
-                        <stop offset="100%" stopColor="#9333EA"/>
-                      </linearGradient>
-                      <linearGradient id="logo-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#EA580C"/>
-                        <stop offset="100%" stopColor="#F97316"/>
-                      </linearGradient>
-                    </defs>
-                    <path d="M6 18L28 6L28 38L6 26Z" fill="url(#logo-left)"/>
-                    <path d="M28 6L50 18L50 46L28 38Z" fill="url(#logo-right)"/>
-                    <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                    <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
+                <img src="/logo.png" alt="trackli" className="w-8 h-8" />
               </div>
             </div>
             {/* Right: Action Buttons */}
@@ -8059,26 +8025,9 @@ export default function KanbanBoard({ demoMode = false }) {
           
           {/* Centered Logo - only visible on wide screens (xl+), absolutely positioned */}
           <div className="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 pointer-events-none">
-            <div className="w-10 h-10">
-              <svg viewBox="0 0 56 56" fill="none" className="w-full h-full">
-                <defs>
-                  <linearGradient id="center-logo-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#7C3AED"/>
-                    <stop offset="100%" stopColor="#9333EA"/>
-                  </linearGradient>
-                  <linearGradient id="center-logo-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#EA580C"/>
-                    <stop offset="100%" stopColor="#F97316"/>
-                  </linearGradient>
-                </defs>
-                <path d="M6 18L28 6L28 38L6 26Z" fill="url(#center-logo-left)"/>
-                <path d="M28 6L50 18L50 46L28 38Z" fill="url(#center-logo-right)"/>
-                <path d="M6 18L28 6L50 18L28 30Z" fill="#E9D5FF"/>
-                <path d="M18 19L25 26L36 14" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-purple-500 to-orange-500 bg-clip-text text-transparent">
-              Trackli
+            <img src="/logo.png" alt="trackli" className="w-10 h-10" />
+            <h1 className="text-2xl font-semibold text-gray-800 dark:text-white" style={{ fontFamily: 'Rubik, sans-serif' }}>
+              trackli
             </h1>
           </div>
         </div>
@@ -8894,7 +8843,7 @@ export default function KanbanBoard({ demoMode = false }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h2 className="text-2xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Welcome to Trackli!</h2>
+          <h2 className="text-2xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Welcome to trackli!</h2>
           <p className="text-gray-500 dark:text-gray-300 mb-8 text-base sm:text-base">Get started by creating your first project.</p>
           <button
             onClick={() => { setEditingProject(null); setProjectModalOpen(true) }}
@@ -11005,7 +10954,7 @@ Or we can extract from:
                 </h3>
                 <div className={`p-4 rounded-xl space-y-3 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                   <div>
-                    <div className={`text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Your Trackli Email Address</div>
+                    <div className={`text-sm font-medium mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Your trackli Email Address</div>
                     <div className={`text-xs mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Forward emails here to create tasks automatically</div>
                   </div>
                   {profile?.inbound_email_token ? (
@@ -11736,7 +11685,7 @@ Or we can extract from:
       {/* Footer */}
       <footer className="mt-auto py-4 px-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-screen-xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 dark:text-gray-400">
-          <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-500 transition-colors">Trackli</a>
+          <a href="https://gettrackli.com" target="_blank" rel="noopener noreferrer" className="font-bold text-gray-700 dark:text-gray-300 hover:text-indigo-500 transition-colors">trackli</a>
           <span className="hidden sm:inline text-gray-400 dark:text-gray-500 italic">Task management that sparks joy</span>
           <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
           <Link to="/privacy" className="hover:text-indigo-500 transition-colors">Privacy</Link>
