@@ -4495,6 +4495,8 @@ export default function KanbanBoard({ demoMode = false }) {
   const [atlassianSuccess, setAtlassianSuccess] = useState('')
   const [jiraProjects, setJiraProjects] = useState([])
   const [jiraProjectsExpanded, setJiraProjectsExpanded] = useState(false)
+  const [webhookInstructionsExpanded, setWebhookInstructionsExpanded] = useState(false)
+  const [webhookUrlCopied, setWebhookUrlCopied] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -11683,6 +11685,79 @@ Or we can extract from:
                           <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
                             Toggle which Jira projects to sync with Trackli
                           </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Real-Time Webhook Section */}
+                  {atlassianConnections.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => setWebhookInstructionsExpanded(!webhookInstructionsExpanded)}
+                        className={`flex items-center gap-2 w-full text-left text-sm font-medium ${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'} transition-colors`}
+                      >
+                        <svg
+                          className={`w-4 h-4 transition-transform ${webhookInstructionsExpanded ? 'rotate-90' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Real-Time Sync (Optional)
+                      </button>
+                      
+                      {webhookInstructionsExpanded && (
+                        <div className="mt-3 space-y-3">
+                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Enable instant sync from Jira by adding a webhook. Without this, Trackli syncs every 15 minutes.
+                          </p>
+                          
+                          {/* Webhook URL */}
+                          <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-xs font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Webhook URL</div>
+                                <code className={`text-xs break-all ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                  {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jira-webhook`}
+                                </code>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jira-webhook`)
+                                  setWebhookUrlCopied(true)
+                                  setTimeout(() => setWebhookUrlCopied(false), 2000)
+                                }}
+                                className={`shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                  webhookUrlCopied
+                                    ? 'bg-green-500 text-white'
+                                    : darkMode
+                                      ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {webhookUrlCopied ? '✓ Copied' : 'Copy'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Setup Instructions */}
+                          <div className={`text-xs space-y-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <p className="font-medium">Setup in Jira:</p>
+                            <ol className="list-decimal list-inside space-y-1 ml-1">
+                              <li>Go to <strong>Jira Settings</strong> → <strong>System</strong> → <strong>Webhooks</strong></li>
+                              <li>Click <strong>Create a webhook</strong></li>
+                              <li>Paste the URL above</li>
+                              <li>Select events: <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue created</code>, <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue updated</code>, <code className={`px-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>issue deleted</code></li>
+                              <li>Filter by your enabled projects (optional)</li>
+                              <li>Save the webhook</li>
+                            </ol>
+                            <p className="mt-2 italic">Changes in Jira will now sync to Trackli instantly!</p>
+                          </div>
                         </div>
                       )}
                     </div>
