@@ -7336,6 +7336,7 @@ export default function KanbanBoard({ demoMode = false }) {
         if (field === 'energy_level' && t.energy_level) return false
         if (field === 'source' && t.source) return false
         if (field === 'due_date' && t.due_date) return false
+        if (field === 'tags' && t.tags?.length > 0) return false
       } else {
         // Filter for specific value
         if (field === 'assignee' && t.assignee !== value) return false
@@ -7343,6 +7344,10 @@ export default function KanbanBoard({ demoMode = false }) {
         if (field === 'category' && t.category !== value) return false
         if (field === 'energy_level' && t.energy_level !== value) return false
         if (field === 'source' && t.source !== value) return false
+        if (field === 'tags') {
+          const taskTagNames = (t.tags || []).map(tag => typeof tag === 'string' ? tag : tag.name)
+          if (!taskTagNames.includes(value)) return false
+        }
         if (field === 'due_date') {
           if (value === 'has_date' && !t.due_date) return false
           else if (value.startsWith('=') || value.startsWith('<') || value.startsWith('>')) {
@@ -8682,7 +8687,7 @@ export default function KanbanBoard({ demoMode = false }) {
               {/* Field Filters */}
               <div className="flex items-center gap-1.5 flex-wrap">
                 {Object.entries(fieldFilters).map(([field, value]) => {
-                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', energy_level: 'Effort', due_date: 'Due Date', start_date: 'Start Date', time_estimate: 'Time Est.' }
+                  const fieldLabels = { assignee: 'Assignee', customer: 'Customer', tags: 'Tag', energy_level: 'Effort', due_date: 'Due Date', start_date: 'Start Date', time_estimate: 'Time Est.' }
                   let displayValue = value
                   if (value === '__blank__') displayValue = '(Blank)'
                   else if (field === 'category') displayValue = CATEGORIES.find(c => c.id === value)?.label || value
@@ -8752,6 +8757,7 @@ export default function KanbanBoard({ demoMode = false }) {
                     <option value="">+ Filter</option>
                     {!fieldFilters.assignee && <option value="assignee">Assignee</option>}
                     {!fieldFilters.customer && <option value="customer">Customer</option>}
+                    {!fieldFilters.tags && <option value="tags">Tag</option>}
                     {!fieldFilters.energy_level && <option value="energy_level">Effort</option>}
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
                     {!fieldFilters.start_date && <option value="start_date">Start Date</option>}
@@ -8766,7 +8772,7 @@ export default function KanbanBoard({ demoMode = false }) {
                 {pendingFilterField && !pendingFilterOperator && (
                   <div className="flex items-center gap-1">
                     {/* Simple fields - direct value selection */}
-                    {['assignee', 'customer', 'energy_level'].includes(pendingFilterField) && (
+                    {['assignee', 'customer', 'tags', 'energy_level'].includes(pendingFilterField) && (
                       <div className="relative">
                         <select
                           autoFocus
@@ -8792,6 +8798,12 @@ export default function KanbanBoard({ demoMode = false }) {
                             return proj && (!proj.archived || showArchivedProjects)
                           }).map(t => t.customer).filter(Boolean))].sort().map(c => (
                             <option key={c} value={c}>{c}</option>
+                          ))}
+                          {pendingFilterField === 'tags' && [...new Set(
+                            projects.filter(p => !p.archived || showArchivedProjects)
+                              .flatMap(p => (p.tags || []).map(t => typeof t === 'string' ? t : t.name))
+                          )].filter(Boolean).sort().map(tag => (
+                            <option key={tag} value={tag}>{tag}</option>
                           ))}
                           {pendingFilterField === 'energy_level' && (
                             <>
