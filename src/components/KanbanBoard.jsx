@@ -3704,12 +3704,12 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
           </div>
           
           {/* Project, Customer, and Tags at bottom - hidden on mobile */}
-          {showProject && project && (
+          {((showProject && project) || task.customer || task.tags?.length > 0) && (
             <div className="hidden sm:block mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
               <span className="text-[10px] text-gray-500 dark:text-gray-300 truncate block">
-                {project.name}
-                {task.customer && ` · ${task.customer}`}
-                {task.tags?.length > 0 && ` · ${task.tags.map(t => typeof t === 'string' ? t : t.name).join(', ')}`}
+                {showProject && project ? project.name : ''}
+                {task.customer && `${showProject && project ? ' · ' : ''}${task.customer}`}
+                {task.tags?.length > 0 && `${(showProject && project) || task.customer ? ' · ' : ''}${task.tags.map(t => typeof t === 'string' ? t : t.name).join(', ')}`}
               </span>
             </div>
           )}
