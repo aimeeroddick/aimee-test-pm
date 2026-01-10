@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
     const changelog = payload.changelog
 
     console.log(`Webhook received: ${webhookEvent} for ${issue?.key || 'unknown'}`)
+    console.log(`issue.self: ${issue?.self || 'undefined'}`)
+    console.log(`payload.baseUrl: ${payload.baseUrl || 'undefined'}`)
 
     // Validate required fields
     if (!webhookEvent || !issue) {
@@ -54,21 +56,45 @@ Deno.serve(async (req) => {
     let siteId: string | null = null
     const selfUrl = issue.self || ''
 
+    // Try API gateway format: api.atlassian.com/ex/jira/{siteId}/...
     if (selfUrl.includes('api.atlassian.com/ex/jira/')) {
       const match = selfUrl.match(/api\.atlassian\.com\/ex\/jira\/([^/]+)/)
       siteId = match ? match[1] : null
     }
 
+    // Try direct Atlassian URL format: https://{site}.atlassian.net/...
+    if (!siteId && selfUrl.includes('.atlassian.net')) {
+      const match = selfUrl.match(/https:\/\/([^/]+\.atlassian\.net)/)
+      if (match) {
+        const siteUrl = match[0] // e.g., https://spicymango.atlassian.net
+        console.log(`Looking up site by URL: ${siteUrl}`)
+        
+        const { data: connectionByUrl, error: urlError } = await supabase
+          .from('atlassian_connections')
+          .select('site_id, site_url')
+          .eq('site_url', siteUrl)
+          .limit(1)
+          .single()
+
+        console.log(`Lookup result: ${JSON.stringify(connectionByUrl)}, error: ${urlError?.message || 'none'}`)
+        if (connectionByUrl) {
+          siteId = connectionByUrl.site_id
+        }
+      }
+    }
+
     // Also try to get from baseUrl in webhook if available
     if (!siteId && payload.baseUrl) {
       const baseUrl = payload.baseUrl
-      const { data: connectionByUrl } = await supabase
+      console.log(`Looking up site by baseUrl: ${baseUrl}`)
+      const { data: connectionByUrl, error: urlError } = await supabase
         .from('atlassian_connections')
-        .select('site_id')
+        .select('site_id, site_url')
         .eq('site_url', baseUrl)
         .limit(1)
         .single()
 
+      console.log(`Lookup result: ${JSON.stringify(connectionByUrl)}, error: ${urlError?.message || 'none'}`)
       if (connectionByUrl) {
         siteId = connectionByUrl.site_id
       }
