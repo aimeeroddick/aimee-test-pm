@@ -8,36 +8,65 @@ This file provides guidance for Claude when working on the Trackli project.
 
 **Overview**: Trackli is a task management app for busy professionals with Kanban boards, calendar views, My Day planning, and AI-powered task extraction.
 
+**Current Version**: 2.23.1
+
 ### Tech Stack
 - **Frontend**: React 18 + Vite + Tailwind CSS
-- **Backend**: Supabase (PostgreSQL with RLS)
+- **Backend**: Supabase (PostgreSQL with RLS, Edge Functions, Vault)
 - **Desktop**: Electron (macOS, Windows, Linux)
-- **AI**: Anthropic Claude API (image task extraction)
+- **AI**: Anthropic Claude API (Spark assistant, image task extraction)
 - **Deployment**: Vercel (web), GitHub releases (desktop)
 
 ### Key Commands
 ```bash
+# Development
 npm run dev              # Start dev server (localhost:5173)
 npm run build            # Production build
+
+# Desktop
 npm run electron:dev     # Desktop dev mode
-npm run electron:build   # Build desktop apps
+npm run electron:build:mac   # Build macOS app (requires signing)
+npm run electron:build:win   # Build Windows app
+npm run electron:build:linux # Build Linux app
+
+# Supabase Edge Functions
+npx supabase functions deploy <function-name> --no-verify-jwt
+npx supabase secrets set KEY=value
+
+# Git Workflow
+git push origin test-develop  # Deploy to test environment
+# NEVER push directly to main - always test first
 ```
 
 ### Project Structure
 ```
 src/
 ├── components/          # React components
-│   ├── KanbanBoard.jsx  # Main board (entry point for most features)
+│   ├── KanbanBoard.jsx  # Main board (11,800+ lines - entry point for most features)
 │   ├── kanban/          # Board subcomponents
 │   │   ├── constants.js # Colors, enums, button styles
 │   │   ├── utils.js     # Date, status, color helpers
 │   │   ├── views/       # Calendar, My Day, Table
-│   │   └── modals/      # Task/Project creation
+│   │   ├── modals/      # Task/Project creation
+│   │   └── SparkPanel.jsx # AI assistant
+│   └── auth/            # OAuth callbacks (Atlassian, etc.)
 ├── contexts/            # AuthContext (user state)
 ├── lib/                 # Supabase client, error logging
-└── utils/               # Task extraction utilities
+└── utils/               
+    ├── analytics.js     # Event tracking
+    └── cacheManager.js  # PWA cache control
 api/                     # Vercel serverless functions
 electron/                # Desktop app (main.cjs, preload.cjs)
+supabase/
+└── functions/           # Edge Functions (Deno/TypeScript)
+    ├── spark-chat/      # AI assistant
+    ├── atlassian-auth-init/
+    ├── atlassian-auth-callback/
+    └── jira-test-fetch/
+docs/                    # PRDs and progress docs
+build/                   # Desktop app resources (icons, entitlements)
+public/
+└── icons/               # PWA icons (icon-72x72.png through icon-512x512.png)
 ```
 
 ### Database Tables
@@ -47,6 +76,150 @@ electron/                # Desktop app (main.cjs, preload.cjs)
 - `attachments` - File uploads
 - `task_dependencies` - Blocking relationships
 - `profiles` - User settings
+- `atlassian_connections` - OAuth tokens (encrypted via Vault)
+- `jira_project_sync` - Per-project sync settings
+- `oauth_states` - CSRF protection for OAuth flows
+- `integration_audit_log` - Security audit trail
+- `spark_analytics` - AI query routing analytics
+
+---
+
+## Deployment & Releases
+
+### Git Workflow (CRITICAL)
+```
+All changes → test-develop → test thoroughly → merge to main
+```
+- **NEVER push directly to main**
+- Test environment: https://trackli-git-test-develop-trackli.vercel.app
+- Production: https://gettrackli.com
+
+### Vercel (Web)
+- Auto-deploys from both branches
+- Preview URLs for test-develop branch
+- Production deploys from main branch
+
+### Edge Functions (Supabase)
+```bash
+cd ~/Desktop/Trackli
+npx supabase functions deploy <function-name> --no-verify-jwt
+```
+- Functions are in `/supabase/functions/`
+- Each function has its own folder with `index.ts`
+- Secrets set via: `npx supabase secrets set KEY=value`
+
+### macOS Notarization
+**Prerequisites:**
+- Apple Developer Account ($99/year)
+- Developer ID Application certificate (in Keychain)
+- App-specific password (from appleid.apple.com)
+- Team ID: `YKB55F67P3`
+
+**Build & Notarize:**
+```bash
+export APPLE_ID="aw291@evansville.edu"
+export APPLE_TEAM_ID="YKB55F67P3"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+npm run electron:build:mac
+```
+
+**Check notarization status:**
+```bash
+xcrun notarytool history --apple-id "aw291@evansville.edu" --team-id "YKB55F67P3" --password "xxxx"
+```
+
+### Windows Store (Future)
+- Microsoft Partner Center account ($19 one-time)
+- Build: `npm run electron:build:win`
+- Output: `release/Trackli-Setup.exe`
+
+---
+
+## Cache Management
+
+### Overview
+PWA caching can cause stale icons/assets. A cache management system handles this:
+
+**File:** `/src/utils/cacheManager.js`
+
+### Updating Icons/Assets
+When changing PWA icons or assets:
+
+1. **Update the icons** in `/public/icons/`
+2. **Increment CACHE_VERSION** in `/src/utils/cacheManager.js`:
+   ```javascript
+   export const CACHE_VERSION = '2.23.2' // Bump this
+   ```
+3. **Icons have cache-busting** in `vite.config.js`:
+   ```javascript
+   src: 'icons/icon-192x192.png?v=2',  // Increment ?v=X for major icon changes
+   ```
+
+### How It Works
+- On app load, `initCacheManager()` checks if version changed
+- If changed: clears all caches, service workers, and reloads
+- Users can manually clear via Settings → Troubleshooting → "Clear & Reload"
+
+### Troubleshooting PWA Issues
+If users report stale icons/content:
+1. Tell them: Settings → Troubleshooting → "Clear & Reload"
+2. For stubborn cases (Windows taskbar): 
+   - Unpin from taskbar
+   - Uninstall PWA from chrome://apps
+   - Clear site data: chrome://settings/content/all → find gettrackli → delete
+   - Reinstall and re-pin while app is open
+
+---
+
+## Integrations
+
+### Atlassian (Jira/Confluence)
+**Status:** OAuth working, Jira fetch in progress
+
+**Progress doc:** `/docs/ATLASSIAN-INTEGRATION-PROGRESS.md`
+
+**Key files:**
+- `/supabase/functions/atlassian-auth-init/` - Starts OAuth flow
+- `/supabase/functions/atlassian-auth-callback/` - Handles callback, stores tokens
+- `/supabase/functions/jira-test-fetch/` - Test fetching Jira issues
+- `/src/components/auth/AtlassianCallback.jsx` - Frontend callback handler
+
+**OAuth App:** developer.atlassian.com/console/myapps (App: "Trackli")
+
+**Scopes:** read:me, read:jira-work, write:jira-work, read:jira-user, read:confluence-content.all, write:confluence-content, read:confluence-user, offline_access
+
+### Spark AI Assistant
+**Architecture:** Hybrid frontend/Claude approach
+
+**Why hybrid?** Claude API rate limit is 10,000 tokens/minute organization-wide. Each query uses ~5,000 tokens × 2 calls. Hybrid handles 80%+ locally.
+
+**Flow:**
+```
+User Query → Frontend Pattern Matching (handleLocalQuery)
+           ↓
+    Match? → Yes → Instant Response (no API)
+           ↓ No
+    Follow-up? → Yes → Claude API (with lastQueryResults context)
+           ↓ No
+    Claude API (task creation, complex queries)
+```
+
+**Local patterns:** Due today/tomorrow/this week, overdue, in progress, backlog, critical, my day, effort levels, project queries, assignee queries
+
+**Key file:** `/src/components/kanban/SparkPanel.jsx`
+
+### Slack Integration
+- DM-based notifications
+- Minimal scopes: chat:write, commands, users:read, im:write
+
+### Email-to-Task
+- Users have unique inbound email address
+- Forwards create tasks via approval queue
+- Address shown in Settings
+
+### Outlook Add-in
+- Creates tasks from current email
+- User-triggered only, no background access
 
 ---
 
@@ -94,6 +267,22 @@ Before implementing UI changes, ask:
 - What if the user has no data?
 - What if the request fails?
 
+### 6. Incremental Changes
+**Problem**: Large batch updates caused deployment timeouts and merge conflicts.
+
+**Solution**:
+- Make small, focused commits
+- Test each change before moving to next
+- Don't bundle unrelated changes
+
+### 7. Root Cause Analysis
+**Problem**: Workarounds that didn't fix underlying issues.
+
+**Solution**:
+- Always identify the root cause before implementing fix
+- Avoid bandaid solutions that mask problems
+- Document why a fix works, not just what it does
+
 ---
 
 ## Core Principles
@@ -112,16 +301,15 @@ Before implementing UI changes, ask:
 ## Languages & Frameworks
 
 ### JavaScript/TypeScript
-- Primary framework: React ecosystem (React, Next.js, etc.)
-- Use proper TypeScript types where applicable
+- Primary framework: React ecosystem
+- Use proper TypeScript types for Edge Functions
 - Follow modern ES6+ conventions
 - Prefer named exports for better refactoring support
 
-### Python
-- Follow PEP 8 style guidelines
-- Use type hints for function signatures
-- Prefer f-strings for string formatting
-- Use virtual environments for dependency management
+### Edge Functions (Deno)
+- Use TypeScript
+- Import from URLs: `import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'`
+- Access secrets via: `Deno.env.get('SECRET_NAME')`
 
 ## Documentation
 
@@ -153,6 +341,7 @@ Before implementing UI changes, ask:
 - **Always ask before committing or pushing**
 - Write clear, descriptive commit messages explaining the "why"
 - Reference related issues or tickets when applicable
+- **Always push to test-develop first, never main directly**
 
 ## Communication Style
 
@@ -168,6 +357,7 @@ Before implementing UI changes, ask:
 - Making assumptions about requirements—ask instead
 - Leaving TODO comments without a plan to address them
 - Committing code with known issues without flagging them
+- Pushing directly to main branch
 
 ---
 
@@ -224,6 +414,17 @@ import { L } from '../lib/locale'; // For UK/US spelling
 formatDate(date, profile?.date_format || 'uk');
 ```
 
+### Cache Management
+```javascript
+import { hardReload, CACHE_VERSION } from '../utils/cacheManager';
+
+// Force clear all caches and reload
+hardReload();
+
+// Check/display current version
+console.log('App version:', CACHE_VERSION);
+```
+
 ### Pre-Commit Checklist
 Before requesting a commit, verify:
 - [ ] Tested on mobile viewport (375px)
@@ -231,3 +432,13 @@ Before requesting a commit, verify:
 - [ ] Checked overflow/clipping behavior
 - [ ] Handled loading and error states
 - [ ] Used existing patterns from codebase
+- [ ] Pushing to test-develop (not main)
+
+---
+
+## Key Documentation
+
+- `/docs/ATLASSIAN-INTEGRATION-PROGRESS.md` - Jira/Confluence integration status
+- `/docs/PRD-atlassian-security-foundations.md` - Security architecture
+- `/docs/PRD-project-tags.md` - Project tags feature spec
+- `/docs/PRD-spark-ai.md` - Spark AI assistant spec
