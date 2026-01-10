@@ -159,23 +159,31 @@ SELECT * FROM cron.job WHERE jobname = 'jira-scheduled-sync';
 
 ---
 
+### Step 9: Real-Time Webhooks (Jira → Trackli)
+**Status: Complete**
+
+Instant sync from Jira via webhooks (vs 15-minute polling fallback).
+
+**Files:**
+- `supabase/functions/jira-webhook/index.ts` - Webhook receiver
+- Settings UI shows webhook URL + setup instructions
+
+**Events Handled:**
+- `jira:issue_created` - Creates new Trackli task
+- `jira:issue_updated` - Updates status, title, due date, priority
+- `jira:issue_deleted` - Marks task as `jira_sync_status = 'deleted'`
+
+**Setup (Manual):**
+1. User goes to Jira Settings → System → Webhooks
+2. Creates webhook with Trackli URL
+3. Selects events: issue created, updated, deleted
+4. Saves webhook
+
+**Note:** 15-minute cron sync remains as fallback.
+
+---
+
 ## Not Yet Implemented
-
-### Real-Time Webhooks (Jira → Trackli)
-**Status: Not Started**
-
-Currently using 15-minute polling. Webhooks would provide instant sync.
-
-**Would require:**
-1. Create webhook endpoint Edge Function
-2. Register webhook with Jira via API
-3. Handle incoming events (issue.updated, etc.)
-4. Verify webhook signatures for security
-
-**Jira Webhook Events to handle:**
-- `jira:issue_updated` - Status, priority, due date changes
-- `jira:issue_deleted` - Remove from Trackli or mark inactive
-- `jira:issue_created` - If assigned to user, sync immediately
 
 ---
 
@@ -312,6 +320,7 @@ Tracks all sync events for debugging.
 | `jira-sync` | Manual sync (Sync Now button) | User |
 | `jira-sync-scheduled` | Cron sync (every 15 min) | Cron header |
 | `jira-update-issue` | Push status change to Jira | User |
+| `jira-webhook` | Receive real-time events from Jira | None (public) |
 
 **Deploying:**
 ```bash
@@ -342,11 +351,20 @@ npx supabase functions deploy <function-name> --no-verify-jwt
 - [ ] Move back to To Do
 - [ ] Check Jira - should be To Do
 
+### Webhooks (Real-Time Sync)
+- [ ] Create issue in Jira → appears in Trackli instantly
+- [ ] Update issue status in Jira → task moves columns
+- [ ] Update issue title in Jira → task title changes
+- [ ] Delete issue in Jira → task marked as deleted
+- [ ] Unassign issue in Jira → task marked unassigned
+
 ### Edge Cases
 - [ ] Token refresh (wait 1+ hour)
 - [ ] Disable project, sync - issues shouldn't update
 - [ ] Assign new issue in Jira, wait for auto-sync
 - [ ] Bulk status change with mixed Jira/non-Jira tasks
+- [ ] Webhook for non-enabled project → ignored
+- [ ] Webhook for non-connected user → ignored
 
 ---
 
@@ -386,13 +404,13 @@ ORDER BY start_time DESC LIMIT 10;
 
 ## Future Roadmap
 
-1. **Real-time webhooks** - Instant Jira → Trackli sync
-2. **Project mapping** - Choose which Trackli project per Jira project
-3. **Confluence integration** - Extract tasks from Confluence pages
-4. **Comments sync** - Sync comments between systems
-5. **Assignee sync** - When assigned in Trackli, assign in Jira
-6. **Custom field mapping** - Map Jira custom fields to Trackli fields
-7. **Multi-site support** - Connect multiple Jira sites
+1. **Project mapping** - Choose which Trackli project per Jira project
+2. **Confluence integration** - Extract tasks from Confluence pages
+3. **Comments sync** - Sync comments between systems
+4. **Assignee sync** - When assigned in Trackli, assign in Jira
+5. **Custom field mapping** - Map Jira custom fields to Trackli fields
+6. **Multi-site support** - Connect multiple Jira sites
+7. **Auto-register webhooks** - Automatically set up webhooks on connect
 
 ---
 
