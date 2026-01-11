@@ -12173,6 +12173,77 @@ Or we can extract from:
                 </div>
               </div>
               
+              {/* Region & Language Section */}
+              <div>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Region & Language
+                </h3>
+                <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  {/* Date Format */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Date format</span>
+                    <select
+                      value={dateFormat}
+                      onChange={(e) => handlePreferenceChange('trackli-date-format', e.target.value)}
+                      className={`w-36 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="auto">Auto-detect</option>
+                      <option value="DD/MM/YYYY">15/01 (DD/MM)</option>
+                      <option value="MM/DD/YYYY">01/15 (MM/DD)</option>
+                    </select>
+                  </div>
+                  
+                  {/* Timezone info */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Timezone</span>
+                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Data Section */}
+              <div>
+                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                  Data
+                </h3>
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Clear completed tasks</div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remove done tasks older than:</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <select
+                        value={clearTasksAge}
+                        onChange={(e) => setClearTasksAge(e.target.value)}
+                        className={`px-2 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                      >
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30">30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                      </select>
+                      <button
+                        onClick={handleClearCompletedTasks}
+                        disabled={clearingTasks}
+                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 active:bg-gray-700 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                      >
+                        {clearingTasks ? '...' : 'Clear'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Email to Tasks Section */}
               <div>
                 <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
@@ -12211,39 +12282,6 @@ Or we can extract from:
                       Email address not yet generated. Contact support.
                     </div>
                   )}
-                </div>
-              </div>
-              
-              {/* Region & Language Section */}
-              <div>
-                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Region & Language
-                </h3>
-                <div className={`p-4 rounded-xl space-y-4 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                  {/* Date Format */}
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Date format</span>
-                    <select
-                      value={dateFormat}
-                      onChange={(e) => handlePreferenceChange('trackli-date-format', e.target.value)}
-                      className={`w-36 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                    >
-                      <option value="auto">Auto-detect</option>
-                      <option value="DD/MM/YYYY">15/01 (DD/MM)</option>
-                      <option value="MM/DD/YYYY">01/15 (MM/DD)</option>
-                    </select>
-                  </div>
-                  
-                  {/* Timezone info */}
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Timezone</span>
-                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                    </span>
-                  </div>
                 </div>
               </div>
               
@@ -12337,7 +12375,7 @@ Or we can extract from:
                       </div>
                     </div>
                     {atlassianConnections.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
                         <button
                           onClick={handleSyncJira}
                           disabled={atlassianLoading || jiraProjects.filter(p => p.sync_enabled).length === 0}
@@ -12352,7 +12390,7 @@ Or we can extract from:
                           className="px-3 py-1.5 bg-[#0891B2] text-white text-xs font-medium rounded-lg hover:bg-[#0E7490] transition-colors disabled:opacity-50 whitespace-nowrap"
                           title="Search for Confluence tasks assigned to you"
                         >
-                          {confluenceSyncing ? '...' : 'Confluence'}
+                          {confluenceSyncing ? '...' : 'Sync Confluence'}
                         </button>
                         <button
                           onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
@@ -12473,44 +12511,6 @@ Or we can extract from:
                       </p>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Data Section */}
-              <div>
-                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3 text-indigo-600/80 dark:text-indigo-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                  </svg>
-                  Data
-                </h3>
-                <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Clear completed tasks</div>
-                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Remove done tasks older than:</div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <select
-                        value={clearTasksAge}
-                        onChange={(e) => setClearTasksAge(e.target.value)}
-                        className={`px-2 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                      >
-                        <option value="7">7 days</option>
-                        <option value="14">14 days</option>
-                        <option value="30">30 days</option>
-                        <option value="60">60 days</option>
-                        <option value="90">90 days</option>
-                      </select>
-                      <button
-                        onClick={handleClearCompletedTasks}
-                        disabled={clearingTasks}
-                        className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 active:bg-gray-700 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                      >
-                        {clearingTasks ? '...' : 'Clear'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
               
