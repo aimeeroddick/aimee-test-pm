@@ -105,6 +105,28 @@ Deno.serve(async (req) => {
     )
 
     if (!tasksResult.success) {
+      // Log detailed error info
+      console.error('Confluence fetch failed:', {
+        status: tasksResult.status,
+        error: tasksResult.error,
+        siteId: connection.site_id,
+        siteName: connection.site_name,
+      })
+
+      // Log to audit log for debugging
+      await supabase.from('integration_audit_log').insert({
+        user_id: user.id,
+        event_type: 'confluence.fetch_failed',
+        provider: 'atlassian',
+        site_id: connection.site_id,
+        details: {
+          status: tasksResult.status,
+          error: tasksResult.error,
+          site_name: connection.site_name,
+        },
+        success: false,
+      })
+
       if (tasksResult.status === 401) {
         return new Response(
           JSON.stringify({
@@ -112,6 +134,17 @@ Deno.serve(async (req) => {
             needsReconnect: true,
           }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Check if it's a 403 - might mean Confluence is not enabled for this site
+      if (tasksResult.status === 403) {
+        return new Response(
+          JSON.stringify({
+            error: 'Confluence access forbidden. Your Atlassian site may not have Confluence enabled, or your account may not have Confluence access.',
+            details: tasksResult.error,
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
@@ -372,10 +405,15 @@ async function fetchConfluenceTasks(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Confluence Tasks API error:', errorText)
+      console.error('Confluence Tasks API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: url,
+        error: errorText,
+      })
       return {
         success: false,
-        error: errorText,
+        error: `${response.status} ${response.statusText}: ${errorText}`,
         status: response.status,
       }
     }

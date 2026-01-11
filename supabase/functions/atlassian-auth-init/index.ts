@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     })
 
     // Build Atlassian authorization URL
+    // Note: Confluence Tasks API v2 requires specific task scopes
     const scopes = [
       'read:me',
       'read:jira-work',
@@ -119,6 +120,8 @@ Deno.serve(async (req) => {
       'read:confluence-content.all',
       'write:confluence-content',
       'read:confluence-user',
+      'read:task:confluence',   // Required for Confluence Tasks API v2
+      'write:task:confluence',  // Required for updating Confluence tasks
       'offline_access', // Required for refresh tokens
     ]
 
