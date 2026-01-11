@@ -5414,10 +5414,17 @@ export default function KanbanBoard({ demoMode = false }) {
 
   // Search Confluence for tasks (manual sync)
   const handleSearchConfluenceTasks = async () => {
-    if (demoMode || !session?.access_token) return
+    if (demoMode) return
 
     setConfluenceSyncing(true)
+    setAtlassianError('')
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setAtlassianError('Not authenticated. Please refresh the page.')
+        return
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-fetch-tasks`,
         {
@@ -5435,14 +5442,18 @@ export default function KanbanBoard({ demoMode = false }) {
         console.error('Confluence sync error:', result.error)
         if (result.needsReconnect) {
           setAtlassianError('Confluence connection expired. Please reconnect.')
+        } else {
+          setAtlassianError(result.error || 'Failed to sync Confluence tasks')
         }
         return
       }
 
       console.log('Confluence sync result:', result)
+      setAtlassianSuccess(`Found ${result.discovered || 0} Confluence tasks (${result.newPending || 0} new)`)
       await fetchPendingConfluenceTasks()
     } catch (err) {
       console.error('Confluence sync error:', err)
+      setAtlassianError('Failed to connect to Confluence')
     } finally {
       setConfluenceSyncing(false)
     }
@@ -12250,11 +12261,11 @@ Or we can extract from:
                       </div>
                     </div>
                     {atlassianConnections.length > 0 ? (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={handleSyncJira}
                           disabled={atlassianLoading || jiraProjects.filter(p => p.sync_enabled).length === 0}
-                          className="px-3 py-1.5 bg-[#0052CC] text-white text-sm font-medium rounded-lg hover:bg-[#0747A6] transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 bg-[#0052CC] text-white text-xs font-medium rounded-lg hover:bg-[#0747A6] transition-colors disabled:opacity-50 whitespace-nowrap"
                           title={jiraProjects.filter(p => p.sync_enabled).length === 0 ? 'Enable at least one project to sync' : 'Import Jira issues as tasks'}
                         >
                           {atlassianLoading ? '...' : 'Sync Jira'}
@@ -12262,15 +12273,15 @@ Or we can extract from:
                         <button
                           onClick={handleSearchConfluenceTasks}
                           disabled={confluenceSyncing}
-                          className="px-3 py-1.5 bg-[#0891B2] text-white text-sm font-medium rounded-lg hover:bg-[#0E7490] transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 bg-[#0891B2] text-white text-xs font-medium rounded-lg hover:bg-[#0E7490] transition-colors disabled:opacity-50 whitespace-nowrap"
                           title="Search for Confluence tasks assigned to you"
                         >
-                          {confluenceSyncing ? '...' : 'Search Confluence'}
+                          {confluenceSyncing ? '...' : 'Confluence'}
                         </button>
                         <button
                           onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
                           disabled={atlassianLoading}
-                          className="px-3 py-1.5 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 bg-gray-500 text-white text-xs font-medium rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 whitespace-nowrap"
                         >
                           {atlassianLoading ? '...' : 'Disconnect'}
                         </button>
@@ -12980,23 +12991,26 @@ Or we can extract from:
             setToast({ message: 'Task completed!', type: 'success' })
 
             // Sync completion to Confluence if this is a Confluence task
-            if (completedTask?.confluence_task_id && session?.access_token) {
+            if (completedTask?.confluence_task_id) {
               try {
-                await fetch(
-                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-complete-task`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${session.access_token}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      confluenceTaskId: completedTask.confluence_task_id,
-                      siteId: completedTask.jira_site_id,
-                      status: 'complete'
-                    })
-                  }
-                )
+                const { data: { session: currentSession } } = await supabase.auth.getSession()
+                if (currentSession?.access_token) {
+                  await fetch(
+                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-complete-task`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${currentSession.access_token}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        confluenceTaskId: completedTask.confluence_task_id,
+                        siteId: completedTask.jira_site_id,
+                        status: 'complete'
+                      })
+                    }
+                  )
+                }
               } catch (err) {
                 console.error('Failed to sync Confluence completion:', err)
               }
