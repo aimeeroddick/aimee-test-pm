@@ -152,10 +152,10 @@ Deno.serve(async (req) => {
         // Cache for Trackli project and tag lookups (per Jira project)
         const projectCache = new Map<string, { projectId: string; tagId: string | null }>()
 
-        // Get all existing Jira tasks for this user
+        // Get all existing Jira tasks for this user (include sync status for reassignment check)
         const { data: existingTasks } = await supabase
           .from('tasks')
-          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, jira_sprint_id, jira_parent_key, assignee, comments, updated_at, project_id')
+          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, jira_sprint_id, jira_parent_key, assignee, comments, updated_at, project_id, jira_sync_status')
           .eq('user_id', connection.user_id)
           .not('jira_issue_key', 'is', null)
 
@@ -163,8 +163,12 @@ Deno.serve(async (req) => {
           (existingTasks || []).map(t => [t.jira_issue_key, t])
         )
 
+        // Build set of issue keys from current Jira results
+        const currentJiraKeys = new Set((jiraResult.issues || []).map((i: any) => i.key))
+
         let created = 0
         let updated = 0
+        let markedUnassigned = 0
 
         // Process each issue
         for (const issue of jiraResult.issues || []) {
@@ -229,6 +233,26 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Mark tasks as unassigned if they're no longer in the user's Jira issues
+        // This handles the case where a task was reassigned to someone else
+        for (const [issueKey, task] of existingByKey) {
+          if (task.jira_sync_status === 'active' && !currentJiraKeys.has(issueKey)) {
+            // Task exists in Trackli but not in current Jira results - reassigned away
+            const { error: unassignError } = await supabase
+              .from('tasks')
+              .update({
+                jira_sync_status: 'unassigned',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', task.id)
+
+            if (!unassignError) {
+              console.log(`Marked task ${task.id} (${issueKey}) as unassigned - no longer assigned to user`)
+              markedUnassigned++
+            }
+          }
+        }
+
         // Update last_sync_at
         await supabase
           .from('atlassian_connections')
@@ -250,6 +274,7 @@ Deno.serve(async (req) => {
             totalIssues: jiraResult.issues?.length || 0,
             created,
             updated,
+            markedUnassigned,
           },
           success: true,
         })
@@ -262,9 +287,10 @@ Deno.serve(async (req) => {
           totalFetched: jiraResult.issues?.length || 0,
           created,
           updated,
+          markedUnassigned,
         })
 
-        console.log(`Synced connection ${connection.id}: ${created} created, ${updated} updated`)
+        console.log(`Synced connection ${connection.id}: ${created} created, ${updated} updated, ${markedUnassigned} unassigned`)
 
       } catch (err) {
         console.error(`Error syncing connection ${connection.id}:`, err)

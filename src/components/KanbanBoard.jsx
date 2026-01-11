@@ -5628,7 +5628,9 @@ export default function KanbanBoard({ demoMode = false }) {
       // Include user check in parallel to avoid sequential delay
       const [projectsRes, tasksRes, membersRes, customersRes, projectTagsRes, taskTagsRes, attachmentsRes, dependenciesRes, userRes] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
-        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+        // Filter out Jira tasks that are no longer assigned to the user (unassigned/deleted)
+        // Allow: null (non-Jira tasks), 'active' (current Jira tasks)
+        supabase.from('tasks').select('*').or('jira_sync_status.is.null,jira_sync_status.eq.active').order('created_at', { ascending: false }),
         supabase.from('project_members').select('project_id, name'),
         supabase.from('project_customers').select('project_id, name'),
         supabase.from('project_tags').select('id, project_id, name'),

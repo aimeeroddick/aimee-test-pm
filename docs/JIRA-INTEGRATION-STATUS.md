@@ -216,6 +216,28 @@ UI updates instantly (no refresh needed)
 
 ---
 
+### Step 10: Reassignment Handling
+**Status: ✅ Complete**
+
+When a Jira task is reassigned to someone else, it's automatically removed from the user's board.
+
+**How it works:**
+| Trigger | Action |
+|---------|--------|
+| Manual sync ("Sync Now") | Compares Jira results with existing tasks. Tasks not in results → marked `unassigned` |
+| Scheduled sync (every 15 min) | Same as manual sync |
+| Webhook (real-time) | Detects assignee change, marks old owner's task as `unassigned` |
+
+**Task states (`jira_sync_status`):**
+- `active` - Task is assigned to user, shown on board
+- `unassigned` - Task was reassigned away, hidden from board
+- `deleted` - Jira issue was deleted
+- `paused` - User paused sync (future feature)
+
+**Note:** Unassigned tasks are hidden, not deleted. If the task is reassigned back, a new sync will create it again.
+
+---
+
 ## Not Yet Implemented
 
 ### Project Mapping (User Choice)
@@ -315,9 +337,10 @@ Tracks all sync events for debugging.
 - `oauth.token_refresh_failed` - Refresh failed
 - `webhook.registered` - Webhook auto-registered
 - `webhook.registration_failed` - Webhook registration failed
-- `jira.sync_completed` - Manual sync finished
-- `jira.scheduled_sync_completed` - Cron sync finished
+- `jira.sync_completed` - Manual sync finished (includes `markedUnassigned` count)
+- `jira.scheduled_sync_completed` - Cron sync finished (includes `markedUnassigned` count)
 - `jira.issue_transitioned` - Status pushed to Jira
+- `jira.webhook.issue_reassigned_away` - Task reassigned to someone else via webhook
 - `jira.webhook.issue_created` - Webhook received for new issue
 - `jira.webhook.issue_updated` - Webhook received for update
 - `jira.webhook.issue_deleted` - Webhook received for deletion

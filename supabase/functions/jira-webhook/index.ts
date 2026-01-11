@@ -117,6 +117,61 @@ Deno.serve(async (req) => {
     // Get assignee accountId
     const assigneeAccountId = issue.fields?.assignee?.accountId || null
 
+    // Before checking if assignee is a Trackli user, check if this issue exists
+    // for ANY user and was reassigned away from them
+    if (webhookEvent === 'jira:issue_updated') {
+      const assigneeChanged = payload.changelog?.items?.some(
+        (item: any) => item.field === 'assignee'
+      )
+
+      if (assigneeChanged) {
+        // Find any existing task with this issue key on this site
+        const { data: existingTask } = await supabase
+          .from('tasks')
+          .select('id, user_id, jira_sync_status')
+          .eq('jira_issue_key', issue.key)
+          .eq('jira_site_id', siteId)
+          .eq('jira_sync_status', 'active')
+          .single()
+
+        if (existingTask) {
+          // Check if the OLD assignee was this task's owner
+          // If the task exists and assignee changed, mark it as unassigned
+          const { data: oldOwnerConnection } = await supabase
+            .from('atlassian_connections')
+            .select('atlassian_account_id')
+            .eq('user_id', existingTask.user_id)
+            .eq('site_id', siteId)
+            .single()
+
+          // If the new assignee is different from the task owner, mark as unassigned
+          if (oldOwnerConnection && oldOwnerConnection.atlassian_account_id !== assigneeAccountId) {
+            console.log(`Issue ${issue.key} reassigned away from user ${existingTask.user_id}, marking unassigned`)
+            await supabase
+              .from('tasks')
+              .update({
+                jira_sync_status: 'unassigned',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingTask.id)
+
+            // Log to audit
+            await supabase.from('integration_audit_log').insert({
+              user_id: existingTask.user_id,
+              event_type: 'jira.webhook.issue_reassigned_away',
+              provider: 'atlassian',
+              site_id: siteId,
+              details: {
+                issue_key: issue.key,
+                task_id: existingTask.id,
+              },
+              success: true,
+            })
+          }
+        }
+      }
+    }
+
     if (!assigneeAccountId) {
       console.log(`Issue ${issue.key} has no assignee, skipping`)
       return new Response(
@@ -125,7 +180,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Find Trackli user with this Atlassian connection
+    // Find Trackli user with this Atlassian connection (the NEW assignee)
     const { data: connection, error: connError } = await supabase
       .from('atlassian_connections')
       .select('*')
