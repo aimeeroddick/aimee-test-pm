@@ -4525,6 +4525,20 @@ export default function KanbanBoard({ demoMode = false }) {
   const [atlassianSuccess, setAtlassianSuccess] = useState('')
   const [jiraProjects, setJiraProjects] = useState([])
   const [jiraProjectsExpanded, setJiraProjectsExpanded] = useState(false)
+
+  // Confluence pending tasks state
+  const [pendingConfluenceTasks, setPendingConfluenceTasks] = useState([])
+  const [pendingConfluenceCount, setPendingConfluenceCount] = useState(0)
+  const [confluencePendingExpanded, setConfluencePendingExpanded] = useState(true)
+  const [confluenceDropdownOpen, setConfluenceDropdownOpen] = useState(false)
+  const [selectedConfluenceIds, setSelectedConfluenceIds] = useState(new Set())
+  const [expandedConfluenceIds, setExpandedConfluenceIds] = useState(new Set())
+  const [confluenceSyncing, setConfluenceSyncing] = useState(false)
+  const [approvingConfluenceId, setApprovingConfluenceId] = useState(null)
+  const [mobileConfluenceSheetOpen, setMobileConfluenceSheetOpen] = useState(false)
+  const [confluenceBulkAction, setConfluenceBulkAction] = useState(null)
+  const [confluenceUncheckedConfirmOpen, setConfluenceUncheckedConfirmOpen] = useState(false)
+
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   // Settings - Profile
@@ -4962,6 +4976,7 @@ export default function KanbanBoard({ demoMode = false }) {
   useEffect(() => {
     fetchData()
     fetchPendingEmailTasks()
+    fetchPendingConfluenceTasks()
   }, [])
 
   // Supabase Realtime subscription for tasks
@@ -5149,6 +5164,72 @@ export default function KanbanBoard({ demoMode = false }) {
     }
   }, [demoMode, user?.id])
 
+  // Supabase Realtime subscription for Confluence pending tasks
+  useEffect(() => {
+    if (demoMode || !user?.id) return
+
+    const channel = supabase
+      .channel('confluence-pending-tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'confluence_pending_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Confluence pending task inserted', payload.new.id)
+          setPendingConfluenceTasks(prev => {
+            if (prev.some(t => t.id === payload.new.id)) return prev
+            return [payload.new, ...prev]
+          })
+          setPendingConfluenceCount(prev => prev + 1)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'confluence_pending_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Confluence pending task updated', payload.new.id)
+          if (payload.new.status !== 'pending') {
+            setPendingConfluenceTasks(prev => prev.filter(t => t.id !== payload.new.id))
+            setPendingConfluenceCount(prev => Math.max(0, prev - 1))
+          } else {
+            setPendingConfluenceTasks(prev => prev.map(t =>
+              t.id === payload.new.id ? { ...t, ...payload.new } : t
+            ))
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'confluence_pending_tasks',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Realtime: Confluence pending task deleted', payload.old.id)
+          setPendingConfluenceTasks(prev => prev.filter(t => t.id !== payload.old.id))
+          setPendingConfluenceCount(prev => Math.max(0, prev - 1))
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime confluence pending tasks subscription:', status)
+      })
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [demoMode, user?.id])
+
   // Handle URL parameters (Slack callback, task deep link)
   const handleUrlParams = useCallback(async () => {
     if (demoMode) return
@@ -5297,6 +5378,267 @@ export default function KanbanBoard({ demoMode = false }) {
       })
     } catch (err) {
       console.error('Error fetching pending email tasks:', err)
+    }
+  }
+
+  // Fetch pending Confluence tasks
+  const fetchPendingConfluenceTasks = async () => {
+    if (demoMode) return
+    try {
+      const { data, error } = await supabase
+        .from('confluence_pending_tasks')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setPendingConfluenceTasks(data || [])
+      setPendingConfluenceCount((data || []).length)
+
+      // Auto-select all Confluence tasks by default
+      setSelectedConfluenceIds(prev => {
+        const allIds = new Set((data || []).map(t => t.id))
+        if (prev.size === 0) return allIds
+
+        const validIds = new Set((data || []).map(t => t.id))
+        const existingValid = new Set([...prev].filter(id => validIds.has(id)))
+        const newTasks = [...allIds].filter(id => !prev.has(id))
+
+        return new Set([...existingValid, ...newTasks])
+      })
+    } catch (err) {
+      console.error('Error fetching pending Confluence tasks:', err)
+    }
+  }
+
+  // Search Confluence for tasks (manual sync)
+  const handleSearchConfluenceTasks = async () => {
+    if (demoMode || !session?.access_token) return
+
+    setConfluenceSyncing(true)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-fetch-tasks`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Confluence sync error:', result.error)
+        if (result.needsReconnect) {
+          setAtlassianError('Confluence connection expired. Please reconnect.')
+        }
+        return
+      }
+
+      console.log('Confluence sync result:', result)
+      await fetchPendingConfluenceTasks()
+    } catch (err) {
+      console.error('Confluence sync error:', err)
+    } finally {
+      setConfluenceSyncing(false)
+    }
+  }
+
+  // Toggle Confluence pending task selection
+  const toggleConfluencePendingSelection = (taskId) => {
+    setSelectedConfluenceIds(prev => {
+      const next = new Set(prev)
+      if (next.has(taskId)) {
+        next.delete(taskId)
+      } else {
+        next.add(taskId)
+      }
+      return next
+    })
+  }
+
+  // Update Confluence pending task field
+  const handleUpdateConfluencePendingTask = async (taskId, field, value) => {
+    try {
+      let updates = { [field]: value }
+
+      // Auto-set effort based on time estimate
+      if (field === 'time_estimate' && value) {
+        const mins = parseInt(value)
+        if (mins <= 30) updates.energy_level = 'low'
+        else if (mins <= 120) updates.energy_level = 'medium'
+        else updates.energy_level = 'high'
+      }
+
+      await supabase
+        .from('confluence_pending_tasks')
+        .update(updates)
+        .eq('id', taskId)
+
+      setPendingConfluenceTasks(prev => prev.map(t =>
+        t.id === taskId ? { ...t, ...updates } : t
+      ))
+    } catch (err) {
+      console.error('Error updating Confluence pending task:', err)
+    }
+  }
+
+  // Dismiss Confluence pending task
+  const handleDismissConfluencePendingTask = async (taskId) => {
+    try {
+      await supabase
+        .from('confluence_pending_tasks')
+        .update({ status: 'dismissed', processed_at: new Date().toISOString() })
+        .eq('id', taskId)
+
+      setSelectedConfluenceIds(prev => {
+        const next = new Set(prev)
+        next.delete(taskId)
+        return next
+      })
+      await fetchPendingConfluenceTasks()
+    } catch (err) {
+      console.error('Error dismissing Confluence pending task:', err)
+    }
+  }
+
+  // Approve Confluence pending task
+  const handleApproveConfluencePendingTask = async (pendingTask, projectId) => {
+    if (!projectId) {
+      alert('Please select a project first')
+      return
+    }
+
+    setApprovingConfluenceId(pendingTask.id)
+
+    try {
+      const targetColumn = getTargetColumn(pendingTask.due_date, false)
+
+      // Create the actual task with Confluence metadata
+      const { data: newTask, error: taskError } = await supabase
+        .from('tasks')
+        .insert({
+          title: pendingTask.task_title,
+          description: pendingTask.task_description,
+          due_date: pendingTask.due_date,
+          project_id: projectId,
+          status: targetColumn,
+          critical: false,
+          energy_level: 'medium',
+          confluence_task_id: pendingTask.confluence_task_id,
+          confluence_page_id: pendingTask.confluence_page_id,
+          confluence_page_title: pendingTask.confluence_page_title,
+          confluence_space_key: pendingTask.confluence_space_key,
+          confluence_space_name: pendingTask.confluence_space_name,
+          subtasks: [],
+          comments: []
+        })
+        .select()
+        .single()
+
+      if (taskError) throw taskError
+
+      // Update pending task status
+      await supabase
+        .from('confluence_pending_tasks')
+        .update({
+          status: 'approved',
+          processed_at: new Date().toISOString(),
+          created_task_id: newTask.id
+        })
+        .eq('id', pendingTask.id)
+
+      await fetchData()
+      await fetchPendingConfluenceTasks()
+    } catch (err) {
+      console.error('Error approving Confluence pending task:', err)
+      alert('Failed to create task: ' + err.message)
+    } finally {
+      setApprovingConfluenceId(null)
+    }
+  }
+
+  // Bulk approve Confluence pending tasks
+  const handleBulkApproveConfluencePending = async (removeUnchecked = false) => {
+    if (approvingConfluenceId === 'bulk') return
+
+    const tasksToApprove = pendingConfluenceTasks.filter(t => selectedConfluenceIds.has(t.id) && t.project_id)
+    const uncheckedTasks = pendingConfluenceTasks.filter(t => !selectedConfluenceIds.has(t.id))
+
+    if (tasksToApprove.length === 0) {
+      alert('Please select tasks and ensure they have projects assigned')
+      return
+    }
+
+    // Show confirmation for unchecked tasks
+    if (uncheckedTasks.length > 0 && !confluenceBulkAction) {
+      setConfluenceBulkAction({ tasksToApprove, uncheckedTasks })
+      setConfluenceUncheckedConfirmOpen(true)
+      return
+    }
+
+    setApprovingConfluenceId('bulk')
+
+    try {
+      for (const task of tasksToApprove) {
+        const targetColumn = getTargetColumn(task.due_date, false)
+
+        const { data: newTask, error: taskError } = await supabase
+          .from('tasks')
+          .insert({
+            title: task.task_title,
+            description: task.task_description,
+            due_date: task.due_date,
+            project_id: task.project_id,
+            status: targetColumn,
+            critical: false,
+            energy_level: task.energy_level || 'medium',
+            confluence_task_id: task.confluence_task_id,
+            confluence_page_id: task.confluence_page_id,
+            confluence_page_title: task.confluence_page_title,
+            confluence_space_key: task.confluence_space_key,
+            confluence_space_name: task.confluence_space_name,
+            subtasks: [],
+            comments: []
+          })
+          .select()
+          .single()
+
+        if (taskError) throw taskError
+
+        await supabase
+          .from('confluence_pending_tasks')
+          .update({
+            status: 'approved',
+            processed_at: new Date().toISOString(),
+            created_task_id: newTask.id
+          })
+          .eq('id', task.id)
+      }
+
+      // Handle unchecked tasks
+      if (removeUnchecked && uncheckedTasks.length > 0) {
+        const uncheckedIds = uncheckedTasks.map(t => t.id)
+        await supabase
+          .from('confluence_pending_tasks')
+          .update({ status: 'dismissed', processed_at: new Date().toISOString() })
+          .in('id', uncheckedIds)
+      }
+
+      setSelectedConfluenceIds(new Set())
+      setConfluenceBulkAction(null)
+
+      await fetchData()
+      await fetchPendingConfluenceTasks()
+    } catch (err) {
+      console.error('Error bulk approving Confluence tasks:', err)
+      alert('Failed to create some tasks: ' + err.message)
+    } finally {
+      setApprovingConfluenceId(null)
     }
   }
 
@@ -7296,6 +7638,12 @@ export default function KanbanBoard({ demoMode = false }) {
         syncStatusToJira(task.jira_issue_key, newStatus, taskId)
       }
 
+      // Sync completion to Confluence if this is a Confluence-linked task
+      if (task?.confluence_task_id && newStatus === 'done' && previousStatus !== 'done') {
+        console.log(`Triggering Confluence sync: ${task.confluence_task_id}`)
+        syncStatusToConfluence(task.confluence_task_id, task.jira_site_id)
+      }
+
       // Show undo toast
       if (newStatus === 'done') {
         trackEvent('task_completed', { had_subtasks: (task?.subtasks?.length || 0) > 0 })
@@ -7338,6 +7686,42 @@ export default function KanbanBoard({ demoMode = false }) {
     } catch (err) {
       // Don't show error to user - this is background sync
       console.error('Error syncing to Jira:', err)
+    }
+  }
+
+  // Sync task completion to Confluence (runs in background, doesn't block UI)
+  const syncStatusToConfluence = async (confluenceTaskId, siteId) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-complete-task`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            confluenceTaskId,
+            siteId,
+            status: 'complete'
+          })
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Confluence sync error:', result.error)
+        return
+      }
+
+      console.log(`Synced Confluence task ${confluenceTaskId}: Success`)
+    } catch (err) {
+      // Don't show error to user - this is background sync
+      console.error('Error syncing to Confluence:', err)
     }
   }
 
@@ -8538,7 +8922,149 @@ export default function KanbanBoard({ demoMode = false }) {
                   )}
                 </div>
               )}
-              
+
+              {/* Pending Confluence Tasks Badge + Dropdown */}
+              {pendingConfluenceCount > 0 && (
+                <div className="relative overflow-visible">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.innerWidth < 640) {
+                        setMobileConfluenceSheetOpen(true)
+                      } else {
+                        setConfluenceDropdownOpen(!confluenceDropdownOpen)
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      if (window.innerWidth < 640) {
+                        e.preventDefault()
+                        setMobileConfluenceSheetOpen(true)
+                      }
+                    }}
+                    className="relative overflow-visible p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors text-blue-600 dark:text-blue-400 cursor-pointer"
+                    title={`${pendingConfluenceCount} pending Confluence task${pendingConfluenceCount !== 1 ? 's' : ''} to review`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse pointer-events-none">
+                      {pendingConfluenceCount > 9 ? '9+' : pendingConfluenceCount}
+                    </span>
+                  </button>
+
+                  {/* Dropdown Panel - desktop only */}
+                  {confluenceDropdownOpen && (
+                    <>
+                      <div className="hidden sm:block fixed inset-0 z-40" onClick={() => setConfluenceDropdownOpen(false)} />
+                      <div className="hidden sm:block absolute right-0 top-full mt-2 w-[600px] max-w-[90vw] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-b border-blue-200/50 dark:border-blue-800/50">
+                          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-sm font-semibold">{pendingConfluenceTasks.length} Confluence tasks</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-blue-600 dark:text-blue-400">
+                              {pendingConfluenceTasks.filter(t => selectedConfluenceIds.has(t.id)).length} selected
+                            </span>
+                            <button
+                              onClick={async () => {
+                                await handleBulkApproveConfluencePending()
+                                if (pendingConfluenceTasks.filter(t => selectedConfluenceIds.has(t.id) && t.project_id).length > 0) {
+                                  setConfluenceDropdownOpen(false)
+                                }
+                              }}
+                              disabled={approvingConfluenceId === 'bulk' || pendingConfluenceTasks.filter(t => selectedConfluenceIds.has(t.id) && t.project_id).length === 0}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+                            >
+                              {approvingConfluenceId === 'bulk' ? (
+                                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                              ) : (
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                              )}
+                              Create Tasks
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Task List */}
+                        <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                          {pendingConfluenceTasks.map(task => {
+                            const isSelected = selectedConfluenceIds.has(task.id)
+                            const selectedProject = projects.find(p => p.id === task.project_id)
+                            return (
+                              <div key={task.id} className={`transition-colors ${isSelected ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900/50 opacity-60'}`}>
+                                <div className="flex items-center gap-2 px-4 py-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleConfluencePendingSelection(task.id)}
+                                    className="w-4 h-4 rounded border-blue-400 dark:border-blue-600 text-blue-500 focus:ring-blue-500"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <input
+                                      type="text"
+                                      value={task.task_title}
+                                      onChange={(e) => handleUpdateConfluencePendingTask(task.id, 'task_title', e.target.value)}
+                                      className="w-full text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0 truncate"
+                                    />
+                                    <div className="text-xs text-blue-500 dark:text-blue-400 truncate">
+                                      📄 {task.confluence_page_title} · {task.confluence_space_name || task.confluence_space_key}
+                                    </div>
+                                  </div>
+                                  <div className="relative w-32">
+                                    <input
+                                      type="date"
+                                      value={task.due_date || ''}
+                                      onChange={(e) => handleUpdateConfluencePendingTask(task.id, 'due_date', e.target.value || null)}
+                                      className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                    <div className="text-xs px-2 py-1 border border-blue-200 dark:border-blue-700 rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 cursor-pointer">
+                                      {task.due_date ? formatDate(task.due_date) : <span className="text-gray-400">Due date</span>}
+                                    </div>
+                                  </div>
+                                  <select
+                                    value={task.project_id || ''}
+                                    onChange={(e) => handleUpdateConfluencePendingTask(task.id, 'project_id', e.target.value || null)}
+                                    className={`w-32 text-xs px-2 py-1 border rounded bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-blue-500 ${!task.project_id ? 'border-red-400 dark:border-red-600' : 'border-blue-200 dark:border-blue-700'}`}
+                                  >
+                                    <option value="">Project *</option>
+                                    {projects.filter(p => !p.archived).map(p => (
+                                      <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => handleDismissConfluencePendingTask(task.id)}
+                                    className="p-1 text-blue-400 hover:text-red-500 dark:text-blue-500 dark:hover:text-red-400 transition-colors"
+                                    title="Dismiss"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                          <button
+                            onClick={() => { setCurrentView('board'); setConfluencePendingExpanded(true); setConfluenceDropdownOpen(false); }}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                          >
+                            View on Board →
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               <button
                 id="help-button"
                 onClick={() => setHelpModalOpen(true)}
@@ -8549,7 +9075,7 @@ export default function KanbanBoard({ demoMode = false }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
-              
+
               {/* Admin Feedback Button - only visible to admin */}
               {ADMIN_EMAILS.includes(user?.email) && (
                 <button
@@ -11731,7 +12257,15 @@ Or we can extract from:
                           className="px-3 py-1.5 bg-[#0052CC] text-white text-sm font-medium rounded-lg hover:bg-[#0747A6] transition-colors disabled:opacity-50"
                           title={jiraProjects.filter(p => p.sync_enabled).length === 0 ? 'Enable at least one project to sync' : 'Import Jira issues as tasks'}
                         >
-                          {atlassianLoading ? '...' : 'Sync Now'}
+                          {atlassianLoading ? '...' : 'Sync Jira'}
+                        </button>
+                        <button
+                          onClick={handleSearchConfluenceTasks}
+                          disabled={confluenceSyncing}
+                          className="px-3 py-1.5 bg-[#0891B2] text-white text-sm font-medium rounded-lg hover:bg-[#0E7490] transition-colors disabled:opacity-50"
+                          title="Search for Confluence tasks assigned to you"
+                        >
+                          {confluenceSyncing ? '...' : 'Search Confluence'}
                         </button>
                         <button
                           onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}
@@ -12441,8 +12975,33 @@ Or we can extract from:
           const completedAt = new Date().toISOString()
           const { error } = await supabase.from('tasks').update({ status: 'done', completed_at: completedAt }).eq('id', taskId)
           if (!error) {
+            const completedTask = tasks.find(t => t.id === taskId)
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done', completed_at: completedAt } : t))
             setToast({ message: 'Task completed!', type: 'success' })
+
+            // Sync completion to Confluence if this is a Confluence task
+            if (completedTask?.confluence_task_id && session?.access_token) {
+              try {
+                await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confluence-complete-task`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${session.access_token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      confluenceTaskId: completedTask.confluence_task_id,
+                      siteId: completedTask.jira_site_id,
+                      status: 'complete'
+                    })
+                  }
+                )
+              } catch (err) {
+                console.error('Failed to sync Confluence completion:', err)
+              }
+            }
+
             return { success: true }
           }
           return { success: false, error: error.message }

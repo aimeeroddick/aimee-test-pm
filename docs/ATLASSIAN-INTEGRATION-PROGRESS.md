@@ -217,16 +217,39 @@ SELECT jira_project_key, jira_project_name, sync_enabled FROM jira_project_sync;
    - If both sides changed, use last-updated wins
    - Or show conflict UI for user to resolve
 
-### Phase 5: Confluence Integration (Priority: Low)
+### Phase 5: Confluence Integration (Priority: Low) ✅ IN PROGRESS
 
-1. **Fetch Confluence Tasks**
-   - Use Confluence API to get tasks assigned to user
-   - `/wiki/rest/api/content/search?cql=type=task AND assignee=currentUser()`
+**Date: January 11, 2026**
 
-2. **Approval Queue**
-   - Store in `confluence_pending_tasks`
-   - Show in UI for user to approve/reject
-   - Create Trackli task on approval
+1. **Edge Functions Created & Deployed:**
+   - `confluence-fetch-tasks` - Fetches inline tasks assigned to user via Confluence API v2
+   - `confluence-complete-task` - Marks Confluence task complete when Trackli task is done
+
+2. **Database Migration Applied:**
+   - Added `confluence_space_name` column to tasks table
+   - Added index `idx_tasks_confluence_task_id` for efficient lookups
+
+3. **Frontend Implementation:**
+   - State variables for pending Confluence tasks
+   - Realtime subscription for `confluence_pending_tasks` table
+   - Fetch and handler functions (approve, dismiss, bulk approve, inline edit)
+   - Header badge with blue theme (Confluence branding)
+   - Dropdown panel for reviewing pending tasks
+   - Completion sync to Confluence when tasks moved to "done"
+   - "Search Confluence" button added to Settings/Integrations (teal #0891B2)
+
+4. **Remaining Work:**
+   - Add inline pending section on board view (optional, dropdown works)
+   - Webhook for real-time task discovery (future enhancement)
+   - Mobile bottom sheet for Confluence pending tasks
+
+**Testing Checklist:**
+- [ ] Manual sync fetches Confluence tasks
+- [ ] Tasks appear in pending queue with page/space info
+- [ ] Approve creates task with Confluence metadata
+- [ ] Dismiss removes from pending
+- [ ] Completing task syncs back to Confluence
+- [ ] Realtime updates work
 
 ### Phase 6: UI Enhancements (Priority: Medium)
 
@@ -251,16 +274,19 @@ SELECT jira_project_key, jira_project_name, sync_enabled FROM jira_project_sync;
 ```
 /docs/PRD-atlassian-security-foundations.md
 /supabase/migrations/20260110_atlassian_security_foundations.sql
+/supabase/migrations/20260111_add_confluence_space_name_to_tasks.sql
 /supabase/functions/atlassian-auth-init/index.ts
 /supabase/functions/atlassian-auth-callback/index.ts
 /supabase/functions/jira-test-fetch/index.ts
+/supabase/functions/confluence-fetch-tasks/index.ts
+/supabase/functions/confluence-complete-task/index.ts
 /src/components/auth/AtlassianCallback.jsx
 ```
 
 ### Modified Files:
 ```
 /src/App.jsx - Added AtlassianCallback route
-/src/components/KanbanBoard.jsx - Added Atlassian state, functions, and UI
+/src/components/KanbanBoard.jsx - Added Atlassian state, functions, and UI; Confluence pending queue
 ```
 
 ---
