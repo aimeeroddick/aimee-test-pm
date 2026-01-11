@@ -9021,8 +9021,27 @@ export default function KanbanBoard({ demoMode = false }) {
                                       onChange={(e) => handleUpdateConfluencePendingTask(task.id, 'task_title', e.target.value)}
                                       className="w-full text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent border-none p-0 focus:ring-0 truncate"
                                     />
-                                    <div className="text-xs text-blue-500 dark:text-blue-400 truncate">
-                                      📄 {task.confluence_page_title} · {task.confluence_space_name || task.confluence_space_key}
+                                    <div className="flex items-center gap-2 text-xs text-blue-500 dark:text-blue-400">
+                                      {task.confluence_page_url ? (
+                                        <a 
+                                          href={task.confluence_page_url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="truncate hover:underline flex items-center gap-1"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          📄 {task.confluence_page_title}
+                                          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                          </svg>
+                                        </a>
+                                      ) : (
+                                        <span className="truncate">📄 {task.confluence_page_title}</span>
+                                      )}
+                                      <span className="text-blue-400 dark:text-blue-500">·</span>
+                                      <span className="truncate">{task.confluence_space_name || task.confluence_space_key}</span>
+                                      <span className="text-blue-400 dark:text-blue-500">·</span>
+                                      <span className="text-green-600 dark:text-green-400 font-medium whitespace-nowrap">Assigned to you</span>
                                     </div>
                                   </div>
                                   <div className="relative w-32">
@@ -9061,13 +9080,16 @@ export default function KanbanBoard({ demoMode = false }) {
                           })}
                         </div>
 
-                        {/* Footer */}
-                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                        {/* Footer with sync info */}
+                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            Select tasks and assign a project to create
+                          </span>
                           <button
-                            onClick={() => { setCurrentView('board'); setConfluencePendingExpanded(true); setConfluenceDropdownOpen(false); }}
+                            onClick={() => setConfluenceDropdownOpen(false)}
                             className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                           >
-                            View on Board →
+                            Done
                           </button>
                         </div>
                       </div>
