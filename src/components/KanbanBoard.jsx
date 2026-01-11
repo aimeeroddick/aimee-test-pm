@@ -4182,6 +4182,8 @@ export default function KanbanBoard({ demoMode = false }) {
 
       if (error) throw error
       setAtlassianConnections(data || [])
+      console.log('Atlassian connections loaded:', data?.length || 0, data)
+      window.__DEBUG_atlassianConnections = data
 
       // Also fetch Jira projects for sync settings
       if (data && data.length > 0) {
