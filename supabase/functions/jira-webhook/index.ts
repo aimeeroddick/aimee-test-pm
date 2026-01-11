@@ -664,9 +664,24 @@ function buildTaskUpdates(
   }
 
   // Update T-shirt size / effort if changed
-  // Check common T-shirt size field IDs
-  const tshirtValue = fields.customfield_10016 || fields.customfield_10024 || null
-  console.log(`T-shirt check: customfield_10016=${JSON.stringify(fields.customfield_10016)}, customfield_10024=${JSON.stringify(fields.customfield_10024)}, existing=${existingTask.jira_tshirt_size}`)
+  // Scan all custom fields for T-shirt size values (since field ID varies by org)
+  let tshirtValue = null
+  const tshirtPattern = /^(XS|S|M|L|XL|XXL|EXTRA\s*SMALL|SMALL|MEDIUM|LARGE|EXTRA\s*LARGE)$/i
+  
+  for (const [fieldId, fieldValue] of Object.entries(fields)) {
+    if (fieldId.startsWith('customfield_') && fieldValue) {
+      // Check if value looks like a T-shirt size
+      const valueStr = typeof fieldValue === 'string' ? fieldValue :
+                       (fieldValue as any)?.value || (fieldValue as any)?.name || ''
+      if (tshirtPattern.test(valueStr.trim())) {
+        tshirtValue = valueStr
+        console.log(`Found T-shirt size in ${fieldId}: ${valueStr}`)
+        break
+      }
+    }
+  }
+  
+  console.log(`T-shirt check: found=${tshirtValue}, existing=${existingTask.jira_tshirt_size}`)
   if (tshirtValue) {
     const sizeStr = typeof tshirtValue === 'string' ? tshirtValue : 
                     tshirtValue?.value || tshirtValue?.name || String(tshirtValue)
