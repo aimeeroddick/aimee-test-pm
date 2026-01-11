@@ -3688,6 +3688,21 @@ const TaskCard = ({ task, project, onEdit, onDragStart, showProject = true, allT
                 {task.jira_issue_key}
               </a>
             )}
+            {task.confluence_task_id && !task.jira_issue_key && (
+              <a
+                href={task.confluence_page_url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { e.stopPropagation(); if (!task.confluence_page_url) e.preventDefault(); }}
+                title={`${task.confluence_page_title || 'Confluence Page'}${task.confluence_space_name ? ` • ${task.confluence_space_name}` : ''}`}
+                className="flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-medium rounded bg-blue-500/10 text-blue-600 dark:bg-blue-500/30 dark:text-blue-400 hover:bg-blue-500/20 dark:hover:bg-blue-500/40 transition-colors flex-shrink-0"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5.897 19.482c-.376.452-.752.603-1.203.603-.376 0-.677-.075-1.053-.301l-1.955-1.354c-.15-.076-.15-.226-.075-.376.076-.151.226-.151.376-.076l1.955 1.354c.301.151.527.226.828.226.301 0 .527-.075.752-.376l1.279-1.504c.075-.15.226-.15.376-.075.15.075.15.226.075.376l-1.355 1.503zm12.556-6.763c-.376.452-.752.603-1.203.603-.376 0-.677-.075-1.054-.301l-6.766-4.662c-.15-.075-.15-.226-.075-.376.075-.15.226-.15.376-.075l6.766 4.662c.301.151.527.226.828.226.301 0 .527-.075.752-.376l1.279-1.504c.075-.15.226-.15.376-.075.15.075.15.226.075.376l-1.354 1.502zm-6.766-8.346c-.376.452-.752.602-1.203.602-.376 0-.677-.075-1.054-.301L3.64 1.312c-.15-.076-.15-.226-.075-.376.075-.151.226-.151.376-.076l5.79 3.963c.302.15.528.226.829.226.301 0 .527-.075.752-.376l1.279-1.504c.075-.15.226-.15.376-.075.15.076.15.226.075.377L11.687 5.373z"/>
+                </svg>
+                📄
+              </a>
+            )}
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
@@ -5545,6 +5560,7 @@ export default function KanbanBoard({ demoMode = false }) {
           confluence_page_title: pendingTask.confluence_page_title,
           confluence_space_key: pendingTask.confluence_space_key,
           confluence_space_name: pendingTask.confluence_space_name,
+          confluence_page_url: pendingTask.confluence_page_url,
           subtasks: [],
           comments: []
         })
@@ -5613,6 +5629,7 @@ export default function KanbanBoard({ demoMode = false }) {
             confluence_page_title: task.confluence_page_title,
             confluence_space_key: task.confluence_space_key,
             confluence_space_name: task.confluence_space_name,
+            confluence_page_url: task.confluence_page_url,
             subtasks: [],
             comments: []
           })
