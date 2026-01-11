@@ -4182,8 +4182,6 @@ export default function KanbanBoard({ demoMode = false }) {
 
       if (error) throw error
       setAtlassianConnections(data || [])
-      console.log('Atlassian connections loaded:', data?.length || 0, data)
-      window.__DEBUG_atlassianConnections = data
 
       // Also fetch Jira projects for sync settings
       if (data && data.length > 0) {
@@ -9141,7 +9139,6 @@ export default function KanbanBoard({ demoMode = false }) {
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
                     {!fieldFilters.start_date && <option value="start_date">Start Date</option>}
                     {!fieldFilters.time_estimate && <option value="time_estimate">Time Estimate</option>}
-                    {/* Debug: atlassianConnections.length={atlassianConnections?.length}, filterSprint={filterSprint} */}
                     {atlassianConnections?.length > 0 && !filterSprint && <option value="sprint">Sprint</option>}
                   </select>
                   <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11733,13 +11730,6 @@ Or we can extract from:
                           title={jiraProjects.filter(p => p.sync_enabled).length === 0 ? 'Enable at least one project to sync' : 'Import Jira issues as tasks'}
                         >
                           {atlassianLoading ? '...' : 'Sync Now'}
-                        </button>
-                        <button
-                          onClick={handleTestAtlassian}
-                          disabled={atlassianLoading}
-                          className="px-3 py-1.5 bg-[#0052CC]/70 text-white text-sm font-medium rounded-lg hover:bg-[#0052CC] transition-colors disabled:opacity-50"
-                        >
-                          {atlassianLoading ? '...' : 'Test'}
                         </button>
                         <button
                           onClick={() => handleDisconnectAtlassian(atlassianConnections[0]?.id)}

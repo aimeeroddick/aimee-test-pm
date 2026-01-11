@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         // Get all existing Jira tasks for this user
         const { data: existingTasks } = await supabase
           .from('tasks')
-          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, jira_sprint_id, comments, updated_at, project_id')
+          .select('id, jira_issue_key, jira_status, status, title, description, due_date, start_date, critical, energy_level, time_estimate, jira_tshirt_size, jira_sprint_id, jira_parent_key, assignee, comments, updated_at, project_id')
           .eq('user_id', connection.user_id)
           .not('jira_issue_key', 'is', null)
 
@@ -448,7 +448,7 @@ async function fetchJiraIssues(
   const fields = ['summary', 'description', 'status', 'priority', 'duedate', 'startDate', 'created', 'updated', 'issuetype', 'project', 'parent', 'assignee', 'customfield_10015', 'customfield_10020', 'comment']
 
   const jiraResponse = await fetch(
-    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql`,
+    `https://api.atlassian.com/ex/jira/${siteId}/rest/api/3/search/jql?expand=names`,
     {
       method: 'POST',
       headers: {
@@ -475,29 +475,60 @@ async function fetchJiraIssues(
 
   const jiraData = await jiraResponse.json()
 
-  const issues = jiraData.issues?.map((issue: any) => ({
-    id: issue.id,
-    key: issue.key,
-    summary: issue.fields.summary,
-    description: extractDescription(issue.fields.description),
-    status: issue.fields.status?.name,
-    statusCategory: issue.fields.status?.statusCategory?.key,
-    priority: issue.fields.priority?.name,
-    issueType: issue.fields.issuetype?.name,
-    projectId: issue.fields.project?.id,
-    projectKey: issue.fields.project?.key,
-    projectName: issue.fields.project?.name,
-    dueDate: issue.fields.duedate,
-    startDate: issue.fields.startDate || issue.fields.customfield_10015,
-    parentId: issue.fields.parent?.id,
-    parentKey: issue.fields.parent?.key,
-    parentName: issue.fields.parent?.fields?.summary,
-    sprint: extractActiveSprint(issue.fields.customfield_10020),
-    storyPoints: issue.fields.customfield_10016,
-    comments: extractComments(issue.fields.comment?.comments),
-  })) || []
+  // Find T-Shirt Size custom field by name (handles different field IDs across orgs)
+  const fieldNames = jiraData.names || {}
+  const tshirtFieldId = Object.entries(fieldNames).find(([id, name]) => {
+    const n = String(name).toLowerCase()
+    return n.includes('t-shirt') || n.includes('tshirt') || n.includes('t shirt') || n === 'story points'
+  })?.[0]
 
-  return { success: true, issues }
+  const issues = jiraData.issues?.map((issue: any) => {
+    // Extract T-Shirt size from the dynamically detected field
+    let tshirtValue = null
+    if (tshirtFieldId && issue.fields[tshirtFieldId]) {
+      const fieldValue = issue.fields[tshirtFieldId]
+      if (typeof fieldValue === 'string') {
+        tshirtValue = fieldValue
+      } else if (fieldValue?.value) {
+        tshirtValue = fieldValue.value
+      } else if (fieldValue?.name) {
+        tshirtValue = fieldValue.name
+      }
+    }
+    
+    return {
+      id: issue.id,
+      key: issue.key,
+      summary: issue.fields.summary,
+      description: extractDescription(issue.fields.description),
+      status: issue.fields.status?.name,
+      statusCategory: issue.fields.status?.statusCategory?.key,
+      priority: issue.fields.priority?.name,
+      issueType: issue.fields.issuetype?.name,
+      projectId: issue.fields.project?.id,
+      projectKey: issue.fields.project?.key,
+      projectName: issue.fields.project?.name,
+      dueDate: issue.fields.duedate,
+      startDate: issue.fields.startDate || issue.fields.customfield_10015,
+      parentId: issue.fields.parent?.id,
+      parentKey: issue.fields.parent?.key,
+      parentName: issue.fields.parent?.fields?.summary,
+      parentType: issue.fields.parent?.fields?.issuetype?.name,
+      assignee: issue.fields.assignee?.displayName,
+      assigneeEmail: issue.fields.assignee?.emailAddress,
+      sprint: extractActiveSprint(issue.fields.customfield_10020),
+      tshirtSize: tshirtValue,
+      comments: extractComments(issue.fields.comment?.comments),
+    }
+  }) || []
+
+  // Filter out Epics - they're containers, not actionable tasks
+  const filteredIssues = issues.filter((issue: any) => {
+    const type = issue.issueType?.toLowerCase()
+    return type !== 'epic'
+  })
+
+  return { success: true, issues: filteredIssues }
 }
 
 /**
@@ -718,7 +749,7 @@ function buildNewTask(
   const jiraUrl = siteUrl ? `${siteUrl}/browse/${issue.key}` : `https://atlassian.net/browse/${issue.key}`
 
   // Map T-shirt size to effort and time estimate
-  const sizeMapping = mapTshirtSize(issue.storyPoints)
+  const sizeMapping = mapTshirtSize(issue.tshirtSize)
 
   return {
     user_id: userId,
@@ -750,6 +781,7 @@ function buildNewTask(
     jira_issue_type: issue.issueType,
     jira_tshirt_size: sizeMapping.jira_tshirt_size,
     jira_site_id: siteId,
+    assignee: issue.assignee || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
@@ -809,7 +841,7 @@ function buildTaskUpdates(
   }
 
   // Update T-shirt size / effort / time estimate if changed
-  const sizeMapping = mapTshirtSize(issue.storyPoints)
+  const sizeMapping = mapTshirtSize(issue.tshirtSize)
   if (existingTask.jira_tshirt_size !== sizeMapping.jira_tshirt_size) {
     updates.jira_tshirt_size = sizeMapping.jira_tshirt_size
     updates.energy_level = sizeMapping.energy_level
@@ -842,6 +874,20 @@ function buildTaskUpdates(
     updates.jira_sprint_id = newSprintId
     updates.jira_sprint_name = issue.sprint?.name || null
     updates.jira_sprint_state = issue.sprint?.state || null
+  }
+
+  // Update parent/epic if changed
+  const newParentKey = issue.parentKey || null
+  if (existingTask.jira_parent_key !== newParentKey) {
+    updates.jira_parent_id = issue.parentId || null
+    updates.jira_parent_key = newParentKey
+    updates.jira_parent_name = issue.parentName || null
+  }
+
+  // Update assignee if changed
+  const newAssignee = issue.assignee || null
+  if (existingTask.assignee !== newAssignee) {
+    updates.assignee = newAssignee
   }
 
   return updates

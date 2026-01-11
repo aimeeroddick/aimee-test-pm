@@ -655,7 +655,6 @@ function buildTaskUpdates(
 
   // Update parent/epic if changed
   const newParentKey = fields.parent?.key || null
-  console.log(`Parent check: existing=${existingTask.jira_parent_key}, new=${newParentKey}, fields.parent=`, JSON.stringify(fields.parent))
   if (existingTask.jira_parent_key !== newParentKey) {
     updates.jira_parent_id = fields.parent?.id || null
     updates.jira_parent_key = newParentKey
@@ -675,13 +674,11 @@ function buildTaskUpdates(
                        (fieldValue as any)?.value || (fieldValue as any)?.name || ''
       if (tshirtPattern.test(valueStr.trim())) {
         tshirtValue = valueStr
-        console.log(`Found T-shirt size in ${fieldId}: ${valueStr}`)
         break
       }
     }
   }
   
-  console.log(`T-shirt check: found=${tshirtValue}, existing=${existingTask.jira_tshirt_size}`)
   if (tshirtValue) {
     const sizeStr = typeof tshirtValue === 'string' ? tshirtValue : 
                     tshirtValue?.value || tshirtValue?.name || String(tshirtValue)
