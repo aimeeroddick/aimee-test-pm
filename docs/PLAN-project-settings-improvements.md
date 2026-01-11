@@ -54,22 +54,16 @@ ALTER TABLE projects ADD COLUMN has_customers BOOLEAN DEFAULT true;
 
 ### UI Change - ProjectModal.jsx
 
-Add a toggle in the project form. **Proposed phrasing options:**
+Add a toggle in the project form.
 
-| Option | Phrasing | Notes |
-|--------|----------|-------|
-| A | "Track customers" toggle (on by default) | Clear, action-oriented |
-| B | Checkbox: "This project has customers/clients" | Declarative |
-| C | Checkbox: "Show customer field on tasks" | Technical but clear |
-
-**Recommended: Option A** - "Track customers" toggle
+**Final Decision:** "Enable customer tracking" toggle, **default ON**
 
 **Location:** After the color picker, before Team Members section (around line 116)
 
 ```jsx
 <div className="flex items-center justify-between py-2">
   <label className="text-sm text-gray-700 dark:text-gray-300">
-    Track customers
+    Enable customer tracking
   </label>
   <button
     type="button"
@@ -276,7 +270,7 @@ ALTER TABLE projects ADD COLUMN has_customers BOOLEAN DEFAULT true;
 ## Testing Checklist
 
 ### Hide Customer Field
-- [ ] Create project with "Track customers" OFF
+- [ ] Create project with "Enable customer tracking" OFF
 - [ ] Create task - customer field should be hidden
 - [ ] Edit existing project, toggle OFF
 - [ ] Create/edit tasks - customer field hidden
@@ -347,14 +341,8 @@ const myName = profile?.display_name ||
 
 ---
 
-## Open Questions
+## Decisions Made
 
-1. **Toggle phrasing** - Is "Track customers" clear enough? Other options:
-   - "Enable customer tracking"
-   - "This project has external clients"
-   - Something else?
-
-2. **Existing tasks with customers** - When `has_customers` is turned OFF:
-   - Should existing tasks keep their customer value? (Recommended: Yes)
-   - Should customer be hidden but preserved?
-   - Should customer be cleared?
+1. **Toggle phrasing:** "Enable customer tracking" ✓
+2. **Default value:** ON (true) - backwards compatible with existing behavior ✓
+3. **Existing tasks with customers:** When toggle is OFF, existing tasks keep their customer value (just hidden from UI, preserved in database)

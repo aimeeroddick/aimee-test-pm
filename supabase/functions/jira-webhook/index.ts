@@ -298,7 +298,7 @@ async function handleIssueUpdated(
     // Find existing task
     const { data: existing, error: findError } = await supabase
       .from('tasks')
-      .select('id, status, jira_status, title, due_date, start_date, critical, updated_at')
+      .select('id, status, jira_status, title, due_date, start_date, critical, jira_parent_key, jira_tshirt_size, updated_at')
       .eq('jira_issue_key', issue.key)
       .eq('jira_site_id', connection.site_id)
       .single()
@@ -481,6 +481,34 @@ async function addTagToTask(
 }
 
 /**
+ * Map T-Shirt Size to Trackli effort and time estimate
+ * Per PRD: XS=30m/Low, S=1h/Low, M=2h/Medium, L=4h/High, XL=8h/High
+ */
+function mapTshirtSizeWebhook(sizeValue: any): { energy_level: string; time_estimate: number; jira_tshirt_size: string | null } {
+  const size = String(sizeValue || '').toUpperCase().trim()
+  
+  // Handle various formats: "XL", "Extra Large", "EXTRA LARGE", numbers, etc.
+  if (size.includes('XS') || size.includes('EXTRA SMALL') || size === '1') {
+    return { energy_level: 'low', time_estimate: 30, jira_tshirt_size: 'XS' }
+  }
+  if ((size === 'S' || size.includes('SMALL')) && !size.includes('EXTRA')) {
+    return { energy_level: 'low', time_estimate: 60, jira_tshirt_size: 'S' }
+  }
+  if ((size === 'M' || size.includes('MEDIUM')) || size === '3') {
+    return { energy_level: 'medium', time_estimate: 120, jira_tshirt_size: 'M' }
+  }
+  if ((size === 'L' || size.includes('LARGE')) && !size.includes('EXTRA')) {
+    return { energy_level: 'high', time_estimate: 240, jira_tshirt_size: 'L' }
+  }
+  if (size.includes('XL') || size.includes('EXTRA LARGE') || size === '5') {
+    return { energy_level: 'high', time_estimate: 480, jira_tshirt_size: 'XL' }
+  }
+  
+  // Default to medium if unrecognized
+  return { energy_level: 'medium', time_estimate: 60, jira_tshirt_size: size || null }
+}
+
+/**
  * Map Jira status to Trackli status
  */
 function mapStatusToTrackli(statusName: string, statusCategory: string): string {
@@ -623,6 +651,32 @@ function buildTaskUpdates(
   const newCritical = priority === 'Highest' || priority === 'Critical'
   if (existingTask.critical !== newCritical) {
     updates.critical = newCritical
+  }
+
+  // Update parent/epic if changed
+  const newParentKey = fields.parent?.key || null
+  console.log(`Parent check: existing=${existingTask.jira_parent_key}, new=${newParentKey}, fields.parent=`, JSON.stringify(fields.parent))
+  if (existingTask.jira_parent_key !== newParentKey) {
+    updates.jira_parent_id = fields.parent?.id || null
+    updates.jira_parent_key = newParentKey
+    updates.jira_parent_name = fields.parent?.fields?.summary || null
+    console.log(`Parent/Epic changed: ${existingTask.jira_parent_key} -> ${newParentKey}`)
+  }
+
+  // Update T-shirt size / effort if changed
+  // Check common T-shirt size field IDs
+  const tshirtValue = fields.customfield_10016 || fields.customfield_10024 || null
+  console.log(`T-shirt check: customfield_10016=${JSON.stringify(fields.customfield_10016)}, customfield_10024=${JSON.stringify(fields.customfield_10024)}, existing=${existingTask.jira_tshirt_size}`)
+  if (tshirtValue) {
+    const sizeStr = typeof tshirtValue === 'string' ? tshirtValue : 
+                    tshirtValue?.value || tshirtValue?.name || String(tshirtValue)
+    const sizeMapping = mapTshirtSizeWebhook(sizeStr)
+    if (existingTask.jira_tshirt_size !== sizeMapping.jira_tshirt_size) {
+      updates.jira_tshirt_size = sizeMapping.jira_tshirt_size
+      updates.energy_level = sizeMapping.energy_level
+      updates.time_estimate = sizeMapping.time_estimate
+      console.log(`T-shirt size changed: ${existingTask.jira_tshirt_size} -> ${sizeMapping.jira_tshirt_size}`)
+    }
   }
 
   return updates
