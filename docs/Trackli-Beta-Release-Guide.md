@@ -650,9 +650,39 @@ My Day includes a dedicated area for capturing meeting notes:
 
 Trackli connects with your existing tools to bring tasks from where work happens into one place.
 
-## Jira Integration (Atlassian)
+## Atlassian (Jira & Confluence)
 
-Connect Trackli to Jira to sync your assigned issues bidirectionally.
+Connect your Atlassian account to sync Jira issues and Confluence tasks with Trackli. One connection gives you access to both integrations.
+
+### Connecting Your Atlassian Account
+
+1. Go to **Settings** (hamburger menu → Settings)
+2. Scroll to the **Integrations** section
+3. Find **Atlassian (Jira & Confluence)**
+4. Click **"Connect Atlassian"**
+5. Sign in to your Atlassian account when prompted
+6. Review the permissions and click **"Accept"**
+7. You'll be redirected back to Trackli
+
+Once connected, you'll see:
+- **"Connected to [your-site]"** confirmation
+- **"Sync Jira"** button for Jira issues
+- **"Confluence"** button for Confluence tasks
+- **"Disconnect"** button to remove the connection
+
+### What Gets Connected
+
+Your Atlassian connection gives Trackli access to:
+- **Jira**: Issues assigned to you across all projects
+- **Confluence**: Tasks where you're @mentioned in task checkboxes
+
+Both integrations use the same Atlassian account—you only need to connect once.
+
+---
+
+## Jira Integration
+
+Sync your assigned Jira issues to Trackli with real-time two-way updates.
 
 ### What It Does
 - **Import Jira issues** assigned to you as Trackli tasks
@@ -660,20 +690,14 @@ Connect Trackli to Jira to sync your assigned issues bidirectionally.
 - **Real-time updates:** Webhooks keep everything in sync instantly
 - **Smart status mapping:** Jira statuses map intelligently to Trackli columns
 
-### Connecting to Jira
-
-1. Go to **Settings** (gear icon)
-2. Find the **Atlassian** section
-3. Click **"Connect Atlassian Account"**
-4. Sign in to your Atlassian account
-5. Authorize Trackli to access your Jira
-
 ### Choosing Projects to Sync
 
-After connecting:
-1. Your Jira projects appear in Settings
+After connecting Atlassian:
+1. Expand **"Jira Projects"** in Settings
 2. Toggle **ON** the projects you want to sync
-3. Click **"Sync Now"** to import issues
+3. Click **"Sync Jira"** to import your assigned issues
+
+Only issues **assigned to you** will be imported—you won't see your entire team's backlog.
 
 ### How Sync Works
 
@@ -697,21 +721,88 @@ Jira statuses map to Trackli columns using smart keyword matching:
 
 ### Jira Tasks on Your Board
 
-Tasks from Jira display a blue Jira badge with the issue key (e.g., "PROJ-123"). Click the badge to open the issue in Jira.
+Tasks from Jira display a blue **Jira badge** with the issue key (e.g., "PROJ-123"). Click the badge to open the issue directly in Jira.
 
 ### Sync Status Indicator
 
 In Settings, you'll see:
-- **Real-Time Sync: Active** (green) - Webhooks are working
-- **15-min Polling** (yellow) - Fallback sync is active
+- **Real-Time Sync: Active** (green) — Webhooks are working
+- **15-min Polling** (yellow) — Fallback sync is active
 
 ### Troubleshooting Jira
 
 | Issue | Solution |
 |-------|----------|
-| Sync shows 0 issues | Check that issues are assigned to you |
-| Status not mapping | Check if status name matches the keywords above |
-| Changes not syncing | Try "Sync Now" or reconnect |
+| Sync shows 0 issues | Check that issues are assigned to you in Jira |
+| Status not mapping correctly | Check if your Jira status name matches the keywords above |
+| Changes not syncing | Click "Sync Jira" to force a refresh, or try disconnecting and reconnecting |
+
+---
+
+## Confluence Integration
+
+Import tasks from Confluence pages where you've been @mentioned, and sync completion status back to Confluence.
+
+### What It Does
+- **Discover tasks** where you're @mentioned in Confluence task checkboxes
+- **Approval workflow:** Review discovered tasks before adding to your board
+- **Completion sync:** When you complete a task in Trackli, it's automatically checked off in Confluence
+- **Direct links:** Click to jump straight to the Confluence page
+
+### How Confluence Tasks Work
+
+In Confluence, tasks are created using the task checkbox feature (typically `[] @username task description`). Trackli finds pages where you've been @mentioned in a task and imports those action items.
+
+### Syncing Confluence Tasks
+
+1. Go to **Settings**
+2. Click the **"Confluence"** button
+3. Trackli searches for pages mentioning you
+4. Found tasks appear in the **Confluence pending dropdown** (header bar)
+
+### Reviewing Pending Tasks
+
+When Confluence tasks are found:
+1. A badge appears in the header showing the count (e.g., "2")
+2. Click the badge to open the pending tasks dropdown
+3. For each task you'll see:
+   - Task title (editable)
+   - Page name (click to open in Confluence)
+   - Due date (editable)
+   - Project selector (required)
+
+### Creating Tasks from Confluence
+
+1. **Select tasks** using the checkboxes (all are selected by default)
+2. **Assign a project** to each task (required)
+3. **Optionally set due dates**
+4. Click **"+ Create Tasks"**
+5. If you have unchecked tasks, you'll be asked whether to keep them for later or remove them
+
+### Confluence Tasks on Your Board
+
+Approved Confluence tasks display a blue **"Confluence" badge**. Click the badge to open the source page directly in Confluence.
+
+### Completion Sync (Trackli → Confluence)
+
+When you move a Confluence-linked task to **Done** in Trackli:
+- The task checkbox is automatically ticked in Confluence
+- Your team sees the updated status without you needing to visit Confluence
+
+> **Note: Known Limitations**
+> - **Manual sync only:** Click "Confluence" in Settings to check for new tasks—they won't appear automatically
+> - **One-way discovery:** If someone completes your task directly in Confluence, Trackli won't know about it
+> - **@mention required:** You must be @mentioned inside the task checkbox to be discovered (being mentioned elsewhere on the page doesn't count)
+> - **Task checkbox format:** Only Confluence's native task/checkbox format is supported, not plain text to-do lists
+
+### Troubleshooting Confluence
+
+| Issue | Solution |
+|-------|----------|
+| No tasks found | Ensure you're @mentioned inside the task checkbox, not just on the page |
+| Task not syncing to Done | Check that the task has a valid `confluence_task_id` (visible in task details) |
+| "0 new" on repeat sync | Tasks already in your pending queue or board won't be re-imported |
+| Page link not working | The page may have been moved or deleted in Confluence |
 
 ---
 

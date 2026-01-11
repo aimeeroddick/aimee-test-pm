@@ -350,6 +350,8 @@ async function registerJiraWebhook(
     // Register webhook with Jira
     // Using the dynamic webhook registration API
     // jqlFilter is required - we use a broad filter and handle filtering in our webhook handler
+    // Note: sprint_started and sprint_closed events are not supported via OAuth 2.0 dynamic webhooks
+    // However, sprint changes are captured via jira:issue_updated when issues move between sprints
     const webhookPayload = {
       url: webhookUrl,
       webhooks: [
@@ -358,8 +360,6 @@ async function registerJiraWebhook(
             'jira:issue_created',
             'jira:issue_updated', 
             'jira:issue_deleted',
-            'sprint_started',
-            'sprint_closed',
           ],
           jqlFilter: 'project != "ZZZZNONEXISTENT"',  // Matches all projects (only project/status/assignee clauses supported)
         }

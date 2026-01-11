@@ -8,9 +8,13 @@ const corsHeaders = {
 /**
  * Confluence Fetch Tasks
  *
- * Fetches inline tasks assigned to the current user from Confluence.
- * Inserts new tasks into the confluence_pending_tasks table for approval.
- * Automatically refreshes expired tokens.
+ * NEW APPROACH: The Tasks API doesn't populate assignedTo for @mentioned tasks.
+ * Instead, we:
+ * 1. Use CQL to find pages that mention the current user
+ * 2. Fetch each page's content
+ * 3. Parse <ac:task> elements from the XML
+ * 4. Check if the task body contains the user's account ID
+ * 5. Extract incomplete tasks assigned to the user
  */
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -97,80 +101,70 @@ Deno.serve(async (req) => {
       accessToken = tokenData
     }
 
-    // Fetch tasks from Confluence API
-    const tasksResult = await fetchConfluenceTasks(
+    // Build site base URL from site_name (e.g., "spicymango" -> "https://spicymango.atlassian.net")
+    const siteBaseUrl = `https://${connection.site_name}.atlassian.net`
+
+    // Fetch tasks by parsing page content (new approach)
+    const tasksResult = await fetchTasksFromPageContent(
       accessToken,
       connection.site_id,
-      connection.atlassian_account_id
+      connection.atlassian_account_id,
+      siteBaseUrl
     )
 
     if (!tasksResult.success) {
-      // Log detailed error info
       console.error('Confluence fetch failed:', {
-        status: tasksResult.status,
         error: tasksResult.error,
         siteId: connection.site_id,
         siteName: connection.site_name,
       })
 
-      // Log to audit log for debugging
       await supabase.from('integration_audit_log').insert({
         user_id: user.id,
         event_type: 'confluence.fetch_failed',
         provider: 'atlassian',
         site_id: connection.site_id,
         details: {
-          status: tasksResult.status,
           error: tasksResult.error,
           site_name: connection.site_name,
         },
         success: false,
       })
 
-      if (tasksResult.status === 401) {
-        return new Response(
-          JSON.stringify({
-            error: 'Confluence access denied. Token may have been revoked. Please reconnect Atlassian.',
-            needsReconnect: true,
-          }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      // Check if it's a 403 - might mean Confluence is not enabled for this site
-      if (tasksResult.status === 403) {
-        return new Response(
-          JSON.stringify({
-            error: 'Confluence access forbidden. Your Atlassian site may not have Confluence enabled, or your account may not have Confluence access.',
-            details: tasksResult.error,
-          }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
       return new Response(
         JSON.stringify({ error: 'Confluence API error', details: tasksResult.error }),
-        { status: tasksResult.status || 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    // Fetch page details for each task to get space info
-    const tasksWithPageInfo = await enrichTasksWithPageInfo(
-      accessToken,
-      connection.site_id,
-      tasksResult.tasks || []
-    )
 
     // Insert/update tasks in confluence_pending_tasks table
     let newCount = 0
     let existingCount = 0
 
-    for (const task of tasksWithPageInfo) {
+    for (const task of tasksResult.tasks || []) {
+      // Use a composite ID: pageId-taskLocalId
+      const taskId = `${task.pageId}-${task.localId}`
+
+      // Check if task already exists in the main tasks table (already approved/created)
+      const { data: existingTask } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('confluence_task_id', taskId)
+        .maybeSingle()
+
+      if (existingTask) {
+        // Task already exists in Trackli - skip it entirely
+        existingCount++
+        continue
+      }
+
+      // Check if task exists in pending table
       const { data: existing } = await supabase
         .from('confluence_pending_tasks')
         .select('id, status')
         .eq('user_id', user.id)
-        .eq('confluence_task_id', task.id)
+        .eq('confluence_task_id', taskId)
         .single()
 
       if (existing) {
@@ -183,6 +177,7 @@ Deno.serve(async (req) => {
               confluence_page_title: task.pageTitle,
               confluence_space_key: task.spaceKey,
               confluence_space_name: task.spaceName,
+              confluence_page_url: task.pageUrl,
               due_date: task.dueDate || null,
             })
             .eq('id', existing.id)
@@ -195,11 +190,12 @@ Deno.serve(async (req) => {
           .insert({
             user_id: user.id,
             connection_id: connection.id,
-            confluence_task_id: task.id,
+            confluence_task_id: taskId,
             confluence_page_id: task.pageId,
             confluence_page_title: task.pageTitle,
             confluence_space_key: task.spaceKey,
             confluence_space_name: task.spaceName,
+            confluence_page_url: task.pageUrl,
             task_title: task.bodyText || 'Untitled task',
             task_description: null,
             due_date: task.dueDate || null,
@@ -224,6 +220,7 @@ Deno.serve(async (req) => {
         total_found: tasksResult.tasks?.length || 0,
         new_pending: newCount,
         existing: existingCount,
+        pages_scanned: tasksResult.pagesScanned || 0,
       },
       success: true,
     })
@@ -242,6 +239,7 @@ Deno.serve(async (req) => {
         newPending: newCount,
         alreadyTracked: existingCount,
         totalPending: pendingCount || 0,
+        pagesScanned: tasksResult.pagesScanned || 0,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -378,24 +376,31 @@ async function refreshToken(
 }
 
 /**
- * Fetch tasks from Confluence API v2
- * Tasks endpoint: /wiki/api/v2/tasks
+ * NEW APPROACH: Fetch tasks by searching for pages mentioning the user
+ * and parsing the page content XML to find <ac:task> elements
  */
-async function fetchConfluenceTasks(
+async function fetchTasksFromPageContent(
   accessToken: string,
   siteId: string,
-  atlassianAccountId: string
+  atlassianAccountId: string,
+  siteBaseUrl: string
 ): Promise<{
   success: boolean;
   tasks?: any[];
+  pagesScanned?: number;
   error?: string;
-  status?: number;
 }> {
   try {
-    // Confluence Tasks API v2 - filter by assignee and incomplete status
-    const url = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/tasks?assignee=${atlassianAccountId}&status=incomplete&limit=100`
+    console.log(`Fetching tasks for user: ${atlassianAccountId}`)
 
-    const response = await fetch(url, {
+    // Step 1: Use CQL to find pages that mention the user
+    // This finds pages where the user is @mentioned
+    const cql = `mention = "${atlassianAccountId}" AND type = page`
+    const searchUrl = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/rest/api/content/search?cql=${encodeURIComponent(cql)}&limit=50&expand=space`
+
+    console.log(`Searching for pages with CQL: ${cql}`)
+
+    const searchResponse = await fetch(searchUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -403,127 +408,280 @@ async function fetchConfluenceTasks(
       },
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Confluence Tasks API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: url,
-        error: errorText,
-      })
-      return {
-        success: false,
-        error: `${response.status} ${response.statusText}: ${errorText}`,
-        status: response.status,
-      }
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text()
+      console.error('CQL search failed:', searchResponse.status, errorText)
+      return { success: false, error: `CQL search failed: ${searchResponse.status} ${errorText}` }
     }
 
-    const data = await response.json()
+    const searchData = await searchResponse.json()
+    const pages = searchData.results || []
 
-    // Map tasks to simpler structure
-    const tasks = (data.results || []).map((task: any) => ({
-      id: task.id,
-      localId: task.localId,
-      pageId: task.pageId,
-      spaceId: task.spaceId,
-      bodyText: task.body?.text || task.bodyText || '',
-      dueDate: task.dueDate || null,
-      status: task.status,
-      assignee: task.assignedTo?.accountId,
-    }))
+    console.log(`Found ${pages.length} pages mentioning user`)
+
+    if (pages.length === 0) {
+      return { success: true, tasks: [], pagesScanned: 0 }
+    }
+
+    // Step 2: Fetch each page's content and parse tasks
+    const allTasks: any[] = []
+
+    for (const page of pages) {
+      const pageId = page.id
+      const pageTitle = page.title || 'Untitled'
+      const spaceKey = page.space?.key || ''
+      const spaceName = page.space?.name || ''
+      
+      // Construct the page URL
+      const pageUrl = `${siteBaseUrl}/wiki/spaces/${spaceKey}/pages/${pageId}`
+
+      console.log(`Fetching content for page: ${pageTitle} (${pageId})`)
+
+      // Fetch page content in storage format
+      const pageApiUrl = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/pages/${pageId}?body-format=storage`
+
+      const pageResponse = await fetch(pageApiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+      })
+
+      if (!pageResponse.ok) {
+        console.error(`Failed to fetch page ${pageId}:`, pageResponse.status)
+        continue
+      }
+
+      const pageData = await pageResponse.json()
+      const bodyContent = pageData.body?.storage?.value || ''
+
+      // Parse tasks from the content
+      const pageTasks = parseTasksFromContent(
+        bodyContent, 
+        atlassianAccountId, 
+        pageId, 
+        pageTitle, 
+        spaceKey, 
+        spaceName,
+        pageUrl
+      )
+
+      console.log(`Found ${pageTasks.length} tasks assigned to user on page ${pageTitle}`)
+      allTasks.push(...pageTasks)
+    }
+
+    console.log(`Total tasks found: ${allTasks.length} from ${pages.length} pages`)
 
     return {
       success: true,
-      tasks,
+      tasks: allTasks,
+      pagesScanned: pages.length,
     }
+
   } catch (error) {
-    console.error('fetchConfluenceTasks error:', error)
+    console.error('fetchTasksFromPageContent error:', error)
     return { success: false, error: error.message }
   }
 }
 
 /**
- * Enrich tasks with page and space information
- * Fetches page details to get title and space name
+ * Parse <ac:task> elements from Confluence storage format XML
+ * and extract tasks where the user is @mentioned in the task body
+ * 
+ * Handles two common patterns:
+ * 1. Inline tasks: "@User to complete something" - text is in the task body
+ * 2. Table tasks: Task title in one cell, @User checkbox in another cell
  */
-async function enrichTasksWithPageInfo(
-  accessToken: string,
-  siteId: string,
-  tasks: any[]
-): Promise<any[]> {
-  // Cache page info to avoid duplicate API calls
-  const pageCache: Record<string, { title: string; spaceKey: string; spaceName: string }> = {}
+function parseTasksFromContent(
+  content: string,
+  atlassianAccountId: string,
+  pageId: string,
+  pageTitle: string,
+  spaceKey: string,
+  spaceName: string,
+  pageUrl: string
+): any[] {
+  const tasks: any[] = []
 
-  const enrichedTasks = []
+  // Regex to match <ac:task>...</ac:task> elements (including newlines)
+  const taskRegex = /<ac:task>([\s\S]*?)<\/ac:task>/g
+  let taskMatch
 
-  for (const task of tasks) {
-    let pageInfo = pageCache[task.pageId]
+  while ((taskMatch = taskRegex.exec(content)) !== null) {
+    const taskXml = taskMatch[1]
+    const taskStartIndex = taskMatch.index
 
-    if (!pageInfo) {
-      // Fetch page details
-      try {
-        const pageResponse = await fetch(
-          `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/pages/${task.pageId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Accept': 'application/json',
-            },
-          }
-        )
+    // Extract task-id
+    const idMatch = taskXml.match(/<ac:task-id>(\d+)<\/ac:task-id>/)
+    const localId = idMatch ? idMatch[1] : null
 
-        if (pageResponse.ok) {
-          const pageData = await pageResponse.json()
+    // Extract task-uuid
+    const uuidMatch = taskXml.match(/<ac:task-uuid>([^<]+)<\/ac:task-uuid>/)
+    const uuid = uuidMatch ? uuidMatch[1] : null
 
-          // Fetch space details for space name
-          let spaceName = ''
-          if (pageData.spaceId) {
-            try {
-              const spaceResponse = await fetch(
-                `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/spaces/${pageData.spaceId}`,
-                {
-                  method: 'GET',
-                  headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Accept': 'application/json',
-                  },
-                }
-              )
+    // Extract task-status
+    const statusMatch = taskXml.match(/<ac:task-status>([^<]+)<\/ac:task-status>/)
+    const status = statusMatch ? statusMatch[1] : 'incomplete'
 
-              if (spaceResponse.ok) {
-                const spaceData = await spaceResponse.json()
-                spaceName = spaceData.name || ''
-              }
-            } catch (e) {
-              console.error('Error fetching space:', e)
-            }
-          }
+    // Skip completed tasks
+    if (status === 'complete') {
+      continue
+    }
 
-          pageInfo = {
-            title: pageData.title || 'Untitled Page',
-            spaceKey: pageData.spaceKey || pageData._links?.space?.split('/').pop() || '',
-            spaceName: spaceName,
-          }
+    // Extract task-body
+    const bodyMatch = taskXml.match(/<ac:task-body>([\s\S]*?)<\/ac:task-body>/)
+    const bodyXml = bodyMatch ? bodyMatch[1] : ''
 
-          pageCache[task.pageId] = pageInfo
-        } else {
-          console.error('Failed to fetch page:', task.pageId)
-          pageInfo = { title: 'Unknown Page', spaceKey: '', spaceName: '' }
-        }
-      } catch (e) {
-        console.error('Error fetching page info:', e)
-        pageInfo = { title: 'Unknown Page', spaceKey: '', spaceName: '' }
+    // Check if this task mentions the user
+    // Look for ri:account-id="user_account_id"
+    const userMentionPattern = new RegExp(`ri:account-id=["']${atlassianAccountId}["']`, 'i')
+    if (!userMentionPattern.test(bodyXml)) {
+      // User not mentioned in this task
+      continue
+    }
+
+    // Extract plain text from the task body (remove XML tags)
+    let bodyText = bodyXml
+      // Remove user mention links but keep surrounding text
+      .replace(/<ac:link>[\s\S]*?<\/ac:link>/g, '')
+      .replace(/<ri:user[^>]*\/>/g, '')
+      // Remove other XML tags
+      .replace(/<[^>]+>/g, ' ')
+      // Clean up whitespace
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    // Remove leading "to" if present (common pattern after @mention)
+    bodyText = bodyText.replace(/^to\s+/i, '').trim()
+
+    // Capitalize first letter
+    if (bodyText) {
+      bodyText = bodyText.charAt(0).toUpperCase() + bodyText.slice(1)
+    }
+
+    // If task body is empty/just whitespace, try to find title from table context
+    let dueDate: string | null = null
+    
+    if (!bodyText || bodyText.length < 3) {
+      // Try to extract from table row context
+      const tableContext = extractTableRowContext(content, taskStartIndex)
+      if (tableContext.title) {
+        bodyText = tableContext.title
+      }
+      if (tableContext.dueDate) {
+        dueDate = tableContext.dueDate
+      }
+    } else {
+      // Still try to find due date from nearby content
+      const tableContext = extractTableRowContext(content, taskStartIndex)
+      if (tableContext.dueDate) {
+        dueDate = tableContext.dueDate
       }
     }
 
-    enrichedTasks.push({
-      ...task,
-      pageTitle: pageInfo.title,
-      spaceKey: pageInfo.spaceKey,
-      spaceName: pageInfo.spaceName,
+    if (!bodyText) {
+      bodyText = 'Untitled task'
+    }
+
+    tasks.push({
+      localId: localId,
+      uuid: uuid,
+      pageId: pageId,
+      pageTitle: pageTitle,
+      spaceKey: spaceKey,
+      spaceName: spaceName,
+      pageUrl: pageUrl,
+      bodyText: bodyText,
+      status: status,
+      dueDate: dueDate,
     })
   }
 
-  return enrichedTasks
+  return tasks
+}
+
+/**
+ * Extract context from the table row containing the task
+ * Looks for task title in previous cells and due date in <time> elements
+ */
+function extractTableRowContext(
+  content: string,
+  taskPosition: number
+): { title: string | null; dueDate: string | null } {
+  // Find the containing <tr> by looking backwards
+  const beforeTask = content.substring(0, taskPosition)
+  const trStartMatch = beforeTask.match(/.*<tr[^>]*>/s)
+  
+  if (!trStartMatch) {
+    return { title: null, dueDate: null }
+  }
+
+  const trStartIndex = trStartMatch[0].lastIndexOf('<tr')
+  const trStartPos = beforeTask.length - (beforeTask.length - trStartIndex)
+
+  // Find the end of this row
+  const afterTrStart = content.substring(trStartPos)
+  const trEndMatch = afterTrStart.match(/<\/tr>/)
+  
+  if (!trEndMatch) {
+    return { title: null, dueDate: null }
+  }
+
+  const rowContent = afterTrStart.substring(0, trEndMatch.index! + 5)
+
+  // Extract all <td> cells
+  const cells: string[] = []
+  const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/g
+  let tdMatch
+  while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
+    cells.push(tdMatch[1])
+  }
+
+  let title: string | null = null
+  let dueDate: string | null = null
+
+  // Look for title in cells (usually first non-number cell before the task)
+  for (const cell of cells) {
+    // Skip cells that contain the task itself
+    if (cell.includes('<ac:task>')) {
+      continue
+    }
+    
+    // Skip numbering cells
+    if (cell.match(/^\s*\d+\s*$/) || cell.includes('numberingColumn')) {
+      continue
+    }
+
+    // Skip cells with status macros
+    if (cell.includes('ac:name="status"')) {
+      continue
+    }
+
+    // Extract text from this cell
+    const cellText = cell
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    // If it looks like a meaningful title (more than 3 chars, not a date)
+    if (cellText.length > 3 && !cellText.match(/^\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i)) {
+      if (!title) {
+        title = cellText
+      }
+    }
+  }
+
+  // Look for <time> element anywhere in the row for due date
+  const timeMatch = rowContent.match(/<time[^>]*datetime=["']([^"']+)["'][^>]*>/)
+  if (timeMatch) {
+    dueDate = timeMatch[1]
+  }
+
+  // Capitalize title if found
+  if (title) {
+    title = title.charAt(0).toUpperCase() + title.slice(1)
+  }
+
+  return { title, dueDate }
 }

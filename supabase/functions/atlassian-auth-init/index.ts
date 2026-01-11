@@ -110,18 +110,30 @@ Deno.serve(async (req) => {
     })
 
     // Build Atlassian authorization URL
-    // Note: Confluence Tasks API v2 requires specific task scopes
+    // Note: Confluence Tasks API v2 requires specific granular scopes
     const scopes = [
       'read:me',
+      // Jira scopes
       'read:jira-work',
       'write:jira-work',
       'read:jira-user',
       'manage:jira-webhook',  // Required for auto-registering webhooks
+      // Confluence classic scopes
       'read:confluence-content.all',
       'write:confluence-content',
       'read:confluence-user',
+      'search:confluence',      // Required for CQL search on REST API v1
+      // Confluence v2 API granular scopes (required for Tasks, Pages, Spaces APIs)
       'read:task:confluence',   // Required for Confluence Tasks API v2
       'write:task:confluence',  // Required for updating Confluence tasks
+      'read:page:confluence',   // Required for fetching page details
+      'write:page:confluence',  // Required for updating page content (task completion)
+      'read:space:confluence',  // Required for fetching space details
+      'read:user:confluence',   // Required for fetching assignee display names
+      'read:content:confluence', // Required for reading page content
+      'write:content:confluence', // Required for updating page content
+      'read:content-details:confluence', // Required for detailed content access
+      'read:content.restriction:confluence', // Required for restricted content
       'offline_access', // Required for refresh tokens
     ]
 

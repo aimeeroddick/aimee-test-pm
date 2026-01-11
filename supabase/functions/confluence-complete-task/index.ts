@@ -306,12 +306,15 @@ async function refreshToken(
 
 /**
  * Update a Confluence task status
- * Uses Confluence REST API v2
+ * 
+ * Note: Our confluenceTaskId is a composite "pageId-localId" format.
+ * We need to find the actual task and update it via the page content.
+ * The Tasks API v2 uses different IDs than our parsed localId.
  */
 async function updateConfluenceTask(
   accessToken: string,
   siteId: string,
-  taskId: string,
+  compositeTaskId: string,
   status: string
 ): Promise<{
   success: boolean;
@@ -319,10 +322,95 @@ async function updateConfluenceTask(
   status?: number;
 }> {
   try {
-    // Confluence Tasks API v2 - update task
-    const url = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/tasks/${taskId}`
-
-    const response = await fetch(url, {
+    // Parse our composite ID: "pageId-localId"
+    const parts = compositeTaskId.split('-')
+    if (parts.length < 2) {
+      return { success: false, error: 'Invalid task ID format', status: 400 }
+    }
+    
+    const pageId = parts[0]
+    const localId = parts.slice(1).join('-') // Handle IDs that might contain dashes
+    
+    console.log(`Updating Confluence task: pageId=${pageId}, localId=${localId}, status=${status}`)
+    
+    // First, try the Tasks API with the localId (sometimes works)
+    const tasksApiUrl = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/tasks/${localId}`
+    
+    const tasksApiResponse = await fetch(tasksApiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    })
+    
+    if (tasksApiResponse.ok) {
+      console.log('Task updated via Tasks API')
+      return { success: true }
+    }
+    
+    console.log(`Tasks API returned ${tasksApiResponse.status}, trying page content approach...`)
+    
+    // Fallback: Update task by modifying page content
+    // Get current page content
+    const pageUrl = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/pages/${pageId}?body-format=storage`
+    
+    const pageResponse = await fetch(pageUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json',
+      },
+    })
+    
+    if (!pageResponse.ok) {
+      const errorText = await pageResponse.text()
+      console.error('Failed to fetch page:', errorText)
+      return { success: false, error: `Failed to fetch page: ${errorText}`, status: pageResponse.status }
+    }
+    
+    const pageData = await pageResponse.json()
+    const currentContent = pageData.body?.storage?.value || ''
+    const currentVersion = pageData.version?.number || 1
+    
+    // Find and update the task status in the content
+    // The XML structure is: <ac:task><ac:task-id>X</ac:task-id><ac:task-uuid>...</ac:task-uuid><ac:task-status>incomplete</ac:task-status>...
+    // We need a flexible pattern that finds the task by ID and updates its status
+    const taskIdPattern = new RegExp(
+      `<ac:task-id>${localId}</ac:task-id>`,
+      'g'
+    )
+    
+    if (!taskIdPattern.test(currentContent)) {
+      console.error(`Task ID ${localId} not found in page content`)
+      return { success: false, error: 'Task not found in page content', status: 404 }
+    }
+    
+    // Reset regex lastIndex after test()
+    taskIdPattern.lastIndex = 0
+    
+    const newStatus = status === 'complete' ? 'complete' : 'incomplete'
+    
+    // Find the task block and update the status within it
+    // Match the entire <ac:task>...</ac:task> block containing our task ID
+    const taskBlockPattern = new RegExp(
+      `(<ac:task>[\\s\\S]*?<ac:task-id>${localId}</ac:task-id>[\\s\\S]*?<ac:task-status>)(incomplete|complete)(</ac:task-status>[\\s\\S]*?</ac:task>)`,
+      'g'
+    )
+    
+    const updatedContent = currentContent.replace(taskBlockPattern, `$1${newStatus}$3`)
+    
+    if (updatedContent === currentContent) {
+      console.log('Task already has the correct status')
+      return { success: true }
+    }
+    
+    // Update the page
+    const updateUrl = `https://api.atlassian.com/ex/confluence/${siteId}/wiki/api/v2/pages/${pageId}`
+    
+    const updateResponse = await fetch(updateUrl, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -330,21 +418,31 @@ async function updateConfluenceTask(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        status: status, // 'complete' or 'incomplete'
+        id: pageId,
+        status: 'current',
+        title: pageData.title,
+        body: {
+          storage: {
+            value: updatedContent,
+            representation: 'storage',
+          },
+        },
+        version: {
+          number: currentVersion + 1,
+          message: `Task ${localId} marked as ${newStatus} via Trackli`,
+        },
       }),
     })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Confluence Task Update API error:', errorText)
-      return {
-        success: false,
-        error: errorText,
-        status: response.status,
-      }
+    
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text()
+      console.error('Failed to update page:', errorText)
+      return { success: false, error: `Failed to update page: ${errorText}`, status: updateResponse.status }
     }
-
+    
+    console.log('Task updated via page content modification')
     return { success: true }
+    
   } catch (error) {
     console.error('updateConfluenceTask error:', error)
     return { success: false, error: error.message }
