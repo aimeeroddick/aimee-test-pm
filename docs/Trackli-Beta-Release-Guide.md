@@ -1,5 +1,5 @@
 # Trackli Beta Release Guide
-## Version 2.20 | Beta Testing Documentation
+## Version 2.24 | Beta Testing Documentation
 
 ---
 
@@ -11,7 +11,8 @@
 - **Multiple views** for different planning styles (Kanban board, Calendar, Daily planner, Table)
 - **AI-powered task extraction** from meeting notes and images
 - **Smart daily planning** that prioritizes what matters most
-- **Context-rich tasks** with projects, customers, team members, and more
+- **Context-rich tasks** with projects, customers, tags, and team members
+- **Integrations** with Jira, Slack, email, and Outlook
 - **Cross-platform** availability (Web, macOS, Windows, Linux)
 
 This guide will help you understand how Trackli works, explore its features, and get the most out of the application during beta testing.
@@ -26,11 +27,13 @@ This guide will help you understand how Trackli works, explore its features, and
 4. [Working with Tasks](#working-with-tasks)
 5. [AI-Powered Features](#ai-powered-features)
 6. [Projects & Organization](#projects--organization)
-7. [My Day: Smart Daily Planning](#my-day-smart-daily-planning)
-8. [Best Practices & Tips](#best-practices--tips)
-9. [Technical Architecture](#technical-architecture)
-10. [Known Limitations](#known-limitations)
-11. [Providing Feedback](#providing-feedback)
+7. [Tags](#tags)
+8. [My Day: Smart Daily Planning](#my-day-smart-daily-planning)
+9. [Integrations](#integrations)
+10. [Best Practices & Tips](#best-practices--tips)
+11. [Technical Architecture](#technical-architecture)
+12. [Known Limitations](#known-limitations)
+13. [Providing Feedback](#providing-feedback)
 
 ---
 
@@ -430,6 +433,44 @@ The extraction uses pattern matching to identify common action item formats:
   4. Build data visualizations for revenue and growth charts
   5. Schedule review meeting with stakeholders for feedback
 
+## Spark AI Assistant
+
+**What it does:** An intelligent assistant that helps you query your tasks using natural language.
+
+**How to access:**
+- Click the **Spark** button (sparkle icon) in the header
+- Opens a chat panel on the right side
+
+**What you can ask:**
+| Question Type | Example |
+|--------------|---------|
+| Due dates | "What's due today?" "Show overdue tasks" |
+| Status queries | "What's in progress?" "Show my backlog" |
+| Priority | "What are my critical tasks?" |
+| Project queries | "What am I working on for [project]?" |
+| Time planning | "What can I do in 30 minutes?" |
+| Energy matching | "Show me low-energy tasks" |
+| My Day | "What's on my day today?" |
+
+**Example conversation:**
+```
+You: What's due this week?
+Spark: You have 5 tasks due this week:
+       - Review proposal (Due: Monday)
+       - Send client update (Due: Tuesday)
+       ...
+
+You: Which ones are critical?
+Spark: 2 of those are marked critical:
+       - Review proposal
+       - Client presentation prep
+```
+
+**Tips:**
+- Ask follow-up questions—Spark remembers context
+- Use natural language, no special syntax needed
+- Great for quick status checks without leaving your current view
+
 ---
 
 # Projects & Organization
@@ -477,6 +518,67 @@ Completed projects can be archived to reduce clutter while preserving history.
 2. Click **"Archive Project"**
 3. Project moves to archived section
 4. Can be unarchived anytime
+
+---
+
+# Tags
+
+Tags provide flexible sub-categorization within projects. They work alongside the existing Customer field—use either or both depending on how you organize your work.
+
+## Why Use Tags?
+
+Different users organize differently:
+- **Use Customer field** if you have a single project and categorize by client
+- **Use Tags** if your projects represent customers and you need sub-categories (e.g., "Website", "Phase 1", "UAT")
+- **Use both** for maximum flexibility
+
+## Creating Tags
+
+**Method 1: In Project Settings**
+1. Open the project
+2. Go to project settings (gear icon)
+3. Scroll to the **Tags** section
+4. Click **"Add Tag"**
+5. Enter a name and save
+
+**Method 2: On-the-Fly**
+1. Open a task
+2. In the Tags field, type a new tag name
+3. Click **"Create [tag name]"**
+4. The tag is created and added to the task
+
+## Adding Tags to Tasks
+
+1. Open a task (click to edit)
+2. Find the **Tags** row below Customer/Assignee
+3. Click to open the tag dropdown
+4. Select existing tags or create new ones
+5. Tags appear as pills with × to remove
+
+**Note:** Tasks can have up to **3 tags** maximum.
+
+## Tags on Task Cards
+
+Tags appear at the bottom of task cards alongside the project and customer:
+- With customer: `Project · Customer · Tag1, Tag2`
+- Without customer: `Project · Tag1, Tag2`
+
+## Filtering by Tag
+
+Use the filter panel to show only tasks with specific tags:
+1. Open the filter panel
+2. Find the **Tags** filter
+3. Select one or more tags
+4. Tasks are filtered to show only matching items
+
+## Managing Tags
+
+In project settings, you can:
+- **View** all tags for the project
+- **Edit** tag names
+- **Delete** tags (removes from all tasks in that project)
+
+**Important:** Tags are project-specific—each project has its own set of tags.
 
 ---
 
@@ -541,6 +643,184 @@ My Day includes a dedicated area for capturing meeting notes:
 3. **Include buffer:** Schedule 70-80% of available time
 4. **Review at end of day:** Move incomplete tasks or reschedule
 5. **Use time estimates:** Helps the algorithm and your planning
+
+---
+
+# Integrations
+
+Trackli connects with your existing tools to bring tasks from where work happens into one place.
+
+## Jira Integration (Atlassian)
+
+Connect Trackli to Jira to sync your assigned issues bidirectionally.
+
+### What It Does
+- **Import Jira issues** assigned to you as Trackli tasks
+- **Two-way sync:** Status changes in Trackli update Jira (and vice versa)
+- **Real-time updates:** Webhooks keep everything in sync instantly
+- **Smart status mapping:** Jira statuses map intelligently to Trackli columns
+
+### Connecting to Jira
+
+1. Go to **Settings** (gear icon)
+2. Find the **Atlassian** section
+3. Click **"Connect Atlassian Account"**
+4. Sign in to your Atlassian account
+5. Authorize Trackli to access your Jira
+
+### Choosing Projects to Sync
+
+After connecting:
+1. Your Jira projects appear in Settings
+2. Toggle **ON** the projects you want to sync
+3. Click **"Sync Now"** to import issues
+
+### How Sync Works
+
+| Action | Result |
+|--------|--------|
+| **Jira issue assigned to you** | Appears in Trackli automatically |
+| **Move task in Trackli** | Status updates in Jira |
+| **Jira status changes** | Trackli updates within seconds |
+| **Issue reassigned away** | Removed from your Trackli board |
+
+### Status Mapping
+
+Jira statuses map to Trackli columns using smart keyword matching:
+
+| Jira Status Contains | → Trackli Column |
+|---------------------|------------------|
+| "backlog" | Backlog |
+| "to do", "open", "ready" | To Do |
+| "progress", "review", "test", "dev" | In Progress |
+| "done", "closed", "complete" | Done |
+
+### Jira Tasks on Your Board
+
+Tasks from Jira display a blue Jira badge with the issue key (e.g., "PROJ-123"). Click the badge to open the issue in Jira.
+
+### Sync Status Indicator
+
+In Settings, you'll see:
+- **Real-Time Sync: Active** (green) - Webhooks are working
+- **15-min Polling** (yellow) - Fallback sync is active
+
+### Troubleshooting Jira
+
+| Issue | Solution |
+|-------|----------|
+| Sync shows 0 issues | Check that issues are assigned to you |
+| Status not mapping | Check if status name matches the keywords above |
+| Changes not syncing | Try "Sync Now" or reconnect |
+
+---
+
+## Slack Integration
+
+Get task notifications delivered directly to your Slack DMs.
+
+### What It Does
+- **Task reminders** sent to your Slack DMs
+- **Due date alerts** for upcoming and overdue tasks
+- **Daily digests** with your priorities
+
+### Connecting to Slack
+
+1. Go to **Settings**
+2. Find the **Slack** section
+3. Click **"Connect Slack"**
+4. Choose your workspace
+5. Authorize Trackli
+
+### Notification Types
+
+| Notification | When |
+|--------------|------|
+| Task due today | Morning of due date |
+| Task overdue | Day after due date |
+| Daily summary | Your configured time |
+
+**Note:** Notifications are sent via DM—Trackli never posts to public channels.
+
+---
+
+## Email-to-Task
+
+Create tasks by forwarding emails to your personal Trackli address.
+
+### How It Works
+
+1. Every Trackli account has a unique inbound email address
+2. Forward any email to this address
+3. The email appears in your **Pending Tasks** queue
+4. Review and approve to create the task
+
+### Finding Your Email Address
+
+1. Go to **Settings**
+2. Find the **Email-to-Task** section
+3. Copy your unique address (looks like: `abc123@inbound.gettrackli.com`)
+
+### Email to Task Mapping
+
+| Email Field | Task Field |
+|-------------|------------|
+| Subject line | Task title |
+| Email body | Task description |
+| Sender | Source (noted) |
+| Attachments | Task attachments |
+
+### Approval Queue
+
+Forwarded emails don't become tasks immediately:
+1. They appear in **Pending Tasks**
+2. Review and edit details
+3. Assign to a project
+4. Click **"Create Task"** to approve
+
+This prevents spam and gives you control over what becomes a task.
+
+### Tips for Email-to-Task
+
+- Forward the email, don't compose a new one (keeps context)
+- Add notes in the forwarded body if needed
+- Works great with email rules to auto-forward certain messages
+
+---
+
+## Outlook Add-in
+
+Create Trackli tasks directly from Outlook without leaving your inbox.
+
+### What It Does
+- **One-click task creation** from any email
+- **Email content** automatically populates task
+- **Link back to email** for reference
+
+### Installing the Add-in
+
+1. Open Outlook
+2. Go to **Get Add-ins** (varies by Outlook version)
+3. Search for "Trackli"
+4. Click **Add**
+5. Sign in to your Trackli account
+
+### Creating Tasks from Email
+
+1. Open or select an email in Outlook
+2. Click the **Trackli** button in the ribbon
+3. Review the pre-filled task details
+4. Adjust title, dates, project as needed
+5. Click **"Create Task"**
+
+### What Gets Captured
+
+| Email Field | Task Field |
+|-------------|------------|
+| Subject | Task title |
+| Body (first 500 chars) | Description |
+| Email link | Source link |
+| Sender | Source notes |
 
 ---
 
@@ -812,7 +1092,7 @@ BACKLOG → TO DO → IN PROGRESS → DONE
 - Status, Due Date, Start Date
 - Time Estimate, Energy Level
 - Category, Source
-- Assignee, Customer
+- Assignee, Customer, Tags (up to 3)
 - Critical flag, Attachments, Subtasks
 
 ## Views
@@ -825,6 +1105,13 @@ BACKLOG → TO DO → IN PROGRESS → DONE
 - **Extract from Image:** Photo → Tasks
 - **Extract from Text:** Notes → Tasks
 - **AI Break Down:** Task → Subtasks
+- **Spark Assistant:** Natural language task queries
+
+## Integrations
+- **Jira:** Two-way sync of assigned issues
+- **Slack:** DM notifications for tasks
+- **Email-to-Task:** Forward emails to create tasks
+- **Outlook:** Create tasks from emails
 
 ---
 
@@ -842,4 +1129,4 @@ Your feedback shapes the future of the product. We appreciate your time and inpu
 
 ---
 
-*Document Version: 2.20 | Last Updated: January 2026*
+*Document Version: 2.24 | Last Updated: January 2026*
