@@ -1,6 +1,6 @@
 // Cache Manager - handles clearing all caches for fresh updates
 
-export const CACHE_VERSION = '2.23.1' // Increment when icons/assets change
+export const CACHE_VERSION = '2.24.0' // Increment when icons/assets change
 
 /**
  * Clear all caches - service worker, browser cache, localStorage cache flags

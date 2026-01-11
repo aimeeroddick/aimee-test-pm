@@ -8,7 +8,7 @@ This file provides guidance for Claude when working on the Trackli project.
 
 **Overview**: Trackli is a task management app for busy professionals with Kanban boards, calendar views, My Day planning, and AI-powered task extraction.
 
-**Current Version**: 2.23.1
+**Current Version**: 2.24.0
 
 ### Tech Stack
 - **Frontend**: React 18 + Vite + Tailwind CSS
