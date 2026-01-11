@@ -9124,6 +9124,8 @@ export default function KanbanBoard({ demoMode = false }) {
                     {!fieldFilters.due_date && <option value="due_date">Due Date</option>}
                     {!fieldFilters.start_date && <option value="start_date">Start Date</option>}
                     {!fieldFilters.time_estimate && <option value="time_estimate">Time Estimate</option>}
+                    {/* Debug: atlassianConnections.length={atlassianConnections?.length}, filterSprint={filterSprint} */}
+                    {atlassianConnections?.length > 0 && !filterSprint && <option value="sprint">Sprint</option>}
                   </select>
                   <svg className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -9134,14 +9136,18 @@ export default function KanbanBoard({ demoMode = false }) {
                 {pendingFilterField && !pendingFilterOperator && (
                   <div className="flex items-center gap-1">
                     {/* Simple fields - direct value selection */}
-                    {['assignee', 'customer', 'tags', 'energy_level'].includes(pendingFilterField) && (
+                    {['assignee', 'customer', 'tags', 'energy_level', 'sprint'].includes(pendingFilterField) && (
                       <div className="relative">
                         <select
                           autoFocus
                           value=""
                           onChange={(e) => {
                             if (e.target.value) {
-                              setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
+                              if (pendingFilterField === 'sprint') {
+                                setFilterSprint(e.target.value)
+                              } else {
+                                setFieldFilters({ ...fieldFilters, [pendingFilterField]: e.target.value })
+                              }
                               setPendingFilterField('')
                             }
                           }}
@@ -9172,6 +9178,13 @@ export default function KanbanBoard({ demoMode = false }) {
                               <option value="high">High Effort</option>
                               <option value="medium">Medium Effort</option>
                               <option value="low">Low Effort</option>
+                            </>
+                          )}
+                          {pendingFilterField === 'sprint' && (
+                            <>
+                              <option value="active">In Active Sprint</option>
+                              <option value="has_sprint">Has Sprint (any)</option>
+                              <option value="none">No Sprint</option>
                             </>
                           )}
                         </select>

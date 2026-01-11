@@ -560,6 +560,11 @@ async function fetchJiraIssues(
       }
     }
     
+    // Debug parent field
+    if (issue.fields.parent) {
+      console.log(`Issue ${issue.key} has parent:`, JSON.stringify(issue.fields.parent))
+    }
+    
     return {
       id: issue.id,
       key: issue.key,
@@ -591,7 +596,11 @@ async function fetchJiraIssues(
   // Filter out Epics - they're containers, not actionable tasks
   const filteredIssues = issues.filter((issue: any) => {
     const type = issue.issueType?.toLowerCase()
-    return type !== 'epic'
+    const isEpic = type === 'epic'
+    if (isEpic) {
+      console.log(`FILTERING OUT EPIC: ${issue.key} - ${issue.summary} (type: ${issue.issueType})`)
+    }
+    return !isEpic
   })
 
   console.log(`Fetched ${issues.length} issues, ${filteredIssues.length} after filtering out Epics`)
